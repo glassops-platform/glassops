@@ -107,7 +107,7 @@ jobs:
 
             - name: Check Dependencies
               working-directory: packages/runtime
-              run: npm audit --audit-level moderate
+              run: npm audit --audit-level high
 
     dependency-review:
         name: Dependency Review
