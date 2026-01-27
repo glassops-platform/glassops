@@ -1,0 +1,102 @@
+name: Governance Validation
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    test-freeze-logic:
+        name: Verify Freeze Window Enforcement
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Generate Active Freeze Policy
+              run: |
+                  DAY=$(date +%A)
+                  START="00:00"
+                  END="23:59"
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "freeze_windows": [
+                        { "day": "$DAY", "start": "$START", "end": "$END" }
+                      ]
+                    },
+                    "runtime": { "cli_version": "latest" }
+                  }
+                  EOF
+
+            - name: Attempt Governed Run (Expected to Fail)
+              id: governed-run
+              continue-on-error: true
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\nMOCK_KEY\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'mock-id'
+                  username: 'mock-user'
+                  enforce_policy: 'true'
+
+            - name: Validate Blocked Outcome
+              run: |
+                  echo "## ❄️ Freeze Window Logic Verified" >> $GITHUB_STEP_SUMMARY
+                  if [ "${{ steps.governed-run.outcome }}" == "failure" ]; then
+                    echo "✅ **Success**: Runtime correctly blocked deployment during freeze window." >> $GITHUB_STEP_SUMMARY
+                    echo "- Policy: Active" >> $GITHUB_STEP_SUMMARY
+                    echo "- Outcome: Blocked" >> $GITHUB_STEP_SUMMARY
+                  else
+                    echo "❌ **Failure**: Runtime allowed deployment during an active freeze window!" >> $GITHUB_STEP_SUMMARY
+                    exit 1
+                  fi
+
+    test-bypass-logic:
+        name: Verify Manual Bypass
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Generate Active Freeze Policy
+              run: |
+                  DAY=$(date +%A)
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "freeze_windows": [
+                        { "day": "$DAY", "start": "00:00", "end": "23:59" }
+                      ]
+                    },
+                    "runtime": { "cli_version": "latest" }
+                  }
+                  EOF
+
+            - name: Attempt Bypassed Run
+              id: test-bypass
+              uses: ./packages/runtime
+              continue-on-error: true
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\nMOCK_KEY\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'mock-id'
+                  username: 'mock-user'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+            - name: Verify Bypass
+              if: always()
+              run: |
+                  echo "## 🔓 Manual Bypass Verified" >> $GITHUB_STEP_SUMMARY
+                  OUTCOME="${{ steps.test-bypass.outcome }}"
+                  if [ "$OUTCOME" == "success" ]; then
+                     echo "✅ **Success**: Policy successfully bypassed with enforce_policy='false'" >> $GITHUB_STEP_SUMMARY
+                     echo "- Outcome: Allowed" >> $GITHUB_STEP_SUMMARY
+                  else
+                     echo "❌ **Failure**: Runtime failed unexpectedly during bypass test." >> $GITHUB_STEP_SUMMARY
+                     echo "- Outcome: $OUTCOME" >> $GITHUB_STEP_SUMMARY
+                     exit 1
+                  fi

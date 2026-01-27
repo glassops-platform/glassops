@@ -1,0 +1,70 @@
+name: Docs Governance & Deploy
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    docs-validation:
+        name: Validate Markdown & Docs
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '20'
+
+            - name: Install Dependencies
+              run: |
+                  npm install
+
+            - name: Run Link & Doc Validation
+              run: |
+                  npm run docs:regen
+
+    mkdocs-deploy:
+        name: Build & Deploy Docs
+        runs-on: ubuntu-latest
+        needs: docs-validation
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v4
+
+            - name: Configure Git Credentials
+              run: |
+                  git config user.name github-actions[bot]
+                  git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.11'
+
+            - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+            - uses: actions/cache@v4
+              with:
+                  key: mkdocs-material-${{ env.cache_id }}
+                  path: .cache
+                  restore-keys: |
+                      mkdocs-material-
+
+            - name: Install MkDocs
+              run: |
+                  pip install mkdocs mkdocs-material
+
+            - name: Build Site
+              run: |
+                  mkdocs build --strict
+
+            - name: Deploy to GitHub Pages
+              if: github.ref == 'refs/heads/main'
+              run: |
+                  mkdocs gh-deploy --force

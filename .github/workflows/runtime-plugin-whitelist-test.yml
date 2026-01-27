@@ -1,0 +1,270 @@
+name: Plugin Whitelist Governance Test
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - 'packages/runtime/src/**'
+            - 'packages/runtime/action.yml'
+            - '.github/workflows/runtime-plugin-whitelist-test.yml'
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    test-whitelisted-plugin:
+        name: Test Whitelisted Plugin Installation
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: packages/runtime/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: packages/runtime
+              run: npm ci
+
+            - name: Build Action
+              working-directory: packages/runtime
+              run: npm run build
+
+            - name: Create Test Config with Plugin Whitelist
+              run: |
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "plugin_whitelist": ["sfdx-hardis@^6.0.0", "@salesforce/plugin-deploy-retrieve"]
+                    },
+                    "runtime": {
+                      "cli_version": "latest"
+                    }
+                  }
+                  EOF
+
+            - name: Test Whitelisted Plugin Installation
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\ntest-key\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'test-client-id'
+                  username: 'test@example.com'
+                  plugins: 'sfdx-hardis'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+    test-non-whitelisted-plugin:
+        name: Test Non-Whitelisted Plugin Rejection
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: packages/runtime/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: packages/runtime
+              run: npm ci
+
+            - name: Build Action
+              working-directory: packages/runtime
+              run: npm run build
+
+            - name: Create Test Config with Plugin Whitelist
+              run: |
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "plugin_whitelist": ["sfdx-hardis", "@salesforce/plugin-deploy-retrieve"]
+                    },
+                    "runtime": {
+                      "cli_version": "latest"
+                    }
+                  }
+                  EOF
+
+            - name: Test Non-Whitelisted Plugin Rejection (Expected to Fail)
+              id: test-failure
+              continue-on-error: true
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\ntest-key\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'test-client-id'
+                  username: 'test@example.com'
+                  plugins: 'some-malicious-plugin'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+            - name: Verify Plugin Was Rejected
+              run: |
+                  echo "## 🛡️ Plugin Whitelist Validation" >> $GITHUB_STEP_SUMMARY
+                  if [ "${{ steps.test-failure.outcome }}" == "failure" ]; then
+                    echo "✅ **Success**: Governance correctly rejected non-whitelisted plugin" >> $GITHUB_STEP_SUMMARY
+                    echo "- Plugin: 'some-malicious-plugin'" >> $GITHUB_STEP_SUMMARY
+                    echo "- Outcome: Blocked" >> $GITHUB_STEP_SUMMARY
+                  else
+                    echo "❌ **Failure**: Governance failed to reject non-whitelisted plugin" >> $GITHUB_STEP_SUMMARY
+                    exit 1
+                  fi
+
+    test-no-whitelist:
+        name: Test No Whitelist Configuration
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: packages/runtime/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: packages/runtime
+              run: npm ci
+
+            - name: Build Action
+              working-directory: packages/runtime
+              run: npm run build
+
+            - name: Create Test Config without Plugin Whitelist
+              run: |
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true
+                    },
+                    "runtime": {
+                      "cli_version": "latest"
+                    }
+                  }
+                  EOF
+
+            - name: Test Plugin Installation without Whitelist
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\ntest-key\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'test-client-id'
+                  username: 'test@example.com'
+                  plugins: 'sfdx-hardis'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+    test-version-constraints:
+        name: Test Plugin Version Constraints
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: packages/runtime/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: packages/runtime
+              run: npm ci
+
+            - name: Build Action
+              working-directory: packages/runtime
+              run: npm run build
+
+            - name: Create Test Config with Version Constraints
+              run: |
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "plugin_whitelist": ["sfdx-hardis@^6.0.0", "@salesforce/plugin-deploy-retrieve@latest"]
+                    },
+                    "runtime": {
+                      "cli_version": "latest"
+                    }
+                  }
+                  EOF
+
+            - name: Test Plugin Installation with Version Constraints
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\ntest-key\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'test-client-id'
+                  username: 'test@example.com'
+                  plugins: '@salesforce/plugin-deploy-retrieve'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+    test-scanner-blocked:
+        # RTM: TC-003-N06
+        name: Verify Scanner Block (Opinionated)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: packages/runtime/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: packages/runtime
+              run: npm ci
+
+            - name: Build Action
+              working-directory: packages/runtime
+              run: npm run build
+
+            - name: Create Config (Scanner NOT Whitelisted)
+              run: |
+                  cat <<EOF > devops-config.json
+                  {
+                    "governance": {
+                      "enabled": true,
+                      "plugin_whitelist": ["sfdx-hardis"]
+                    },
+                    "runtime": { "cli_version": "latest" }
+                  }
+                  EOF
+
+            - name: Attempt to Install Scanner (Expected to Fail)
+              id: scanner-install
+              continue-on-error: true
+              uses: ./packages/runtime
+              with:
+                  jwt_key: "-----BEGIN RSA PRIVATE KEY-----\nMOCK\n-----END RSA PRIVATE KEY-----"
+                  client_id: 'mock'
+                  username: 'mock'
+                  plugins: '@salesforce/sfdx-scanner'
+                  enforce_policy: 'false'
+                  skip_auth: 'true'
+
+            - name: Validate Scanner Blocked
+              run: |
+                  echo "## 🚫 Anti-Scanner Policy Verification" >> $GITHUB_STEP_SUMMARY
+                  if [ "${{ steps.scanner-install.outcome }}" == "failure" ]; then
+                     echo "✅ **Success**: Governance blocked '@salesforce/sfdx-scanner' installation." >> $GITHUB_STEP_SUMMARY
+                     echo "- Reason: Not in whitelist" >> $GITHUB_STEP_SUMMARY
+                     echo "- Outcome: Blocked" >> $GITHUB_STEP_SUMMARY
+                  else
+                     echo "❌ **Failure**: Policy allowed installation of deprecated Scanner!" >> $GITHUB_STEP_SUMMARY
+                     echo "- Outcome: ${{ steps.scanner-install.outcome }}" >> $GITHUB_STEP_SUMMARY
+                     exit 1
+                  fi

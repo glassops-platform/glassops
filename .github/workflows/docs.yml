@@ -1,0 +1,44 @@
+name: Documentation
+
+on:
+    pull_request:
+        paths:
+            - 'glassspec/**'
+            - 'packages/*/src/**'
+            - 'utils/**'
+            - 'docs/generated/**'
+
+permissions:
+    contents: read
+
+jobs:
+    validate:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build Agent
+              run: npm run build -w @glassops/agent
+
+            - name: Regenerate Docs
+              run: npm run docs:ai
+              env:
+                  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+            - name: Check for Drift
+              run: |
+                  if ! git diff --quiet docs/generated/; then
+                    echo "❌ Generated docs are out of sync with code/schemas."
+                    echo "Run 'npm run docs:ai' locally and commit the changes."
+                    git diff docs/generated/
+                    exit 1
+                  fi
+                  echo "✅ Documentation is up to date."
