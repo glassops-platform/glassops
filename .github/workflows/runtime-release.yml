@@ -32,7 +32,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run Tests
               working-directory: packages/runtime

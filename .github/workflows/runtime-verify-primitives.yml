@@ -40,7 +40,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run Jest Suite
               working-directory: packages/runtime
@@ -86,7 +86,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run Code Hygiene Checks
               working-directory: packages/runtime

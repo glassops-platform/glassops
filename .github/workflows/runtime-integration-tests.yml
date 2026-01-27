@@ -40,7 +40,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Build Project
               working-directory: packages/runtime
@@ -86,7 +86,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run All Tests with Coverage
               working-directory: packages/runtime
@@ -132,7 +132,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Build Action
               working-directory: packages/runtime
@@ -217,7 +217,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Build Project
               working-directory: packages/runtime
