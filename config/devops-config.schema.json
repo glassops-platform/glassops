@@ -1,0 +1,105 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "GlassOps DevOps Configuration",
+    "description": "Configuration for GlassOps Governance Protocol and Execution Engines",
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "string",
+            "enum": ["1.0"],
+            "description": "Schema version"
+        },
+        "execution": {
+            "type": "object",
+            "description": "Execution Engine Configuration",
+            "properties": {
+                "engine": {
+                    "type": "string",
+                    "enum": ["native", "hardis"],
+                    "default": "native",
+                    "description": "Primary execution engine"
+                },
+                "fallback": {
+                    "type": "string",
+                    "enum": ["native", "none"],
+                    "default": "none",
+                    "description": "Fallback engine if primary fails"
+                }
+            },
+            "additionalProperties": false
+        },
+        "governance": {
+            "type": "object",
+            "description": "Governance Policy Configuration",
+            "properties": {
+                "minCoverage": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "default": 75,
+                    "description": "Minimum required code coverage percentage"
+                },
+                "requireTests": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to enforce test execution"
+                },
+                "enforcedBy": {
+                    "type": "string",
+                    "description": "Entity enforcing this policy (for audit logging)"
+                }
+            },
+            "additionalProperties": false
+        },
+        "glassops": {
+            "type": "object",
+            "description": "GlassOps Platform Specifics",
+            "properties": {
+                "enablePlatformEvents": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Publish status to Salesforce Platform Events"
+                }
+            }
+        },
+        "environments": {
+            "type": "object",
+            "description": "Environment-specific deployment policies",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "display_name": { "type": "string" },
+                    "branch_mapping": { "type": "string" },
+                    "deployment_policy": { "type": "object" },
+                    "quality_gates": {
+                        "type": "object",
+                        "properties": {
+                            "minCoverage": { "type": "integer" },
+                            "security_severity_threshold": { "type": "integer" },
+                            "block_on_test_failure": { "type": "boolean" }
+                        }
+                    },
+                    "github_environment": { "type": "string" }
+                }
+            }
+        },
+
+        "ticket_enforcement": {
+            "type": "object",
+            "description": "Ticket/Issue tracking enforcement"
+        },
+        "notifications": {
+            "type": "object",
+            "description": "Notification channel configurations"
+        },
+        "deployment_defaults": {
+            "type": "object",
+            "description": "Default deployment settings"
+        },
+        "delta_deployment": {
+            "type": "object",
+            "description": "Delta deployment configuration"
+        }
+    },
+    "required": ["version"]
+}

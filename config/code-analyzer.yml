@@ -1,0 +1,25 @@
+engines:
+    pmd:
+        disable_engine: false
+        custom_rulesets:
+            - config/ruleset.xml
+        file_extensions:
+            apex:
+                - .cls
+                - .trigger
+            html:
+                - .html
+                - .htm
+            javascript:
+                - .js
+            xml:
+                - .xml
+
+    eslint:
+        disable_engine: true
+
+    retire-js:
+        disable_engine: false
+
+    cpd:
+        disable_engine: false

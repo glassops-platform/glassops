@@ -1,0 +1,31 @@
+{
+    "global": {
+        "requiredSections": [],
+        "maxStalenessDays": 90,
+        "coverageThreshold": 0.8
+    },
+    "system": {
+        "ignoreDirs": ["node_modules", ".git", ".gemini", ".glassops", "dist", "coverage", "docs_staging", "site"],
+        "adrPatterns": ["**/adr/*.md", "docs/adr/*.md"]
+    },
+    "linkValidation": {
+        "enforceCasing": true,
+        "allowLocalhost": false,
+        "requireHttps": false,
+        "checkAnchors": true
+    },
+    "rules": [
+        {
+            "pattern": "/**/architecture/**/*.md",
+            "requiredSections": ["overview", "components", "data-flow"]
+        },
+        {
+            "pattern": "/**/guides/**/*.md",
+            "requiredSections": ["prerequisites", "installation", "usage"]
+        },
+        {
+            "pattern": "/**/adr/!(README).md",
+            "requiredSections": ["context", "decision", "consequences", "alternatives"]
+        }
+    ]
+}

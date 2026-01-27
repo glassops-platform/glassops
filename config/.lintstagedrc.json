@@ -1,0 +1,9 @@
+{
+    "**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}": [
+        "prettier --config config/.prettierrc --write"
+    ],
+    "**/{aura,lwc}/**/*.js": ["eslint --config config/eslint.config.mjs"],
+    "**/lwc/**": ["sfdx-lwc-jest -- --config config/jest.config.js --bail --findRelatedTests --passWithNoTests"],
+    "**/*.{cls,trigger,js,xml,yaml,yml,md}": ["secretlint --secretlintrc config/.secretlintrc.json --maskSecrets"],
+    "packages/integration-api/specs/**/*.yaml": ["npm run docs:api"]
+}

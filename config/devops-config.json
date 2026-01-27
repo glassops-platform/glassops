@@ -1,0 +1,130 @@
+{
+    "version": "1.0",
+    "metadata": {
+        "last_updated": "2026-01-19",
+        "schema_version": "1.0"
+    },
+
+    "execution": {
+        "engine": "native",
+        "fallback": "none"
+    },
+
+    "governance": {
+        "minCoverage": 75,
+        "requireTests": true,
+        "enforcedBy": "Platform Team"
+    },
+
+    "glassops": {
+        "enablePlatformEvents": false
+    },
+
+    "ticket_enforcement": {
+        "enabled": true,
+        "pattern": "^([A-Z]+-\\d+):\\s.+",
+        "message": "PR title must start with a Jira Ticket ID (e.g., 'PROJ-123: Feature Name').",
+        "exempt_branches": ["dependabot/**", "renovate/**"]
+    },
+
+    "notifications": {
+        "enabled_by_default": false,
+        "channels": {
+            "slack": {
+                "enabled": false,
+                "mention_on_failure": true
+            },
+            "email": {
+                "enabled": false
+            }
+        }
+    },
+
+    "environments": {
+        "prod": {
+            "display_name": "Production",
+            "branch_mapping": "main",
+            "deployment_policy": {
+                "test_level": "RunAllTestsInOrg",
+                "wait_time": "60",
+                "use_delta": true,
+                "validation_required": true,
+                "auto_deploy_on_merge": false
+            },
+            "quality_gates": {
+                "minCoverage": 85,
+                "security_severity_threshold": 2,
+                "block_on_test_failure": true
+            },
+            "github_environment": "production",
+            "notes": "Production requires approval via GitHub Environment protection rules"
+        },
+
+        "uat": {
+            "display_name": "UAT",
+            "branch_mapping": "release/**",
+            "deployment_policy": {
+                "test_level": "RunLocalTests",
+                "wait_time": "30",
+                "use_delta": true,
+                "validation_required": false,
+                "auto_deploy_on_merge": true
+            },
+            "quality_gates": {
+                "minCoverage": 75,
+                "security_severity_threshold": 3,
+                "block_on_test_failure": true
+            },
+            "github_environment": "uat"
+        },
+
+        "int": {
+            "display_name": "Integration",
+            "branch_mapping": "develop",
+            "deployment_policy": {
+                "test_level": "RunLocalTests",
+                "wait_time": "30",
+                "use_delta": false,
+                "validation_required": false,
+                "auto_deploy_on_merge": true
+            },
+            "quality_gates": {
+                "minCoverage": 75,
+                "security_severity_threshold": 4,
+                "block_on_test_failure": false
+            },
+            "github_environment": "integration"
+        },
+
+        "dev": {
+            "display_name": "Development",
+            "branch_mapping": "feature/**",
+            "deployment_policy": {
+                "test_level": "NoTestRun",
+                "wait_time": "15",
+                "use_delta": false,
+                "validation_required": false,
+                "auto_deploy_on_merge": false
+            },
+            "quality_gates": {
+                "minCoverage": 0,
+                "security_severity_threshold": 5,
+                "block_on_test_failure": false
+            },
+            "github_environment": "dev"
+        }
+    },
+
+    "deployment_defaults": {
+        "max_retries": 3,
+        "retry_delay_seconds": 30,
+        "collect_diagnostics": true,
+        "generate_deployment_report": true
+    },
+
+    "delta_deployment": {
+        "enabled_by_default": true,
+        "base_commit_strategy": "previous_successful_deployment",
+        "fallback_to_full_deployment": true
+    }
+}
