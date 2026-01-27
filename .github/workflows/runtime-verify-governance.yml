@@ -15,6 +15,9 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v6
 
+            - name: Install Salesforce CLI
+              run: npm install --global @salesforce/cli
+
             - name: Generate Active Freeze Policy
               run: |
                   DAY=$(date +%A)
@@ -60,6 +63,9 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v6
+
+            - name: Install Salesforce CLI
+              run: npm install --global @salesforce/cli
 
             - name: Generate Active Freeze Policy
               run: |

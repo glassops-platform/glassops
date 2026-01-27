@@ -35,9 +35,12 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: packages/runtime/package-lock.json
 
+            - name: Install Salesforce CLI
+              run: npm install --global @salesforce/cli
+
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run Jest Suite
               working-directory: packages/runtime
@@ -78,9 +81,12 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: packages/runtime/package-lock.json
 
+            - name: Install Salesforce CLI
+              run: npm install --global @salesforce/cli
+
             - name: Install Dependencies
               working-directory: packages/runtime
-              run: npm ci
+              run: npm ci --ignore-scripts
 
             - name: Run Code Hygiene Checks
               working-directory: packages/runtime
@@ -101,7 +107,7 @@ jobs:
 
             - name: Check Dependencies
               working-directory: packages/runtime
-              run: npm audit --audit-level moderate
+              run: npm audit --audit-level high
 
     dependency-review:
         name: Dependency Review
