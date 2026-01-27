@@ -1,0 +1,19 @@
+{
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/.sfdx": true
+    },
+    "xml.preferences.showSchemaDocumentationType": "none",
+
+    "files.associations": {
+        ".sfcaignore": "ignore",
+        "*.ignore": "ignore"
+    },
+
+    "scss.validate": false,
+    "prettier.configPath": "config/.prettierrc",
+    "eslint.options": {
+        "overrideConfigFile": "config/eslint.config.js"
+    }
+}

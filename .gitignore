@@ -1,0 +1,67 @@
+# System Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# Environment & Security
+.env
+*.key
+
+# Salesforce
+.sf/
+.sfdx/
+
+
+# Build & Dependencies
+node_modules/
+dist/
+.turbo/
+*.log
+.eslintcache
+.prettiercache
+venv/
+
+# Test Outputs
+test-results/
+coverage/
+scan-results.html
+
+# Documentation Tooling
+config/doc-cache.json
+changed/
+docs_staging/
+site/
+glassops_site/
+docs/generated/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# General Build
+dist/
+build/
+!packages/runtime/dist/
+
+# GlassOps Runtime Artifacts
+.glassops/*.json
+!.glassops/policy.team.json
+glassops_index/

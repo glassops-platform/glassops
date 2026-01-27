@@ -1,0 +1,82 @@
+{
+    "name": "glassops",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "packages/*",
+        "packages/adapters/*",
+        "packages/tools/*"
+    ],
+    "description": "The GitHub-Native Salesforce DevOps Platform",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "packageManager": "npm@11.2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/glassops-platform/glassops.git"
+    },
+    "bugs": {
+        "url": "https://github.com/glassops-platform/glassops/issues"
+    },
+    "scripts": {
+        "build": "turbo build",
+        "test": "turbo test",
+        "lint": "turbo lint",
+        "test:unit": "sfdx-lwc-jest",
+        "test:unit:watch": "sfdx-lwc-jest --watch",
+        "test:unit:debug": "sfdx-lwc-jest --debug",
+        "test:unit:coverage": "sfdx-lwc-jest --coverage",
+        "delta": "npm run clean && shx mkdir -p changed && sf sgd source delta --to HEAD --from origin/main --output-dir changed --source-dir packages --generate-delta",
+        "clean": "shx rm -rf changed",
+        "delta:validate": "node scripts/validate.js",
+        "prepare": "sf plugins link node_modules/sfdx-git-delta && husky",
+        "sf:coverage": "sf apex run test --code-coverage --coverage-requirement 75 --result-format human --wait 10",
+        "sf:validate": "sf project deploy validate --source-dir packages --test-level RunLocalTests",
+        "docs:build": "python scripts/build-docs.py",
+        "docs:serve": "python scripts/build-docs.py && python -m mkdocs serve -f docs_staging/mkdocs.yml",
+        "docs:generate-map": "node scripts/verify-docs.js generate",
+        "docs:validate": "node scripts/verify-docs.js",
+        "docs:regen": "node scripts/verify-docs.js generate && node scripts/verify-docs.js",
+        "agent:build": "npm run build -w @glassops/agent",
+        "agent:run": "npm run start -w @glassops/agent --",
+        "docs:ai": "npm run agent:run -- generate",
+        "knowledge:pipeline": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py",
+        "knowledge:index": "knowledge:pipeline -- --index",
+        "knowledge:ask": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py -- ",
+        "precommit": "npm run docs:validate"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3.3.3",
+        "@lhci/cli": "^0.13.0",
+        "@lwc/eslint-plugin-lwc": "^3.3.0",
+        "@prettier/plugin-xml": "^3.4.1",
+        "@salesforce/cli": "^2.20.0",
+        "@salesforce/eslint-config-lwc": "^4.1.1",
+        "@salesforce/eslint-plugin-aura": "^3.0.0",
+        "@salesforce/eslint-plugin-lightning": "^2.0.0",
+        "@salesforce/sfdx-lwc-jest": "^7.0.2",
+        "@secretlint/secretlint-rule-pattern": "^11.2.5",
+        "@secretlint/secretlint-rule-preset-recommend": "^11.2.5",
+        "eslint": "^9.29.0",
+        "eslint-plugin-import": "^2.31.0",
+        "eslint-plugin-jest": "^29.0.1",
+        "globals": "^17.0.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.1.2",
+        "prettier": "^3.5.3",
+        "prettier-plugin-apex": "^2.2.6",
+        "rimraf": "^5.0.0",
+        "secretlint": "^6.2.4",
+        "sfdx-git-delta": "^5.4.0",
+        "shx": "^0.3.4",
+        "turbo": "^2.7.6",
+        "typescript-eslint": "^8.53.1"
+    },
+    "author": "Ryan Bumstead",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "fast-levenshtein": "^3.0.0",
+        "ignore": "^7.0.5"
+    }
+}

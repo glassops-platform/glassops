@@ -1,0 +1,9 @@
+{
+    "version": "1.0",
+    "description": "Team Policy Standards - Version controlled, PR reviewed",
+    "governance": {
+        "minCoverage": 80,
+        "requireTests": true,
+        "enforcedBy": "Platform Team"
+    }
+}
