@@ -27,6 +27,9 @@ jobs:
                   cache-dependency-path: packages/runtime/package-lock.json
                   registry-url: 'https://registry.npmjs.org'
 
+            - name: Install Salesforce CLI
+              run: npm install --global @salesforce/cli
+
             - name: Install Dependencies
               working-directory: packages/runtime
               run: npm ci
