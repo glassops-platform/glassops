@@ -62,9 +62,9 @@ jobs:
 
             - name: Build Site
               run: |
-                  mkdocs build --strict
+                  python scripts/build-docs.py
 
             - name: Deploy to GitHub Pages
               if: github.ref == 'refs/heads/main'
               run: |
-                  mkdocs gh-deploy --force
+                  mkdocs gh-deploy --config-file docs_staging/mkdocs.yml --force
