@@ -1,0 +1,229 @@
+site_name: GlassOps
+site_description: The Universal Governance Orchestration Protocol
+site_author: Ryan Bumstead
+site_url: https://glassops.io/
+
+repo_name: glassops-platform/glassops
+repo_url: https://github.com/glassops-platform/glassops
+
+# Documentation source is the repository root
+docs_dir: ..
+# Build output must be outside of docs_dir (project root) to avoid infinite loop
+site_dir: ../../glassops_site_build
+
+theme:
+    name: material
+    palette:
+        # Light mode
+        - media: "(prefers-color-scheme: light)"
+          scheme: default
+          primary: indigo
+          accent: deep purple
+          toggle:
+              icon: material/weather-sunny
+              name: Switch to dark mode
+        # Dark mode
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          primary: indigo
+          accent: deep purple
+          toggle:
+              icon: material/weather-night
+              name: Switch to light mode
+    features:
+        - navigation.indexes
+        - navigation.tabs
+        - navigation.sections
+        - navigation.expand
+        - content.code.copy
+        - content.action.edit
+
+markdown_extensions:
+    - admonition
+    - pymdownx.details
+    - pymdownx.superfences:
+          custom_fences:
+              - name: mermaid
+                class: mermaid
+                format: !!python/name:pymdownx.superfences.fence_code_format
+    - pymdownx.tabbed:
+          alternate_style: true
+    - pymdownx.highlight:
+          anchor_linenums: true
+    - attr_list
+    - md_in_html
+
+plugins:
+    - search
+
+exclude_docs: |
+    **node_modules/**
+    **venv/**
+    **__pycache__/**
+    **dist/**
+    **build/**
+    **coverage/**
+    **docs_staging/**
+    **glassops_site/**
+
+nav:
+    - Home: README.md
+
+    - Foundation:
+          - "Vision": docs/vision.md
+          - "Documentation Map": docs/doc-map.md
+          - "The 8/10 Constraint": docs/adr/009-8-10-vs-10-10-bridge-strategy.md
+          - "Compliance":
+                - "Contributing": CONTRIBUTING.md
+                - "Code License": LICENSE.md
+                - "Docs License": docs/LICENSE.md
+
+    - Protocol (The Law):
+          - "GlassOps Protocol": packages/glassspec/README.md
+          - "Identity Contract": docs/adr/010-identity-contract.md
+          - "Protocol ADRs": packages/glassspec/adr/README.md
+          - "Layered Contract Model": packages/glassspec/adr/001-layered-contract-model.md
+
+    - Architecture:
+          - "Overview": docs/architecture/overview.md
+          - "Control Plane": docs/adr/005-control-plane-architecture.md
+          - "Runtime Model": packages/runtime/adr/001-six-phase-execution.md
+          - "ADR Master Index": docs/adr-index.md
+          - "ADRs":
+                - "Platform ADRs Index": docs/adr/README.md
+                - "System API Primitive": docs/adr/001-system-api-primitive.md
+                - "GitHub Execution Authority": docs/adr/002-github-execution-authority.md
+                - "Additive Governance": docs/adr/003-additive-governance.md
+                - "Schema Contract Config": docs/adr/004-schema-contract-config.md
+                - "Documentation as Governed Artifact": docs/adr/006-documentation-as-governed-artifact.md
+                - "Protocol Supremacy Enforcement": docs/adr/007-protocol-supremacy-enforcement.md
+                - "Federated Documentation Structure": docs/adr/008-federated-documentation-structure.md
+                - "Monorepo Strategy": docs/adr/011-monorepo-strategy.md
+          - "Build Scripts": docs/scripts-build-docs.md
+
+    - Reference:
+          - "Platform Reference": docs/reference/platform-reference.md
+          - "Examples": examples/README.md
+
+    - Components:
+          - Platform:
+                - "Overview": packages/platform/README.md
+                - "Docs": packages/platform/docs/README.md
+                - "SFDX Project": packages/platform/docs/sfdx-project.md
+
+          - Runtime:
+                - "Overview": packages/runtime/README.md
+                - "Changelog": packages/runtime/CHANGELOG.md
+                - "Contributing": packages/runtime/CONTRIBUTING.md
+                - "Security": packages/runtime/SECURITY.md
+                - "Trademark": packages/runtime/TRADEMARK.md
+                - "ADRs": packages/runtime/adr/README.md
+                - "Docs":
+                      - "Jest Config": packages/runtime/docs/config-jest.config.md
+                      - "Jest Integration Config": packages/runtime/docs/config-jest.integration.config.md
+                      - "Jest Integration Setup": packages/runtime/docs/config-jest.integration.setup.md
+                      - "ESLint Config": packages/runtime/docs/eslint.config.md
+                      - "Integration Analyzer": packages/runtime/docs/integration-analyzer.integration.test.md
+                      - "Integration CLI Platform": packages/runtime/docs/integration-cli-platform.integration.test.md
+                      - "Integration CLI": packages/runtime/docs/integration-cli.integration.test.md
+                      - "Integration Contract": packages/runtime/docs/integration-contract.integration.test.md
+                      - "Integration Identity": packages/runtime/docs/integration-identity.integration.test.md
+                      - "Integration Policy": packages/runtime/docs/integration-policy.integration.test.md
+                      - "Integration Test Helpers": packages/runtime/docs/integration-test-helpers.md
+                      - "Package": packages/runtime/docs/package.md
+                      - "Protocol Contract": packages/runtime/docs/protocol-contract.md
+                      - "Protocol Contract Test": packages/runtime/docs/protocol-contract.test.md
+                      - "Protocol Policy": packages/runtime/docs/protocol-policy.md
+                      - "Protocol Policy Test": packages/runtime/docs/protocol-policy.test.md
+                      - "Services Analyzer": packages/runtime/docs/services-analyzer.md
+                      - "Services Analyzer Test": packages/runtime/docs/services-analyzer.test.md
+                      - "Services CLI": packages/runtime/docs/services-cli.md
+                      - "Services CLI Test": packages/runtime/docs/services-cli.test.md
+                      - "Services Identity": packages/runtime/docs/services-identity.md
+                      - "Services Identity Test": packages/runtime/docs/services-identity.test.md
+                      - "Source Index": packages/runtime/docs/src-index.md
+                      - "TSConfig": packages/runtime/docs/tsconfig.md
+                      - "Types Config": packages/runtime/docs/types-config.d.md
+                      - "Types Contract": packages/runtime/docs/types-contract.d.md
+                      - "Workflows Integration Tests": packages/runtime/docs/workflows-integration-tests.md
+                      - "Workflows Plugin Whitelist": packages/runtime/docs/workflows-plugin-whitelist-test.md
+                      - "Workflows Release": packages/runtime/docs/workflows-release.md
+                      - "Workflows Verify Auth": packages/runtime/docs/workflows-verify-auth-contract.md
+                      - "Workflows Verify Governance": packages/runtime/docs/workflows-verify-governance.md
+                      - "Workflows Verify Primitives": packages/runtime/docs/workflows-verify-primitives.md
+
+          - Control Plane:
+                - "Overview": packages/control-plane/README.md
+                - "ADRs": packages/control-plane/adr/README.md
+                - "Kubernetes Operator Pattern": packages/control-plane/adr/001-kubernetes-operator-pattern.md
+
+          - Knowledge:
+                - "Overview": packages/knowledge/README.md
+                - "Docs":
+                      - "Init": packages/knowledge/docs/__init__.md
+                      - "Config": packages/knowledge/docs/config.md
+                      - "Drift": packages/knowledge/docs/drift-__init__.md
+                      - "Drift Detection": packages/knowledge/docs/drift-detect_drift.md
+                      - "Embeddings": packages/knowledge/docs/embeddings-__init__.md
+                      - "Gemini Embedding": packages/knowledge/docs/embeddings-gemini_embedding.md
+                      - "Gemma Embedding": packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md
+                      - "Router Embedding": packages/knowledge/docs/embeddings-router_embedding.md
+                      - "Ingestion": packages/knowledge/docs/ingestion-__init__.md
+                      - "Federated Loader": packages/knowledge/docs/ingestion-federated_loader.md
+                      - "Index Builder": packages/knowledge/docs/ingestion-index_builder.md
+                      - "Main": packages/knowledge/docs/main.md
+                      - "RAG": packages/knowledge/docs/rag-__init__.md
+                      - "Query Engine": packages/knowledge/docs/rag-query_engine.md
+                      - "Utils": packages/knowledge/docs/utils-__init__.md
+                      - "Batch Utils": packages/knowledge/docs/utils-batch.md
+                      - "File Hash": packages/knowledge/docs/utils-file_hash.md
+                      - "Generated Drift Report": packages/knowledge/docs/generated/drift_report.md
+
+          - Adapters:
+                - "Adapter Development": packages/adapters/docs/adapter-development.md
+                - Native:
+                      - "Overview": packages/adapters/native/README.md
+                      - "ADRs": packages/adapters/native/adr/README.md
+                      - "Package": packages/adapters/native/docs/package.md
+                - Hardis:
+                      - "Overview": packages/adapters/hardis/README.md
+                      - "ADRs": packages/adapters/hardis/adr/README.md
+                      - "Package": packages/adapters/hardis/docs/package.md
+                - Scanner:
+                      - "Overview": packages/adapters/scanner/README.md
+                      - "Docs": packages/adapters/scanner/docs/README.md
+                      - "Package": packages/adapters/scanner/docs/package.md
+                      - "ADRs": packages/adapters/scanner/docs/adr/README.md
+                - MegaLinter:
+                      - "Overview": packages/adapters/megalinter/README.md
+                      - "Package": packages/adapters/megalinter/docs/package.md
+
+          - Tools:
+                - ADR Enforcer:
+                      - "Overview": packages/tools/adr-enforcer/README.md
+                      - "Architecture": packages/tools/adr-enforcer/architecture.md
+                      - "Docs": packages/tools/adr-enforcer/docs/README.md
+                      - "Package": packages/tools/adr-enforcer/docs/package.md
+                      - "ADRs": packages/tools/adr-enforcer/docs/adr/README.md
+                - Agent:
+                      - "Overview": packages/tools/agent/README.md
+                      - "Docs":
+                            - "Apex Adapter": packages/tools/agent/docs/adapters-apex-adapter.md
+                            - "Docker Adapter": packages/tools/agent/docs/adapters-docker-adapter.md
+                            - "Interface": packages/tools/agent/docs/adapters-interface.md
+                            - "JSON Adapter": packages/tools/agent/docs/adapters-json-adapter.md
+                            - "LWC Adapter": packages/tools/agent/docs/adapters-lwc-adapter.md
+                            - "MD Adapter": packages/tools/agent/docs/adapters-md-adapter.md
+                            - "Python Adapter": packages/tools/agent/docs/adapters-py-adapter.md
+                            - "Terraform Adapter": packages/tools/agent/docs/adapters-terraform-adapter.md
+                            - "TS Adapter": packages/tools/agent/docs/adapters-ts-adapter.md
+                            - "YML Adapter": packages/tools/agent/docs/adapters-yml-adapter.md
+                            - "ESLint Config": packages/tools/agent/docs/eslint.config.md
+                            - "Package": packages/tools/agent/docs/package.md
+                            - "Generator": packages/tools/agent/docs/src-generator.md
+                            - "Index": packages/tools/agent/docs/src-index.md
+                            - "LLM Client": packages/tools/agent/docs/src-llm-client.md
+                            - "Prompts": packages/tools/agent/docs/src-prompts.md
+                            - "Scanner": packages/tools/agent/docs/src-scanner.md
+                            - "Validator": packages/tools/agent/docs/src-validator.md
+                            - "TSConfig": packages/tools/agent/docs/tsconfig.md
