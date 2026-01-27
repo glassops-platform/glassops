@@ -1,0 +1,17 @@
+{
+  "name": "@glassops/megalinter-adapter",
+  "version": "0.1.0",
+  "description": "GlassOps adapter for MegaLinter static analysis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "glassops",
+    "megalinter",
+    "sarif",
+    "governance"
+  ],
+  "author": "Ryan Bumstead",
+  "license": "MIT"
+}
