@@ -1,0 +1,14 @@
+# GlassOps Runtime Code Owners
+# These owners will be automatically requested for review on PRs
+
+# Default owner for all files
+* @rdbumstead
+
+# Core protocol implementation
+/src/protocol/ @rdbumstead
+
+# CI/CD workflows
+/.github/workflows/ @rdbumstead
+
+# Action configuration
+/action.yml @rdbumstead

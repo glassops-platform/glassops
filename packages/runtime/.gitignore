@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build & Release
+# We IGNORE 'lib' (intermediate JS) but KEEP 'dist' (bundled action)
+lib/
+!dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+*.lcov
+junit.xml
+
+# Environment & Security (CRITICAL)
+# Never commit local secrets or keys
+.env
+.env.test
+*.key
+*.pem
+*.crt
+*.p12
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# GlassOps Specific
+# Ignore local artifacts from running tests/debug locally
+.glassops/deployment-contract.json
+.glassops/draft-*.json
+
+# Keep the policy files!
+# !.glassops/policy.json
+# !.glassops/policy.*.json
+
+# Local Configuration Overrides
+devops-config.local.json
