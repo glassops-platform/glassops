@@ -1,0 +1,20 @@
+name: 🧠 Ask the Knowledge Bot
+description: Ask a question about GlassOps and get an automated response from our documentation.
+title: "[Question]: <Your question here>"
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🤖 GlassOps Knowledge Bot
+        Ask a question about the protocol, adapters, or architecture. The bot will search the documentation and provide an answer below.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: |
+        What would you like to know?
+        Example: "How do I implement a custom adapter?" or "What are adoption levels?"
+      placeholder: Describe what you're looking for...
+    validations:
+      required: true

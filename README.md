@@ -1,5 +1,9 @@
 # GlassOps™
 
+[![Docs](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
+[![Runtime](https://github.com/glassops-platform/glassops/actions/workflows/runtime-integration-tests.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-integration-tests.yml)
+[![Governance](https://github.com/glassops-platform/glassops/actions/workflows/runtime-verify-governance.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-verify-governance.yml)
+
 > **Governance-first Salesforce DevOps.**
 >
 > GlassOps governs outcomes, not implementations.
@@ -90,7 +94,6 @@ You can stop at any level and still get value.
 
 - **In active development**
 - **Seeking testers and collaborators**
-- **Apache 2.0 licensed**
 
 ### Implementation Status
 
@@ -161,8 +164,6 @@ GlassOps is intentionally modular. You don't need to adopt the whole platform to
 - See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
 
 ---
-
-## License
 
 ## License
 
