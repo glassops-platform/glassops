@@ -1,7 +1,8 @@
 # query_engine.py
 import chromadb
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 from pathlib import Path
 from knowledge.embeddings.router_embedding import get_embeddings_for_docs
@@ -39,8 +40,6 @@ def query_index(query, n_results=5):
     sources = results['ids'][0]
 
     # Post-retrieval: Check for config-based file injection
-    # This ensures critical reports (like drift/audit) are present if keywords match, 
-    # overcoming vector similarity limitations.
     try:
         config_path = Path(__file__).parent.parent / "config" / "config.json"
         with open(config_path, "r", encoding="utf-8") as f:
@@ -95,10 +94,9 @@ def query_index(query, n_results=5):
          print(f"Warning: Could not load system_context from config: {e}")
 
     try:
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
         # Using user-specified model
         model_name = 'gemma-3-12b-it'
-        model = genai.GenerativeModel(model_name)
         
         prompt = f"""{system_context}
 
@@ -113,15 +111,11 @@ Question:
 
 Answer:"""
         
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt
+        )
         return f"{response.text}\n\nSources:\n- " + "\n- ".join(sources)
         
     except Exception as e:
-        # Debug helper: List available models
-        try:
-             models = list(genai.list_models())
-             # Filter for generateContent support
-             available = [m.name for m in models if 'generateContent' in m.supported_generation_methods]
-             return f"Error with model '{model_name}': {e}\n\nAvailable Models (for generating content): {available}"
-        except:
-             return f"Error generating response: {e}\n\nContext:\n{context_text[:500]}..."
+         return f"Error generating response: {e}\n\nContext:\n{context_text[:500]}..."
