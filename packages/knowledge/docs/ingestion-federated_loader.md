@@ -2,73 +2,48 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/ingestion/federated_loader.py
-last_modified: 2026-01-26
+last_modified: 2026-01-28
 generated: true
 source: packages/knowledge/ingestion/federated_loader.py
-generated_at: 2026-01-26T14:08:56.264Z
-hash: d8f8723cd2c6f186c687cbe57c2ba7a7db043f32baedb5b95deb38a2643d0766
+generated_at: 2026-01-28T22:45:46.084407
+hash: 16479342d05b9369478aa6657719d0de08cf932c3abacb79e515d7220a5e4e89
 ---
 
 ## Federated Document Loader Documentation
 
-This document details the functionality of the Federated Document Loader, a Python module designed to ingest, chunk, and hash documentation from a repository.  It is a core component for building knowledge bases from source code documentation, architectural decision records (ADRs), and other markdown-based documentation.
+This module provides functionality for discovering, chunking, and hashing documentation files within a repository. It is designed to prepare documentation for ingestion into a knowledge base or similar system. The primary goal is to break down large documents into smaller, manageable chunks while preserving contextual information.
 
-**Purpose:**
+**Key Responsibilities:**
 
-The primary goal of this module is to automatically discover documentation files within a specified directory structure, break them down into manageable chunks, and generate a unique hash for each chunk. This process prepares the documentation for efficient storage, retrieval, and use in applications like question answering systems or knowledge search.
+*   Locating documentation files (Markdown) within a specified directory structure.
+*   Reading the content of these files.
+*   Splitting the content into chunks based on document headers.
+*   Generating a SHA256 hash for each chunk to ensure content integrity and enable efficient comparison.
+*   Returning a list of dictionaries, each representing a chunk of documentation.
 
-**Key Features:**
+**Key Classes & Functions:**
 
-*   **Automated Discovery:**  The loader automatically identifies relevant documentation files based on predefined file patterns.
-*   **Flexible Chunking:**  Documentation is intelligently split into chunks based on markdown headers (## and #) to preserve contextual information.  If no headers are present, the entire file is treated as a single chunk.
-*   **Content Hashing:**  Each chunk is hashed using SHA256 to ensure data integrity and enable efficient change detection.
-*   **Robust Error Handling:**  The loader gracefully handles file reading errors and ignores specified directories.
-*   **Metadata Preservation:**  The original file path is stored alongside each chunk for provenance tracking.
+*   **`hash_content(text: str) -> str`**: This function takes a string as input and returns its SHA256 hash as a hexadecimal string. It is used to generate unique identifiers for each document chunk, allowing for efficient content comparison and deduplication. The type hint `str` specifies that both the input and output are strings.
 
-**Functionality:**
+*   **`discover_and_chunk_docs(root_dir: str = ".") -> List[Dict]`**: This is the core function of the module. It performs the following steps:
+    1.  **Document Discovery:** It searches for Markdown files (`.md`) within the `root_dir` (defaulting to the current directory) using a set of predefined glob patterns. These patterns include `docs`, `packages/docs`, `packages/adr`, and `packages/README.md` directories.
+    2.  **Path Handling:** It handles potential duplicate file paths and sorts the discovered paths for consistent processing.
+    3.  **Ignored Directories:** It skips files located within common directories that should not be included in the knowledge base (e.g., `node_modules`, `.git`).
+    4.  **File Reading:** It reads the content of each Markdown file, handling potential file reading errors gracefully. Empty files are skipped.
+    5.  **Chunking:** It splits the document content into chunks based on header levels. It prioritizes splitting by Level 2 headers (`##`) to maintain context within sections. If no Level 2 headers are found, it falls back to splitting by Level 1 headers (`#`). If no headers are present, the entire file is treated as a single chunk.
+    6.  **Chunk Metadata:** For each chunk, it creates a dictionary containing the following information:
+        *   `path`: A unique identifier for the chunk, combining the original file path with a chunk index (e.g., `path/to/file.md#chunk-0`).
+        *   `source_file`: The original file path from which the chunk was extracted.
+        *   `content`: The text content of the chunk.
+        *   `hash`: The SHA256 hash of the chunk's content.
+    7.  **Return Value:** It returns a list of these dictionaries, representing all the extracted and processed documentation chunks. The type hint `List[Dict]` indicates that the function returns a list of dictionaries.
 
-The module provides a single primary function:
+**Design Decisions & Patterns:**
 
-*   `discover_and_chunk_docs(root_dir=".")`:
-    *   **Input:**  `root_dir` (string, optional): The root directory to scan for documentation. Defaults to the current directory.
-    *   **Process:**
-        1.  **File Discovery:**  Scans the `root_dir` for files matching the following patterns:
-            *   `docs/**/*.md`
-            *   `packages/**/docs/**/*.md`
-            *   `packages/**/adr/**/*.md`
-            *   `packages/**/README.md`
-        2.  **Filtering:** Excludes files located within the following directories: `node_modules`, `venv`, `vnev`, `.git`, `__pycache__`, `dist`, and `site-packages`.
-        3.  **Chunking:** Reads the content of each identified file and splits it into chunks based on markdown headers (##, then #).
-        4.  **Hashing:** Calculates the SHA256 hash of each chunk.
-        5.  **Metadata Creation:** Creates a dictionary for each chunk containing:
-            *   `path`: A unique identifier for the chunk (e.g., `file/path.md#chunk-0`).
-            *   `source_file`: The original file path.
-            *   `content`: The text content of the chunk.
-            *   `hash`: The SHA256 hash of the chunk.
-    *   **Output:** A list of dictionaries, where each dictionary represents a single documentation chunk.
-
-**Dependencies:**
-
-*   `hashlib`:  For generating SHA256 hashes.
-*   `glob`: For file path pattern matching.
-*   `os`: For interacting with the operating system (file paths, directory traversal).
-*   `re`: For regular expression operations used in chunking.
-
-**Usage:**
-
-```python
-from packages.knowledge.ingestion.federated_loader import discover_and_chunk_docs
-
-docs = discover_and_chunk_docs(root_dir="/path/to/your/repository")
-
-for doc in docs:
-    print(f"Chunk Path: {doc['path']}")
-    print(f"Chunk Hash: {doc['hash']}")
-    # Further processing of the 'content' can be done here
-```
-
-**Considerations:**
-
-*   **Chunk Size:** The chunking strategy aims to create semantically meaningful chunks based on headers.  However, very large files with minimal structure may result in large chunks.
-*   **Encoding:** The module assumes UTF-8 encoding for all documentation files.
-*   **Performance:** For very large repositories, the file discovery and processing steps may take a significant amount of time.
+*   **Glob Patterns:** The use of glob patterns provides a flexible way to specify the locations of documentation files.
+*   **Header-Based Chunking:** Splitting documents based on headers is a semantic approach that aims to preserve context and create more meaningful chunks.
+*   **Error Handling:** The `try...except` block ensures that the process continues even if some files cannot be read.
+*   **Hashing:** The use of SHA256 hashing provides a reliable way to identify and compare document chunks.
+*   **Type Hints:** Type hints are used throughout the code to improve readability and maintainability, and to enable static analysis.
+*   **Clear Metadata:** The inclusion of both a unique `path` and the original `source_file` allows for easy tracking and referencing of chunks.
+*   **Robust Ignoring:** The explicit list of ignored directories prevents unwanted files from being processed.

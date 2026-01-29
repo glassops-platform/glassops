@@ -5,7 +5,8 @@ GlassOps Knowledge Pipeline
 - Compute embeddings (with router/fallback)
 - Build/update vector store
 - Detect semantic drift
-- Example RAG query
+- RAG query
+- Documentation generation from source code
 """
 
 import json
@@ -24,6 +25,7 @@ from knowledge.embeddings.router_embedding import get_embeddings_for_docs
 from knowledge.ingestion.index_builder import build_or_update_index
 from knowledge.drift.detect_drift import detect_drift
 from knowledge.rag.query_engine import query_index
+from knowledge.generation import Generator
 
 # Optional: load config
 from dotenv import load_dotenv
@@ -38,12 +40,36 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
 
 import argparse
 
+def run_generate(patterns: list[str]) -> None:
+    """Run documentation generation for the given patterns."""
+    print("🚀 Starting documentation generation...")
+    generator = Generator(str(ROOT_DIR))
+    generator.run(patterns)
+
+
 def run_pipeline():
     parser = argparse.ArgumentParser(description="GlassOps Knowledge Pipeline")
     parser.add_argument("--query", "-q", type=str, help="Run a RAG query against the knowledge base")
     parser.add_argument("query_pos", nargs="*", help="Positional query string (joined by space)")
     parser.add_argument("--index", "-i", action="store_true", help="Force re-indexing of documents")
+    parser.add_argument("--generate", "-g", action="store_true", help="Generate documentation from source code")
+    parser.add_argument("--pattern", "-p", type=str, action="append", dest="patterns",
+                        help="Glob pattern(s) for --generate (can be specified multiple times)")
     args = parser.parse_args()
+
+    # Documentation generation mode
+    if args.generate:
+        patterns = args.patterns if args.patterns else [
+            "packages/**/*.go",
+            "packages/**/*.py",
+            "packages/**/*.ts",
+            "!**/node_modules/**",
+            "!**/dist/**",
+            "!**/venv/**",
+            "!**/__pycache__/**",
+        ]
+        run_generate(patterns)
+        return
 
     # Consolidate query from flag OR positional args
     final_query = args.query

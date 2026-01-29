@@ -2,43 +2,54 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/__init__.py
-last_modified: 2026-01-26
+last_modified: 2026-01-28
 generated: true
 source: packages/knowledge/__init__.py
-generated_at: 2026-01-26T14:05:37.166Z
-hash: 4439cf8d1ca7be4e91550ccd28dea201149b96936957f7b9275a00a74140ba08
+generated_at: 2026-01-28T22:38:19.247813
+hash: a295383fffe5caa9562c06e539020acd2d587f6d580a11dfe83fe0084093e701
 ---
 
 ## Knowledge Package Documentation
 
-The `knowledge` package provides a comprehensive set of tools for building and utilizing knowledge-based systems, specifically focused on Retrieval-Augmented Generation (RAG) pipelines. This document outlines the package's functionality and key components.
+This package provides tools for building and maintaining a knowledge base, enabling applications to reason about and retrieve information from documents. It supports document ingestion, embedding generation, index creation, drift detection, and querying.
 
-**Core Functionality:**
+**Module Responsibilities:**
 
-This package streamlines the process of ingesting documents, creating semantic representations (embeddings), detecting changes in data distributions (drift), and querying the knowledge base to retrieve relevant information.  It is designed to be modular and adaptable to various data sources and use cases.
+The `knowledge` package serves as the central component for managing document-based knowledge. It orchestrates the process of transforming raw documents into a searchable and analyzable form. The core functionality revolves around creating and maintaining a vector index, which allows for efficient similarity searches.
 
-**Modules and Functions:**
+**Key Components:**
 
-*   **`run_pipeline()`:**  This is the primary entry point for executing the complete knowledge pipeline. It orchestrates document ingestion, embedding generation, index creation/update, and drift detection.  Details on specific configuration options for the pipeline are available in the module documentation.
+*   **`run_pipeline` (Function):** This is the primary entry point for the knowledge management process. It encapsulates the complete workflow, from document discovery to index updates. It simplifies the process of keeping the knowledge base current.
 
-*   **`get_embeddings_for_docs()`:**  Generates vector embeddings for a collection of documents. Embeddings capture the semantic meaning of the text, enabling efficient similarity searches.
+*   **`get_embeddings_for_docs` (Function):** This function takes a list of documents as input and generates vector embeddings for each document. These embeddings represent the semantic meaning of the documents and are used for similarity searches.
 
-*   **`discover_and_chunk_docs()`:**  Identifies documents from specified sources and divides them into smaller, manageable chunks.  This process is crucial for handling large documents and improving retrieval accuracy.
+*   **`discover_and_chunk_docs` (Function):** This function identifies documents from a specified source and divides them into smaller, manageable chunks. This chunking process is important for handling large documents and improving search relevance.
 
-*   **`build_or_update_index()`:**  Creates or updates a vector index from document embeddings. The index facilitates fast and efficient retrieval of relevant information based on semantic similarity.
+*   **`build_or_update_index` (Function):** This function creates a vector index from a collection of documents and their corresponding embeddings. If an index already exists, it updates it with new or modified documents.
 
-*   **`detect_drift()`:**  Monitors the knowledge base for data drift – changes in the underlying data distribution.  Drift detection is essential for maintaining the accuracy and relevance of the knowledge system over time.
+*   **`detect_drift` (Function):** This function monitors the knowledge base for concept drift. It assesses whether the underlying data distribution has changed, which could indicate the need for retraining or updating the knowledge base.
 
-*   **`query_index()`:**  Performs a semantic search against the vector index to retrieve documents relevant to a given query. This function is the core of the RAG process, enabling the system to provide informed responses.
+*   **`query_index` (Function):** This function allows you to search the vector index using a query string. It returns the most relevant documents based on semantic similarity.
 
-*   **`hash_file()`:**  Calculates a unique hash value for a given file. This is used for change detection and ensuring data integrity.
+*   **`hash_file` (Function):** This utility function calculates a hash value for a given file. This is used to detect changes in documents and avoid redundant processing.
 
-*   **`batch_items()`:**  Processes items in batches, optimizing performance for large datasets. This function is used internally to improve efficiency in several other modules.
+*   **`batch_items` (Function):** This utility function divides a list of items into smaller batches. This is helpful for processing large datasets in a memory-efficient manner.
+
+**Type Hints:**
+
+All functions within this package are annotated with type hints. These hints specify the expected data types for function arguments and return values. Type hints improve code readability, maintainability, and help catch errors during development. They allow for static analysis and better integration with development tools.
+
+**Design Patterns and Decisions:**
+
+The package is designed around a pipeline architecture, where data flows through a series of processing steps. This approach promotes modularity and allows for easy customization and extension. The use of vector embeddings and a vector index enables efficient similarity searches and semantic reasoning. The inclusion of drift detection functionality ensures that the knowledge base remains accurate and relevant over time. We aim to provide a flexible and scalable solution for managing document-based knowledge.
 
 **Usage:**
 
-Users typically interact with the `knowledge` package through the `run_pipeline()` function, configuring it to suit their specific needs. Individual functions can also be used directly for more granular control over the knowledge processing steps.
+You can access the functions within this package by importing them directly:
 
-**Dependencies:**
+```python
+from knowledge import run_pipeline, query_index
 
-The `knowledge` package relies on external libraries for tasks such as embedding generation, vector storage, and document loading. Specific dependency details are available in the package's `requirements.txt` file.
+# Example usage:
+run_pipeline()
+results = query_index("your search query")
