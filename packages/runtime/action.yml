@@ -1,0 +1,62 @@
+name: 'GlassOps Runtime'
+description: 'Bootstraps a governed Salesforce execution environment adhering to the GlassOps Protocol.'
+author: 'Ryan Bumstead'
+branding:
+    icon: 'shield'
+    color: 'blue'
+
+inputs:
+    jwt_key:
+        description: 'Private Key for JWT flow'
+        required: true
+    client_id:
+        description: 'External Client App Consumer Key'
+        required: true
+    username:
+        description: 'Target Org Username'
+        required: true
+    instance_url:
+        description: 'Salesforce login URL (e.g., https://login.salesforce.com or https://test.salesforce.com)'
+        default: 'https://login.salesforce.com'
+        required: false
+
+    enforce_policy:
+        description: 'If true, scans devops-config.json before allowing CLI use'
+        default: 'true'
+        required: false
+
+    test_results:
+        description: 'JSON string with test results: {"total": 100, "passed": 95, "failed": 5}'
+        required: false
+
+    coverage_percentage:
+        description: 'Code coverage percentage (0-100)'
+        required: false
+
+    coverage_required:
+        description: 'Required coverage percentage threshold'
+        default: '80'
+        required: false
+
+    plugins:
+        description: "Comma-separated list of Salesforce CLI plugins to install (e.g., 'sfdx-hardis,@salesforce/plugin-deploy-retrieve')"
+        required: false
+
+    skip_auth:
+        description: 'If true, skips Salesforce authentication (useful for CI/governance testing)'
+        default: 'false'
+        required: false
+
+outputs:
+    runtime_id:
+        description: 'Unique ID for this execution session'
+    org_id:
+        description: 'Authenticated Org ID'
+    is_locked:
+        description: 'True if the environment is currently frozen by policy'
+    contract_path:
+        description: 'Path to the generated deployment contract JSON file'
+
+runs:
+    using: 'node20'
+    main: 'dist/index.js'
