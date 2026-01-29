@@ -2,57 +2,48 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/ingestion/index_builder.py
-last_modified: 2026-01-26
+last_modified: 2026-01-28
 generated: true
 source: packages/knowledge/ingestion/index_builder.py
-generated_at: 2026-01-26T14:09:14.662Z
-hash: 39cd37b37940da1b0b27c716bcc04f941ca3c4ed3407426dd21610052be0113d
+generated_at: 2026-01-28T22:46:07.999394
+hash: 9c54c23a508d4b3fccdf0915b486a5525e52745057e432f05a5f2dd21d3dbe91
 ---
 
-## GlassOps Knowledge Index Builder Documentation
+## Glassops Knowledge Index Builder Documentation
 
-**1. Introduction**
+This document details the functionality of the knowledge index builder, a component responsible for creating and maintaining a vector store of knowledge documents using ChromaDB. This vector store enables efficient similarity searches for question answering and knowledge retrieval.
 
-The Knowledge Index Builder is a Python component responsible for creating and maintaining a vector store index of knowledge base documents. This index enables efficient semantic search and retrieval of information. It leverages ChromaDB, an open-source vector database, for storing and querying document embeddings.
+**Module Purpose:**
 
-**2. Functionality**
+The primary responsibility of this module is to ingest document embeddings and store them in a ChromaDB collection. It handles the initialization of the ChromaDB client, collection creation (if it doesn’t exist), and the population of the collection with document data and their corresponding vector representations. The module supports updating the index with new or modified documents.
 
-The core function, `build_or_update_index`, processes a list of document-embedding pairs and populates or updates the ChromaDB index.  The process involves:
+**Key Classes & Roles:**
 
-*   **Initialization:** Establishes a connection to a ChromaDB instance configured for persistent storage. The index data is stored locally in a directory named `glassops_index` within the current working directory.
-*   **Collection Management:**  Retrieves an existing ChromaDB collection named `glassops_knowledge` or creates a new one if it doesn't exist. The collection is configured to use cosine similarity for vector comparisons (`hnsw:space = "cosine"`).
-*   **Data Preparation:** Extracts relevant information (document content, path, hash, and embedding vector) from the input data. Document paths are used as unique identifiers within the index. Metadata, including document path and hash, is stored alongside each embedding for enhanced context and traceability.
-*   **Index Update:**  Utilizes ChromaDB’s `upsert` operation to add new documents and update existing ones.  `upsert` efficiently handles both insertion and update operations based on the document ID (path).
-*   **Error Handling:** Includes basic error handling to catch and report exceptions during the indexing process.
+*   **`chromadb.PersistentClient`:** This class from the ChromaDB library is used to establish a connection to a ChromaDB instance with persistent storage. The `PersistentClient` ensures that the vector store data is saved to disk and available across sessions.
+*   **`chromadb.Collection`:** Represents a collection within ChromaDB where document embeddings are stored and managed. We create or retrieve a collection named "glassops_knowledge" to hold our knowledge base.
 
-**3. Input**
+**Important Functions & Behavior:**
 
-The `build_or_update_index` function accepts a single argument:
+*   **`build_or_update_index(embeddings)`:** This is the core function of the module. It accepts a list of tuples, where each tuple contains a document dictionary and its associated embedding vector.
+    *   **Input:** `embeddings` – A list of tuples. Each tuple contains a dictionary representing a document (with keys like "path", "content", and "hash") and a list of floats representing the document’s embedding vector. Type hint: `list[tuple[dict, list[float]]]`.
+    *   **Process:**
+        1.  Determines the persistence directory for the ChromaDB database ("glassops\_index" within the current working directory).
+        2.  Initializes a `chromadb.PersistentClient` to connect to the ChromaDB instance.
+        3.  Retrieves an existing collection named "glassops\_knowledge" or creates a new one if it doesn’t exist. The collection is configured to use cosine similarity for distance calculations (`metadata={"hnsw:space": "cosine"}`).
+        4.  Extracts document IDs, content, metadata, and embedding vectors from the input `embeddings` list. The document's "path" is used as the unique identifier for each document. Metadata includes both the document "path" and its "hash".
+        5.  Handles the case where the input `embeddings` list is empty, printing a message and returning early.
+        6.  Uses the `upsert` method of the ChromaDB collection to add or update documents in the vector store. The `upsert` operation efficiently handles both new documents and updates to existing documents based on their IDs.
+    *   **Output:** None. The function modifies the ChromaDB collection directly. Prints success or error messages to the console.
 
-*   `embeddings`: A list of tuples. Each tuple contains:
-    *   `doc_dict`: A dictionary representing a document with the following keys:
-        *   `path`: (string) The file path of the document.  Used as the unique identifier in the index.
-        *   `content`: (string) The textual content of the document.
-        *   `hash`: (string) A hash value representing the document's content.
-    *   `embedding_vector`: (list of floats) The numerical vector representation (embedding) of the document's content.
+**Type Hints:**
 
-**4. Output**
+Type hints are used throughout the code to improve readability and maintainability. They specify the expected data types for function arguments and return values. For example, `embeddings: list[tuple[dict, list[float]]]` clearly indicates that the `embeddings` argument should be a list of tuples, where each tuple contains a dictionary and a list of floats.
 
-The function does not explicitly return a value.  Its primary effect is to modify the ChromaDB index.  It provides console output indicating success or failure, along with the number of documents indexed.
+**Notable Patterns & Design Decisions:**
 
-**5. Dependencies**
-
-*   **ChromaDB:**  A Python client for ChromaDB is required (`chromadb`).
-*   **Python Standard Library:**  The `os` module is used for file path manipulation.
-
-**6. Configuration**
-
-*   **Persistence Directory:** The ChromaDB index is stored in a directory named `glassops_index` in the current working directory.
-*   **Collection Name:** The ChromaDB collection is named `glassops_knowledge`.
-*   **Similarity Metric:** Cosine similarity is used for vector comparisons within the ChromaDB collection.
-
-**7. Considerations**
-
-*   **Document Identification:** The document `path` is used as the unique identifier in the index. This allows for easy updating of documents if their content changes.
-*   **Immutability:** Using the document `hash` as the ID would provide a degree of immutability, preventing accidental overwrites. The current implementation prioritizes update-in-place behavior.
-*   **Error Handling:** The current error handling is basic. More robust error handling and logging may be necessary for production environments.
+*   **Persistence:** The use of `chromadb.PersistentClient` ensures that the vector store is saved to disk, allowing for data persistence across sessions.
+*   **Upsert for Updates:** The `upsert` operation is used to efficiently handle both the addition of new documents and the updating of existing documents. Using the document "path" as the ID allows for easy updates when the content at that path changes.
+*   **Metadata Storage:** Storing both the document "path" and "hash" as metadata provides flexibility for future use cases, such as versioning or content verification.
+*   **Error Handling:** A `try-except` block is used to catch potential exceptions during the `upsert` operation, providing informative error messages to the user.
+*   **ID Strategy:** The document path is used as the ID for indexing. This simplifies updates, as changes to a document at the same path will overwrite the existing entry. Using the hash would create immutable entries.
+*   **Cosine Similarity:** The collection is configured to use cosine similarity, a common metric for measuring the similarity between vector embeddings.

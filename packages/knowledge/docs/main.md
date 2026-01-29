@@ -2,52 +2,51 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/main.py
-last_modified: 2026-01-26
+last_modified: 2026-01-28
 generated: true
 source: packages/knowledge/main.py
-generated_at: 2026-01-26T14:05:22.543Z
-hash: 5d41e9d3d8607148f1424259cfb9527ae1a07fa000c2fd7e26bcf294e21ed089
+generated_at: 2026-01-28T22:47:20.774856
+hash: 7e73371cb5cef0a28a05248d302b108fff4651aa1e1a0eacbb6a40b57634ac4d
 ---
 
-# GlassOps Knowledge Pipeline Documentation
+## GlassOps Knowledge Pipeline Documentation
 
-## Overview
+This document describes the GlassOps Knowledge Pipeline, a system designed to ingest, process, and query documentation from various sources. It supports automated documentation generation, semantic drift detection, and retrieval-augmented generation (RAG) for answering questions based on the knowledge base.
 
-The GlassOps Knowledge Pipeline is a system designed to ingest, process, and query documentation from various sources (federated documentation). It leverages embeddings and a vector store to enable semantic search and Retrieval-Augmented Generation (RAG) for answering questions based on the knowledge base.  The pipeline includes drift detection to identify outdated or semantically changed documents.
+**Module Purpose and Responsibilities:**
 
-## Core Functionality
+The `main.py` module serves as the entry point and orchestrator for the entire knowledge pipeline. It handles argument parsing, calls individual components for document loading, embedding generation, index building, drift detection, and query execution.  It also includes functionality for generating documentation from source code.
 
-The pipeline performs the following key steps:
+**Key Classes and Their Roles:**
 
-1.  **Documentation Discovery & Chunking:**  Identifies and retrieves documentation from multiple sources, then divides it into manageable chunks.
-2.  **Embedding Generation:**  Creates vector embeddings for each document chunk using a router that prioritizes Gemini and falls back to Gemma. Embeddings represent the semantic meaning of the text.
-3.  **Vector Store Management:** Builds or updates a vector store (database) containing the embeddings, enabling efficient similarity searches.
-4.  **Semantic Drift Detection:**  Monitors the knowledge base for semantic drift, identifying documents whose meaning has changed significantly over time.
-5.  **Retrieval-Augmented Generation (RAG):**  Answers user queries by retrieving relevant document chunks from the vector store and using them to augment the query to a language model.
+*   **`Generator` (from `knowledge.generation`):** This class is responsible for generating documentation from source code files based on provided patterns. It takes the root directory of the project as input and processes files matching the specified glob patterns.
+*   Other classes are primarily functions within modules, but represent core pipeline components:
+    *   `discover_and_chunk_docs` (from `knowledge.ingestion.federated_loader`): Locates and prepares documentation for embedding.
+    *   `get_embeddings_for_docs` (from `knowledge.embeddings.router_embedding`): Creates vector representations of the documentation.
+    *   `build_or_update_index` (from `knowledge.ingestion.index_builder`): Manages the vector store.
+    *   `detect_drift` (from `knowledge.drift.detect_drift`): Identifies changes in the semantic meaning of the documentation.
+    *   `query_index` (from `knowledge.rag.query_engine`): Executes queries against the vector store and returns relevant results.
 
-## Usage
+**Important Functions and Their Behavior:**
 
-The pipeline can be executed from the command line.  Here's a breakdown of the available options:
+*   **`run_generate(patterns: list[str]) -> None`:**  This function initiates the documentation generation process. It takes a list of file patterns (glob strings) as input and uses the `Generator` class to create documentation for files matching those patterns.
+*   **`run_pipeline()`:** This is the main function that drives the entire pipeline. It parses command-line arguments, determines the appropriate course of action (querying, indexing, generating documentation), and calls the necessary functions to execute the selected tasks.
+*   **`discover_and_chunk_docs() -> list`:** This function discovers documentation from various sources and splits it into smaller chunks suitable for embedding. The specific sources and chunking strategy are defined within the `knowledge.ingestion.federated_loader` module.
+*   **`get_embeddings_for_docs(docs: list, batch_size: int) -> list`:** This function computes embeddings for a list of document chunks. It uses a router to select an embedding model (Gemini is primary, Gemma is a fallback). The `batch_size` parameter controls the number of documents processed in each batch.
+*   **`build_or_update_index(embeddings: list) -> None`:** This function builds or updates a vector store (index) using the provided embeddings. The vector store is used for efficient similarity search during query time.
+*   **`detect_drift(embeddings: list, threshold: float) -> list`:** This function detects semantic drift in the documentation by comparing the current embeddings to a baseline. Documents with a drift score above the specified `threshold` are flagged as drifted.
+*   **`query_index(query: str) -> str`:** This function executes a query against the vector store and returns the most relevant results. It uses a retrieval-augmented generation (RAG) approach to combine the retrieved results with a language model to generate a comprehensive answer.
 
-*   `python packages/knowledge/main.py`: Runs the entire pipeline, including documentation discovery, embedding generation, index building, drift detection, and an example RAG query.
-*   `python packages/knowledge/main.py --query "your question"` or `python packages/knowledge/main.py "your question"`:  Performs a RAG query against the existing knowledge base.  The query is provided either via the `--query` flag or as positional arguments.
-*   `python packages/knowledge/main.py --index`: Forces a complete re-indexing of the documentation, including discovery, embedding generation, and vector store update.  This is useful when the source documentation has changed significantly.
+**Type Hints and Their Significance:**
 
-## Configuration
+The code makes extensive use of type hints (e.g., `patterns: list[str]`, `batch_size: int`, `-> None`, `-> list`). These hints improve code readability, maintainability, and allow for static analysis to catch potential errors early in the development process. They clearly define the expected data types for function arguments and return values.
 
-The pipeline's behavior is configurable through a `config.json` file located at `packages/knowledge/config/config.json`.  Key configurable parameters include:
+**Notable Patterns and Design Decisions:**
 
-*   `batch_size`:  The number of documents processed in each batch during embedding generation.  Defaults to 10.
-*   `drift_threshold`: The threshold used for semantic drift detection.  Documents with a drift score above this threshold are flagged. Defaults to 0.85.
-
-The pipeline also supports loading environment variables from a `.env` file located in the project root directory.
-
-## Technical Details
-
-*   **Dependencies:** The pipeline relies on several Python packages, including `dotenv`, and internal modules from the `knowledge` package.
-*   **Embedding Router:** The pipeline uses a router to select the embedding model. It prioritizes Gemini and falls back to Gemma if Gemini is unavailable.
-*   **Vector Store:** The specific vector store implementation is not detailed in the provided code, but it is assumed to be managed by the `build_or_update_index` function.
-*   **Drift Detection:** The `detect_drift` function identifies documents that have undergone semantic changes based on a configurable threshold.
-*   **Error Handling:** The code does not explicitly demonstrate error handling, but a production implementation should include robust error handling and logging.
-*   **Path Management:** Uses `pathlib` for robust and platform-independent path manipulation.
-*   **sys.path Modification:** Dynamically adds the `packages` directory to `sys.path` to allow execution from the project root.
+*   **Configuration Management:** The pipeline loads configuration parameters from a `config.json` file, allowing for easy customization of settings such as batch size and drift threshold.  It also supports loading environment variables from a `.env` file.
+*   **Command-Line Interface:** The pipeline is designed to be run from the command line, with options for querying the knowledge base, forcing re-indexing, and generating documentation.
+*   **Modularity:** The pipeline is broken down into smaller, reusable modules, each responsible for a specific task. This promotes code organization and maintainability.
+*   **Embedding Router:** The use of an embedding router allows for flexibility in choosing the appropriate embedding model based on factors such as cost, performance, and availability.
+*   **Semantic Drift Detection:** The inclusion of semantic drift detection helps to ensure that the knowledge base remains up-to-date and accurate.
+*   **Error Handling:** While not explicitly shown in this overview, robust error handling is expected within the individual modules to ensure the pipeline's stability.
+*   **Path Management:** The code uses `pathlib.Path` for robust and platform-independent path manipulation.

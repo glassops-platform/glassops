@@ -2,78 +2,48 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/embeddings/router_embedding.py
-last_modified: 2026-01-26
+last_modified: 2026-01-28
 generated: true
 source: packages/knowledge/embeddings/router_embedding.py
-generated_at: 2026-01-26T14:10:35.791Z
-hash: 6ca89adeea1efe2c51cd06b358350c1e92bb78b0436fe0e0e6afb922f9c594de
+generated_at: 2026-01-28T22:40:14.293849
+hash: 49a09ab49ded32a47ef1514aba557a72be4f60b26c06cb948ff12be0d674bc98
 ---
 
 ## Router Embedding Documentation
 
-**Document Version:** 1.0
-**Date:** October 26, 2023
-**Author:** AI Documentation Generator
+This module provides a routing mechanism for generating embeddings from a collection of documents. It prioritizes a primary embedding model and seamlessly falls back to a secondary model if rate limits are encountered with the primary. This ensures continuous operation even when facing API restrictions.
 
-### 1. Introduction
+**Module Responsibilities:**
 
-This document details the `router_embedding.py` module, responsible for generating embeddings for text documents using a prioritized approach. Embeddings are numerical representations of text, used for tasks like semantic search and similarity analysis. This module intelligently routes embedding requests between a primary, high-quality embedding model and a fallback model, managing potential rate limits and ensuring continuous operation.
+The primary responsibility of this module is to abstract the complexity of managing multiple embedding models and their potential limitations. It handles batch processing of documents and intelligently switches between models to maximize throughput and reliability.
 
-### 2. Functionality
+**Key Classes:**
 
-The core functionality of this module is to provide a robust and reliable embedding service. It prioritizes a preferred embedding model (`GeminiEmbedding`) but seamlessly switches to a fallback model (`Gemma12bItEmbedding`) if rate limits are encountered with the primary service. This ensures that embedding requests are always processed, even under high load or temporary service disruptions.
+*   **`RPDLimitError` (Exception):** A custom exception class raised when the primary embedding service encounters a rate limit or quota issue. This signals the need to switch to the fallback model.
+*   **`GeminiEmbedding` (from `gemini_embedding`):** Represents the primary embedding service. It is responsible for generating embeddings using the Gemini model.
+*   **`Gemma12bItEmbedding` (from `gemma_12b_it_embedding`):** Represents the fallback embedding service. It generates embeddings using the Gemma 12B Italian model. This model is used when the primary service is unavailable due to rate limits.
 
-### 3. Components
+**Important Functions:**
 
-*   **`GeminiEmbedding`:**  A class representing the primary embedding model.  This model is assumed to provide higher quality embeddings but may be subject to usage quotas.
-*   **`Gemma12bItEmbedding`:** A class representing the fallback embedding model. This model provides a secondary option for generating embeddings when the primary model is unavailable due to rate limits.
-*   **`RPDLimitError`:** A custom exception raised when the primary embedding model (`GeminiEmbedding`) exceeds its rate limit or quota.
-*   **`get_embeddings_for_docs(docs, batch_size=10)`:** The primary function of the module. It takes a list of documents and generates embeddings for each document.
+*   **`get_embeddings_for_docs(docs: list[dict], batch_size: int = 10) -> list[tuple[dict, list[float]]]`:**
+    *   **Purpose:** This function takes a list of documents and generates embeddings for each document.
+    *   **Parameters:**
+        *   `docs` (list of dictionaries): A list of documents, where each document is a dictionary containing a "content" key with the text to be embedded.
+        *   `batch_size` (int, optional): The number of documents to process in each batch. Defaults to 10.  Adjusting this value can impact performance and rate limit behavior.
+    *   **Behavior:**
+        1.  It initializes instances of the `GeminiEmbedding` (primary) and `Gemma12bItEmbedding` (fallback) classes.
+        2.  It iterates through the documents in batches.
+        3.  For each batch, it attempts to generate embeddings using the primary `GeminiEmbedding` service.
+        4.  If a `RPDLimitError` is raised (indicating a rate limit), it falls back to using the `Gemma12bItEmbedding` service for that batch.
+        5.  The function pairs each original document with its corresponding embedding and appends it to the `embeddings` list.
+        6.  Finally, it returns a list of tuples, where each tuple contains a document and its embedding.
+    *   **Return Value:** A list of tuples. Each tuple contains a document (dictionary) and its corresponding embedding (list of floats).
+    *   **Type Hints:** The function uses type hints to clearly define the expected input and output types, improving code readability and maintainability.
 
-### 4. `get_embeddings_for_docs` Function Details
+**Design Decisions and Patterns:**
 
-**Purpose:** Generates embeddings for a list of documents, utilizing a primary embedding model with automatic fallback to a secondary model if rate limits are hit.
-
-**Parameters:**
-
-*   `docs` (list): A list of dictionaries, where each dictionary represents a document and *must* contain a key named `"content"` holding the text to be embedded.
-*   `batch_size` (int, optional): The number of documents to process in each batch.  Defaults to 10.  Larger batch sizes can improve throughput but may increase the likelihood of hitting rate limits.
-
-**Return Value:**
-
-*   `list`: A list of tuples. Each tuple contains the original document (dictionary) and its corresponding embedding (list of floats).
-
-**Error Handling:**
-
-*   The function handles `RPDLimitError` exceptions, which are raised by the `GeminiEmbedding` class when rate limits are exceeded.  Upon catching this exception, the function automatically switches to the `Gemma12bItEmbedding` model for the current batch.
-
-**Workflow:**
-
-1.  The function iterates through the input `docs` list in batches of size `batch_size`.
-2.  For each batch, it attempts to generate embeddings using the `GeminiEmbedding` model.
-3.  If the `GeminiEmbedding` model raises an `RPDLimitError`, the function falls back to using the `Gemma12bItEmbedding` model for that batch.
-4.  The function extends the `embeddings` list with tuples of (document, embedding) for each processed document.
-5.  A progress indicator is printed to the console during processing.
-6.  Finally, the function returns the complete list of (document, embedding) tuples.
-
-### 5. Dependencies
-
-*   `gemini_embedding.py`
-*   `gemma_12b_it_embedding.py`
-
-### 6. Usage Example
-
-```python
-from packages.knowledge.embeddings.router_embedding import get_embeddings_for_docs
-
-documents = [
-    {"content": "This is the first document."},
-    {"content": "This is the second document."},
-    {"content": "And this is the third one."}
-]
-
-embeddings = get_embeddings_for_docs(documents, batch_size=2)
-
-for doc, embedding in embeddings:
-    print(f"Document: {doc['content']}")
-    print(f"Embedding: {embedding[:5]}...") # Print only the first 5 elements for brevity
+*   **Fallback Mechanism:** The core design pattern is a fallback mechanism. This ensures resilience against API rate limits or service outages.
+*   **Batch Processing:** Processing documents in batches improves efficiency and reduces the number of API calls.
+*   **Clear Error Handling:** The custom `RPDLimitError` exception provides a specific signal for rate limit events, allowing for targeted fallback behavior.
+*   **Loose Coupling:** The module relies on separate classes for each embedding service, promoting modularity and making it easier to add or replace embedding models in the future.
+*   **Progress Indicator:** The print statement within the loop provides a simple progress indicator to the user, showing the processing status. You may want to replace this with a more sophisticated logging mechanism in a production environment.
