@@ -1,8 +1,6 @@
 # GlassOps™
 
 [![Docs](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
-[![Runtime](https://github.com/glassops-platform/glassops/actions/workflows/runtime-integration-tests.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-integration-tests.yml)
-[![Governance](https://github.com/glassops-platform/glassops/actions/workflows/runtime-verify-governance.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-verify-governance.yml)
 
 > **Governance-first Salesforce DevOps.**
 >
