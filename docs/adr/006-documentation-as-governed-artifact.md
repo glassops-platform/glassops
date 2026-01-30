@@ -23,7 +23,7 @@ We're not asking: "Should GlassOps generate documentation?"
 
 We're asking: **"Should documentation be a governed, enforceable, first-class signal in GlassOps?"**
 
-Once you see it that way, RepoAgent + MkDocs aren't tooling choices — they're reference implementations of a capability.
+Once you see it that way, GlassOps Knowledge + MkDocs aren't tooling choices — they're reference implementations of a capability.
 
 ---
 
@@ -45,7 +45,7 @@ Documentation becomes the **9th substrate** (joining Code, Cloud, Network, Analy
 Code / IaC / Config
         │
         ▼
-RepoAgent (AST + Auto Docs)
+GlassOps Knowledge (AST + Auto Docs)
         │
         ▼
 Structured Doc Artifacts

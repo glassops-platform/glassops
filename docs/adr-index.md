@@ -43,9 +43,9 @@ Architecture Decision Records (ADRs) capture important architectural decisions a
 
 **Runtime execution decisions for GitHub Actions adapter**
 
-| ADR                                                       | Title                   | Status   | Date       |
-| --------------------------------------------------------- | ----------------------- | -------- | ---------- |
-| [001](../packages/runtime/adr/001-six-phase-execution.md) | 6-Phase Execution Model | Accepted | 2026-01-24 |
+| ADR                                                          | Title                   | Status   | Date       |
+| ------------------------------------------------------------ | ----------------------- | -------- | ---------- |
+| [001](../packages/runtime-ts/adr/001-six-phase-execution.md) | 6-Phase Execution Model | Accepted | 2026-01-24 |
 
 ---
 
