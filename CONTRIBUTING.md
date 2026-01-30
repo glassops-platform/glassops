@@ -39,7 +39,7 @@ Before proposing a major change, consider if it aligns with our target maturity 
 1. **Fork** the repo and create your branch from `main`.
 2. **Clean Room Standard:** Ensure your contribution is independent of any proprietary or work-related logic.
 3. **Test:** Verify your changes against the **Deployment Contract v1.0** schema.
-4. **Lint:** Ensure the CI build passes and follow the project's TypeScript standards.
+4. **Lint:** Ensure the CI build passes and follow the project's coding standards.
 5. **Issue:** Submit your Pull Request!
 
 ### Report Bugs

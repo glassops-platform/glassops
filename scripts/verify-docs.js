@@ -16,7 +16,7 @@ let governanceConfig = {
         coverageThreshold: 0.8
     },
     system: {
-        ignoreDirs: ['node_modules', '.git', '.gemini', '.glassops', 'dist', 'coverage'],
+        ignoreDirs: ['node_modules', '.git', '.gemini', '.glassops', 'dist', 'coverage', 'docs_staging', 'glassops_site'],
         adrPatterns: ["**/adr/*.md", "docs/adr/*.md"]
     },
     linkValidation: {
@@ -128,10 +128,15 @@ async function processFile(filePath) {
         anchors.add(anchor);
     }
 
-    const linkRegex = /(?<!\!)\[([^\]]+)\]\(([^)]+)\)/g;
-// Helper to extract headers from markdown content
+    // Regex explanation:
+    // (?<!\!|\\) : Negative lookbehind to ensure [ is not preceded by ! (image) or \ (escaped)
+    // \[([^\]]+)\] : Match text inside [ ]
+    // \(([^)]+)\) : Match URL inside ( )
+    const linkRegex = /(?<!\!|\\)\[([^\]]+)\]\(([^)]+)\)/g;
+
     while ((match = linkRegex.exec(content)) !== null) {
         const lineNo = content.substring(0, match.index).split('\n').length;
+        // console.log(`[DEBUG] Found link in ${relPath}:${lineNo}: "${match[0]}" -> URL: "${match[2]}"`);
         links.push({
             original: match[0],
             text: match[1],
@@ -208,7 +213,7 @@ async function validateDocs() {
                 const validationResult = validateLink(filePath, link);
                 
                 if (validationResult.error) {
-                    console.error(`[ERROR] ${relPath}:${link.lineNo} - ${validationResult.error}`);
+                    console.error(`[ERROR] ${relPath}:${link.lineNo} - ${validationResult.error} (Link text: "${link.text}", URL: "${link.url}")`);
                     if (validationResult.suggestion) {
                         console.log(`[INFO] Suggestion: ${validationResult.suggestion}`);
                     }
