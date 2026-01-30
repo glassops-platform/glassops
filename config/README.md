@@ -16,7 +16,7 @@ The configuration is divided into 4 main sections:
 The configuration is formally defined in two places:
 
 1.  **Validation (JSON Schema):** [`devops-config.schema.json`](devops-config.schema.json) - Direct validation for your IDE.
-2.  **Type Definition (TypeScript):** [`types/config.d.ts`](../packages/runtime/src/types/config.d.ts) - The authoratative interface for developers.
+2.  **Type Definition (TypeScript):** [`types/config.d.ts`](../packages/runtime-ts/src/types/config.d.ts) - The authoratative interface for developers.
 
 ## Example Configuration
 
