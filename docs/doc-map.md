@@ -21,7 +21,7 @@ These documents live here (`docs/`) and guide you through the system.
 | Component          | Documentation Authority                                                                                                                 |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **Protocol**       | [`packages/glassspec/README.md`](../packages/glassspec/README.md) <br/> [`/adr`](../packages/glassspec/adr/README.md)                   |
-| **Runtime**        | [`packages/runtime/README.md`](../packages/runtime/README.md) <br/> [`/adr`](../packages/runtime-ts/adr/README.md)                      |
+| **Runtime**        | [`packages/runtime/README.md`](../packages/runtime/README.md) <br/> [`/adr`](../packages/runtime/adr/README.md)                         |
 | **Control Plane**  | [`packages/control-plane/README.md`](../packages/control-plane/README.md) <br/> [`/adr`](../packages/control-plane/adr/README.md)       |
 | **Native Adapter** | [`packages/adapters/native/README.md`](../packages/adapters/native/README.md) <br/> [`/adr`](../packages/adapters/native/adr/README.md) |
 
