@@ -38,12 +38,10 @@
         "docs:generate-map": "node scripts/verify-docs.js generate",
         "docs:validate": "node scripts/verify-docs.js",
         "docs:regen": "node scripts/verify-docs.js generate && node scripts/verify-docs.js",
-        "agent:build": "npm run build -w @glassops/agent",
-        "agent:run": "npm run start -w @glassops/agent --",
-        "docs:ai": "npm run agent:run -- generate",
+        "docs:ai": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py --generate",
         "knowledge:pipeline": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py",
-        "knowledge:index": "knowledge:pipeline -- --index",
-        "knowledge:ask": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py -- ",
+        "knowledge:index": "npm run knowledge:pipeline -- --index",
+        "knowledge:ask": "npm run knowledge:pipeline --",
         "precommit": "npm run docs:validate"
     },
     "devDependencies": {

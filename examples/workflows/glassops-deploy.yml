@@ -1,34 +1,78 @@
-name: GlassOps Deployment
+name: GlassOps Governed Deployment
 
 on:
-    push:
-        branches: [main]
-    workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
-        # environment: production # Uncomment to enforce GitHub Environment protection rules
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for delta deployments
+      
+      - name: Setup GlassOps Runtime
+        id: glassops
+        uses: ./  # For local testing, replace with glassops/runtime@v1 in production
+        with:
+          jwt_key: ${{ secrets.SALESFORCE_JWT_KEY }}
+          client_id: ${{ secrets.SALESFORCE_CLIENT_ID }}
+          username: ${{ secrets.SALESFORCE_USERNAME }}
+          instance_url: ${{ secrets.SALESFORCE_INSTANCE_URL || 'https://login.salesforce.com' }}
+          enforce_policy: 'true'
+          plugins: 'sfdx-hardis,@salesforce/plugin-deploy-retrieve'
+          coverage_required: '80'
+      
+      - name: Verify Runtime Status
+        run: |
+          echo "Runtime ID: ${{ steps.glassops.outputs.runtime_id }}"
+          echo "Org ID: ${{ steps.glassops.outputs.org_id }}"
+          echo "Is Locked: ${{ steps.glassops.outputs.is_locked }}"
+          echo "Contract Path: ${{ steps.glassops.outputs.contract_path }}"
+      
+      - name: Deploy to Salesforce
+        if: steps.glassops.outputs.glassops_ready == 'true'
+        run: |
+          echo "Deploying with governed runtime..."
+          sf project deploy start --target-org default
+      
+      - name: Upload Deployment Contract
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-contract
+          path: ${{ steps.glassops.outputs.contract_path }}
+          retention-days: 90
 
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0 # Required for delta deployments
-
-            - name: Setup GlassOps context
-              # Alpha Primitive: https://github.com/glassops-platform/glassops-runtime
-              uses: glassops-platform/glassops-runtime@v1
-              with:
-                  jwt_key: ${{ secrets.SF_JWT_KEY }}
-                  client_id: ${{ secrets.SF_CLIENT_ID }}
-                  username: ${{ secrets.SF_USERNAME }}
-                  instance_url: ${{ secrets.SF_INSTANCE_URL }}
-
-            - name: Deploy with Governance
-              uses: glassops-platform/glassops-native-adapter@v1
-              with:
-                  source-dir: force-app
-                  test-level: RunLocalTests
-                  deploy-type: Full
-                  # min-coverage: 75 # Optional: Override GitHub variables
+  governance-report:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    
+    steps:
+      - name: Download Contract
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-contract
+      
+      - name: Generate Governance Report
+        run: |
+          echo "## 📊 GlassOps Governance Report" >> $GITHUB_STEP_SUMMARY
+          cat glassops-contract.json | jq -r '
+            "### Deployment Status: \(.status)",
+            "",
+            "**Runtime ID**: `\(.audit.repository)`",
+            "**Org ID**: `\(.audit.orgId)`",
+            "**Triggered By**: @\(.audit.triggeredBy)",
+            "**Commit**: `\(.audit.commit)`",
+            "",
+            "### Quality Metrics",
+            "- **Coverage**: \(.quality.coverage.actual)% (Required: \(.quality.coverage.required)%)",
+            "- **Tests**: \(.quality.tests.passed)/\(.quality.tests.total) passed",
+            "- **Coverage Met**: \(if .quality.coverage.met then "✅" else "❌" end)"
+          ' >> $GITHUB_STEP_SUMMARY
