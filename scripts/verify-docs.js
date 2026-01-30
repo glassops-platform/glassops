@@ -16,7 +16,7 @@ let governanceConfig = {
         coverageThreshold: 0.8
     },
     system: {
-        ignoreDirs: ['node_modules', '.git', '.gemini', '.glassops', 'dist', 'coverage'],
+        ignoreDirs: ['node_modules', '.git', '.gemini', '.glassops', 'dist', 'coverage', 'docs_staging', 'glassops_site'],
         adrPatterns: ["**/adr/*.md", "docs/adr/*.md"]
     },
     linkValidation: {
