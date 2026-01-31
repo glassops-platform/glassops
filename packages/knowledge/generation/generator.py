@@ -316,7 +316,7 @@ hash: {content_hash}
             return None
 
         try:
-            content = file_path.read_text(encoding="utf-8")
+            content = file_path.read_text(encoding="utf-8-sig")
             # Normalize line endings to LF for consistent hashing across OS
             content = content.replace("\r\n", "\n")
         except Exception as e:
@@ -400,7 +400,7 @@ hash: {content_hash}
                     output_path.parent.mkdir(parents=True, exist_ok=True)
 
                     # Read original content for hashing
-                    original_content = file_path.read_text(encoding="utf-8")
+                    original_content = file_path.read_text(encoding="utf-8-sig")
                     original_content = original_content.replace("\r\n", "\n")
                     content_hash = hashlib.sha256(original_content.encode("utf-8")).hexdigest()
                     frontmatter = self._generate_frontmatter(file_path, original_content)
