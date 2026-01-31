@@ -36,13 +36,30 @@ jobs:
             - name: Build Agent
               run: npm run build -w @glassops/agent
 
+            - name: Get changed files
+              id: changed-files
+              uses: tj-actions/changed-files@v44
+              with:
+                  files: |
+                      packages/**/*.{ts,js,mjs,tsx,jsx,go,py,yml,yaml,json,tf,cls,trigger}
+                      utils/**/*.{ts,js}
+
             - name: Regenerate Docs
               id: docs
               shell: bash
+              if: steps.changed-files.outputs.any_changed == 'true'
               run: |
                   # Capture output of buffer to env vars for comment
-                  # We use 2>&1 to capture stderr too (logs often go there)
-                  OUTPUT=$(npm run docs:ai 2>&1)
+                  # Construct args for changed files
+                  FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+                  ARGS=""
+                  for file in $FILES; do
+                      ARGS="$ARGS -p $file"
+                  done
+
+                  echo "Processing changed files: $FILES"
+
+                  OUTPUT=$(npm run docs:ai -- $ARGS 2>&1)
                   echo "$OUTPUT"
 
                   # Save to ENV for next step
@@ -57,23 +74,27 @@ jobs:
               if: github.event_name == 'pull_request'
               with:
                   script: |
-                      const summary = process.env.DOCS_SUMMARY;
-                      const drift = process.env.DRIFT_STATUS || 'Unknown';
+                      const anyChanged = '${{ steps.changed-files.outputs.any_changed }}';
 
-                      // Extract key info or just dump the log?
-                      // Let's dump the log but maybe truncate if too long
-                      const logSection = summary.length > 60000 ? summary.substring(summary.length - 60000) : summary;
+                      let body = '';
+                      if (anyChanged !== 'true') {
+                          body = `### 📚 Documentation Generation Summary\n\n✅ No relevant code changes detected. Documentation generation skipped.`;
+                      } else {
+                          const summary = process.env.DOCS_SUMMARY || 'No output captured.';
+                          // Truncate logs if needed
+                          const logSection = summary.length > 60000 ? summary.substring(summary.length - 60000) : summary;
 
-                      const body = `### Documentation Generation Summary
-
-                      <details>
-                      <summary>Click to view generation logs</summary>
-
-                      \`\`\`text
-                      ${logSection}
-                      \`\`\`
-                      </details>
-                      `;
+                          body = `### 📚 Documentation Generation Summary
+                          
+                          <details>
+                          <summary>Click to view incremental generation logs</summary>
+                          
+                          \`\`\`text
+                          ${logSection}
+                          \`\`\`
+                          </details>
+                          `;
+                      }
 
                       await github.rest.issues.createComment({
                           owner: context.repo.owner,
