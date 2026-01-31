@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/health.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/health.test.ts
-generated_at: 2026-01-29T20:59:15.981662
+generated_at: 2026-01-31T09:16:16.352763
 hash: e417c599a11eef37d982678f0b02565e75438c27c15f6d8eff509eddf7989e6e
 ---
 
@@ -31,29 +31,29 @@ Upon execution, `healthCheck()` performs the following steps:
     *   `{ result: { cliVersion: "version_string" } }`
 *   If the CLI execution is successful and a valid version is found, the service returns a `healthy` status of `true` along with the extracted version.
 *   If the CLI execution fails or the JSON response does not contain a recognizable version field, the service returns a `healthy` status of `false` and an error message.
-*   If the JSON format is unexpected, the version is reported as “unknown” while maintaining a `healthy` status of `true`.
+*   If the JSON format is unexpected, the version is reported as “unknown”.
 
 **4. Return Value**
 
 The `healthCheck()` function returns an object with the following properties:
 
 *   `healthy`: A boolean indicating the health status of the CLI. `true` if healthy, `false` otherwise.
-*   `version`: A string representing the CLI version. This will be “unknown” if the version cannot be determined from the output.  Will be undefined if the check is unhealthy.
-*   `error`: A string containing an error message if the health check failed.  Undefined if the check is healthy.
+*   `version`: A string representing the CLI version. This will be “unknown” if the version cannot be determined.  Will be undefined if the check fails.
+*   `error`: A string containing an error message if the health check failed.  Undefined if the check passes.
 
 **5. Error Handling**
 
 The service handles the following error conditions:
 
 *   **CLI Execution Failure:** If the CLI command fails to execute (e.g., command not found), the `healthy` status is set to `false`, and the `error` property is populated with the error message.
-*   **Invalid JSON Response:** If the CLI output is not valid JSON, the service attempts to proceed, but may report an “unknown” version.
-*   **Unexpected JSON Format:** If the JSON response does not contain the expected `cliVersion` field, the `version` is set to “unknown”, and the `healthy` status remains `true`.
-*   **Non-Error Exceptions:** The service handles exceptions that are not instances of the `Error` class by setting the `error` property to the exception value.
+*   **Invalid JSON Response:** If the CLI output is not valid JSON, the `healthy` status is set to `false`, and the `error` property is populated with the error message.
+*   **Unexpected JSON Format:** If the JSON response does not contain the expected `cliVersion` field, the `healthy` status is set to `true`, and the `version` property is set to “unknown”.
+*   **Non-Error Exceptions:** The service handles exceptions that are not instances of the `Error` class by setting `healthy` to `false` and populating the `error` property with the exception value.
 
 **6. Dependencies**
 
-*   `@actions/exec`: Used for executing the CLI command.
+*   `@actions/exec`: This package is used to execute the CLI command.
 
 **7. Usage**
 
-You can call the `healthCheck()` function directly to assess the health of the CLI.  The returned object provides information about the CLI’s status and version.
+You can call the `healthCheck()` function directly to assess the health of the CLI.  Review the return object to determine the status and version.

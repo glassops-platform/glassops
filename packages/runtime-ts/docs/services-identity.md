@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/identity.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/identity.ts
-generated_at: 2026-01-29T21:00:16.061344
+generated_at: 2026-01-31T09:17:07.844370
 hash: 7da4458a3bb94c021316e184cd6743876ac04c4f59fee21885b081066399ee60
 ---
 
@@ -17,70 +17,57 @@ This document details the Identity Resolver service, a component designed to aut
 
 **Functionality**
 
-The Identity Resolver service handles the authentication process against an organization’s security infrastructure. It accepts authentication credentials and securely obtains an organization ID, which can then be used for subsequent operations. The service incorporates retry logic to handle transient errors during authentication.
+The Identity Resolver service handles the authentication process against an organization’s security infrastructure. It accepts authentication credentials and securely obtains an organization ID, which can then be used for subsequent operations. The service incorporates retry logic to handle transient API failures.
 
 **Key Concepts**
 
 * **JWT Authentication:** The service authenticates using a JWT, a standard for securely transmitting information between parties as a JSON object.
 * **Organization ID:** A unique identifier for the target organization. This ID is the primary output of the authentication process.
-* **Retry Logic:** The service automatically retries the authentication process a configurable number of times to mitigate intermittent failures.
-* **Secure Key Handling:** The JWT key is written to a temporary file with restricted permissions and securely deleted after use.
+* **Transient Errors:** Temporary issues encountered when communicating with the organization’s API. The service is designed to automatically retry these operations.
 
 **Inputs**
 
 The `authenticate` function requires an `AuthRequest` object containing the following properties:
 
-* **clientId:** (String) The client ID associated with the JWT.
-* **jwtKey:** (String) The private key used to generate the JWT.
-* **username:** (String) The username associated with the JWT.
-* **instanceUrl:** (Optional String) The instance URL of the organization. If not provided, the service will use the default instance.
+* `clientId`: The client ID associated with the JWT. (String)
+* `jwtKey`: The private key used to generate the JWT. (String)
+* `username`: The username associated with the JWT. (String)
+* `instanceUrl` (Optional): The URL of the organization’s instance. If not provided, the service will attempt to connect to the default instance. (String)
 
 **Outputs**
 
-The `authenticate` function returns a Promise that resolves with the organization ID (String) upon successful authentication.
+Upon successful authentication, the `authenticate` function returns the organization ID as a string.
 
 **Error Handling**
 
-If authentication fails, the `authenticate` function throws an error with a descriptive message. Common causes of failure include invalid client ID, an incorrect JWT key, or network connectivity issues.
+If authentication fails, the `authenticate` function throws an error with a descriptive message. Common causes of failure include invalid client IDs or JWT keys.
 
 **Security Considerations**
 
-* The JWT key is written to a temporary file with permissions set to 600 (read/write for the owner only).
-* Before deletion, the temporary file containing the JWT key is overwritten with zeros to prevent data recovery.
-* All sensitive information is handled in memory whenever possible.
+* **JWT Key Management:** The JWT key is written to a temporary file during the authentication process.
+* **Secure File Handling:** Before deletion, the temporary file containing the JWT key is overwritten with zeros to prevent data recovery.
+* **Permissions:** The temporary file is created with restricted permissions (mode 0o600) to limit access.
 
 **Usage**
 
-To authenticate and retrieve the organization ID, you must first create an `IdentityResolver` instance. Then, call the `authenticate` function with a valid `AuthRequest` object.
+To authenticate and retrieve the organization ID, you must:
 
-```typescript
-import { IdentityResolver } from './identity';
+1.  Create an `AuthRequest` object with the necessary credentials.
+2.  Call the `authenticate` function with the `AuthRequest` object.
+3.  Handle the returned organization ID or any potential errors.
 
-const resolver = new IdentityResolver();
+**Implementation Details**
 
-const authRequest = {
-  clientId: 'your_client_id',
-  jwtKey: 'your_jwt_key',
-  username: 'your_username',
-  instanceUrl: 'https://your-instance.salesforce.com' // Optional
-};
+The service leverages the following dependencies:
 
-try {
-  const orgId = await resolver.authenticate(authRequest);
-  console.log(`Successfully authenticated with Org ID: ${orgId}`);
-} catch (error) {
-  console.error('Authentication failed:', error);
-}
-```
+* `@actions/core`: For logging and managing environment variables.
+* `@actions/exec`: For executing external commands (specifically, the `sf` CLI).
+* `fs`: For file system operations (writing and deleting the temporary JWT key file).
+* `path`: For constructing file paths.
+* `os`: For accessing operating system-specific information (like the temporary directory).
 
-**Configuration**
+The service uses the `sf` command-line interface (CLI) to perform the actual authentication. It constructs the appropriate command arguments based on the provided input and parses the JSON output from the CLI.
 
-The number of retries and the backoff time between retries are configurable within the `executeWithRetry` function. Currently, the service is configured for a maximum of 3 retries with a 2-second backoff.
+**Retry Mechanism**
 
-**Dependencies**
-
-* `@actions/core`
-* `@actions/exec`
-* `fs`
-* `path`
-* `os`
+The service incorporates a retry mechanism to handle transient errors during the authentication process. It will attempt the authentication up to three times, with a two-second delay between each attempt. This improves the reliability of the service in environments with intermittent network connectivity or API availability issues.

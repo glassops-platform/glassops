@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/integration/cli-platform.integration.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/cli-platform.integration.test.ts
-generated_at: 2026-01-29T20:54:57.238361
+generated_at: 2026-01-31T09:11:48.721223
 hash: c0fe62e004405747ec5aed3472ced22489880f70c7e4fec6ba9821c76fff59c7
 ---
 
@@ -21,25 +21,39 @@ The primary goal of these tests is to validate platform-specific CLI operations,
 
 The tests cover the following key areas:
 
-*   **Plugin Installation:** Verification of correct plugin installation procedures, including handling platform-specific command prefixes (e.g., `echo` on Windows vs. Unix-based systems).  Error handling during plugin installation is also tested.
-*   **CLI Installation:**  Testing the installation of the CLI itself, including scenarios where the CLI is already present and scenarios where installation fails.
-*   **Cross-Platform Command Execution:**  Confirmation that commands are executed using the appropriate shell for each operating system.
+*   **Plugin Installation:** Verification of correct plugin installation procedures, including handling platform-specific command prefixes (e.g., `echo` on Windows vs. Unix-based systems) and error handling during installation failures.
+*   **CLI Installation:** Validation of CLI installation logic, including checks for existing installations and handling installation failures.
+*   **Cross-Platform Command Execution:** Confirmation that commands are executed using the appropriate shell for each operating system.
 
-**Key Components**
+**Testing Methodology**
 
-*   **RuntimeEnvironment:** This class encapsulates the core logic for CLI interaction, including installation and command execution.
-*   **ProtocolConfig:**  This configuration object defines runtime settings, such as plugin whitelists and CLI/Node.js versions.
-*   **Mocking:**  External dependencies, specifically GitHub Actions modules (`@actions/exec`, `@actions/io`), are mocked to provide a controlled testing environment. This allows for predictable test results and isolation from external factors.
+These tests employ mocking of external dependencies, specifically modules from the `@actions` suite (e.g., `@actions/exec`, `@actions/io`). This allows for controlled testing without relying on actual system commands or file system interactions.  The tests dynamically modify the `process.platform` property to simulate different operating systems.  After each test, the original platform is restored.
 
-**Test Methodology**
+**Configuration**
 
-The tests employ the following techniques:
+The tests utilize a `ProtocolConfig` object to define runtime parameters, including:
 
-*   **Platform Spoofing:** The `process.platform` property is temporarily modified to simulate different operating systems.
-*   **Mock Assertion:**  Assertions are used to verify that the correct commands are executed with the expected arguments.
-*   **Error Handling Validation:** Tests confirm that the system gracefully handles errors during plugin installation and CLI bootstrapping.
-*   **Conditional Logic Testing:** Tests verify that platform-specific logic (e.g., command prefixes) is correctly applied.
+*   **Governance:**  Settings related to plugin whitelisting and enablement.
+*   **Runtime:**  Specifications for the CLI and Node.js versions.
 
-**User Guidance**
+**Key Functionality Tested**
 
-You should understand that these tests are automated and require a TypeScript/JavaScript environment with the necessary dependencies installed.  The tests are designed to run without manual intervention, providing a reliable and repeatable validation process.  If you encounter test failures, review the error messages and ensure your environment meets the prerequisites.
+*   **Platform-Specific Echo Prefix:** The tests confirm that the correct `echo` command prefix is used during plugin installation based on the operating system.
+*   **Installation Failure Handling:**  The tests verify that the system gracefully handles plugin installation failures and propagates appropriate error messages.
+*   **CLI Presence Check:** The tests validate that the CLI installation process is skipped if the CLI is already present on the system.
+*   **Command Execution Shell:** The tests ensure that commands are executed using the correct shell (e.g., `cmd` on Windows, `sh` on Unix-based systems).
+
+**Requirements**
+
+*   Node.js environment with TypeScript support.
+*   Dependencies specified in the project’s `package.json` file.
+*   Access to the test files.
+
+**Running the Tests**
+
+You can execute these tests using a standard test runner for TypeScript/JavaScript projects, such as Jest.  Ensure the necessary dependencies are installed before running the tests.
+
+**Related Documentation**
+
+*   `RuntimeEnvironment` service documentation.
+*   `ProtocolConfig` interface documentation.

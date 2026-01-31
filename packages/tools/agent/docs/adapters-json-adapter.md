@@ -2,57 +2,46 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/json-adapter.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/json-adapter.ts
-generated_at: 2026-01-26T14:22:58.348Z
-hash: 6e7fa918d0f9d854c033d03ac35ea4226c0fdf1592d90c6fe7900d0258957ff0
+generated_at: 2026-01-31T09:20:25.593790
+hash: fbdff4a5a66631702c17a404f4b360020230038017433e82b6b0aa0f16ab50d2
 ---
 
 ## JSON Adapter Documentation
 
-**Overview**
+**1. Introduction**
 
-This document details the functionality of the JSON Adapter, a component designed to process files with the `.json` extension within an agent system. The adapter’s purpose is to prepare JSON file content for analysis and subsequent use by the agent.
+This document details the functionality of the JSON Adapter, a component designed to process files with the `.json` extension within the agent system. It handles parsing, prompt generation, and post-processing of JSON file content.
 
-**Functionality**
+**2. Purpose**
 
-The JSON Adapter provides four core functions: determining file compatibility, parsing file content, generating prompts for analysis, and post-processing outputs.
+The JSON Adapter enables the agent to understand and work with JSON data. It prepares the JSON content for analysis by constructing a specific prompt for a language model.
 
-**1. File Compatibility (canHandle)**
+**3. Functionality**
 
-The `canHandle` function verifies if the adapter is suitable for a given file based on its extension. 
+The adapter provides the following core functions:
 
-*   **Input:** `extension` (string) – The file extension.
-*   **Output:** `boolean` – Returns `true` if the extension is `.json`, otherwise `false`.
+*   **File Type Handling:** Determines if the adapter can process a given file based on its extension. It specifically handles files ending in `.json`.
+*   **Parsing:** Reads the content of a JSON file and formats it into a structured string. This string includes the file path and the JSON content enclosed in a code block for clarity.
+*   **Prompt Generation:** Creates a prompt for a language model, instructing it to analyze the parsed JSON content as if it were a principal architect reviewing documentation. The prompt includes the formatted JSON content.
+*   **Post-Processing:** Combines multiple outputs from the language model into a single, formatted string, separated by double newlines.
 
-**2. Content Parsing (parse)**
+**4. Technical Details**
 
-The `parse` function takes the file path and content of a JSON file and formats it for inclusion in a prompt.
-
-*   **Input:**
-    *   `filePath` (string) – The path to the JSON file.
-    *   `content` (string) – The content of the JSON file.
-*   **Output:** `string[]` – An array containing a single string. This string includes the file path and the JSON content, formatted within a code block for clarity.
-
-**3. Prompt Generation (generatePrompt)**
-
-The `generatePrompt` function constructs a prompt to be sent to a language model for analysis of the parsed JSON content. 
+The JSON Adapter implements the `AgentAdapter` interface. This ensures compatibility and consistent behavior within the agent system. 
 
 *   **Input:**
-    *   `filePath` (string) – The path to the JSON file.
-    *   `parsedContent` (string) – The formatted JSON content (output from the `parse` function).
-*   **Output:** `string` – A prompt instructing the language model to act as a principal architect and create a high-level document from the provided JSON content. The prompt emphasizes clarity, conciseness, and professional presentation.
+    *   `filePath`: String representing the path to the JSON file.
+    *   `content`: String containing the JSON file’s content.
+*   **Output:**
+    *   A string containing the processed output, ready for presentation or further action.
 
-**4. Output Post-Processing (postProcess)**
+**5. Usage**
 
-The `postProcess` function combines multiple outputs from the language model into a single, formatted string.
+When the agent encounters a `.json` file, it will automatically route the file to this adapter for processing. You do not need to directly interact with the adapter; it operates as part of the agent’s automated workflow.
 
-*   **Input:**
-    *   `filePath` (string) – The path to the JSON file.
-    *   `outputs` (string[]) – An array of strings representing the outputs from the language model.
-*   **Output:** `string` – A single string containing all outputs, separated by double newlines for readability.
+**6. Output Format**
 
-**Integration**
-
-I am designed to be integrated into a larger agent system. You can configure the system to use this adapter by ensuring that files with the `.json` extension are routed to this component for processing. The output of this adapter serves as input for subsequent stages in the agent’s workflow, such as analysis and documentation generation.
+The final output consists of the language model’s responses, concatenated with double newlines between each response. The initial parsed content is formatted to clearly present the JSON data to the language model.

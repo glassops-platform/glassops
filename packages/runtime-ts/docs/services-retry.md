@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/retry.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/retry.ts
-generated_at: 2026-01-29T21:01:16.081786
+generated_at: 2026-01-31T09:17:47.397771
 hash: 66a78c21d7ac4ddc3abd59ad36043dc7099c50667d80546a7689ee9433fea96b
 ---
 
@@ -22,7 +22,7 @@ The retry service provides a mechanism to automatically re-execute an asynchrono
 The behavior of the retry service is configurable through the `RetryOptions` interface:
 
 *   `maxRetries`: (Optional) The maximum number of retry attempts. Defaults to 3.
-*   `backoffMs`: (Optional) The initial delay in milliseconds before the first retry. The delay increases exponentially with each subsequent attempt. Defaults to 1000 milliseconds (1 second).
+*   `backoffMs`: (Optional) The initial delay in milliseconds before the first retry. The delay increases exponentially with each subsequent attempt. Defaults to 1000ms (1 second).
 *   `shouldRetry`: (Optional) A function that determines whether a retry should be attempted for a given error. It accepts an `Error` object as input and returns a boolean value. If not provided, all errors will trigger a retry.
 
 **executeWithRetry Function**
@@ -53,7 +53,10 @@ async function runWithRetry() {
     const result = await executeWithRetry(myAsyncFunction, {
       maxRetries: 5,
       backoffMs: 2000,
-      shouldRetry: (error) => error.message.includes("temporary error"),
+      shouldRetry: (error) => {
+        // Only retry if the error is a network error
+        return error.message.includes("network");
+      },
     });
     console.log("Operation succeeded:", result);
   } catch (error) {
@@ -64,8 +67,8 @@ async function runWithRetry() {
 runWithRetry();
 ```
 
-In this example, `myAsyncFunction` will be retried up to 5 times with an initial delay of 2 seconds. Retries will only occur if the error message includes "temporary error".
+**Behavior Details**
 
-**Implementation Details**
-
-We implement exponential backoff by multiplying the `backoffMs` value by 2 raised to the power of the current attempt number. This ensures that the delay increases with each retry, preventing rapid re-attempts that could overload a failing service.  The `shouldRetry` function allows you to customize retry behavior based on the specific error encountered. If an error is not retryable, it is immediately propagated.
+*   **Exponential Backoff:** The delay between retries increases exponentially. For example, with a `backoffMs` of 1000, the delays will be 1000ms, 2000ms, 4000ms, and so on.
+*   **Last Error:** The service preserves the last error encountered during the retry process. This ensures that the caller receives the most informative error message when all retries have been exhausted.
+*   **Default Options:** If you do not provide any options, the service will use default values for `maxRetries` (3) and `backoffMs` (1000ms). The default `shouldRetry` function always returns `true`, meaning all errors will trigger a retry.

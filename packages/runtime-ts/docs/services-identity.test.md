@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/identity.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/identity.test.ts
-generated_at: 2026-01-29T20:59:56.058102
+generated_at: 2026-01-31T09:16:47.470536
 hash: 918ca996fb332cea01787f5421099d52ba39b83780127de3f138ac7b0198480f
 ---
 
@@ -28,25 +28,25 @@ The primary function of this service is the `authenticate` method. This method a
 *   `username`: The username associated with the identity.
 *   `instanceUrl` (Optional): The URL of the instance to authenticate against. If provided, it is included in the authentication request.
 
-**Authentication Process:**
+**Workflow:**
 
 1.  **JWT Key Storage:** Upon receiving an authentication request, the service securely writes the provided `jwtKey` to a file on disk.
-2.  **External Tool Execution:** The service executes an external tool ("sf") with appropriate arguments, including the `clientId` and optionally the `instanceUrl`.
-3.  **Response Handling:** The service parses the response from the external tool, expecting a JSON object containing the `orgId` and `accessToken`.
-4.  **Org ID Return:** If the authentication is successful, the service returns the extracted `orgId`.
-5.  **Error Handling:** If the external tool returns an error, the service retries the authentication process. If retries are exhausted, an "Authentication Failed" error is thrown.
+2.  **Authentication Execution:** The service executes an external authentication command ("sf") with the provided parameters. The command's output is parsed to extract the Org ID and access token.
+3.  **Instance URL Handling:** If an `instanceUrl` is provided in the request, it is included as a parameter in the authentication command.
+4.  **Success Handling:** If authentication is successful, the Org ID is returned.
+5.  **Failure Handling:** If authentication fails, the service retries the operation. After exhausting retry attempts, an "Authentication Failed" error is thrown.
 6.  **Cleanup:** Regardless of success or failure, the service attempts to delete the JWT key file to maintain security.  Deletion is skipped if the file does not exist.
 
-**Dependencies:**
+**Error Handling:**
 
-*   `@actions/exec`: Used for executing external processes.
-*   `fs`: Used for file system operations (writing and deleting the JWT key file).
+*   The `authenticate` method throws an "Authentication Failed" error if authentication cannot be completed after multiple retries.
 
 **Security Considerations:**
 
 *   The JWT key is written to disk with restricted permissions (mode 0o600) to prevent unauthorized access.
 *   The JWT key file is deleted after authentication, regardless of success or failure, to minimize the risk of compromise.
 
-**Usage:**
+**Dependencies:**
 
-You should instantiate the `IdentityResolver` class and call the `authenticate` method with the appropriate authentication request parameters.  Ensure you handle potential errors, such as "Authentication Failed", and implement appropriate logging and error reporting.
+*   `@actions/exec`: Used to execute external commands.
+*   `fs`: Used for file system operations (writing and deleting the JWT key file).

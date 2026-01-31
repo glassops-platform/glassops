@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/rag/query_engine.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/rag/query_engine.py
-generated_at: 2026-01-28T22:48:07.081711
+generated_at: 2026-01-31T09:01:03.765181
 hash: 09603013c88193d7faf419e2b18b13bf32b3d9de8e28c293f2d3e97f0923446f
 ---
 
@@ -26,21 +26,21 @@ This module primarily relies on external libraries (chromadb, google.genai) and 
 *   **`query_index(query: str, n_results: int = 5) -> str`**: This is the main function of the module. It takes a user query (string) and an optional number of results to retrieve (integer, default is 5). It returns a string containing the generated answer, or an error message if something goes wrong.
     *   **Embedding Generation:** The function first generates an embedding vector for the input query using the `get_embeddings_for_docs` function (defined elsewhere). This embedding represents the semantic meaning of the query.
     *   **ChromaDB Querying:** It then queries a ChromaDB collection named "glassops\_knowledge" using the query embedding. The `n_results` parameter controls the number of relevant documents retrieved.
-    *   **Context Construction:** The retrieved documents are assembled into a context string, separated by delimiters.  Document IDs (sources) are also collected.
-    *   **Trigger-Based File Injection:**  The function checks for keywords in the query against a configuration file (`config.json`). If a keyword is found, the corresponding file (specified by a relative path in the configuration) is read and prepended to the context. This allows for dynamic inclusion of up-to-date information.
-    *   **Gemini Answer Generation:** Finally, the function uses the Gemini language model to generate an answer based on the constructed context and the original query.  A system prompt provides instructions to the model, defining its role and behavior.
-    *   **Error Handling:** The function includes robust error handling, returning informative messages if embedding generation fails, the index is not found, the API key is missing, or the language model encounters an error.
+    *   **Context Construction:** The retrieved documents are assembled into a context string, which will be provided to the language model.
+    *   **Trigger-Based File Injection:** Before passing the context to the LLM, the function checks for specific keywords in the query. If a keyword is found, it attempts to load and prepend the content of a corresponding file (defined in a `config.json` file) to the context. This allows for dynamic inclusion of up-to-date information.
+    *   **Gemini Integration:** The function uses the Gemini language model to generate an answer based on the constructed context and the original query. It uses a system prompt to guide the model's behavior.
+    *   **Error Handling:** The function includes robust error handling to catch potential issues during embedding generation, ChromaDB querying, file loading, and language model interaction.  Informative error messages are returned to the user.
 
 **Type Hints:**
 
 The code makes extensive use of type hints (e.g., `query: str`, `n_results: int`) to improve code readability and maintainability. These hints specify the expected data types for function arguments and return values, enabling static analysis and helping to prevent errors.
 
-**Notable Patterns and Design Decisions:**
+**Notable Patterns & Design Decisions:**
 
-*   **RAG Architecture:** The module implements a standard RAG pipeline, combining retrieval and generation for improved accuracy and relevance.
-*   **Configuration-Driven Behavior:** The use of a `config.json` file allows for customization of the system prompt and trigger-based file injection without modifying the code.
-*   **Error Handling:** Comprehensive error handling is implemented to provide informative messages to the user and facilitate debugging.
-*   **Modular Design:** The embedding generation is delegated to a separate function (`get_embeddings_for_docs`), promoting code reuse and separation of concerns.
-*   **Context Injection:** The ability to inject content from external files based on query keywords provides a flexible mechanism for incorporating dynamic information into the knowledge base.
-*   **Environment Variables:** The API key is loaded from an environment variable (`GOOGLE_API_KEY`), enhancing security and portability.
-*   **Path Handling:** Uses `pathlib` for robust and platform-independent path manipulation.
+*   **RAG Architecture:** The module implements a standard RAG pipeline, combining information retrieval with language model generation.
+*   **Configuration-Driven Behavior:** The system prompt and file injection triggers are loaded from a `config.json` file, allowing for easy customization without modifying the code.
+*   **Modular Design:** The embedding generation is handled by a separate function (`get_embeddings_for_docs`), promoting code reuse and separation of concerns.
+*   **Error Handling:** Comprehensive error handling is implemented throughout the function to provide informative messages to the user and prevent unexpected crashes.
+*   **Contextual Injection:** The ability to inject content from external files based on query keywords provides a mechanism for incorporating dynamic or frequently updated information into the knowledge base.
+*   **Environment Variable for API Key:** The Gemini API key is retrieved from an environment variable (`GOOGLE_API_KEY`), enhancing security and flexibility.
+*   **Model Specification:** The code explicitly defines the Gemini model to be used (`gemma-3-12b-it`), allowing for easy switching between different models.

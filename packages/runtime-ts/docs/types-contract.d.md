@@ -2,83 +2,84 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/types/contract.d.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/types/contract.d.ts
-generated_at: 2026-01-29T21:02:50.896652
+generated_at: 2026-01-31T09:19:08.733627
 hash: 93fa4c433babe2f882aeffac091d68dc3f8ae11749a82816392fa518c93f9a44
 ---
 
 ## Deployment Contract Specification
 
-This document details the structure of the Deployment Contract, a standardized format for reporting the results of deployments and quality checks. It provides a comprehensive record of the process, enabling clear communication and informed decision-making.
+This document details the structure of the Deployment Contract, a standardized format for reporting the results of deployments and quality checks. It provides a comprehensive record of a deployment attempt, including its status, quality metrics, policy adherence, and audit information. You can use this contract to understand the outcome of a deployment process and identify areas for improvement.
 
-**Purpose**
+**1. Overview**
 
-The Deployment Contract serves as a single source of truth regarding a deployment’s execution, quality, policy compliance, and audit trail. You can use this contract to understand the outcome of a deployment, identify potential issues, and track improvements over time.
+The Deployment Contract is a JSON-compatible object defining the results of a deployment operation. It is designed to be machine-readable and human-understandable, facilitating integration with various tools and systems.
 
-**Structure**
+**2. Contract Structure**
 
-The contract is a JSON object with the following key sections:
+The contract consists of the following top-level properties:
 
-**1. `schemaVersion`**:  A string indicating the version of the contract schema used. This allows for future evolution of the contract format.
+*   **schemaVersion:** (String) Indicates the version of the contract schema used. This allows for future evolution of the contract format.
+*   **meta:** (Object) Contains metadata about the deployment process itself.
+    *   **adapter:** (String) Identifies the adapter used for deployment.
+    *   **engine:** (String) Specifies the deployment engine used.
+    *   **engineVersion:** (String) The version of the deployment engine.
+    *   **timestamp:** (String) The date and time of the deployment.
+    *   **trigger:** (String) The event that initiated the deployment.
+*   **status:** (String) Represents the overall status of the deployment. Possible values are: "Succeeded", "Failed", "Canceled", or "Partial".
+*   **deployment:** (Object) Details about the deployment action.
+    *   **id:** (String) A unique identifier for the deployment.
+    *   **url:** (String, Optional) A URL pointing to the deployment details.
+    *   **mode:** (String) The deployment mode used ("validate", "deploy", or "quick\_deploy").
+    *   **validationId:** (String, Optional) The ID of the validation run, if applicable.
+    *   **metrics:** (Object) Quantitative data about the deployment.
+        *   **componentsDeployed:** (Number) The number of components successfully deployed.
+        *   **componentsFailed:** (Number) The number of components that failed to deploy.
+        *   **testsRun:** (Number) The number of tests executed.
+        *   **durationMs:** (Number) The total duration of the deployment in milliseconds.
+*   **quality:** (Object) Contains information about the quality of the deployed code.
+    *   **coverage:** (Object) Details about code coverage.
+        *   **actual:** (Number) The actual code coverage percentage.
+        *   **required:** (Number) The required code coverage percentage.
+        *   **met:** (Boolean) Indicates whether the required coverage was met.
+        *   **details:** (Object, Optional) Provides more granular coverage details.
+            *   **orgWideCoverage:** (Number) Code coverage across the entire organization.
+            *   **packageCoverage:** (Number, Optional) Code coverage for a specific package.
+    *   **staticAnalysis:** (Object, Optional) Results from static analysis tools.
+        *   **toolsUsed:** (Array of Strings) The tools used for static analysis.
+        *   **score:** (Number) An overall health score from the static analysis.
+        *   **criticalViolations:** (Number) The number of critical violations found.
+        *   **warningViolations:** (Number) The number of warning violations found.
+        *   **topIssues:** (Array of Objects, Optional) A list of the most significant issues identified. Each issue includes:
+            *   **file:** (String) The file where the issue was found.
+            *   **rule:** (String) The rule that was violated.
+            *   **severity:** (String) The severity of the issue ("Critical" or "Warning").
+            *   **line:** (Number) The line number where the issue was found.
+            *   **message:** (String) A description of the issue.
+*   **policy:** (Object) Information about policy adherence.
+    *   **source:** (Object) Details about the source of the policy.
+        *   **githubFloor:** (Number) Policy level from GitHub.
+        *   **configFile:** (Number, Optional) Policy level from configuration files.
+        *   **salesforceCmdt:** (Number, Optional) Policy level from Salesforce CMT.
+    *   **effective:** (Number) The effective policy level applied.
+    *   **overrides:** (Array of Objects, Optional) A list of policy overrides. Each override includes:
+        *   **reason:** (String) The reason for the override.
+        *   **approver:** (String) The user who approved the override.
+*   **audit:** (Object) Audit information about the deployment.
+    *   **triggeredBy:** (String) The user or system that triggered the deployment.
+    *   **repository:** (String) The repository where the code is stored.
+    *   **ref:** (String) The branch or tag that was deployed.
+    *   **commit:** (String) The commit hash that was deployed.
+    *   **runUrl:** (String) A URL to the deployment run details.
+*   **errors:** (Array of Objects, Optional) A list of errors that occurred during the deployment. Each error includes:
+    *   **code:** (String) An error code.
+    *   **message:** (String) A descriptive error message.
+    *   **severity:** (String) The severity of the error ("Critical" or "Warning").
+    *   **component:** (String, Optional) The component associated with the error.
+*   **extensions:** (Object, Optional) A flexible container for adding custom data to the contract.
 
-**2. `meta`**: Metadata about the deployment process itself.
-    *   `adapter`: The name of the adapter used for deployment.
-    *   `engine`: The name of the deployment engine.
-    *   `engineVersion`: The version of the deployment engine.
-    *   `timestamp`: The date and time of the deployment.
-    *   `trigger`: The event that initiated the deployment.
+**3. Usage**
 
-**3. `status`**: The overall status of the deployment. Possible values are: `Succeeded`, `Failed`, `Canceled`, or `Partial`.
-
-**4. `deployment`**: Details specific to the deployment action.
-    *   `id`: A unique identifier for the deployment.
-    *   `url`: (Optional) A URL pointing to the deployment details.
-    *   `mode`: The deployment mode: `validate`, `deploy`, or `quick_deploy`.
-    *   `validationId`: (Optional) An identifier for a preceding validation run.
-    *   `metrics`: Quantitative data about the deployment.
-        *   `componentsDeployed`: The number of components successfully deployed.
-        *   `componentsFailed`: The number of components that failed to deploy.
-        *   `testsRun`: The number of tests executed.
-        *   `durationMs`: The total duration of the deployment in milliseconds.
-
-**5. `quality`**:  Information about the quality of the deployed code.
-    *   `coverage`: Code coverage metrics.
-        *   `actual`: The actual code coverage achieved.
-        *   `required`: The required code coverage threshold.
-        *   `met`: A boolean indicating whether the required coverage was met.
-        *   `details`: (Optional) Further breakdown of coverage.
-            *   `orgWideCoverage`: Coverage across the entire organization.
-            *   `packageCoverage`: Coverage for a specific package.
-    *   `staticAnalysis`: Results from static code analysis tools. (Optional)
-        *   `toolsUsed`: An array of tools used for static analysis.
-        *   `score`: An overall health score.
-        *   `criticalViolations`: The number of critical violations found.
-        *   `warningViolations`: The number of warning violations found.
-        *   `topIssues`: (Optional) An array of the most significant issues identified, including file, rule, severity, line number, and message.
-
-**6. `policy`**:  Information about policy compliance.
-    *   `source`: Where policy definitions were sourced from.
-        *   `githubFloor`: Policy version from the GitHub floor.
-        *   `configFile`: Policy version from a configuration file.
-        *   `salesforceCmdt`: Policy version from Salesforce CMT.
-    *   `effective`: The effective policy version used during the deployment.
-    *   `overrides`: (Optional) An array of policy overrides, including the reason and approver.
-
-**7. `audit`**:  Audit trail information.
-    *   `triggeredBy`: The user or system that triggered the deployment.
-    *   `repository`: The repository where the code resides.
-    *   `ref`: The branch or tag that was deployed.
-    *   `commit`: The commit hash of the deployed code.
-    *   `runUrl`: A URL to the execution run details.
-
-**8. `errors`**: (Optional) An array of errors encountered during the deployment.
-    *   `code`: An error code.
-    *   `message`: A descriptive error message.
-    *   `severity`: The severity of the error: `Critical` or `Warning`.
-    *   `component`: (Optional) The component associated with the error.
-
-**9. `extensions`**: (Optional) A flexible section for adding custom data. This allows for extending the contract with additional information specific to your environment. It is a key-value store where keys are strings and values can be of any type.
-
-I maintain this contract to ensure consistency and clarity in deployment reporting. We aim to provide a robust and extensible framework for managing deployments and improving software quality.
+I generate this contract after each deployment attempt. You can parse and analyze this contract to gain insights into the deployment process, identify potential issues, and track quality metrics over time. We intend for this contract to be a central source of truth for deployment information.

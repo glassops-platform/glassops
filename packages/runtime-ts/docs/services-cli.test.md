@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/cli.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/cli.test.ts
-generated_at: 2026-01-29T20:58:35.305482
+generated_at: 2026-01-31T09:15:37.541231
 hash: b3234a4c5d9ab2fe336c4578cdcdb047c8240534be58cb563e50a98b33158e5d
 ---
 
@@ -33,32 +33,32 @@ The service provides the following core functions:
 3.  **Version Verification:** After installation, the service verifies the CLI version.
 4.  **Plugin Installation:**  If plugins are specified, the service proceeds to install them according to the configured policy.
 
-**Plugin Configuration and Security**
+**Plugin Installation Details**
 
-Plugin installation is governed by a configuration that includes a plugin whitelist.
-
-*   **Whitelist:**  Only plugins listed in the whitelist are installed. This prevents the installation of potentially harmful or unauthorized plugins.
-*   **No Whitelist:** If no whitelist is configured, a warning is issued, and all requested plugins are installed without validation.
+*   **Whitelist Enforcement:** Plugin installation is governed by a whitelist. Only plugins listed in the whitelist are installed.  If no whitelist is configured, a warning is issued, and plugins are installed without validation.
+*   **Verification:** After installation, each plugin is verified to ensure it was installed correctly.
 *   **Version Constraints:** The service supports installing plugins with specific version constraints (e.g., `sfdx-hardis@^6.0.0`).
+*   **Platform Considerations:** The service adapts to the operating system, using the appropriate shell (cmd on Windows, sh on other platforms) for plugin installation.
 
-**Error Scenarios**
+**Configuration**
 
-The service handles several potential error scenarios:
+The service relies on a `ProtocolConfig` object to determine its behavior. Key configuration elements include:
 
-*   **npm Installation Failure:** If the npm installation fails (e.g., due to network issues), the service retries the installation.  If retries fail, an error is thrown.
-*   **CLI Version Check Failure:** If verifying the CLI version fails, an error is thrown.
-*   **Plugin Installation Failure:** If a plugin installation fails, an error is thrown.
-*   **Plugin Verification Failure:** If the installed plugins cannot be verified, an error is thrown.
-*   **Non-Whitelisted Plugins:** Attempts to install plugins not on the whitelist result in an error.
-*   **Unexpected Output Format:** Errors are thrown if the output from CLI commands is not in the expected format.
+*   `governance.enabled`:  A boolean indicating whether governance features (like the plugin whitelist) are enabled.
+*   `governance.plugin_whitelist`: An array of strings representing the allowed plugins.
+*   `runtime.cli_version`: Specifies the desired Salesforce CLI version ("latest" or a specific version number).
+*   `runtime.node_version`: Specifies the required Node.js version.
 
-**Platform Considerations**
+**Error Handling and Reporting**
 
-The service adapts to the operating system:
+The service provides detailed error messages to assist in troubleshooting. Common error scenarios include:
 
-*   **Windows:** Uses `cmd` shell with the `/c` flag for executing commands.
-*   **Non-Windows:** Uses `sh` shell with the `-c` flag.
+*   **NPM Installation Failure:** Indicates a problem with the npm registry or network connectivity.
+*   **CLI Version Check Failure:**  Indicates an issue verifying the installed CLI version.
+*   **Plugin Installation Failure:** Indicates a problem during plugin installation.
+*   **Plugin Verification Failure:** Indicates that a plugin could not be verified after installation.
+*   **Non-Whitelisted Plugin:**  An error is thrown if an attempt is made to install a plugin not present in the whitelist.
 
 **Usage Notes**
 
-You can specify the CLI version to install. If no version is provided, the latest version is installed.  Plugin installation is controlled by the configuration file.  Ensure the configuration file is correctly set up to define the desired plugins and security policies.
+You can trigger the installation and plugin management functions programmatically. The service provides clear error messages to guide you in resolving any issues.

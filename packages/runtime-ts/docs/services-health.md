@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/health.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/health.ts
-generated_at: 2026-01-29T20:59:35.200164
+generated_at: 2026-01-31T09:16:28.480867
 hash: d643450fca14f67821903d531e6c29e9a99b9b9bca34c02860de6cdc68024520
 ---
 
@@ -53,7 +53,7 @@ exampleUsage();
 
 **5. Error Handling**
 
-If the `sf version --json` command fails to execute, or if the output cannot be parsed, the `healthCheck` function will return a `HealthCheckResult` object with `healthy` set to `false` and the `error` field populated with a descriptive error message.
+If the `sf version --json` command fails to execute or produces invalid output, the `healthCheck` function catches the error. The `HealthCheckResult` will have `healthy` set to `false` and the `error` field will contain a descriptive error message.
 
 **6. Dependencies**
 
@@ -61,4 +61,4 @@ This service depends on the `@actions/exec` package for executing shell commands
 
 **7. Future Considerations**
 
-We plan to expand this service to include checks for other dependencies and system requirements as needed.
+We plan to extend this service to include checks for other dependencies and system requirements as needed.

@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/utils/__init__.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/utils/__init__.py
-generated_at: 2026-01-28T22:48:22.022868
+generated_at: 2026-01-31T09:01:16.385156
 hash: 30f89e90ce9df55dbb41c92df0cc93232e1f030ed051112539e18b45539a8f28
 ---
 
@@ -35,6 +35,6 @@ The primary responsibility of this module is to expose a collection of helper fu
 
 **Design Decisions & Patterns:**
 
-- **Explicit Exports (`__all__`):** We use the `__all__` list to explicitly define the public interface of the module. This prevents accidental exposure of internal functions and improves maintainability.
-- **Type Hinting:** Consistent use of type hints throughout the module enhances code readability, facilitates static analysis, and helps prevent runtime errors.
-- **Function Focus:** Each function is designed to perform a single, well-defined task, promoting modularity and reusability.
+- **Explicit Exposure:** The `__all__` list explicitly defines the public interface of the module. This ensures that only intended functions are accessible to external code, promoting encapsulation and preventing accidental misuse of internal components.
+- **Type Safety:** The consistent use of type hints throughout the functions enhances code maintainability and allows for static analysis, helping to catch potential errors early in the development process.
+- **Generators:** The `batch_items` function is implemented as a generator. This approach avoids loading the entire dataset into memory at once, making it more memory-efficient, especially when dealing with large datasets.

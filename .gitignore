@@ -36,7 +36,6 @@ coverage/
 scan-results.html
 
 # Documentation Tooling
-config/doc-cache.json
 changed/
 docs_staging/
 site/

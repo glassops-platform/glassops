@@ -2,52 +2,47 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/index.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/index.ts
-generated_at: 2026-01-26T14:12:49.970Z
-hash: f4a190c15881960f1608fc56abe70baa6d65bcbc06ec184b10b72e6bdab05757
+generated_at: 2026-01-31T09:23:01.433678
+hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 ---
 
 ## GlassOps Agent Documentation
 
 **Overview**
 
-The GlassOps Agent is a command-line tool designed to automatically generate documentation and metadata for GlassOps repositories. It analyzes source code and related files to produce up-to-date documentation, improving code understanding and maintainability.
+This tool is an automated agent designed to produce documentation and metadata for GlassOps projects. It analyzes source code and related files within a repository to create up-to-date documentation assets.
 
-**Key Features**
+**Purpose**
 
-*   **Automated Documentation:**  The agent simplifies the documentation process by automatically extracting information from your codebase.
-*   **Multi-Language Support:** It supports various programming languages and file types commonly used in GlassOps projects, including TypeScript, Python, JavaScript, Terraform, YAML, JSON, and more.
-*   **Configurable Patterns:**  You can specify which files and directories to include in the documentation generation process.
-*   **Error Handling:**  The agent provides informative error messages to help diagnose and resolve issues.
+The agent simplifies the process of maintaining accurate and comprehensive documentation, reducing the manual effort required for project onboarding, knowledge sharing, and overall maintainability.
 
-**Installation**
+**Installation & Execution**
 
-This tool is intended to be used as part of a larger GlassOps environment. Installation details are provided within that context.
+The agent is designed to be executed from the command line. Ensure Node.js and npm are installed on your system. Installation is typically handled through npm package management.
 
-**Usage**
+**Command-Line Interface**
 
-The agent is invoked from the command line. The primary command is `generate`.
+The primary command is `glassops-agent`.
 
-```bash
-glassops-agent generate [patterns...]
-```
+*   `glassops-agent generate [patterns...]`
 
-*   `glassops-agent`: The name of the tool.
-*   `generate`:  The command to initiate documentation generation.
-*   `[patterns...]`: (Optional) One or more file patterns specifying the files to document. If no patterns are provided, a default set of patterns will be used.
+    This command initiates the documentation generation process.
+
+    *   `[patterns...]` (Optional):  A space-separated list of file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used (see “Default File Patterns” below).  You can specify patterns like `'packages/**/*.ts'` to focus on TypeScript files within the `packages` directory.
 
 **Default File Patterns**
 
-If you do not specify any patterns, the agent will analyze the following file types by default:
+If no patterns are specified during the `generate` command, the agent will process files matching the following patterns:
 
 *   `packages/**/*.ts`
 *   `packages/**/*.py`
 *   `packages/**/*.mjs`
 *   `packages/**/*.cls`
 *   `packages/**/*.trigger`
-*   `packages/**/*.js` (for LWC)
+*   `packages/**/*.js`
 *   `packages/**/*.tf`
 *   `packages/**/Dockerfile`
 *   `docs/**/*.md`
@@ -58,32 +53,24 @@ If you do not specify any patterns, the agent will analyze the following file ty
 *   `scripts/**/*.ts`
 *   `*.py`
 
-**Specifying Custom Patterns**
+**Operation**
 
-You can provide your own file patterns to control which files are processed. For example:
+1.  **Root Directory Detection:** The agent automatically determines the root directory of the GlassOps project. It assumes a project structure where the agent’s execution location is four levels deep from the root.
+2.  **Pattern Application:** The agent applies the provided (or default) file patterns to identify relevant files within the project.
+3.  **Documentation Generation:** The agent analyzes the identified files and generates documentation. The specific output format and content are managed internally by the agent’s core logic.
+4.  **Error Handling:**  If an error occurs during the process, the agent will display an error message to the console and exit with a non-zero status code.
 
-```bash
-glassops-agent generate 'src/**/*.js' 'test/**/*.ts'
-```
+**Dependencies**
 
-This command will only analyze JavaScript files in the `src` directory and TypeScript files in the `test` directory.
+The agent relies on the following dependencies:
 
-**Root Directory Detection**
+*   Commander: For parsing command-line arguments.
+*   Built-in Node.js modules: `url`, `path`.
 
-The agent automatically detects the root directory of your GlassOps repository. It assumes the agent’s location is four levels deep from the repository root. This ensures correct file path resolution during documentation generation.
+**Maintainability**
 
-**Error Handling**
+I am designed for ongoing maintenance and improvement. Updates will include new features, bug fixes, and support for additional file types. We are committed to providing a reliable and effective documentation solution for GlassOps projects.
 
-If an error occurs during the documentation generation process, the agent will display an error message and stack trace to the console. The process will then exit with a non-zero exit code.
+**Error Reporting**
 
-**Example**
-
-To generate documentation for all supported file types in your repository, simply run:
-
-```bash
-glassops-agent generate
-```
-
-**Version**
-
-The current version of the GlassOps Agent is 1.0.0.
+If you encounter issues or have suggestions for improvement, please report them through the project’s issue tracker. Include detailed information about the problem, including the command used, any error messages, and your project’s structure.

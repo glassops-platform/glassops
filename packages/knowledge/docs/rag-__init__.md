@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/rag/__init__.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/rag/__init__.py
-generated_at: 2026-01-28T22:47:38.872454
+generated_at: 2026-01-31T09:00:45.467573
 hash: dfb47fdaffdff34cc1b8b061b4662fcb1e7c7de005961dce082a670496c8b3a6
 ---
 
@@ -28,7 +28,7 @@ The `query_index` function employs type hints to improve code clarity and mainta
 **Design Decisions & Patterns:**
 
 *   **Minimalist Interface:** The package intentionally exposes only the `query_index` function. This design choice promotes simplicity and ease of use. It hides the complexity of the underlying knowledge index and retrieval process from the user.
-*   **Explicit Exports:** The `__all__` list explicitly defines the public interface of the package. This ensures that only intended components are accessible when importing the package.
+*   **Explicit Export:** The `__all__` list explicitly defines the public interface of the package. This ensures that only the intended functions are accessible when importing the package.
 *   **Modular Structure:** The package is structured with a dedicated `query_engine.py` module to encapsulate the query logic. This promotes code organization and separation of concerns.
 
 **Usage:**
@@ -42,4 +42,4 @@ context = query_index("What is the capital of France?")
 print(context)
 ```
 
-This will retrieve information related to the capital of France from the knowledge index and print it to the console.
+We aim to provide a robust and easy-to-integrate solution for adding knowledge retrieval to your applications.

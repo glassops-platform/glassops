@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/integration/identity.integration.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/identity.integration.test.ts
-generated_at: 2026-01-29T20:55:51.673333
+generated_at: 2026-01-31T09:12:29.782438
 hash: 08ee7d731762dc4c1479b9f5d75b6fe4580c23a9416e0cec0c9778be60362917
 ---
 
@@ -34,38 +34,34 @@ The Identity Resolver’s `authenticate` method accepts the following parameters
 *   `clientId`: The Salesforce Connected App Client ID.
 *   `jwtKey`: The private key associated with the Connected App.
 *   `username`: The Salesforce username.
-*   `instanceUrl` (Optional): The Salesforce instance URL (e.g., `https://login.salesforce.com` or a sandbox URL). If not provided, the resolver will attempt authentication without it.
+*   `instanceUrl` (Optional): The Salesforce instance URL. If not provided, the default Salesforce production instance is used.
 
 Upon successful authentication, the method returns the Salesforce Organization ID.
 
 **Test Methodology**
 
-These tests employ mocking of the `@actions/exec` module to simulate interactions with the Salesforce CLI (`sf`).  This allows for controlled testing without requiring a live Salesforce environment.  The tests verify:
+These tests employ mocking of the `@actions/exec` module to simulate Salesforce CLI interactions. This allows for controlled testing without requiring a live Salesforce environment.  The tests verify:
 
-*   The correct CLI command and arguments are invoked.
-*   The expected output is processed correctly.
-*   Error conditions are handled gracefully.
-*   Temporary files are cleaned up as expected.
+*   Correct CLI command construction and execution.
+*   Expected return values from the CLI.
+*   Proper error handling and exception throwing.
+*   File system operations related to JWT key management.
 
 **Error Handling**
 
-The `authenticate` method throws an error with a descriptive message ("❌ Authentication Failed. Check Client ID and JWT Key.") in the following cases:
+The Identity Resolver is designed to handle the following error conditions:
 
-*   The Salesforce CLI command fails.
-*   The CLI output is not valid JSON.
+*   Failure of the Salesforce CLI command.  In this case, an error message "❌ Authentication Failed. Check Client ID and JWT Key." is thrown.
+*   Invalid JSON response from the Salesforce CLI.  The same error message is thrown.
 
 **Cleanup**
 
 The Identity Resolver ensures that any temporary JWT key files created during the authentication process are removed, regardless of whether authentication succeeds or fails. This prevents sensitive information from persisting on the system.
 
+**Environment Considerations**
+
+The tests utilize the operating system’s temporary directory (`os.tmpdir()`) for JWT key file storage.  The tests verify that the correct files are created and deleted within this directory.
+
 **Silent Execution**
 
-The `authenticate` method executes the Salesforce CLI commands in silent mode, suppressing standard output.  Stdout is captured via listeners for processing.
-
-**Environments**
-
-The Identity Resolver supports authentication against:
-
-*   Production Salesforce instances.
-*   Sandbox Salesforce instances.
-*   Salesforce instances with custom domains.
+The `authenticate` method executes Salesforce CLI commands in silent mode, suppressing standard output.  Stdout is captured via listeners for processing.

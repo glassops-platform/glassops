@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/generation/adapters/yaml_adapter.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/generation/adapters/yaml_adapter.py
-generated_at: 2026-01-28T22:44:24.872138
+generated_at: 2026-01-31T08:57:47.709493
 hash: 02479b1d1aa043a20a103d0efcc3bdbdb68628a7e2e1134784aada793175c79b
 ---
 
@@ -19,14 +19,14 @@ The primary responsibility of this module is to adapt YAML files into a format s
 
 **Key Classes:**
 
-* **`YAMLAdapter`**: This class inherits from `BaseAdapter` and implements the specific logic for handling YAML files. It defines methods for identifying YAML files, parsing their content, formatting chunks, and generating prompts.
+* **`YAMLAdapter`**: This class inherits from `BaseAdapter` and implements the specific logic for handling YAML files. It defines how to identify YAML files, parse their content, format the content for inclusion in a prompt, and generate the prompt itself.
 
 **Important Functions:**
 
-* **`can_handle(file_path: Path) -> bool`**: This function determines whether the adapter can process a given file based on its extension. It returns `True` if the file path has a `.yml` or `.yaml` extension, and `False` otherwise. The `file_path` argument is a `Path` object representing the file's location.
-* **`parse(file_path: Path, content: str) -> List[str]`**: This function parses the content of a YAML file and splits it into chunks if the content exceeds a predefined size (`TARGET_CHUNK_SIZE`). It returns a list of strings, where each string represents a chunk of the YAML content, formatted for inclusion in a prompt. The `file_path` argument is a `Path` object, and `content` is a string containing the YAML file's content.
-* **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This private function formats a single chunk of YAML content. It adds metadata such as the file path and chunk number (if applicable) and wraps the content in a Markdown code block. The `file_path` argument is a `Path` object, `content` is the YAML chunk, and `part` is an optional integer representing the chunk number.
-* **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs a prompt for the language model. The prompt instructs the model to act as a DevOps engineer and technical writer, documenting the provided YAML configuration. It emphasizes the need for valid Markdown output and prohibits conversational text or specific terms. The `file_path` argument is a `Path` object, and `parsed_content` is a string containing the YAML content to be documented.
+* **`can_handle(file_path: Path) -> bool`**: This function determines whether the adapter can process a given file based on its extension. It returns `True` if the file path’s suffix is either ".yml" or ".yaml", and `False` otherwise. The `file_path` argument is a `Path` object representing the file's location.
+* **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and the file content as input and splits the content into a list of strings (chunks).  It addresses the limitation of language models regarding input size by dividing large YAML files into smaller, more manageable chunks, each not exceeding `TARGET_CHUNK_SIZE` characters. The function returns a list of these formatted chunks.
+* **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This private helper function formats a single chunk of YAML content. It prepends the file path and an optional part number to the content, wraps the content in a code block, and returns the formatted string. The `part` argument, if provided, indicates the chunk number within the original file.
+* **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs a prompt to be sent to the language model. The prompt instructs the model to act as a DevOps engineer and technical writer, documenting the provided YAML configuration. It emphasizes the need for valid Markdown output, prohibits conversational text, and specifies stylistic constraints (no emojis, certain words excluded, and pronoun usage). The `parsed_content` argument represents the YAML content to be documented.
 
 **Type Hints:**
 
@@ -34,7 +34,8 @@ The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `
 
 **Notable Patterns and Design Decisions:**
 
-* **Adapter Pattern:** The `YAMLAdapter` class follows the Adapter pattern, allowing the system to work with YAML files in a consistent manner alongside other potential configuration file types. It provides a standardized interface (`BaseAdapter`) for parsing and processing different file formats.
-* **Chunking:** Large YAML files are split into smaller chunks to avoid exceeding the input limits of the language model. The `TARGET_CHUNK_SIZE` constant defines the maximum size of each chunk.
-* **Prompt Engineering:** The `get_prompt` function carefully crafts a prompt that guides the language model to generate high-quality documentation. The prompt includes specific instructions regarding the desired output format, role-playing, and prohibited terms.
-* **Markdown Formatting:** The `_format_chunk` function ensures that the YAML content is properly formatted as a Markdown code block, making it easy to read and integrate into documentation.
+* **Adapter Pattern:** The `YAMLAdapter` class follows the Adapter pattern, allowing the system to work with YAML files in a consistent manner alongside other potential configuration file types.  It provides a common interface (`BaseAdapter`) for different file formats.
+* **Chunking:** The `parse` function implements a chunking mechanism to handle large YAML files that exceed the input size limits of the language model. This ensures that even extensive configurations can be documented.
+* **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering, providing clear instructions and constraints to the language model to ensure the generation of high-quality documentation.
+* **String Formatting:** The code uses f-strings for clear and concise string formatting, improving readability and maintainability.
+* **Constant for Chunk Size:** The `TARGET_CHUNK_SIZE` constant allows for easy adjustment of the maximum chunk size without modifying the core logic.

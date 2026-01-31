@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/types/config.d.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/types/config.d.ts
-generated_at: 2026-01-29T21:02:24.714139
+generated_at: 2026-01-31T09:18:38.204468
 hash: 10e0f67f12da9b5de1b7aeac604b2417e83996caf4f4cf3d95d537e6db4127ee
 ---
 
@@ -54,19 +54,19 @@ The `environments` section defines settings for each deployment environment.  Ea
 *   `github_environment`:  Links to a corresponding GitHub environment.
 *   `notes`:  Allows for adding descriptive notes about the environment.
 
-**GlassOps Platform Settings:**
+**GlassOps Platform Features:**
 
-The optional `glassops` section configures platform-specific features.
+The optional `glassops` section controls platform-level features.
 *   `enablePlatformEvents`: Enables or disables platform events.
 
 **Notification Settings:**
 
-The optional `notifications` section manages alert configurations.
+The optional `notifications` section configures how GlassOps sends notifications.
 *   `enabled_by_default`:  Enables or disables notifications globally.
 *   `channels`: Defines notification channels.
     *   `slack`: Configures Slack notifications.
         *   `enabled`: Enables or disables Slack notifications.
-        *   `mention_on_failure`: Mentions specific users on failure.
+        *   `mention_on_failure`: Mentions relevant users on failure.
     *   `email`: Configures email notifications.
         *   `enabled`: Enables or disables email notifications.
 

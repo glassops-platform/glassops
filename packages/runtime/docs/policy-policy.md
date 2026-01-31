@@ -2,51 +2,52 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/policy/policy.go
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/policy/policy.go
-generated_at: 2026-01-29T21:25:45.744377
+generated_at: 2026-01-31T09:07:12.631683
 hash: 8a1a02f4d3862565e4162e9128051a7cf16adfedea8d446cdb6684bf679de150
 ---
 
 ## Policy Engine Documentation
 
-This document describes the Policy Engine, a component responsible for enforcing governance rules within the system. It manages configuration loading, freeze window validation, and plugin whitelisting.
+This document describes the Policy Engine package, responsible for managing and enforcing governance policies within the system. It provides a mechanism to control deployments, manage plugin usage, and enforce runtime environment standards.
 
 **Package Purpose and Responsibilities**
 
-The `policy` package provides the functionality to load, parse, and apply governance policies. These policies control aspects such as deployment timing (freeze windows) and permitted plugins. The engine aims to provide a centralized point for managing and enforcing these rules, enhancing security and stability.
+The `policy` package provides the core functionality for loading, validating, and applying governance policies. These policies define rules related to deployment timing (freeze windows), permitted plugins, and runtime environment requirements.  We aim to provide a flexible and configurable system to ensure deployments adhere to organizational standards and security best practices.
 
 **Key Types and Interfaces**
 
-*   **`Config`**: This structure represents the complete governance configuration, encompassing both governance-specific settings and runtime environment settings.
-*   **`GovernanceConfig`**: Contains settings related to governance enforcement, including whether governance is enabled, defined freeze windows, and a whitelist of allowed plugins.
-*   **`RuntimeConfig`**: Holds runtime environment details like CLI and Node versions.
+*   **`Config`**:  The top-level structure representing the complete governance configuration. It contains `GovernanceConfig` and `RuntimeConfig`.
+*   **`GovernanceConfig`**: Holds settings related to governance rules, including whether governance is enabled, defined freeze windows, a whitelist of allowed plugins, and static analyzer configuration.
+*   **`RuntimeConfig`**: Stores runtime environment settings such as the required CLI version and Node.js version.
 *   **`FreezeWindow`**: Defines a specific time window (day and time range) during which deployments are prohibited.
-*   **`AnalyzerConfig`**: Configures static analysis settings, including enabling/disabling analysis, setting a severity threshold, and specifying rulesets.
-*   **`Engine`**: The core type that manages policy loading and enforcement. It holds the path to the configuration file.
+*   **`AnalyzerConfig`**: Configures the static analysis component, including enabling/disabling it, setting a severity threshold for reported issues, and specifying rulesets to apply.
+*   **`Engine`**:  The central component responsible for loading and applying the governance policy. It encapsulates the configuration path and provides methods for policy enforcement.
 
 **Important Functions and Their Behavior**
 
-*   **`New()`**:  This function creates a new `Engine` instance. It determines the configuration file path by first checking the `GLASSOPS_CONFIG_PATH` environment variable. If not set, it defaults to `"config/devops-config.json"`. It also uses the `GITHUB_WORKSPACE` environment variable to resolve the path, defaulting to the current directory if not set.
-*   **`Load()`**: This function reads the governance configuration from the configured file path. If the file does not exist, it logs a warning and returns a default configuration with governance disabled. It parses the file as JSON and applies default values if certain configuration options are missing (CLI version, Node version, Analyzer severity threshold). It also validates the format of freeze window times and days, returning an error if invalid.
-*   **`CheckFreeze(config *Config)`**: This function checks if the current time falls within any defined freeze windows. It iterates through the `FreezeWindows` in the provided `Config` and compares the current day and time against each window's settings. If a match is found, it returns an error indicating that deployments are blocked.
-*   **`ValidatePluginWhitelist(config *Config, pluginName string)`**: This function determines whether a given plugin is allowed based on the configured whitelist. If the whitelist is empty, all plugins are allowed. Otherwise, it checks if the plugin name exists within the whitelist.
-*   **`GetPluginVersionConstraint(config *Config, pluginName string)`**: This function retrieves the version constraint for a given plugin from the whitelist, if it exists.
-*   **`extractPluginName(entry string)`**: This helper function extracts the plugin name from a string that may include version information (e.g., "@scope/package@1.0.0" returns "@scope/package").
-*   **`extractVersionConstraint(entry string)`**: This helper function extracts the version constraint from a string that may include version information (e.g., "@scope/package@1.0.0" returns "1.0.0").
+*   **`New()`**: Creates a new `Engine` instance. It determines the configuration file path, prioritizing the `GLASSOPS_CONFIG_PATH` environment variable, and falling back to a default location (`config/devops-config.json`) if the environment variable is not set. It also uses the `GITHUB_WORKSPACE` environment variable to resolve the path, defaulting to the current directory if not set.
+*   **`Load()`**: Reads the governance configuration from the specified file. If the file does not exist, it logs a warning and returns a default configuration with governance disabled. It parses the JSON configuration, applies default values for missing fields (CLI version, Node version, analyzer severity), and validates the freeze window definitions.  Errors during file reading or JSON parsing are returned.
+*   **`CheckFreeze()`**:  Determines if the current time falls within a defined freeze window. It iterates through the configured freeze windows and compares the current day and time against the window's settings. If a match is found, an error is returned indicating that deployments are blocked.
+*   **`ValidatePluginWhitelist()`**: Checks if a given plugin is permitted based on the configured plugin whitelist. If the whitelist is empty, all plugins are allowed. Otherwise, it iterates through the whitelist and compares the plugin name against the whitelisted entries.
+*   **`GetPluginVersionConstraint()`**: Retrieves the version constraint associated with a whitelisted plugin. If the plugin is whitelisted, the function extracts and returns the version constraint string.
+*   **`extractPluginName()`**:  Helper function to extract the plugin name from a string that may include a version. It handles both scoped and regular packages.
+*   **`extractVersionConstraint()`**: Helper function to extract the version constraint from a string that may include a version.
 
 **Error Handling Patterns**
 
-The functions in this package employ standard Go error handling. Errors are returned as the second return value, allowing the caller to check for and handle potential issues. Errors are often wrapped using `fmt.Errorf` with `%w` to preserve the original error context.  Specific errors are returned for invalid configuration file paths, invalid JSON format, invalid freeze window settings, and deployment blocks due to freeze windows.
+The package employs standard Go error handling practices. Functions return an error value alongside their primary return value. Errors are often wrapped using `fmt.Errorf("%w", err)` to provide context and preserve the original error for debugging.  Specific error messages are provided for invalid configuration data, such as incorrect freeze window formats or missing configuration files.
 
 **Concurrency Patterns**
 
-This package does not currently employ explicit concurrency patterns like goroutines or channels. The functions are designed to be called sequentially.
+This package is primarily focused on configuration loading and validation, and does not currently employ goroutines or channels for concurrent operations.  It is designed to be thread-safe as its methods do not share mutable state.
 
 **Notable Design Decisions**
 
-*   **Configuration File Path**: The configuration file path is determined by environment variables (`GLASSOPS_CONFIG_PATH` and `GITHUB_WORKSPACE`) to provide flexibility and integration with different environments.
-*   **Default Configuration**: A default configuration is provided when the configuration file is missing, ensuring that the system can still operate (albeit with governance disabled) in the absence of a valid configuration.
-*   **Freeze Window Validation**:  Input validation is performed on freeze window settings to prevent invalid configurations from causing unexpected behavior.
-*   **Plugin Whitelisting**: The plugin whitelisting mechanism allows for fine-grained control over which plugins are permitted, enhancing security. The functions to extract plugin names and version constraints provide flexibility in how whitelist entries are formatted.
+*   **Configuration File Location:** The configuration file path is configurable via the `GLASSOPS_CONFIG_PATH` environment variable, providing flexibility in different deployment environments.
+*   **Default Configuration:** A default configuration is provided when the configuration file is missing, allowing the system to function (albeit with governance disabled) even without explicit configuration.
+*   **Plugin Whitelisting:** The plugin whitelist provides a mechanism to control which plugins are permitted, enhancing security and ensuring compliance with organizational standards.
+*   **Freeze Windows:** The freeze window feature allows for scheduled maintenance or blackout periods during which deployments are blocked.
+*   **Validation:** Input validation is performed on the configuration data to ensure data integrity and prevent unexpected behavior.

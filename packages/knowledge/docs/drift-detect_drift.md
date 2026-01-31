@@ -2,16 +2,16 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/drift/detect_drift.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/drift/detect_drift.py
-generated_at: 2026-01-28T22:39:00.075917
+generated_at: 2026-01-31T08:52:32.530018
 hash: dee44b64dd3a391ae28d74379a8cb4f62cf1733a64945e310fcbe0a6ce6a6ac2
 ---
 
 ## Knowledge Drift Detection Documentation
 
-This module is designed to identify changes in the knowledge base over time, a process known as drift. Drift can occur when new information is added that is semantically different from existing content, or when existing content is modified. This impacts the performance of Retrieval-Augmented Generation (RAG) systems.
+This module is designed to identify changes in the knowledge base over time, a process known as drift. Drift can occur when new information is added that is semantically different from existing content, or when existing content is modified in a way that alters its meaning. This impacts the performance of Retrieval-Augmented Generation (RAG) systems.
 
 **Module Responsibilities:**
 
@@ -25,32 +25,24 @@ The primary responsibility of this module is to compare newly processed document
 
     Currently, the drift detection logic is simulated. Instead of comparing against a stored snapshot of previous embeddings, it identifies near-duplicate documents within the current set. This is done by hashing document content and checking for collisions.
 
-    The function generates a markdown report (`drift_report.md`) summarizing the findings. The report includes sections for:
-    *   Knowledge Base Health Report header
-    *   Generation source file
-    *   Conflicting/Duplicate Documentation (if any are found)
-    *   Drift Status (currently always reports "No significant semantic drift detected")
+    The function generates a "Knowledge Base Health Report" in Markdown format, saved to `docs/generated/drift_report.md`. This report details any detected near-duplicate documents and a placeholder drift status.
 
-    The report is written to the `docs/generated` directory. The function returns a list of document paths identified as drifted (currently an empty list due to the simulated nature of the drift detection).
+    The function returns a list of document paths identified as having drifted. Currently, this list is always empty due to the simulated drift detection.
 
-**Key Data Structures:**
+**Data Structures:**
 
-*   **`embeddings`:** A list of tuples. Each tuple contains a document dictionary (`doc_dict`) and its embedding vector. The `doc_dict` is expected to have a `"hash"` key representing the document's content hash and a `"path"` key representing the document's file path.
-*   **`seen_hashes`:** A dictionary used to track document hashes and their corresponding paths. This is used to identify near-duplicate documents.
+*   **`embeddings`:** A list of tuples. Each tuple contains:
+    *   `doc_dict`: A dictionary representing a document, expected to have a `"hash"` key (for content hashing) and a `"path"` key (for document location).
+    *   `embedding_vector`: A NumPy array representing the document's embedding.
 
 **Design Decisions and Patterns:**
 
-*   **Simulated Drift Detection:** The current implementation simulates drift detection due to the absence of a persistent storage mechanism for previous embeddings. This allows for testing and demonstration of the reporting functionality.
-*   **Markdown Reporting:** The use of markdown for the drift report provides a human-readable and easily maintainable format for communicating drift information.
-*   **Hashing for Near-Duplicate Detection:** Employing document hashing is an efficient way to identify potential content conflicts or redundancy.
-*   **Type Hints:** Type hints are used throughout the code to improve readability and maintainability, and to enable static analysis.
-*   **File Path Handling:** The module uses `os.path.join` to construct file paths, ensuring cross-platform compatibility. `os.makedirs(..., exist_ok=True)` is used to create the report directory if it does not exist, preventing errors.
+*   **Report Generation:** The module employs a report-based approach to communicate drift information. This provides a human-readable summary of the knowledge base's health.
+*   **Simulated Drift:** The current implementation uses a simulation for drift detection. This allows for testing and development without requiring a persistent storage of previous embeddings. The comment `TODO: load real previous embeddings snapshot for actual drift detection` indicates the intended future behavior.
+*   **Near-Duplicate Detection:** The current simulation focuses on identifying near-duplicate documents as a proxy for content conflicts. This is a practical approach for detecting redundancy in the knowledge base.
+*   **Type Hints:** Type hints are used to improve code readability and maintainability, and to enable static analysis.
+*   **File Path Handling:** The module uses `os.path.join` to construct file paths, ensuring cross-platform compatibility. `os.makedirs(..., exist_ok=True)` is used to create directories if they do not exist, preventing errors.
 
-**Future Improvements:**
+**Future Considerations:**
 
-We plan to implement the following improvements:
-
-*   Load previous embeddings from a persistent storage location (e.g., a vector database) for accurate drift detection.
-*   Implement a more sophisticated drift detection algorithm based on cosine similarity or other distance metrics.
-*   Allow users to configure the drift threshold.
-*   Provide more detailed information in the drift report, such as the magnitude of the drift and the affected documents.
+The module is designed to be extended with real drift detection logic. This will involve loading previous embeddings from storage, calculating cosine similarity scores, and identifying documents that fall below the specified threshold. The report generation will be updated to reflect the actual drift detected. You will need to provide a mechanism for storing and retrieving embedding snapshots.

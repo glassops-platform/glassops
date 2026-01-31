@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/integration/cli.integration.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/cli.integration.test.ts
-generated_at: 2026-01-29T20:55:13.614677
+generated_at: 2026-01-31T09:12:05.516686
 hash: 7bdd3344b00f64cd730b3fc47b16f07a62fb9c929c986afde8dc397872fe94f8
 ---
 
@@ -19,7 +19,7 @@ The primary goal of these tests is to ensure reliable CLI functionality, includi
 
 **Functionality Tested**
 
-The integration tests cover the following key areas:
+The tests cover the following key areas:
 
 *   **CLI Installation:**
     *   Skipping installation if the CLI is already present.
@@ -43,19 +43,18 @@ The integration tests cover the following key areas:
 
 Plugin installation is governed by a `ProtocolConfig` object, which includes:
 
-*   `governance.enabled`: A boolean indicating whether governance features are enabled.
-*   `governance.plugin_whitelist`: An array of strings representing allowed plugins and their optional version constraints (e.g., `"sfdx-hardis@^6.0.0"`).
-*   `runtime.cli_version`: The desired CLI version.
-*   `runtime.node_version`: The required Node.js version.
+*   **governance.enabled:** A boolean indicating whether governance features are enabled.
+*   **governance.plugin\_whitelist:** An array of strings representing allowed plugins and their optional version constraints (e.g., "sfdx-hardis@^6.0.0").
+*   **runtime.cli\_version:** The desired CLI version.
+*   **runtime.node\_version:** The required Node.js version.
 
 **Behavior Notes**
 
 *   The tests mock external interactions with the operating system and other tools (like `npm` and `sf`) to provide a controlled testing environment.
-*   The tests adapt to the operating system (Windows or others) when constructing shell commands.
-*   Version constraints (e.g., `^6.0.0`) are enforced during plugin installation when a whitelist is configured.
-*   If a plugin is not found in the whitelist, installation is prevented, and an error is thrown.
-*   Informational messages and warnings are logged to provide feedback on the installation process.
+*   Installation commands are constructed differently based on the operating system (Windows vs. others) to ensure compatibility.
+*   Version constraints are enforced during plugin installation when a whitelist is configured.
 *   Error handling is implemented to gracefully manage installation failures and provide informative error messages.
+*   Informational messages are logged to indicate the progress of installation and verification steps.
 
 **User Instructions**
 

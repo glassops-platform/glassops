@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/analyzer.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/analyzer.test.ts
-generated_at: 2026-01-29T20:58:01.640221
+generated_at: 2026-01-31T09:14:52.224123
 hash: 7d2ddbbab6796de15d6654bccb98337c6487a3e9b2166dbec435abeccbfeea3c
 ---
 
@@ -47,17 +47,17 @@ The `scan` function returns an object with the following properties:
 
 **Configuration**
 
-The Analyzer service currently uses a hardcoded command name ("sf"). The ruleset argument is configurable via the `scan` function.
+The Analyzer service currently uses a hardcoded command name, "sf".  The ruleset argument is configurable via the `scan` function.
 
 **Usage**
 
-You can call the `scan` function with an array of file paths to analyze. For example:
+You can call the `scan` function with an array of file paths:
 
 ```typescript
-const result = await analyzer.scan(["src", "test"]);
+const result = await analyzer.scan(["src"]);
 ```
 
-To specify a ruleset:
+You can also specify a ruleset:
 
 ```typescript
 const result = await analyzer.scan(["src"], "Security");

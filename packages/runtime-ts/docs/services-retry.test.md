@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/services/retry.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/retry.test.ts
-generated_at: 2026-01-29T21:00:42.676058
+generated_at: 2026-01-31T09:17:29.383022
 hash: 8f8177f9522970e0c73f095aa11dee7604a2394058095c6d80ef9136115711a4
 ---
 
@@ -36,27 +36,22 @@ The `executeWithRetry` function accepts an asynchronous function and an optional
 
 **Behavior**
 
-*   **First Attempt Success:** If the provided function resolves on the first attempt, the result is immediately returned, and the function is only called once.
-*   **Retry Mechanism:**  When the function rejects, the service waits for the calculated backoff duration before retrying. The backoff duration increases exponentially with each retry (e.g., 1000ms, 2000ms, 4000ms).
-*   **Retry Predicate:** The `shouldRetry` function, if provided, allows for selective retries based on the error type. This is useful for avoiding retries on non-transient errors.
-*   **No Retries:** If `maxRetries` is set to 0, the function is executed only once. If it fails, the Promise is immediately rejected.
-*   **Error Handling:** The service handles both `Error` objects and non-Error rejections (e.g., strings, numbers) from the provided function. These are propagated as the rejection reason.
+*   **Retry Logic:**  The service implements an exponential backoff strategy.  The delay between retries increases exponentially (2<sup>n</sup> * `backoffMs`), where n is the retry attempt number (starting from 0).
+*   **Error Handling:** The service propagates the final error if all retry attempts fail. It also handles cases where the function throws a non-Error value.
+*   **Predicate Control:** The `shouldRetry` function allows for selective retries based on the type of error encountered. This is useful for avoiding retries on errors that are unlikely to be resolved by repeating the operation.
+*   **Zero Retries:** When `maxRetries` is set to 0, the function is executed only once. If it fails, the Promise is immediately rejected.
 *   **Default Options:** If no options are provided, the service uses default values for `maxRetries` and `backoffMs`.
 
 
 
 **Usage**
 
-You can use `executeWithRetry` to wrap potentially unreliable operations:
+You can use `executeWithRetry` as follows:
 
 ```typescript
-const myOperation = async () => {
-  // ... your asynchronous code ...
-};
+const result = await executeWithRetry(async () => {
+  // Your asynchronous operation here
+  return "Operation Result";
+}, { maxRetries: 5, backoffMs: 500 });
 
-try {
-  const result = await executeWithRetry(myOperation, { maxRetries: 5, backoffMs: 500 });
-  // Process the result
-} catch (error) {
-  // Handle the error after all retries have failed
-}
+console.log(result); // Output: Operation Result (or an error if all retries fail)

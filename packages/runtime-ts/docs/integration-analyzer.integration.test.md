@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime-ts
 origin: packages/runtime-ts/src/integration/analyzer.integration.test.ts
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/analyzer.integration.test.ts
-generated_at: 2026-01-29T20:54:43.482993
+generated_at: 2026-01-31T09:11:33.280049
 hash: 0d473ef7c4d829aa4b6073496362792104c26afac17c56c11692582fff9706d5
 ---
 
@@ -15,42 +15,40 @@ hash: 0d473ef7c4d829aa4b6073496362792104c26afac17c56c11692582fff9706d5
 
 **Overview:**
 
-The Analyzer service is designed to integrate with a static code analysis tool – specifically, `sf code-analyzer` – to identify potential issues within a codebase. It provides a consistent interface for scanning code and reporting violations, prioritizing the use of `sf code-analyzer` over alternative tools like `sf scanner`.
+The Analyzer service is designed to integrate with a static analysis tool – specifically, `sf code-analyzer` – to identify code quality issues. It provides a consistent interface for scanning code and reporting violations, prioritizing the use of `sf code-analyzer` over alternative tools like `sf scanner`.
 
 **Functionality Tested:**
 
 The integration tests cover the following key aspects:
 
-*   **Command Construction:** Verification that the Analyzer builds the correct `sf code-analyzer` command with the appropriate arguments, including target directories and rulesets.
+*   **Command Construction:** Verification that the Analyzer builds the correct `sf code-analyzer` command with the appropriate arguments for target directories and rulesets.
 *   **Result Parsing:** Confirmation that the Analyzer accurately parses JSON output from `sf code-analyzer`, extracting violation details such as rule name, message, severity, and location.
-*   **Error Handling:**  Testing the Analyzer’s ability to gracefully handle failures during command execution, such as when the `sf code-analyzer` tool is not found.
+*   **Error Handling:**  Testing the Analyzer’s ability to gracefully handle failures during command execution, such as when the `sf` command is not found.
 
 **Test Scenarios:**
 
-1.  **Valid Command Construction:** This test confirms that when `analyzer.scan()` is called with a target directory and ruleset, the `sf code-analyzer` command is invoked with the expected parameters.  The test mocks successful execution of the command and verifies the arguments passed to `exec`.
+1.  **Valid Command Construction:** This test confirms that when `analyzer.scan()` is called with a target directory and ruleset, the `sf code-analyzer` command is invoked with the expected parameters.  The test mocks successful execution of the command and verifies the arguments passed to `exec.exec`.
 
-2.  **Violation Parsing:** This test simulates a scenario where `sf code-analyzer` identifies violations. It mocks the command’s output with a sample JSON payload containing violation data. The test then asserts that the `analyzer.scan()` function correctly parses this data and returns a list of violations with the expected properties.
+2.  **Violation Parsing:** This test simulates a scenario where `sf code-analyzer` returns a JSON payload containing violation data. The Analyzer is expected to parse this data and populate a `violations` array with the extracted information. The test asserts that the parsed violations have the correct properties.
 
-3.  **Command Failure Handling:** This test verifies that the Analyzer handles errors during command execution. It mocks a scenario where the `sf code-analyzer` command fails (e.g., command not found) and confirms that `analyzer.scan()` throws an appropriate error.
+3.  **Command Failure Handling:** This test verifies that if `sf code-analyzer` fails to execute (e.g., due to a missing command), the Analyzer correctly propagates the error to the calling code. The test mocks a rejected promise from `exec.exec` and asserts that `analyzer.scan()` throws an exception with the expected error message.
 
 **Usage:**
 
-You interact with the Analyzer through its `scan()` method.  You provide an array of target directories and a ruleset name. The `scan()` method executes the `sf code-analyzer` command, parses the results, and returns an object containing any identified violations.
-
-**Output:**
-
-The `scan()` method returns a Promise that resolves to an object containing a `violations` array. Each element in the `violations` array represents a single code violation and includes the following properties:
-
-*   `rule`: The name of the violated rule.
-*   `message`: A descriptive message explaining the violation.
-*   `severity`: An integer representing the severity of the violation.
-*   `line`: The line number where the violation occurred.
+You interact with the Analyzer through its `scan()` method.  You provide an array of target directories and a ruleset name. The `scan()` method executes the `sf code-analyzer` command and returns a result object containing any detected violations.
 
 **Dependencies:**
 
-*   `@actions/exec`: This package is used to execute the `sf code-analyzer` command. The tests mock this dependency to isolate the Analyzer’s logic.
-*   `sf code-analyzer`: The external command-line tool that performs the static code analysis.
+*   `@actions/exec`: This package is used to execute shell commands. The tests mock this dependency to isolate the Analyzer’s logic.
+*   `sf code-analyzer`: The external command-line tool that performs the static analysis.
 
-**Maintainer Notes:**
+**Output:**
 
-I have implemented these tests to ensure the Analyzer’s reliability and maintainability.  We prioritize clear error handling and accurate result parsing.  Future development should continue to focus on expanding test coverage and improving the robustness of the integration with `sf code-analyzer`.
+The `scan()` method returns a promise that resolves to an object containing a `violations` array. Each element in the `violations` array represents a detected code quality issue and includes the following properties:
+
+*   `rule`: The name of the violated rule.
+*   `message`: A description of the violation.
+*   `severity`: The severity level of the violation.
+*   `line`: The line number where the violation occurred.
+
+In case of an error during command execution, the `scan()` method rejects with an error object.

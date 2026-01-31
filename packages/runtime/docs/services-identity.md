@@ -1,75 +1,49 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/src/services/identity.ts
-last_modified: 2026-01-26
+origin: packages/runtime/internal/services/identity.go
+last_modified: 2026-01-31
 generated: true
-source: packages/runtime/src/services/identity.ts
-generated_at: 2026-01-26T14:21:30.363Z
-hash: b2f611e98c51d3110eedded48910994c38f58824770583b1d699d496877ce3e5
+source: packages/runtime/internal/services/identity.go
+generated_at: 2026-01-31T09:09:23.437771
+hash: 3940eb183960a36e834ef630b97962783208d0a0acd53fd5522e36dcb1c8a15d
 ---
 
-## Identity Resolver Service Documentation
+## Identity Service Documentation
 
-**Overview**
+This document details the Identity Service, responsible for handling authentication with Salesforce. It provides functionality for authenticating using both JWT (JSON Web Token) and SFDX Auth URLs.
 
-The Identity Resolver service manages authentication with an organization using Salesforce CLI (sf). It securely authenticates using a JSON Web Token (JWT) and retrieves the organization ID. This service is designed for automated processes requiring access to a Salesforce organization.
+**Package Purpose:**
 
-**Functionality**
+The `services` package contains core services used within the platform. The Identity Service specifically manages the process of authenticating with Salesforce, obtaining an Organization ID (OrgID) which is then used for subsequent operations.
 
-The core function of this service is to authenticate against a Salesforce instance and obtain the organization ID. It achieves this by:
+**Key Types and Interfaces:**
 
-1.  **Secure Key Storage:**  A temporary, securely permissioned file is created to store the provided JWT key. This key is essential for authentication.
-2.  **Salesforce CLI Interaction:** The service executes the `sf org login jwt` command with the provided credentials and key. This command handles the authentication process with Salesforce.
-3.  **Response Parsing:** The output from the Salesforce CLI is parsed to extract the organization ID and access token.
-4.  **Secure Key Deletion:** After authentication, the temporary JWT key file is immediately deleted to maintain security.
-5.  **Error Handling:**  Robust error handling is implemented to catch authentication failures and provide informative error messages.
+*   **`AuthRequest`:** A structure that encapsulates the parameters required for JWT-based authentication. It contains the `ClientID`, `JWTKey`, `Username`, and `InstanceURL` associated with the Salesforce connection.
+*   **`IdentityResolver`:** This type handles JWT authentication. It provides a method to authenticate against Salesforce using the provided credentials.
+*   **`Identity`:** This type handles authentication via SFDX Auth URLs. It includes methods for parsing and authenticating using these URLs.
+*   **No Interfaces:** The service does not currently define any interfaces for abstraction.
 
-**Inputs**
+**Important Functions and Behavior:**
 
-The `authenticate` function accepts a single object, `AuthRequest`, with the following properties:
+*   **`NewIdentityResolver()`:**  A constructor function that returns a new instance of the `IdentityResolver`.
+*   **`Authenticate(req AuthRequest) (string, error)` (on `IdentityResolver`):** This function performs JWT-based authentication with Salesforce. It takes an `AuthRequest` as input, writes the JWT key to a temporary file with restricted permissions, and then executes the `sf org login jwt` command. It retries the operation up to three times in case of transient Salesforce API errors. Upon successful authentication, it parses the JSON response to extract the OrgID and returns it.  It includes secure cleanup of the temporary JWT key file by overwriting it with zeros before deletion.
+*   **`NewIdentity()`:** A constructor function that returns a new instance of the `Identity`.
+*   **`ParseAuthURL(authURL string) (string, error)` (on `Identity`):** This function validates and parses a Salesforce SFDX Auth URL. It checks for the correct format (`force://...`) and verifies that the instance URL is a valid Salesforce domain. It returns the instance URL if the validation is successful.
+*   **`AuthenticateWithURL(authURL string) (string, error)` (on `Identity`):** This function authenticates with Salesforce using an SFDX Auth URL. It first validates the URL using `ParseAuthURL`. It then writes the URL to a temporary file, executes the `sf org login sfdx-url` command, and parses the JSON response to extract the OrgID. It also includes secure cleanup of the temporary Auth URL file.
 
-*   `clientId`: (String) The Salesforce Connected App Client ID. This identifies the application authenticating.
-*   `jwtKey`: (String) The private key used to generate the JWT.  This key must be securely managed.
-*   `username`: (String) The Salesforce username associated with the JWT.
-*   `instanceUrl`: (Optional String) The Salesforce instance URL. If not provided, the service will use the default Salesforce instance.
+**Error Handling:**
 
-**Outputs**
+The service employs robust error handling. Functions return both a result (OrgID) and an error value. Errors are wrapped using `fmt.Errorf` with `%w` to preserve the original error context, allowing for easier debugging and error propagation. Specific error messages are provided for common issues like invalid URL formats, file write failures, and authentication failures.
 
-Upon successful authentication, the `authenticate` function returns a Promise that resolves with the Salesforce Organization ID (String).
+**Concurrency:**
 
-**Error Handling**
+The service does not explicitly use goroutines or channels for concurrent operations. However, the `Authenticate` function incorporates a retry mechanism with exponential backoff, which implicitly introduces a form of controlled concurrency in handling transient errors.
 
-If authentication fails, the `authenticate` function throws an Error with the message "Authentication Failed. Check Client ID and JWT Key."  This indicates a problem with the provided credentials or key.
+**Notable Design Decisions:**
 
-**Usage**
-
-To authenticate, you must first create an instance of the `IdentityResolver` class. Then, call the `authenticate` method with an `AuthRequest` object containing the necessary authentication details.
-
-```typescript
-import { IdentityResolver } from './identity';
-
-const resolver = new IdentityResolver();
-
-const authRequest = {
-  clientId: 'your_client_id',
-  jwtKey: 'your_jwt_key',
-  username: 'your_username',
-  instanceUrl: 'https://your-instance.salesforce.com' // Optional
-};
-
-resolver.authenticate(authRequest)
-  .then(orgId => {
-    console.log(`Successfully authenticated with org ID: ${orgId}`);
-  })
-  .catch(error => {
-    console.error('Authentication error:', error.message);
-  });
-```
-
-**Security Considerations**
-
-*   The JWT key is stored in a temporary file with restricted permissions (0o600) to prevent unauthorized access.
-*   The temporary key file is deleted immediately after authentication.
-*   Ensure the JWT key is securely managed and never committed to source control.
-*   Protect the `clientId` and `username` as sensitive information.
+*   **Temporary File Usage:** The service writes sensitive information (JWT key and Auth URL) to temporary files to interact with the Salesforce CLI (`sf`). This approach allows the CLI to handle the authentication process securely.
+*   **Secure File Cleanup:**  After use, temporary files containing sensitive data are securely cleaned up by first overwriting their contents with zeros before deleting them, mitigating the risk of data leakage.
+*   **Salesforce CLI Dependency:** The service relies on the Salesforce CLI (`sf`) being installed and configured on the system where it is running.
+*   **Retry Mechanism:** The `Authenticate` function includes a retry mechanism to handle transient errors from the Salesforce API, improving the reliability of the authentication process.
+*   **JSON Parsing:** The service uses `json.Unmarshal` to parse the output from the Salesforce CLI, ensuring structured access to the authentication results.

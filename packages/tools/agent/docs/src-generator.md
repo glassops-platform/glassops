@@ -2,26 +2,39 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/generator.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/generator.ts
-generated_at: 2026-01-26T14:12:32.453Z
-hash: 6e3e11b59b4e72025de8b269db9b3d13ad0344f106f135c664f03d15fe00dcf1
+generated_at: 2026-01-31T09:22:39.545996
+hash: 7c69d26ea41989b22a3650371168dda792888bcdf63bb35cc47921f990776a6d
 ---
 
 ## GlassOps Agent Documentation
 
-This document details the functionality of the GlassOps Agent, a tool designed to automatically generate documentation from source code. It supports multiple languages and file types, leveraging a Large Language Model (LLM) to create comprehensive and up-to-date documentation.
+This document details the functionality and usage of the GlassOps Agent, a tool designed to automatically generate documentation from source code. It supports multiple languages and file types, leveraging a large language model (LLM) to create comprehensive and consistent documentation.
 
 **Overview**
 
-The Agent scans specified files, parses their content, and uses an LLM to generate documentation. It incorporates a caching mechanism to avoid redundant processing and a validation step to ensure documentation quality. The generated documentation is then written to a designated output directory, organized based on the source code’s structure.
+The Agent scans specified files, parses their content, and uses an LLM to generate documentation. It supports caching to avoid redundant processing and includes validation checks to ensure documentation quality. The generated documentation is written to a designated output directory, organized based on the source code structure.
 
-**Key Components**
+**Key Features**
 
-*   **GeminiClient:**  Handles communication with the LLM for content generation.
-*   **Scanner:**  Locates files matching specified patterns within the project’s root directory.
-*   **Adapters:**  Interface with different file types (TypeScript, Python, Apex, LWC, Terraform, Dockerfile, YAML, JSON) to parse their content and prepare it for the LLM. Currently supported adapters include:
+*   **Multi-Language Support:** Handles TypeScript, Python, Apex, LWC, Terraform, Dockerfile, YAML, JSON, and Markdown files.
+*   **LLM Integration:** Uses a GeminiClient to interact with a large language model for documentation generation.
+*   **File Scanning:**  Identifies files to process based on provided target patterns.
+*   **Caching:** Stores file hashes and generated file information to skip unchanged files, improving performance.
+*   **Prompting:** Employs configurable prompts to guide the LLM’s documentation generation process.
+*   **Validation:** Checks generated documentation for potential issues.
+*   **Automated Organization:** Structures generated documentation based on the source code’s directory structure.
+*   **Frontmatter Injection:** Adds metadata to generated Markdown files, including type, domain, origin, and modification dates.
+
+**Architecture**
+
+The Agent consists of the following core components:
+
+*   **Generator:** The main class responsible for orchestrating the documentation generation process.
+*   **Scanner:** Locates files matching specified patterns within the project’s root directory.
+*   **Adapters:** Interface with different file types, parsing their content and preparing it for the LLM. Supported adapters include:
     *   TSAdapter (TypeScript)
     *   PyAdapter (Python)
     *   ApexAdapter (Apex)
@@ -30,50 +43,38 @@ The Agent scans specified files, parses their content, and uses an LLM to genera
     *   DockerAdapter (Dockerfile)
     *   YMLAdapter (YAML)
     *   JSONAdapter (JSON)
-*   **Validator:** Checks the generated documentation for potential issues.
-*   **DocCache:** Stores file hashes and metadata to prevent reprocessing unchanged files.
-*   **PromptConfig:** Defines the prompts sent to the LLM, allowing customization of the generated documentation’s style and content.
-
-**Workflow**
-
-1.  **Initialization:** The Agent initializes its components, including the LLM client, scanner, adapters, and cache. It attempts to load prompts from a `prompts.yml` file.
-2.  **Scanning:** The scanner identifies files matching the provided target patterns.
-3.  **Processing:** For each file:
-    *   The Agent determines the appropriate adapter based on the file extension.
-    *   It calculates a hash of the file’s content.
-    *   If the file hasn’t changed (based on the cache), it’s skipped.
-    *   The adapter parses the file’s content into chunks.
-    *   Prompts are constructed using configured prompts or adapter defaults.
-    *   The LLM generates documentation for each chunk.
-    *   The adapter post-processes the generated documentation.
-    *   Metadata (type, domain, origin, last modified date) is inferred.
-    *   The documentation is written to a file in the designated output directory, with a filename derived from the source file’s name and location.
-    *   The cache is updated with the file’s hash and metadata.
-4.  **Validation:** The generated documentation is validated. Warnings are logged for any issues.
-5.  **Caching:** The updated cache is saved to disk.
-
-**Configuration**
-
-*   **rootDir:** Specifies the root directory of the project.
-*   **targetPatterns:** An array of file patterns to scan (e.g., `['**/*.ts', '**/*.py']`).
-*   **prompts.yml:** (Optional) A YAML file containing custom prompts for different file types.
+*   **GeminiClient:**  Handles communication with the LLM.
+*   **Validator:**  Performs validation checks on the generated documentation.
 
 **Usage**
 
-You can run the Agent by providing an array of target patterns:
+You interact with the Agent by providing an array of target file patterns. The Agent will:
 
-```
-agent.run(['**/*.ts', '**/*.py']);
-```
+1.  Load cached file information to avoid reprocessing unchanged files.
+2.  Load prompts from a `prompts.yml` file (if available).
+3.  Scan the project for files matching the provided patterns.
+4.  For each file:
+    *   Determine the appropriate adapter based on the file extension.
+    *   Read the file content and calculate its hash.
+    *   If the file has not changed (based on hash comparison), skip it.
+    *   Parse the file content using the selected adapter.
+    *   Generate a prompt for the LLM, incorporating the file content and any configured prompts.
+    *   Send the prompt to the LLM and receive the generated documentation.
+    *   Post-process the generated documentation.
+    *   Write the documentation to a Markdown file in the appropriate output directory.
+    *   Update the cache with the new file hash and generated file information.
+5.  Save the updated cache.
 
-**Cache Management**
+**Configuration**
 
-The Agent uses a cache to store file hashes and metadata. This prevents reprocessing unchanged files, improving performance. The cache is stored in a `doc-cache.json` file within the `config` directory of the project’s root.
+*   **`prompts.yml`:**  A YAML file containing prompts for different file types. This file allows you to customize the instructions given to the LLM. If not found, default prompts are used.
+*   **`rootDir`:** The root directory of the project. This is specified during the Generator’s instantiation.
+*   **`cachePath`:** The path to the cache file, located within the `config` directory of the `rootDir`.
 
 **Output**
 
-Generated documentation is written as Markdown (`.md`) files to a designated output directory. The directory structure mirrors the source code’s structure, allowing for easy navigation and organization. Frontmatter is added to each file containing metadata about the documentation.
+The Agent generates Markdown files (`.md`) containing the documentation. These files are organized within the `docs` directory, mirroring the source code’s directory structure.  Generated files include frontmatter containing metadata about the documentation.
 
 **Error Handling**
 
-The Agent logs errors encountered during processing. Validation warnings are also logged, providing feedback on potential documentation issues.
+The Agent logs errors encountered during processing.  Validation warnings are also logged, but do not prevent file creation.

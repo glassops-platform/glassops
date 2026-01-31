@@ -2,53 +2,61 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/integration/helpers.go
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/integration/helpers.go
-generated_at: 2026-01-29T21:24:28.686024
+generated_at: 2026-01-31T09:06:03.365969
 hash: e52dc4d6d6a8ca54108f60c771cbec995f0fbcd31ed3a63fa63e608e54b9e2fc
 ---
 
 ## Integration Test Helpers Documentation
 
-This package provides a collection of helper functions and data structures designed to simplify the creation and management of test environments for integration tests. It focuses on providing a consistent and isolated environment for reliable test execution.
+This package provides a collection of helper functions and data structures designed to simplify the creation and management of test environments for integration tests. It focuses on providing a consistent and isolated space for running tests, including configuration management and environment setup/teardown.
 
-### Key Types and Interfaces
+**Key Responsibilities:**
 
-*   **TestEnvironment:** This struct encapsulates the state of a test environment. It holds the path to the workspace directory, the path to the configuration file, and a map of the original environment variables before test setup.
-*   **FreezeWindowData:**  A struct containing pre-defined freeze window configurations for testing purposes. These configurations are represented as slices of maps, defining start and end times for specific days.
-*   **PluginConfigData:** A struct holding pre-defined plugin configurations, including whitelists, and configurations with and without versioning.
-*   **TestResultsData:** A struct containing pre-defined test result sets for various scenarios (valid, empty, all passed, all failed).
-*   **TestResults:** A struct representing the outcome of a test run, including the total number of tests, the number of passed tests, and the number of failed tests.
-*   **CoverageTestData:** A struct containing pre-defined code coverage data for testing purposes.
-*   **Coverage:** A struct representing code coverage information, including the actual coverage percentage and the required coverage percentage.
+*   Creating temporary workspaces for tests.
+*   Managing test configuration files.
+*   Setting and restoring environment variables required by tests.
+*   Providing pre-defined test data for common scenarios.
+*   Cleaning up test artifacts after execution.
 
-### Important Functions
+**Key Types and Interfaces:**
 
-*   **SetupTestWorkspace\[config map\[string]interface{}](config map\[string]interface{}) (*TestEnvironment, error):** This function creates a temporary directory to serve as the test workspace. It creates a `config` subdirectory within the workspace and writes a JSON configuration file (`devops-config.json`) to it. If no configuration is provided, it uses a `DefaultConfig`. It returns a pointer to a `TestEnvironment` struct and an error, if any.
-*   **SetEnvironment(vars map\[string]string):** This method, associated with the `TestEnvironment` struct, sets up the environment variables required for the tests. It merges provided overrides (`vars`) with a set of default environment variables, including `GITHUB_WORKSPACE`, `GITHUB_ACTOR`, and `GLASSOPS_CONFIG_PATH`. It saves the original values of the environment variables before setting the new ones.
-*   **Cleanup():** This method, associated with the `TestEnvironment` struct, restores the original environment variables and removes the temporary test workspace. If an environment variable was not previously set, it is unset. Otherwise, its original value is restored.
-*   **WriteConfig(config map\[string]interface{}) error:** This method, associated with the `TestEnvironment` struct, updates the configuration file within the test workspace with the provided configuration data. It marshals the configuration to JSON and writes it to the `devops-config.json` file.
+*   **TestEnvironment:** This struct represents the state of a test environment. It holds the path to the workspace directory, the path to the configuration file, and a map of original environment variables that were overridden during test setup.
+*   **FreezeWindowData:**  A struct containing pre-defined data for testing freeze window configurations, including weekend, weekday, and multiple freeze window scenarios.
+*   **PluginConfigData:** A struct containing pre-defined data for testing plugin configurations, including whitelists, and various versioning schemes.
+*   **TestResultsData:** A struct containing pre-defined data for testing test results, including valid, empty, all passed, and all failed scenarios.
+*   **TestResults:** A struct representing the results of a test run, including the total number of tests, the number of tests that passed, and the number of tests that failed.
+*   **CoverageTestData:** A struct containing pre-defined data for testing code coverage scenarios, including good, borderline, failing, and perfect coverage.
+*   **Coverage:** A struct representing code coverage data, including the actual coverage percentage and the required coverage percentage.
 
-### Error Handling
+**Important Functions:**
 
-The functions in this package generally return an `error` value to indicate failure. Common error scenarios include:
+*   **SetupTestWorkspace(config map[string]interface{}) (*TestEnvironment, error):** This function creates a temporary directory to serve as the test workspace. It creates a `config` subdirectory and writes a JSON configuration file (`devops-config.json`) to it. If no configuration is provided, it uses a `DefaultConfig`. It returns a pointer to a `TestEnvironment` struct and an error, if any.
+*   **SetEnvironment(vars map[string]string):** This method, associated with the `TestEnvironment` struct, sets environment variables required for the tests. It merges provided overrides with a set of default environment variables (e.g., `GITHUB_WORKSPACE`, `GITHUB_REPOSITORY`). It saves the original values of the environment variables before overwriting them, allowing for restoration later.
+*   **Cleanup():** This method, associated with the `TestEnvironment` struct, restores the original environment variables and removes the temporary workspace directory.
+*   **WriteConfig(config map[string]interface{}) error:** This method, associated with the `TestEnvironment` struct, updates the configuration file within the test workspace with the provided configuration data.
+*   **TestData:** This is a struct containing various pre-defined test data sets for different scenarios, such as freeze windows, plugin configurations, test results, and code coverage.  You can access these data sets directly to populate your tests with realistic data.
+
+**Error Handling:**
+
+The functions in this package generally return an `error` value to indicate failure.  Common error scenarios include:
 
 *   Failure to create the temporary workspace directory.
 *   Failure to create the configuration directory.
 *   Failure to marshal the configuration data to JSON.
-*   Failure to write the configuration data to the file.
+*   Failure to write the configuration file.
 
-In all error cases, the workspace is removed to ensure a clean state.
+In case of an error, the `SetupTestWorkspace` function attempts to remove the partially created workspace to ensure a clean state.
 
-### Concurrency
+**Concurrency:**
 
-This package does not explicitly use goroutines or channels.
+This package does not explicitly use goroutines or channels.  However, the tests that use this package may employ concurrency, and the package is designed to be thread-safe in its operations.
 
-### Design Decisions
+**Design Decisions:**
 
-*   **Temporary Workspace:** The use of a temporary workspace ensures that each test run operates in an isolated environment, preventing interference between tests.
-*   **Configuration File:** The use of a JSON configuration file allows for easy customization of the test environment.
-*   **Environment Variable Management:**  Saving and restoring environment variables ensures that tests do not inadvertently affect the host environment.
-*   **Predefined Test Data:** The `TestData` variable provides a convenient way to access common test data, reducing code duplication and improving test maintainability.
-*   **Default Configuration:** The `DefaultConfig` provides a sensible default configuration when no specific configuration is provided.
+*   **Configuration Management:** The package provides a centralized way to manage test configuration, allowing for easy customization and reproducibility.
+*   **Environment Isolation:** By creating a temporary workspace and managing environment variables, the package ensures that tests are isolated from each other and from the host environment.
+*   **Test Data Factories:** The `TestData` struct provides a convenient way to access pre-defined test data, reducing boilerplate code and improving test maintainability.
+*   **Cleanup:** The `Cleanup` function ensures that the test environment is properly restored after each test run, preventing resource leaks and ensuring consistent test results.

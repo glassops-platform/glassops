@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/errors/errors.go
-last_modified: 2026-01-29
+last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/errors/errors.go
-generated_at: 2026-01-29T21:22:26.891471
+generated_at: 2026-01-31T09:03:57.098003
 hash: 8d74b0b3de8008cf135ed510e21fe41f8422da3ed98dbdf964fe62fb5608c129
 ---
 
@@ -15,45 +15,49 @@ This package defines a structured error handling system for the GlassOps runtime
 
 **Core Concepts**
 
-The package centers around the `GlassOpsError` type, which serves as the base for all errors originating from the runtime.  Specific error types are then defined as structs embedding `GlassOpsError`, adding context relevant to the particular failure scenario.
+The package centers around the `GlassOpsError` type, which serves as the base for all errors originating from the runtime.  Specific error types are then defined as extensions of this base type, each representing a distinct category of failure. This approach allows for easy identification and handling of different error scenarios.
 
 **Key Types and Interfaces**
 
-*   **`GlassOpsError`**: This struct represents a generic GlassOps runtime error.
+*   **`GlassOpsError`**: This struct is the foundation for all errors within the GlassOps runtime. It contains:
     *   `Message`: A human-readable description of the error.
     *   `Phase`:  Indicates the stage of the runtime where the error occurred (e.g., "Policy", "Bootstrap").
-    *   `Code`: A machine-readable error code for categorization and automated handling.
-    *   `Cause`: An optional underlying error that led to this error, enabling error chaining.
-    *   `Error()`:  Implements the `error` interface, providing a formatted string representation of the error.
-    *   `Unwrap()`: Allows access to the underlying `Cause` error, supporting error wrapping and inspection.
+    *   `Code`: A unique string identifier for the error type, useful for programmatic handling and reporting.
+    *   `Cause`: An optional nested error that provides additional context about the root cause of the failure. This supports error chaining.
+    *   The `Error()` method satisfies the `error` interface, providing a formatted string representation of the error.
+    *   The `Unwrap()` method allows access to the underlying `Cause` error, enabling error inspection and handling of nested errors.
 
-*   **Specific Error Types**: The package defines several error types, each representing a distinct category of failure:
-    *   `PolicyError`:  Indicates a violation of a governance policy.
-    *   `BootstrapError`: Indicates a failure during the CLI bootstrap process.
-    *   `IdentityError`: Indicates an authentication or identity-related failure.
-    *   `ContractError`: Indicates a failure during contract generation or validation.
+*   **Specific Error Types**: The package defines several concrete error types, each inheriting from `GlassOpsError`:
+    *   `PolicyError`:  Represents a violation of a governance policy.
+    *   `BootstrapError`: Indicates a failure during the initial setup or bootstrapping process.
+    *   `IdentityError`:  Signals an authentication or authorization failure.
+    *   `ContractError`:  Represents an error during contract generation or validation.
     *   `AnalyzerError`: Indicates a failure during code analysis.
-    *   `FreezeError`: Indicates a deployment is blocked due to a pre-defined freeze window.  Includes `Day`, `Start`, and `End` fields to specify the freeze window details.
+    *   `FreezeError`:  Indicates that a deployment is blocked due to a pre-defined governance freeze window. This type includes additional fields for the `Day`, `Start`, and `End` of the freeze window.
 
 **Important Functions**
 
-*   **`NewPolicyError\[message string, cause error]`**: Creates a new `PolicyError` instance. You should provide a descriptive message and any underlying error that caused the policy violation.
-*   **`NewBootstrapError\[message string, cause error]`**: Creates a new `BootstrapError` instance.
-*   **`NewIdentityError\[message string, cause error]`**: Creates a new `IdentityError` instance.
-*   **`NewContractError\[message string, cause error]`**: Creates a new `ContractError` instance.
-*   **`NewAnalyzerError\[message string, cause error]`**: Creates a new `AnalyzerError` instance.
-*   **`NewFreezeError\[day string, start string, end string]`**: Creates a new `FreezeError` instance.  You must provide the day, start time, and end time of the freeze window.
-*   **`IsGlassOpsError(err error)`**:  Checks if a given error is a `GlassOpsError` or one of its specific subtypes. This is useful for determining if an error originates from the GlassOps runtime.
-*   **`GetPhase(err error)`**: Extracts the `Phase` value from a `GlassOpsError`. Returns "Unknown" if the error is not a `GlassOpsError`.
-*   **`GetCode(err error)`**: Extracts the `Code` value from a `GlassOpsError`. Returns "UNKNOWN\_ERROR" if the error is not a `GlassOpsError`.
+*   **`NewPolicyError(message string, cause error) *PolicyError`**: Creates a new `PolicyError` instance. You should use this function to generate policy violation errors.
+*   **`NewBootstrapError(message string, cause error) *BootstrapError`**: Creates a new `BootstrapError` instance. Use this to report bootstrap failures.
+*   **`NewIdentityError(message string, cause error) *IdentityError`**: Creates a new `IdentityError` instance. Use this to report authentication failures.
+*   **`NewContractError(message string, cause error) *ContractError`**: Creates a new `ContractError` instance. Use this to report contract generation or validation errors.
+*   **`NewAnalyzerError(message string, cause error) *AnalyzerError`**: Creates a new `AnalyzerError` instance. Use this to report code analysis failures.
+*   **`NewFreezeError(day, start, end string) *FreezeError`**: Creates a new `FreezeError` instance. Use this to indicate a deployment is blocked by a freeze window.
+*   **`IsGlassOpsError(err error) bool`**:  Checks if a given error is a `GlassOpsError` or one of its specific subtypes. This is useful for determining if an error originates from the GlassOps runtime.
+*   **`GetPhase(err error) string`**: Extracts the `Phase` value from a `GlassOpsError`. Returns "Unknown" if the error is not a `GlassOpsError`.
+*   **`GetCode(err error) string`**: Extracts the `Code` value from a `GlassOpsError`. Returns "UNKNOWN\_ERROR" if the error is not a `GlassOpsError`.
 
 **Error Handling Patterns**
 
-The package promotes error wrapping.  When creating a new error, You should include the original error as the `Cause` to preserve the error history.  The `Unwrap()` method on `GlassOpsError` allows You to traverse this chain.
+The package promotes a layered error handling approach.  Errors are often wrapped with additional context using the `Cause` field of the `GlassOpsError` struct. This allows you to trace the origin of an error and understand the sequence of events that led to the failure.  The `Unwrap()` method facilitates this process.
+
+**Concurrency**
+
+This package itself does not directly employ goroutines or channels. However, the errors generated by this package may be returned from concurrent functions within the larger GlassOps runtime.  Error handling in those concurrent contexts should follow standard Go error handling practices.
 
 **Design Decisions**
 
-*   **Structured Errors**: The use of structured errors with defined fields (Message, Phase, Code, Cause) allows for more detailed error reporting and analysis.
-*   **Error Categorization**:  Specific error types provide a clear categorization of different failure scenarios.
-*   **Error Codes**: Machine-readable error codes facilitate automated error handling and integration with monitoring systems.
-*   **Error Wrapping**:  The inclusion of a `Cause` field enables error wrapping, preserving the original error context.
+*   **Structured Errors**: The use of a base error type and specific subtypes provides a consistent and organized way to manage errors.
+*   **Error Codes**:  The inclusion of error codes allows for programmatic identification and handling of errors without relying on string matching of error messages.
+*   **Error Chaining**: The `Cause` field enables error chaining, providing valuable context for debugging and troubleshooting.
+*   **Phase Identification**: The `Phase` field helps pinpoint the stage of the runtime where the error occurred, aiding in faster diagnosis.

@@ -2,62 +2,71 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/llm-client.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/llm-client.ts
-generated_at: 2026-01-26T14:13:07.277Z
-hash: 61f93a71599bcb0cd1ae08d2fd797fdfe210724ede3ffe02519c39e7b4e52ecd
+generated_at: 2026-01-31T09:23:30.464008
+hash: 6936f5e724e055e48121feb3598ccbec69a7f115857cf8236e6897d4bc162ef2
 ---
 
-## Gemini Large Language Model (LLM) Client
+## glassops-agent LLM Client Documentation
 
-This document details the GeminiClient, a component designed to interact with the Google Gemini LLM API. It provides a streamlined interface for sending prompts and receiving text-based responses.
+This document details the functionality of the Large Language Model (LLM) Client, designed to interact with the Gemini API. It provides a clear overview for both technical and non-technical users.
 
 **Overview**
 
-The GeminiClient facilitates communication with the Gemini API, handling authentication, request formatting, rate limiting, and error management. It is intended for use in applications requiring natural language processing capabilities.
+The LLM Client facilitates communication with a language model to generate text based on provided prompts. It handles API key management, request formatting, rate limiting, and error handling to provide a reliable interface for accessing LLM capabilities.  I am designed to be easily integrated into applications requiring text generation.
 
-**Functionality**
+**Key Features**
 
-*   **Initialization:** The client requires a Google API key, which it attempts to retrieve from a `.env` file located in the project’s directory or any parent directory.  You must set the `GOOGLE_API_KEY` environment variable.  It also accepts a model name as a parameter, defaulting to ‘gemma-3-27b-it’.
-*   **Prompting:** The `generateContent` method sends a text prompt to the Gemini API and returns the generated text response.
-*   **Rate Limiting:** To prevent exceeding API usage limits, the client incorporates rate limiting. It enforces a minimum interval between requests (currently 4 seconds, approximately 15 requests per minute) and logs when waiting.
-*   **Error Handling:** The client includes robust error handling. It catches potential issues during API calls, including network errors, invalid responses, and rate limit errors (429 and 503 status codes).  Retry logic with exponential backoff is implemented for rate limit errors, attempting up to three retries. Detailed error messages are logged to the console.
-*   **Response Parsing:** The client parses the JSON response from the Gemini API, extracting the generated text. It logs detailed information if a valid text response is not received.
+*   **Gemini API Integration:** Connects to the Gemini API for text generation.
+*   **API Key Management:** Securely retrieves the API key from environment variables.  You must set the `GOOGLE_API_KEY` environment variable.
+*   **Rate Limiting:** Implements rate limiting to prevent exceeding API usage limits and ensure fair usage. A minimum interval of 4 seconds between requests is enforced.
+*   **Error Handling:** Robust error handling with retry logic for common API errors (429 and 503 status codes). Detailed error messages are logged for debugging.
+*   **Configurable Model:** Allows selection of different Gemini models via the constructor. The default model is 'gemma-3-27b-it'.
+*   **Configurable Parameters:** Sets `maxOutputTokens` to 8192 and `temperature` to 0.2 for controlling the generated text.
 
-**Key Components**
+**Installation & Setup**
 
-*   **`ChatMessage` Interface:** Defines the structure of messages exchanged with the LLM, containing a `role` (user or model) and an array of `parts`, each with a `text` field.
-*   **`GeminiClient` Class:** The core class responsible for interacting with the Gemini API.
-    *   `apiKey`: Stores the Google API key.
-    *   `model`: Stores the selected Gemini model.
-    *   `baseUrl`: The API endpoint URL.
-    *   `generateContent(prompt: string, retryCount: number = 0)`:  Sends a prompt to the Gemini API and returns the generated content.
-
-**Configuration**
-
-*   **API Key:**  Set the `GOOGLE_API_KEY` environment variable in a `.env` file. The client searches for this file in the current directory and its parent directories.
-*   **Model:** You can specify the desired Gemini model during client instantiation: `new GeminiClient('your-model-name')`.
+1.  Ensure you have an active Gemini API key.
+2.  Set the `GOOGLE_API_KEY` environment variable to your API key. This can be done by creating a `.env` file in the project root or setting the environment variable directly in your system. The client automatically searches for a `.env` file in parent directories.
+3.  Install the necessary dependencies: `axios`, `dotenv`, and `fs`.
 
 **Usage**
 
-1.  Instantiate the `GeminiClient`:
-
+1.  **Import the Client:**
     ```typescript
-    const client = new GeminiClient();
+    import { GeminiClient } from './llm-client';
     ```
 
-2.  Generate content:
-
+2.  **Instantiate the Client:**
     ```typescript
-    const prompt = "Write a short story about a cat.";
-    const response = await client.generateContent(prompt);
-    console.log(response);
+    const client = new GeminiClient(); // Uses default model 'gemma-3-27b-it'
+    // or
+    const client = new GeminiClient('another-model'); // Specify a different model
     ```
 
-**Dependencies**
+3.  **Generate Content:**
+    ```typescript
+    const prompt = 'Write a short story about a robot.';
+    try {
+      const response = await client.generateContent(prompt);
+      console.log(response);
+    } catch (error) {
+      console.error('Error generating content:', error);
+    }
+    ```
 
-*   `axios`: For making HTTP requests to the Gemini API.
-*   `dotenv`: For loading environment variables from a `.env` file.
-*   `fs`: For file system operations (finding the `.env` file).
-*   `path`: For manipulating file paths.
+**Interfaces**
+
+*   `ChatMessage`: Represents a message in a conversation.
+    *   `role`:  Indicates the role of the message sender ('user' or 'model').
+    *   `parts`: An array of text parts composing the message. Each part contains a `text` field.
+
+**Important Considerations**
+
+*   **API Key Security:** Protect your `GOOGLE_API_KEY`. Do not commit it to version control.
+*   **Rate Limits:** Be mindful of the Gemini API rate limits. The client includes rate limiting, but exceeding limits may still result in errors.
+*   **Error Handling:** Implement appropriate error handling in your application to gracefully handle potential API errors.
+*   **Cost:** Using the Gemini API may incur costs. Review the Gemini API pricing documentation for details.
+*   **Model Selection:** Choose the appropriate Gemini model based on your specific needs and budget.

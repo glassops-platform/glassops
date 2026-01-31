@@ -2,52 +2,72 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/terraform-adapter.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/terraform-adapter.ts
-generated_at: 2026-01-26T14:24:12.619Z
-hash: d7206fb8f67a9090f0b60bf44a52a07a3caa8ca137a00d4a2cdb65cdea5df875
+generated_at: 2026-01-31T09:21:44.257132
+hash: 7c28ae755942fb80ed2efcfecf4b5ac58629d14bc12bba1935b1c59f82527957
 ---
 
 ## Terraform Adapter Documentation
 
 **1. Introduction**
 
-This document details the Terraform Adapter, a component designed to integrate Terraform configuration files into a larger system for analysis and documentation. It enables processing of Terraform code to extract meaningful information and generate comprehensive documentation.
+This document details the Terraform Adapter, a component designed to integrate Terraform configuration files into a larger operational system. It provides a standardized method for parsing, interpreting, and generating documentation from Terraform code.
 
 **2. Purpose**
 
-The Terraform Adapter serves as a bridge between Terraform infrastructure-as-code and tools requiring structured understanding of that code. It identifies Terraform files, parses their content, and prepares prompts for language models to generate documentation.
+The Terraform Adapter enables automated analysis and documentation of infrastructure as code defined using Terraform. It facilitates understanding, maintenance, and collaboration on Terraform projects.
 
-**3. Core Functionality**
+**3. Functionality**
 
-The adapter provides four primary functions:
+The adapter operates through four primary functions: `canHandle`, `parse`, `generatePrompt`, and `postProcess`.
 
-*   **File Handling (canHandle):** Determines if the adapter can process a given file based on its extension. It specifically recognizes files with the `.tf` extension, indicating Terraform configuration files.
-*   **Parsing (parse):** Reads the content of a Terraform file and formats it for use in subsequent steps. The output is a string array containing the file path and the Terraform code itself, enclosed in a code block for clarity.
-*   **Prompt Generation (generatePrompt):** Constructs a prompt tailored for a language model. This prompt instructs the model to act as a DevOps Engineer/Terraform Expert and generate documentation for the provided Terraform code, focusing on resources, variables, outputs, and dependencies.
-*   **Post-Processing (postProcess):** Combines the outputs from the language model into a single, formatted string, separated by double newlines for readability.
+**3.1. File Handling (`canHandle`)**
 
-**4. Technical Details**
+This function determines if the adapter is suitable for processing a given file. It checks the file extension. 
 
-*   **Interface:** Implements the `AgentAdapter` interface, ensuring compatibility with the broader system.
-*   **Dependencies:** Relies on the `path` module for file extension handling.
-*   **Input:** Accepts a file path and the content of a Terraform file.
-*   **Output:** Produces a formatted string containing documentation generated from the Terraform code.
+*   **Input:** `fileName` (string) – The name of the file to evaluate.
+*   **Output:** `boolean` – Returns `true` if the file has a `.tf` extension (indicating a Terraform file), and `false` otherwise.
 
-**5. Usage**
+**3.2. Parsing (`parse`)**
 
-To use the Terraform Adapter:
+This function takes a Terraform file and extracts its content. 
 
-1.  Ensure the input file has a `.tf` extension.
-2.  Provide the file path and content to the adapter.
-3.  The adapter will prepare the content and generate a prompt for a language model.
-4.  After receiving the language model’s output, the adapter will format it into a readable documentation string.
+*   **Input:**
+    *   `filePath` (string) – The full path to the Terraform file.
+    *   `content` (string) – The content of the Terraform file.
+*   **Output:** `string[]` – Returns an array containing a formatted string. This string includes the file path and the Terraform code enclosed in a code block for clear presentation.
 
-**6. Maintainability**
+**3.3. Prompt Generation (`generatePrompt`)**
 
-I designed this adapter to be modular and easily extensible. Future enhancements could include:
+This function constructs a prompt designed for a language model. The prompt instructs the model to act as a DevOps Engineer/Terraform Expert and generate documentation for the provided Terraform code.
 
-*   More sophisticated parsing to extract specific elements from Terraform code.
-*   Support for additional Terraform-related file types (e.g., `.tfvars`).
-*   Customizable prompt templates to control the documentation style.
+*   **Input:**
+    *   `filePath` (string) – The path to the Terraform file.
+    *   `parsedContent` (string) – The parsed content of the Terraform file (output from the `parse` function).
+*   **Output:** `string` – A formatted prompt string ready for use with a language model.
+
+**3.4. Post-Processing (`postProcess`)**
+
+This function combines multiple outputs from a language model into a single, coherent document.
+
+*   **Input:**
+    *   `filePath` (string) – The path to the Terraform file.
+    *   `outputs` (string[]) – An array of strings representing the outputs generated by a language model.
+*   **Output:** `string` – A single string containing all outputs joined by double newlines for readability.
+
+**4. Integration**
+
+You can integrate this adapter into a system by implementing the `AgentAdapter` interface and utilizing its functions in a pipeline. The typical workflow involves:
+
+1.  Using `canHandle` to identify Terraform files.
+2.  Using `parse` to extract the file content.
+3.  Using `generatePrompt` to create a prompt for a language model.
+4.  Sending the prompt to a language model.
+5.  Using `postProcess` to format the language model’s response.
+
+**5. Dependencies**
+
+*   `path` (Node.js built-in module): Used for extracting file extensions.
+*   `AgentAdapter` interface: Defines the required methods for all adapters.
