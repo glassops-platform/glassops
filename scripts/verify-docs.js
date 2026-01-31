@@ -131,8 +131,8 @@ async function processFile(filePath) {
     // Regex explanation:
     // (?<!\!|\\) : Negative lookbehind to ensure [ is not preceded by ! (image) or \ (escaped)
     // \[([^\]]+)\] : Match text inside [ ]
-    // \(([^)]+)\) : Match URL inside ( )
-    const linkRegex = /(?<!\!|\\)\[([^\]]+)\]\(([^)]+)\)/g;
+    // \(([^)\s]+)\) : Match URL inside ( ) - Exclude spaces to avoid matching code signatures like [T](func...)
+    const linkRegex = /(?<!\!|\\)\[([^\]]+)\]\(([^)\s]+)\)/g;
 
     while ((match = linkRegex.exec(content)) !== null) {
         const lineNo = content.substring(0, match.index).split('\n').length;

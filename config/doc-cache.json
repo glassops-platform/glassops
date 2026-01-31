@@ -210,11 +210,11 @@
     "timestamp": "2026-01-31T09:55:45.831213"
   },
   "packages/knowledge/main.py": {
-    "hash": "7e73371cb5cef0a28a05248d302b108fff4651aa1e1a0eacbb6a40b57634ac4d",
+    "hash": "11c84f152af5919603a1faa11b95ec8eb3bfd840332ca9614c74bddd3bec3cf6",
     "generatedFiles": [
       "packages/knowledge/docs/main.md"
     ],
-    "timestamp": "2026-01-31T09:56:08.554725"
+    "timestamp": "2026-01-31T11:04:33.399272"
   },
   "packages/knowledge/rag/__init__.py": {
     "hash": "dfb47fdaffdff34cc1b8b061b4662fcb1e7c7de005961dce082a670496c8b3a6",
@@ -712,5 +712,103 @@
       "packages/tools/agent/docs/src-validator.md"
     ],
     "timestamp": "2026-01-31T10:21:17.925481"
+  },
+  "packages/adapters/native/Dockerfile": {
+    "hash": "84f9b60160c1b3ff063fac221639ae76919d61d1e0a8761fefbca2fe254fd551",
+    "generatedFiles": [
+      "packages/adapters/native/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:03:17.409750"
+  },
+  "packages/knowledge/config/config.json": {
+    "hash": "20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde",
+    "generatedFiles": [
+      "packages/knowledge/docs/config-config.md"
+    ],
+    "timestamp": "2026-01-31T11:03:39.518004"
+  },
+  "packages/knowledge/config/prompts.yml": {
+    "hash": "fa0450b4b022cb08c826f4a7a5d3d82f9e04c2559269e31a838da7444eedfee5",
+    "generatedFiles": [
+      "packages/knowledge/docs/config-prompts.md"
+    ],
+    "timestamp": "2026-01-31T11:04:01.239243"
+  },
+  "packages/platform/sfdx-project.json": {
+    "hash": "06f30cefba9ff14ee0e89759a269061d3ef6688ba2cfef642e806bc82c07207d",
+    "generatedFiles": [
+      "packages/platform/docs/sfdx-project.md"
+    ],
+    "timestamp": "2026-01-31T11:05:07.786165"
+  },
+  "packages/runtime/action.yml": {
+    "hash": "ec91c30a592eb0967662ac9901db54840aebc296fa1897a08af5535daa8d354e",
+    "generatedFiles": [
+      "packages/runtime/docs/action.md"
+    ],
+    "timestamp": "2026-01-31T11:05:38.387819"
+  },
+  "packages/runtime/Dockerfile": {
+    "hash": "335afd8b950d1cbbdaa8c07079af1c61cb68b2480aa25df0e978ec233dcde8fd",
+    "generatedFiles": [
+      "packages/runtime/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:06:09.720820"
+  },
+  "packages/runtime-ts/action.yml": {
+    "hash": "51105da1b20fc22775e94d2a5b8f0b93a942c069a628f45b47f33c6d494426a3",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/action.md"
+    ],
+    "timestamp": "2026-01-31T11:06:43.774449"
+  },
+  "packages/runtime-ts/config/jest.config.js": {
+    "hash": "b18205ff56a3b280190ff342fc2274acbbac97f5209fb9cad0deaf2e74b1808b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.config.md"
+    ],
+    "timestamp": "2026-01-31T11:08:57.032189"
+  },
+  "packages/runtime-ts/config/jest.integration.config.js": {
+    "hash": "e015b22c69711d008eba43205f6f91622c2a2a9133f6434e4762ff636395b2a1",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.integration.config.md"
+    ],
+    "timestamp": "2026-01-31T11:09:14.886413"
+  },
+  "packages/runtime-ts/config/jest.integration.setup.js": {
+    "hash": "50ee3e4481b84677818a5aa4389662eeb26e01b9753a4b71e7d38555636d2959",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.integration.setup.md"
+    ],
+    "timestamp": "2026-01-31T11:09:29.162595"
+  },
+  "packages/runtime-ts/Dockerfile": {
+    "hash": "49486a08faa7bfdf010281f10987d601013eccb90345e92416ebac0b837b9a2b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:09:52.889762"
+  },
+  "packages/runtime-ts/eslint.config.mjs": {
+    "hash": "6c18960259bdddac150641f8016881667a04e07d58087c38a3b44b6229458846",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/eslint.config.md"
+    ],
+    "timestamp": "2026-01-31T11:10:12.363717"
+  },
+  "packages/tools/agent/eslint.config.mjs": {
+    "hash": "642d832bd1e30cccfe62dd437a93aa9a78a6f926e506cf45c4ea171fe501209c",
+    "generatedFiles": [
+      "packages/tools/agent/docs/eslint.config.md"
+    ],
+    "timestamp": "2026-01-31T11:10:24.845470"
+  },
+  "packages/tools/agent/src/prompts.yml": {
+    "hash": "f15f01e56e84a848ffe263878ad181c1ded7b012e586901035152f6acb5572e9",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-prompts.md"
+    ],
+    "timestamp": "2026-01-31T11:10:54.043304"
   }
 }
