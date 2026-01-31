@@ -2,52 +2,83 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/terraform-adapter.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/terraform-adapter.ts
-generated_at: 2026-01-26T14:24:12.619Z
-hash: d7206fb8f67a9090f0b60bf44a52a07a3caa8ca137a00d4a2cdb65cdea5df875
+generated_at: 2026-01-31T10:18:51.706164
+hash: 7c28ae755942fb80ed2efcfecf4b5ac58629d14bc12bba1935b1c59f82527957
 ---
 
 ## Terraform Adapter Documentation
 
 **1. Introduction**
 
-This document details the Terraform Adapter, a component designed to integrate Terraform configuration files into a larger system for analysis and documentation. It enables processing of Terraform code to extract meaningful information and generate comprehensive documentation.
+This document details the Terraform Adapter, a component designed to integrate Terraform configuration files into a larger operational system. It provides capabilities for identifying, parsing, and preparing Terraform code for analysis and documentation generation.
 
-**2. Purpose**
+**2. Overview**
 
-The Terraform Adapter serves as a bridge between Terraform infrastructure-as-code and tools requiring structured understanding of that code. It identifies Terraform files, parses their content, and prepares prompts for language models to generate documentation.
+The Terraform Adapter functions as an agent within the system, responsible for handling files with the `.tf` extension. It extracts content, formats it, and prepares a prompt for a language model to generate documentation. This adapter streamlines the process of understanding and documenting Terraform infrastructure as code.
 
-**3. Core Functionality**
+**3. Functionality**
 
-The adapter provides four primary functions:
+The adapter provides four core functions:
 
-*   **File Handling (canHandle):** Determines if the adapter can process a given file based on its extension. It specifically recognizes files with the `.tf` extension, indicating Terraform configuration files.
-*   **Parsing (parse):** Reads the content of a Terraform file and formats it for use in subsequent steps. The output is a string array containing the file path and the Terraform code itself, enclosed in a code block for clarity.
-*   **Prompt Generation (generatePrompt):** Constructs a prompt tailored for a language model. This prompt instructs the model to act as a DevOps Engineer/Terraform Expert and generate documentation for the provided Terraform code, focusing on resources, variables, outputs, and dependencies.
-*   **Post-Processing (postProcess):** Combines the outputs from the language model into a single, formatted string, separated by double newlines for readability.
+*   **`canHandle(fileName: string): boolean`**: Determines if the adapter can process a given file based on its extension. It returns `true` if the file extension is `.tf`, and `false` otherwise.
 
-**4. Technical Details**
+*   **`parse(filePath: string, content: string): Promise<string[]>`**: Parses the Terraform configuration file content. It formats the file path and content into a structured string array. The output is designed for input into a language model.
+    *   `filePath`: The path to the Terraform file.
+    *   `content`: The content of the Terraform file.
+    *   Returns: A promise resolving to an array of strings, each representing a formatted section of the parsed Terraform code. Example output:
+        ```
+        [
+          "File: /path/to/your/file.tf\n\nTerraform HCL:\n\`\`\`hcl\nresource \"aws_instance\" \"example\" {\n  ami           = \"ami-0c55b2ab9919489a2\"\n  instance_type = \"t2.micro\"\n}\n\`\`\`"
+        ]
+        ```
 
-*   **Interface:** Implements the `AgentAdapter` interface, ensuring compatibility with the broader system.
-*   **Dependencies:** Relies on the `path` module for file extension handling.
-*   **Input:** Accepts a file path and the content of a Terraform file.
-*   **Output:** Produces a formatted string containing documentation generated from the Terraform code.
+*   **`generatePrompt(filePath: string, parsedContent: string): string`**: Constructs a prompt for a language model. This prompt instructs the model to act as a DevOps Engineer/Terraform Expert and generate documentation for the provided Terraform code.
+    *   `filePath`: The path to the Terraform file.
+    *   `parsedContent`: The parsed content of the Terraform file (output from the `parse` function).
+    *   Returns: A string containing the prompt. Example:
+        ```
+        You are a DevOps Engineer / Terraform Expert.
+        Generate documentation for the following Terraform infrastructure code.
+        Identify resources, variables, outputs, and dependencies.
 
-**5. Usage**
+        File: /path/to/your/file.tf
 
-To use the Terraform Adapter:
+        Terraform HCL:
+        \`\`\`hcl
+        resource "aws_instance" "example" {
+          ami           = "ami-0c55b2ab9919489a2"
+          instance_type = "t2.micro"
+        }
+        \`\`\`
+        ```
 
-1.  Ensure the input file has a `.tf` extension.
-2.  Provide the file path and content to the adapter.
-3.  The adapter will prepare the content and generate a prompt for a language model.
-4.  After receiving the language model’s output, the adapter will format it into a readable documentation string.
+*   **`postProcess(filePath: string, outputs: string[]): string`**: Combines the outputs from the language model into a single string, separated by double newlines.
+    *   `filePath`: The path to the Terraform file.
+    *   `outputs`: An array of strings representing the documentation generated by the language model.
+    *   Returns: A single string containing the combined documentation.
 
-**6. Maintainability**
+**4. Usage**
 
-I designed this adapter to be modular and easily extensible. Future enhancements could include:
+You can integrate this adapter into a workflow by:
 
-*   More sophisticated parsing to extract specific elements from Terraform code.
-*   Support for additional Terraform-related file types (e.g., `.tfvars`).
-*   Customizable prompt templates to control the documentation style.
+1.  Checking if a file can be handled using `canHandle()`.
+2.  Parsing the file content using `parse()`.
+3.  Generating a prompt using `generatePrompt()`.
+4.  Sending the prompt to a language model.
+5.  Post-processing the model’s outputs using `postProcess()`.
+
+**5. Dependencies**
+
+*   `path`: Node.js built-in module for file path manipulation.
+*   `./interface.js`: Defines the `AgentAdapter` interface.
+
+**6. Future Considerations**
+
+Potential enhancements include:
+
+*   More sophisticated parsing to identify specific Terraform components.
+*   Support for multiple Terraform file formats (e.g., `.tfvars`).
+*   Integration with Terraform state files for dependency analysis.

@@ -2,55 +2,56 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/drift/detect_drift.py
-last_modified: 2026-01-28
+last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/drift/detect_drift.py
-generated_at: 2026-01-28T22:39:00.075917
+generated_at: 2026-01-31T09:47:39.302149
 hash: dee44b64dd3a391ae28d74379a8cb4f62cf1733a64945e310fcbe0a6ce6a6ac2
 ---
 
 ## Knowledge Drift Detection Documentation
 
-This module is designed to identify changes in the knowledge base over time, a process known as drift. Drift can occur when new information is added that is semantically different from existing content, or when existing content is modified. This impacts the performance of Retrieval-Augmented Generation (RAG) systems.
+This module is responsible for comparing newly ingested document embeddings against a baseline to identify potential drift in the knowledge base. Drift refers to changes in the underlying data distribution, which can negatively impact the performance of retrieval-augmented generation (RAG) systems. Currently, the implementation simulates drift detection by identifying near-duplicate documents, indicating potential redundancy or conflicts.
 
-**Module Responsibilities:**
+### Key Components
 
-The primary responsibility of this module is to compare newly processed document embeddings against a baseline (currently simulated) to detect drift. It generates a report detailing any identified conflicts or potential drift.
+**1. `cosine_similarity(a, b)` Function:**
 
-**Key Functions:**
+   - **Purpose:** Calculates the cosine similarity between two vectors `a` and `b`.
+   - **Parameters:**
+     - `a`: A NumPy array representing the first vector.
+     - `b`: A NumPy array representing the second vector.
+   - **Return Value:** A float representing the cosine similarity score between the two vectors.  A higher score indicates greater similarity.
+   - **Type Hints:** `a: np.ndarray`, `b: np.ndarray` -> `float`
 
-*   **`cosine_similarity(a, b)`:** This function calculates the cosine similarity between two vectors, `a` and `b`. Cosine similarity measures the angle between the vectors, providing a value between -1 and 1, where 1 indicates perfect similarity and 0 indicates orthogonality (no similarity). It uses NumPy for efficient vector operations. Type hints are used to specify that both `a` and `b` are NumPy arrays.
+**2. `detect_drift(embeddings, threshold=0.85)` Function:**
 
-*   **`detect_drift(embeddings, threshold=0.85)`:** This is the core function for drift detection. It accepts a list of tuples, where each tuple contains a document dictionary (`doc_dict`) and its corresponding embedding vector (`embedding_vector`). The `threshold` parameter (defaulting to 0.85) represents the minimum cosine similarity score considered acceptable.
+   - **Purpose:**  Analyzes a list of document embeddings to detect potential drift.  Currently, it focuses on identifying near-duplicate documents as a proxy for drift.
+   - **Parameters:**
+     - `embeddings`: A list of tuples, where each tuple contains a document dictionary (`doc_dict`) and its corresponding embedding vector.
+     - `threshold`: (Optional) A float representing the similarity threshold for drift detection. This parameter is not currently used in the near-duplicate detection logic but is reserved for future semantic drift comparison. Defaults to 0.85.
+   - **Return Value:** A list of document paths that are identified as having drifted (currently, this list is empty as drift is simulated).
+   - **Type Hints:** `embeddings: list[tuple[dict, np.ndarray]]`, `threshold: float = 0.85` -> `list[str]`
 
-    Currently, the drift detection logic is simulated. Instead of comparing against a stored snapshot of previous embeddings, it identifies near-duplicate documents within the current set. This is done by hashing document content and checking for collisions.
+### Design and Operation
 
-    The function generates a markdown report (`drift_report.md`) summarizing the findings. The report includes sections for:
-    *   Knowledge Base Health Report header
-    *   Generation source file
-    *   Conflicting/Duplicate Documentation (if any are found)
-    *   Drift Status (currently always reports "No significant semantic drift detected")
+The `detect_drift` function operates as follows:
 
-    The report is written to the `docs/generated` directory. The function returns a list of document paths identified as drifted (currently an empty list due to the simulated nature of the drift detection).
+1. **Report Generation:** It creates a markdown report file (`drift_report.md`) located in the `docs/generated` directory. This report summarizes the findings of the drift detection process.
 
-**Key Data Structures:**
+2. **Near-Duplicate Detection:** It iterates through the provided `embeddings`, using document hashes to identify potential duplicates.  A dictionary `seen_hashes` stores the path of the first document encountered for each unique hash. If a document with the same hash is encountered again, it's flagged as a potential conflict.
 
-*   **`embeddings`:** A list of tuples. Each tuple contains a document dictionary (`doc_dict`) and its embedding vector. The `doc_dict` is expected to have a `"hash"` key representing the document's content hash and a `"path"` key representing the document's file path.
-*   **`seen_hashes`:** A dictionary used to track document hashes and their corresponding paths. This is used to identify near-duplicate documents.
+3. **Report Content:** The generated report includes:
+   - A header indicating it's a Knowledge Base Health Report.
+   - The name of the script generating the report.
+   - A section detailing any detected near-duplicate documents, listing the paths of the conflicting files.
+   - A section stating that no significant semantic drift was detected (as the current implementation focuses on duplicates).
 
-**Design Decisions and Patterns:**
+4. **Future Enhancements:** The `threshold` parameter and the `cosine_similarity` function are included to facilitate future implementation of true semantic drift detection, where embeddings are compared against a baseline snapshot.  The current implementation serves as a placeholder and provides a basic conflict report.
 
-*   **Simulated Drift Detection:** The current implementation simulates drift detection due to the absence of a persistent storage mechanism for previous embeddings. This allows for testing and demonstration of the reporting functionality.
-*   **Markdown Reporting:** The use of markdown for the drift report provides a human-readable and easily maintainable format for communicating drift information.
-*   **Hashing for Near-Duplicate Detection:** Employing document hashing is an efficient way to identify potential content conflicts or redundancy.
-*   **Type Hints:** Type hints are used throughout the code to improve readability and maintainability, and to enable static analysis.
-*   **File Path Handling:** The module uses `os.path.join` to construct file paths, ensuring cross-platform compatibility. `os.makedirs(..., exist_ok=True)` is used to create the report directory if it does not exist, preventing errors.
+### Notable Patterns
 
-**Future Improvements:**
-
-We plan to implement the following improvements:
-
-*   Load previous embeddings from a persistent storage location (e.g., a vector database) for accurate drift detection.
-*   Implement a more sophisticated drift detection algorithm based on cosine similarity or other distance metrics.
-*   Allow users to configure the drift threshold.
-*   Provide more detailed information in the drift report, such as the magnitude of the drift and the affected documents.
+- **Report-Driven Approach:** The module generates a human-readable report to communicate the results of the drift detection process. This is intended to make the findings accessible to both technical and non-technical stakeholders.
+- **Hash-Based Duplicate Detection:** The use of document hashes provides an efficient way to identify near-duplicate content.
+- **Type Hints:** The use of type hints improves code readability and maintainability, and allows for static analysis.
+- **Modular Design:** The `cosine_similarity` function is separated from the `detect_drift` function to promote code reuse and testability.

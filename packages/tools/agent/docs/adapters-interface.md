@@ -2,71 +2,69 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/interface.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/interface.ts
-generated_at: 2026-01-26T14:22:43.431Z
-hash: 68e2cbc3cf3786da25dba18291b8dc1f2614682fef2c39ba2ddd2c08bc4e73cd
+generated_at: 2026-01-31T10:16:50.275304
+hash: f2768e9d45e206d7f00f3b4c1b4f1de47b4278b6f233c741457ec05cefe83842
 ---
 
 ## Agent Adapter Interface Documentation
 
-**Document Version:** 1.0
-**Date:** October 26, 2023
-**Author:** Principal Architect
+This document details the `AgentAdapter` interface, defining the contract for components responsible for processing files within the system. Adapters enable the system to work with diverse file types and content structures.
 
-### 1. Introduction
+### Overview
 
-This document details the `AgentAdapter` interface. This interface defines the contract for components responsible for processing files within the agent system. Adapters enable the agent to interact with various file types and formats, extracting relevant information and preparing it for use with Large Language Models (LLMs).
+The `AgentAdapter` interface specifies a set of methods that any adapter must implement to integrate with the core processing pipeline. These methods handle file type identification, content parsing, prompt generation for language models, and post-processing of model outputs.
 
-### 2. Purpose
+### Interface Definition
 
-The `AgentAdapter` interface standardizes how different file types are handled. By adhering to this interface, we ensure consistency and extensibility when adding support for new file formats. This allows the agent to process a wide range of documents without requiring modifications to the core agent logic.
+```typescript
+export interface AgentAdapter {
+  canHandle(fileName: string): boolean;
+  parse(filePath: string, content: string): Promise<string[]>;
+  generatePrompt(filePath: string, parsedContent: string): string;
+  postProcess(filePath: string, outputs: string[]): string;
+}
+```
 
-### 3. Interface Definition
+### Method Descriptions
 
-The `AgentAdapter` interface consists of four core methods:
+#### `canHandle(fileName: string): boolean`
 
-#### 3.1. `canHandle(fileName: string): boolean`
+This method determines if the adapter is capable of processing a file based on its name (including extension). 
 
-*   **Description:** This method determines whether a specific adapter is capable of processing a file based on its name (including extension).
 *   **Parameters:**
     *   `fileName`: A string representing the name of the file.
 *   **Return Value:** A boolean value. `true` indicates the adapter can handle the file; `false` indicates it cannot.
-*   **Usage:** The agent uses this method to route files to the appropriate adapter.
+*   **Usage:** You should implement this method to check the file extension or other relevant characteristics to determine compatibility.
 
-#### 3.2. `parse(filePath: string, content: string): Promise<string[]>`
+#### `parse(filePath: string, content: string): Promise<string[]>`
 
-*   **Description:** This method parses the content of a file and transforms it into a structured representation suitable for LLM processing. The method returns a promise that resolves to an array of strings, allowing for the handling of large files through chunking.
+This method parses the content of a file and transforms it into a structured format suitable for use with a language model. The method returns a Promise that resolves to an array of strings, allowing for the handling of large files through chunking.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
     *   `content`: A string containing the file's content.
-*   **Return Value:** A Promise resolving to a string array. Each string in the array represents a chunk of parsed content.
-*   **Usage:** This method extracts meaningful information from the file content.
+*   **Return Value:** A Promise resolving to a string array. Each string in the array represents a chunk of the parsed content.
+*   **Usage:** I recommend implementing this method to extract relevant information from the file content and prepare it for prompt generation.
 
-#### 3.3. `generatePrompt(filePath: string, parsedContent: string): string`
+#### `generatePrompt(filePath: string, parsedContent: string): string`
 
-*   **Description:** This method constructs a prompt for the LLM based on the parsed content of the file. The prompt is designed to elicit the desired information or documentation from the LLM.
+This method constructs a prompt for a language model based on the parsed content of a file.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
     *   `parsedContent`: A string representing the parsed content of the file.
-*   **Return Value:** A string representing the generated prompt.
-*   **Usage:** This method prepares the data for interaction with the LLM.
+*   **Return Value:** A string containing the generated prompt.
+*   **Usage:** We expect this method to format the `parsedContent` into a prompt that instructs the language model to perform the desired task.
 
-#### 3.4. `postProcess(filePath: string, outputs: string[]): string`
+#### `postProcess(filePath: string, outputs: string[]): string`
 
-*   **Description:** This method processes the output generated by the LLM. This includes tasks such as formatting the output, resolving relative links, and combining chunks of content if the file was originally parsed into multiple parts.
+This method performs post-processing on the output generated by a language model. This includes tasks such as formatting the output, resolving relative links, and joining chunks if the file was processed in parts.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
-    *   `outputs`: A string array containing the LLM's outputs.
-*   **Return Value:** A string representing the final, post-processed output.
-*   **Usage:** This method refines the LLM's output into a usable format.
-
-### 4. Implementation Guidance
-
-When implementing the `AgentAdapter` interface, I recommend the following:
-
-*   Ensure the `canHandle` method accurately reflects the file types your adapter supports.
-*   Handle potential errors gracefully within the `parse` and `postProcess` methods.
-*   Design prompts in the `generatePrompt` method to be clear and concise for optimal LLM performance.
-*   Consider the performance implications of chunking large files in the `parse` method.
+    *   `outputs`: A string array containing the outputs from the language model.
+*   **Return Value:** A string containing the final, post-processed output.
+*   **Usage:** You should implement this method to refine the language model's output and ensure it is in the desired format. If the input file was chunked during parsing, this method is responsible for combining the outputs from each chunk into a single, coherent result.

@@ -2,78 +2,86 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/generator.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/generator.ts
-generated_at: 2026-01-26T14:12:32.453Z
-hash: 6e3e11b59b4e72025de8b269db9b3d13ad0344f106f135c664f03d15fe00dcf1
+generated_at: 2026-01-31T10:20:00.344163
+hash: 7c69d26ea41989b22a3650371168dda792888bcdf63bb35cc47921f990776a6d
 ---
 
 ## GlassOps Agent Documentation
 
-This document details the functionality of the GlassOps Agent, a tool designed to automatically generate documentation from source code. It supports multiple languages and file types, leveraging a Large Language Model (LLM) to create comprehensive and up-to-date documentation.
+This document details the functionality and usage of the GlassOps Agent, a tool designed to automatically generate documentation from source code and other file types.
 
 **Overview**
 
-The Agent scans specified files, parses their content, and uses an LLM to generate documentation. It incorporates a caching mechanism to avoid redundant processing and a validation step to ensure documentation quality. The generated documentation is then written to a designated output directory, organized based on the source code’s structure.
+The Agent analyzes files matching specified patterns, leverages Large Language Models (LLMs) to create documentation, and saves the generated content to a designated output directory. It incorporates caching to avoid redundant processing and validation to ensure documentation quality.
 
 **Key Components**
 
 *   **GeminiClient:**  Handles communication with the LLM for content generation.
-*   **Scanner:**  Locates files matching specified patterns within the project’s root directory.
-*   **Adapters:**  Interface with different file types (TypeScript, Python, Apex, LWC, Terraform, Dockerfile, YAML, JSON) to parse their content and prepare it for the LLM. Currently supported adapters include:
-    *   TSAdapter (TypeScript)
-    *   PyAdapter (Python)
-    *   ApexAdapter (Apex)
-    *   LWCAdapter (LWC)
-    *   TerraformAdapter (Terraform)
-    *   DockerAdapter (Dockerfile)
-    *   YMLAdapter (YAML)
-    *   JSONAdapter (JSON)
-*   **Validator:** Checks the generated documentation for potential issues.
+*   **Scanner:**  Identifies files within the project that match user-defined patterns.
+*   **Adapters:**  Responsible for parsing specific file types (TypeScript, Python, Apex, LWC, Terraform, Dockerfile, YAML, JSON) and preparing them for LLM processing.  Currently supported adapters include:
+    *   TSAdapter
+    *   PyAdapter
+    *   ApexAdapter
+    *   LWCAdapter
+    *   TerraformAdapter
+    *   DockerAdapter
+    *   YMLAdapter
+    *   JSONAdapter
+*   **Validator:** Checks generated documentation for potential issues.
 *   **DocCache:** Stores file hashes and metadata to prevent reprocessing unchanged files.
-*   **PromptConfig:** Defines the prompts sent to the LLM, allowing customization of the generated documentation’s style and content.
+*   **PromptConfig:** Defines prompts used to instruct the LLM during documentation generation.
 
-**Workflow**
+**Functionality**
 
-1.  **Initialization:** The Agent initializes its components, including the LLM client, scanner, adapters, and cache. It attempts to load prompts from a `prompts.yml` file.
-2.  **Scanning:** The scanner identifies files matching the provided target patterns.
-3.  **Processing:** For each file:
-    *   The Agent determines the appropriate adapter based on the file extension.
-    *   It calculates a hash of the file’s content.
-    *   If the file hasn’t changed (based on the cache), it’s skipped.
-    *   The adapter parses the file’s content into chunks.
-    *   Prompts are constructed using configured prompts or adapter defaults.
-    *   The LLM generates documentation for each chunk.
-    *   The adapter post-processes the generated documentation.
-    *   Metadata (type, domain, origin, last modified date) is inferred.
-    *   The documentation is written to a file in the designated output directory, with a filename derived from the source file’s name and location.
-    *   The cache is updated with the file’s hash and metadata.
-4.  **Validation:** The generated documentation is validated. Warnings are logged for any issues.
-5.  **Caching:** The updated cache is saved to disk.
+1.  **Initialization:**
+    *   The Agent is initialized with a root directory.
+    *   It loads a cache of previously processed files from a `doc-cache.json` file located in the `config` directory within the root directory. If the cache file does not exist, it starts with an empty cache.
+    *   It loads prompts from a `prompts.yml` file located in `packages/tools/agent/src`. If the file is not found, it defaults to internal logic.
+    *   It instantiates a set of adapters for supported file types.
 
-**Configuration**
+2.  **File Processing:**
+    *   The Agent scans the project for files matching the provided target patterns.
+    *   For each file:
+        *   It determines the appropriate adapter based on the file extension.
+        *   It calculates a SHA256 hash of the file content.
+        *   If the file hash matches a cached entry, the file is skipped.
+        *   The adapter parses the file content into chunks.
+        *   For each chunk, a prompt is constructed using the loaded prompts or adapter-specific defaults.
+        *   The prompt is sent to the LLM via the GeminiClient to generate documentation.
+        *   The generated documentation is post-processed by the adapter.
+        *   Metadata (type, domain, origin, last modified date) is inferred and added as frontmatter.
+        *   The documentation is written to a `.md` file in the appropriate output directory.
+        *   The file hash and metadata are added to the cache.
 
-*   **rootDir:** Specifies the root directory of the project.
-*   **targetPatterns:** An array of file patterns to scan (e.g., `['**/*.ts', '**/*.py']`).
-*   **prompts.yml:** (Optional) A YAML file containing custom prompts for different file types.
+3.  **Caching:**
+    *   The Agent maintains a cache of processed files to avoid redundant work.
+    *   The cache is stored in a `doc-cache.json` file.
+    *   The cache is loaded at startup and saved after each run.
+
+4.  **Validation:**
+    *   Generated documentation is validated to identify potential issues.
+    *   Validation warnings are logged to the console.
 
 **Usage**
 
-You can run the Agent by providing an array of target patterns:
+You can run the Agent by calling the `run` method with an array of target patterns. For example:
 
+```typescript
+const generator = new Generator('/path/to/your/project');
+await generator.run(['**/*.ts', '**/*.py']);
 ```
-agent.run(['**/*.ts', '**/*.py']);
-```
 
-**Cache Management**
+This will process all TypeScript and Python files within the project.
 
-The Agent uses a cache to store file hashes and metadata. This prevents reprocessing unchanged files, improving performance. The cache is stored in a `doc-cache.json` file within the `config` directory of the project’s root.
+**Configuration**
+
+*   **`prompts.yml`:**  Customize the prompts used to generate documentation. This file should be placed in `packages/tools/agent/src`.
+*   **`rootDir`:** The root directory of your project, provided during instantiation of the `Generator` class.
+*   **Target Patterns:**  Specify the files to process using glob patterns.
 
 **Output**
 
-Generated documentation is written as Markdown (`.md`) files to a designated output directory. The directory structure mirrors the source code’s structure, allowing for easy navigation and organization. Frontmatter is added to each file containing metadata about the documentation.
-
-**Error Handling**
-
-The Agent logs errors encountered during processing. Validation warnings are also logged, providing feedback on potential documentation issues.
+Generated documentation is saved as Markdown files (`.md`) in the `docs` directory within the project or in package-specific `docs` directories if the source file resides within a package. The output directory structure mirrors the source file structure.

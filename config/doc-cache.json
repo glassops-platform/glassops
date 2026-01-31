@@ -1,0 +1,814 @@
+{
+  "packages/adapters/native/cmd/main.go": {
+    "hash": "2c4417b1c1c5b20a2809807e6d189a0b7a365808c5821a7565335171823efb5f",
+    "generatedFiles": [
+      "packages/adapters/native/docs/cmd-main.md"
+    ],
+    "timestamp": "2026-01-31T09:45:42.129932"
+  },
+  "packages/control-plane/cmd/resolver/main.go": {
+    "hash": "e53a85af9c11df19f7caa52717a03e4fe1f512958c414471e02e77ad2ada38bc",
+    "generatedFiles": [
+      "packages/control-plane/docs/resolver-main.md"
+    ],
+    "timestamp": "2026-01-31T09:46:02.546974"
+  },
+  "packages/control-plane/internal/contract/contract.go": {
+    "hash": "f6b1fae98e3691bd1375c6e96ecbe12185ba2ce76954ca639a7efb13859d2c67",
+    "generatedFiles": [
+      "packages/control-plane/docs/contract-contract.md"
+    ],
+    "timestamp": "2026-01-31T09:46:21.408747"
+  },
+  "packages/control-plane/internal/policy/policy.go": {
+    "hash": "83153ee161935cb1582b33943db390eb171887a814847d212dc3e156bca88149",
+    "generatedFiles": [
+      "packages/control-plane/docs/policy-policy.md"
+    ],
+    "timestamp": "2026-01-31T09:46:42.331004"
+  },
+  "packages/knowledge/__init__.py": {
+    "hash": "a295383fffe5caa9562c06e539020acd2d587f6d580a11dfe83fe0084093e701",
+    "generatedFiles": [
+      "packages/knowledge/docs/__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:47:03.260735"
+  },
+  "packages/knowledge/drift/__init__.py": {
+    "hash": "2c54a27cc8645bdde6f6560c610cbf582b16a04f024688af37bedfe171f1350d",
+    "generatedFiles": [
+      "packages/knowledge/docs/drift-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:47:17.495915"
+  },
+  "packages/knowledge/drift/detect_drift.py": {
+    "hash": "dee44b64dd3a391ae28d74379a8cb4f62cf1733a64945e310fcbe0a6ce6a6ac2",
+    "generatedFiles": [
+      "packages/knowledge/docs/drift-detect_drift.md"
+    ],
+    "timestamp": "2026-01-31T09:47:39.304655"
+  },
+  "packages/knowledge/embeddings/__init__.py": {
+    "hash": "8155797cfbbac00bb501a46542405e653e9cc589aede51dfac27cdb69312dafd",
+    "generatedFiles": [
+      "packages/knowledge/docs/embeddings-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:47:55.956120"
+  },
+  "packages/knowledge/embeddings/gemini_embedding.py": {
+    "hash": "a0b56efa7a899a2d9e217b1e561575b4fc5fa0176d7c2575ebbb8eacc83645a3",
+    "generatedFiles": [
+      "packages/knowledge/docs/embeddings-gemini_embedding.md"
+    ],
+    "timestamp": "2026-01-31T09:48:18.401030"
+  },
+  "packages/knowledge/embeddings/gemma_12b_it_embedding.py": {
+    "hash": "3e3940290334fd2df5c0c9bce7d51d3fc5c9c6889f7b792208e3d1fdeec0ea93",
+    "generatedFiles": [
+      "packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md"
+    ],
+    "timestamp": "2026-01-31T09:48:36.536110"
+  },
+  "packages/knowledge/embeddings/router_embedding.py": {
+    "hash": "49a09ab49ded32a47ef1514aba557a72be4f60b26c06cb948ff12be0d674bc98",
+    "generatedFiles": [
+      "packages/knowledge/docs/embeddings-router_embedding.md"
+    ],
+    "timestamp": "2026-01-31T09:49:01.781261"
+  },
+  "packages/knowledge/generation/__init__.py": {
+    "hash": "4fcff7f0617c5e673481acc25676d74c85ee65b956a863970113434be6a9fc6b",
+    "generatedFiles": [
+      "packages/knowledge/docs/generation-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:49:21.609668"
+  },
+  "packages/knowledge/generation/adapters/__init__.py": {
+    "hash": "740ef35a544245639b934b1c3390a3673a1f66c6e9b876b1ed8854b5047abd96",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:49:43.957134"
+  },
+  "packages/knowledge/generation/adapters/apex_adapter.py": {
+    "hash": "7fd9d575b3ebb4b889c9e55dcb24940b5cc37ec212bc40d9dbb3868136103744",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-apex_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:50:08.726030"
+  },
+  "packages/knowledge/generation/adapters/base.py": {
+    "hash": "08dc52069e4b5afdbe50fa7d005e2706291f518aebe606d8763794075205d917",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-base.md"
+    ],
+    "timestamp": "2026-01-31T09:50:26.865921"
+  },
+  "packages/knowledge/generation/adapters/docker_adapter.py": {
+    "hash": "baf88548739965112f653460a79caab499eac6130e9bdca0e9984c296e006cd4",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-docker_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:50:48.228681"
+  },
+  "packages/knowledge/generation/adapters/go.py": {
+    "hash": "e352c93ef3e7fa4196bbc8dcd488f396a6f7ff1fd9edb8a91019e9a4c7ea986b",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-go.md"
+    ],
+    "timestamp": "2026-01-31T09:51:16.284417"
+  },
+  "packages/knowledge/generation/adapters/json_adapter.py": {
+    "hash": "51047741270ca1d311ab2b2ad45b14dbe6f1ad33eb711851b4a87c690b2cea1d",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-json_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:51:33.974044"
+  },
+  "packages/knowledge/generation/adapters/lwc_adapter.py": {
+    "hash": "46fc5ec245213835235f1563576f82635e9c7c77480f8813a58f700dc8574dba",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-lwc_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:51:54.759531"
+  },
+  "packages/knowledge/generation/adapters/python.py": {
+    "hash": "01f09935871c40b71b24ec76a18a51e62995920a97c119c08c60e789e00bf4cd",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-python.md"
+    ],
+    "timestamp": "2026-01-31T09:52:16.226825"
+  },
+  "packages/knowledge/generation/adapters/terraform_adapter.py": {
+    "hash": "34f8eb184d2b7e76a39b0b848459e812a805111c250f893d6e922c6e463b029d",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-terraform_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:52:43.930263"
+  },
+  "packages/knowledge/generation/adapters/typescript.py": {
+    "hash": "38edc897ad829164a4fa8e31f1d033c31f53ae2e1924bbe7f308e5d525489af4",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-typescript.md"
+    ],
+    "timestamp": "2026-01-31T09:53:03.412807"
+  },
+  "packages/knowledge/generation/adapters/yaml_adapter.py": {
+    "hash": "02479b1d1aa043a20a103d0efcc3bdbdb68628a7e2e1134784aada793175c79b",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-yaml_adapter.md"
+    ],
+    "timestamp": "2026-01-31T09:53:21.191050"
+  },
+  "packages/knowledge/generation/generator.py": {
+    "hash": "0a0ea08d2da4d3e70cf37f855e65aeb860ba654725e4f99d4fd6d8b26f988e1d",
+    "generatedFiles": [
+      "packages/knowledge/docs/generation-generator.md"
+    ],
+    "timestamp": "2026-01-31T09:53:49.870713"
+  },
+  "packages/knowledge/generation/validator.py": {
+    "hash": "0a70725cba5c908b3ccac480b5dd6d38c7ae6d4d055a98e638804d8adecc87d9",
+    "generatedFiles": [
+      "packages/knowledge/docs/generation-validator.md"
+    ],
+    "timestamp": "2026-01-31T09:54:07.481077"
+  },
+  "packages/knowledge/ingestion/__init__.py": {
+    "hash": "d3a838faa30164960ef819c10bdc23ee47ace81b5ea0591d289302fd6619fd4b",
+    "generatedFiles": [
+      "packages/knowledge/docs/ingestion-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:54:23.580864"
+  },
+  "packages/knowledge/ingestion/federated_loader.py": {
+    "hash": "16479342d05b9369478aa6657719d0de08cf932c3abacb79e515d7220a5e4e89",
+    "generatedFiles": [
+      "packages/knowledge/docs/ingestion-federated_loader.md"
+    ],
+    "timestamp": "2026-01-31T09:54:43.698599"
+  },
+  "packages/knowledge/ingestion/index_builder.py": {
+    "hash": "9c54c23a508d4b3fccdf0915b486a5525e52745057e432f05a5f2dd21d3dbe91",
+    "generatedFiles": [
+      "packages/knowledge/docs/ingestion-index_builder.md"
+    ],
+    "timestamp": "2026-01-31T09:55:06.082057"
+  },
+  "packages/knowledge/llm/__init__.py": {
+    "hash": "887834a896d4bd8152aeba02b2a09a7ee65baa0e959e31b4cdec8af3f0f455f9",
+    "generatedFiles": [
+      "packages/knowledge/docs/llm-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:55:21.102086"
+  },
+  "packages/knowledge/llm/client.py": {
+    "hash": "5c3004e9f42636ddf1fc589893d5cbcf16779f191ba71625688658e4b79db9f5",
+    "generatedFiles": [
+      "packages/knowledge/docs/llm-client.md"
+    ],
+    "timestamp": "2026-01-31T09:55:45.831213"
+  },
+  "packages/knowledge/main.py": {
+    "hash": "11c84f152af5919603a1faa11b95ec8eb3bfd840332ca9614c74bddd3bec3cf6",
+    "generatedFiles": [
+      "packages/knowledge/docs/main.md"
+    ],
+    "timestamp": "2026-01-31T11:04:33.399272"
+  },
+  "packages/knowledge/rag/__init__.py": {
+    "hash": "dfb47fdaffdff34cc1b8b061b4662fcb1e7c7de005961dce082a670496c8b3a6",
+    "generatedFiles": [
+      "packages/knowledge/docs/rag-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:56:18.574243"
+  },
+  "packages/knowledge/rag/query_engine.py": {
+    "hash": "09603013c88193d7faf419e2b18b13bf32b3d9de8e28c293f2d3e97f0923446f",
+    "generatedFiles": [
+      "packages/knowledge/docs/rag-query_engine.md"
+    ],
+    "timestamp": "2026-01-31T09:56:35.296119"
+  },
+  "packages/knowledge/utils/__init__.py": {
+    "hash": "30f89e90ce9df55dbb41c92df0cc93232e1f030ed051112539e18b45539a8f28",
+    "generatedFiles": [
+      "packages/knowledge/docs/utils-__init__.md"
+    ],
+    "timestamp": "2026-01-31T09:56:52.016404"
+  },
+  "packages/knowledge/utils/batch.py": {
+    "hash": "4e0afdbee506b9f550be76fdc05df4a7ff64247f715056fae1452dc7d7ce6480",
+    "generatedFiles": [
+      "packages/knowledge/docs/utils-batch.md"
+    ],
+    "timestamp": "2026-01-31T09:57:09.932401"
+  },
+  "packages/knowledge/utils/file_hash.py": {
+    "hash": "4fd926d74783d2277cebbeeda96818a84db13cb59f5f9cf35460845c88574aab",
+    "generatedFiles": [
+      "packages/knowledge/docs/utils-file_hash.md"
+    ],
+    "timestamp": "2026-01-31T09:57:25.391160"
+  },
+  "packages/runtime/cmd/glassops/main.go": {
+    "hash": "c16e6c382845f65a8d2af02a90b0d828dc4354bf2a489904917c35b59490031c",
+    "generatedFiles": [
+      "packages/runtime/docs/glassops-main.md"
+    ],
+    "timestamp": "2026-01-31T09:57:50.308662"
+  },
+  "packages/runtime/internal/analyzer/analyzer.go": {
+    "hash": "ab8077a3cce90b5885928134a18eb94679791ce20f5d36dac52f7283c6149388",
+    "generatedFiles": [
+      "packages/runtime/docs/analyzer-analyzer.md"
+    ],
+    "timestamp": "2026-01-31T09:58:18.934901"
+  },
+  "packages/runtime/internal/analyzer/analyzer_test.go": {
+    "hash": "94b6446da9b30d2741a9ad1f66da7ffbd5e662cc94eed56a6853fc4cda874adf",
+    "generatedFiles": [
+      "packages/runtime/docs/analyzer-analyzer_test.md"
+    ],
+    "timestamp": "2026-01-31T09:58:37.602677"
+  },
+  "packages/runtime/internal/contract/contract.go": {
+    "hash": "a3f26726bb5f1246580a0587bbde1927f7284f9f574ef6261e317958a6f2bb26",
+    "generatedFiles": [
+      "packages/runtime/docs/contract-contract.md"
+    ],
+    "timestamp": "2026-01-31T09:59:05.080297"
+  },
+  "packages/runtime/internal/contract/contract_test.go": {
+    "hash": "3a35b367629b06cac4dba35c15628d04648cf4fb51ce53f91f0bdbdf0ae3e0d1",
+    "generatedFiles": [
+      "packages/runtime/docs/contract-contract_test.md"
+    ],
+    "timestamp": "2026-01-31T09:59:20.935928"
+  },
+  "packages/runtime/internal/errors/errors.go": {
+    "hash": "8d74b0b3de8008cf135ed510e21fe41f8422da3ed98dbdf964fe62fb5608c129",
+    "generatedFiles": [
+      "packages/runtime/docs/errors-errors.md"
+    ],
+    "timestamp": "2026-01-31T09:59:44.976295"
+  },
+  "packages/runtime/internal/errors/errors_test.go": {
+    "hash": "42983b4d752082e092e6310fbded062202a1677bca7087b44c5f8dc4d436d12c",
+    "generatedFiles": [
+      "packages/runtime/docs/errors-errors_test.md"
+    ],
+    "timestamp": "2026-01-31T10:00:09.303522"
+  },
+  "packages/runtime/internal/gha/gha.go": {
+    "hash": "eda50c569f48d9c3082b8b62388ee96fc7c75c3c418c698edbb6248843fc078d",
+    "generatedFiles": [
+      "packages/runtime/docs/gha-gha.md"
+    ],
+    "timestamp": "2026-01-31T10:00:32.453216"
+  },
+  "packages/runtime/internal/gha/gha_test.go": {
+    "hash": "78792b077f78dcf3f17aa320e2dd3e7fb2cc6d08b94f25a00d6add71f4b7b6b3",
+    "generatedFiles": [
+      "packages/runtime/docs/gha-gha_test.md"
+    ],
+    "timestamp": "2026-01-31T10:00:49.873331"
+  },
+  "packages/runtime/internal/integration/contract_test.go": {
+    "hash": "7ab1e02da31199caf92781e9d2d113b04fe958b0db1d429763f36d052718bce2",
+    "generatedFiles": [
+      "packages/runtime/docs/integration-contract_test.md"
+    ],
+    "timestamp": "2026-01-31T10:01:39.004631"
+  },
+  "packages/runtime/internal/integration/helpers.go": {
+    "hash": "e52dc4d6d6a8ca54108f60c771cbec995f0fbcd31ed3a63fa63e608e54b9e2fc",
+    "generatedFiles": [
+      "packages/runtime/docs/integration-helpers.md"
+    ],
+    "timestamp": "2026-01-31T10:02:06.721731"
+  },
+  "packages/runtime/internal/integration/identity_test.go": {
+    "hash": "28902c7ad4f9dd34f617b2e42846dddebe74fdf681c48ea5294e97c9712c2337",
+    "generatedFiles": [
+      "packages/runtime/docs/integration-identity_test.md"
+    ],
+    "timestamp": "2026-01-31T10:02:26.324159"
+  },
+  "packages/runtime/internal/integration/policy_test.go": {
+    "hash": "043050be51f99529cb2e5a145137b1818e025062b4529569289a697c01e2321b",
+    "generatedFiles": [
+      "packages/runtime/docs/integration-policy_test.md"
+    ],
+    "timestamp": "2026-01-31T10:02:46.301895"
+  },
+  "packages/runtime/internal/policy/policy.go": {
+    "hash": "8a1a02f4d3862565e4162e9128051a7cf16adfedea8d446cdb6684bf679de150",
+    "generatedFiles": [
+      "packages/runtime/docs/policy-policy.md"
+    ],
+    "timestamp": "2026-01-31T10:03:13.175468"
+  },
+  "packages/runtime/internal/policy/policy_test.go": {
+    "hash": "441ac8ad7b79a0cf34d3855a487021291d095753f60c207942d2646ead09cd39",
+    "generatedFiles": [
+      "packages/runtime/docs/policy-policy_test.md"
+    ],
+    "timestamp": "2026-01-31T10:03:33.774333"
+  },
+  "packages/runtime/internal/services/cli.go": {
+    "hash": "bdffb7a1ab67d92a28eb7709a10ddc33e93f9484d200010ddb9f2d4eb003dcb0",
+    "generatedFiles": [
+      "packages/runtime/docs/services-cli.md"
+    ],
+    "timestamp": "2026-01-31T10:03:57.861376"
+  },
+  "packages/runtime/internal/services/cli_test.go": {
+    "hash": "e859613bf4847845a7c5c5270e1cc5b769285ed0a9b1906dafc105891475149e",
+    "generatedFiles": [
+      "packages/runtime/docs/services-cli_test.md"
+    ],
+    "timestamp": "2026-01-31T10:04:12.265159"
+  },
+  "packages/runtime/internal/services/health.go": {
+    "hash": "dc0d532648eaba96338eac5b57315c16984bf5a279ba8dc55a8413c0a9c7fb2d",
+    "generatedFiles": [
+      "packages/runtime/docs/services-health.md"
+    ],
+    "timestamp": "2026-01-31T10:04:36.806534"
+  },
+  "packages/runtime/internal/services/health_test.go": {
+    "hash": "49b8eabef40f08009acba945fd26f33d9fd1f2d88b5e5f0855f246cb469cc3cc",
+    "generatedFiles": [
+      "packages/runtime/docs/services-health_test.md"
+    ],
+    "timestamp": "2026-01-31T10:04:51.167360"
+  },
+  "packages/runtime/internal/services/identity.go": {
+    "hash": "3940eb183960a36e834ef630b97962783208d0a0acd53fd5522e36dcb1c8a15d",
+    "generatedFiles": [
+      "packages/runtime/docs/services-identity.md"
+    ],
+    "timestamp": "2026-01-31T10:05:11.432986"
+  },
+  "packages/runtime/internal/services/identity_test.go": {
+    "hash": "8f19a02999fcfa09373e2168840341eb01b08e156dbef416583afe719ba4b9d4",
+    "generatedFiles": [
+      "packages/runtime/docs/services-identity_test.md"
+    ],
+    "timestamp": "2026-01-31T10:05:34.879646"
+  },
+  "packages/runtime/internal/services/retry.go": {
+    "hash": "e1d1e95b765287a86618a65e5ff3ad75f02277e048316a35ff564620915da90a",
+    "generatedFiles": [
+      "packages/runtime/docs/services-retry.md"
+    ],
+    "timestamp": "2026-01-31T10:05:58.602683"
+  },
+  "packages/runtime/internal/services/retry_test.go": {
+    "hash": "2d86655c452a0aa5f827ababbf9109c72bed0754675afeb768cf51979e2c8637",
+    "generatedFiles": [
+      "packages/runtime/docs/services-retry_test.md"
+    ],
+    "timestamp": "2026-01-31T10:06:14.833053"
+  },
+  "packages/runtime/internal/telemetry/telemetry.go": {
+    "hash": "de6e42c3e0bcb05f5d41072920cb61dfd827fe759cc2b3874316d72a2191e789",
+    "generatedFiles": [
+      "packages/runtime/docs/telemetry-telemetry.md"
+    ],
+    "timestamp": "2026-01-31T10:06:35.008073"
+  },
+  "packages/runtime/internal/telemetry/telemetry_test.go": {
+    "hash": "32936707e300d67e620fffac350f9a49781e0acc63fd0680f537f440505e41a0",
+    "generatedFiles": [
+      "packages/runtime/docs/telemetry-telemetry_test.md"
+    ],
+    "timestamp": "2026-01-31T10:06:57.813669"
+  },
+  "packages/runtime-ts/src/index.ts": {
+    "hash": "54c1bd9aa48e0a943377186f288e629b527a9947f74efd9bc1bfb7ea4386f69a",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/src-index.md"
+    ],
+    "timestamp": "2026-01-31T10:07:23.729967"
+  },
+  "packages/runtime-ts/src/integration/analyzer.integration.test.ts": {
+    "hash": "0d473ef7c4d829aa4b6073496362792104c26afac17c56c11692582fff9706d5",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-analyzer.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:07:46.257293"
+  },
+  "packages/runtime-ts/src/integration/cli-platform.integration.test.ts": {
+    "hash": "c0fe62e004405747ec5aed3472ced22489880f70c7e4fec6ba9821c76fff59c7",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-cli-platform.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:08:01.681776"
+  },
+  "packages/runtime-ts/src/integration/cli.integration.test.ts": {
+    "hash": "7bdd3344b00f64cd730b3fc47b16f07a62fb9c929c986afde8dc397872fe94f8",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-cli.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:08:19.019171"
+  },
+  "packages/runtime-ts/src/integration/contract.integration.test.ts": {
+    "hash": "6b2a352f66d3d0aefc00ef36dddba62abd550228de051275c4a090ad1519375b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-contract.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:08:34.834439"
+  },
+  "packages/runtime-ts/src/integration/identity.integration.test.ts": {
+    "hash": "08ee7d731762dc4c1479b9f5d75b6fe4580c23a9416e0cec0c9778be60362917",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-identity.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:08:52.527076"
+  },
+  "packages/runtime-ts/src/integration/policy.integration.test.ts": {
+    "hash": "cfc958a5318263c5233c93e4cdba61064edb5b9626a53970db4367f2295e7737",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-policy.integration.test.md"
+    ],
+    "timestamp": "2026-01-31T10:09:07.883768"
+  },
+  "packages/runtime-ts/src/integration/test-helpers.ts": {
+    "hash": "af660f4ebe5e84e895d5f3226a2423c92c2523cdf16760c61bfe97bb4ee28393",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/integration-test-helpers.md"
+    ],
+    "timestamp": "2026-01-31T10:09:30.634698"
+  },
+  "packages/runtime-ts/src/protocol/contract.test.ts": {
+    "hash": "606b673c382755f685c8f3302c0198fe680a1046fdc81b1970846e49007a58c0",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/protocol-contract.test.md"
+    ],
+    "timestamp": "2026-01-31T10:09:51.729201"
+  },
+  "packages/runtime-ts/src/protocol/contract.ts": {
+    "hash": "1b4bf84390a17dfe0003a547e8c270362a2a45bc6e276dae6611f4a4d7806f41",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/protocol-contract.md"
+    ],
+    "timestamp": "2026-01-31T10:10:16.917170"
+  },
+  "packages/runtime-ts/src/protocol/policy.test.ts": {
+    "hash": "3f4533598237bae7d4dbe66cd3c23671496fb9bde5d1b088263469c91d0aeb2e",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/protocol-policy.test.md"
+    ],
+    "timestamp": "2026-01-31T10:10:43.914297"
+  },
+  "packages/runtime-ts/src/protocol/policy.ts": {
+    "hash": "010bcd70ed0165b80fec5d3c7beef6127deacdd2ca8158e77fc56047f2ebd024",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/protocol-policy.md"
+    ],
+    "timestamp": "2026-01-31T10:11:07.728101"
+  },
+  "packages/runtime-ts/src/services/analyzer.test.ts": {
+    "hash": "7d2ddbbab6796de15d6654bccb98337c6487a3e9b2166dbec435abeccbfeea3c",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-analyzer.test.md"
+    ],
+    "timestamp": "2026-01-31T10:11:22.081035"
+  },
+  "packages/runtime-ts/src/services/analyzer.ts": {
+    "hash": "f4a83f4fd444af30bcd6ae7b68ee09520db2abfa8fa0347167c5df9af9b446f7",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-analyzer.md"
+    ],
+    "timestamp": "2026-01-31T10:11:43.209695"
+  },
+  "packages/runtime-ts/src/services/cli.test.ts": {
+    "hash": "b3234a4c5d9ab2fe336c4578cdcdb047c8240534be58cb563e50a98b33158e5d",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-cli.test.md"
+    ],
+    "timestamp": "2026-01-31T10:11:59.742106"
+  },
+  "packages/runtime-ts/src/services/cli.ts": {
+    "hash": "973b422680240f152da76f14a615c66ecf48871b05f31f1e52fb30e52ddb2199",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-cli.md"
+    ],
+    "timestamp": "2026-01-31T10:12:18.161206"
+  },
+  "packages/runtime-ts/src/services/health.test.ts": {
+    "hash": "e417c599a11eef37d982678f0b02565e75438c27c15f6d8eff509eddf7989e6e",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-health.test.md"
+    ],
+    "timestamp": "2026-01-31T10:12:38.943394"
+  },
+  "packages/runtime-ts/src/services/health.ts": {
+    "hash": "d643450fca14f67821903d531e6c29e9a99b9b9bca34c02860de6cdc68024520",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-health.md"
+    ],
+    "timestamp": "2026-01-31T10:12:55.979285"
+  },
+  "packages/runtime-ts/src/services/identity.test.ts": {
+    "hash": "918ca996fb332cea01787f5421099d52ba39b83780127de3f138ac7b0198480f",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-identity.test.md"
+    ],
+    "timestamp": "2026-01-31T10:13:10.723711"
+  },
+  "packages/runtime-ts/src/services/identity.ts": {
+    "hash": "7da4458a3bb94c021316e184cd6743876ac04c4f59fee21885b081066399ee60",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-identity.md"
+    ],
+    "timestamp": "2026-01-31T10:13:31.719067"
+  },
+  "packages/runtime-ts/src/services/retry.test.ts": {
+    "hash": "8f8177f9522970e0c73f095aa11dee7604a2394058095c6d80ef9136115711a4",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-retry.test.md"
+    ],
+    "timestamp": "2026-01-31T10:13:53.587126"
+  },
+  "packages/runtime-ts/src/services/retry.ts": {
+    "hash": "66a78c21d7ac4ddc3abd59ad36043dc7099c50667d80546a7689ee9433fea96b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-retry.md"
+    ],
+    "timestamp": "2026-01-31T10:14:18.698832"
+  },
+  "packages/runtime-ts/src/services/telemetry.test.ts": {
+    "hash": "56d6c19ce86ce7a7db9db3a9c9f6f32bb0af562b686006d765c5360258bd239b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-telemetry.test.md"
+    ],
+    "timestamp": "2026-01-31T10:14:34.432319"
+  },
+  "packages/runtime-ts/src/services/telemetry.ts": {
+    "hash": "effd62924f7ca6ef31b43af94c93a643466e7be582e31b7b472180bb6b2f408e",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/services-telemetry.md"
+    ],
+    "timestamp": "2026-01-31T10:14:59.683769"
+  },
+  "packages/runtime-ts/src/types/config.d.ts": {
+    "hash": "10e0f67f12da9b5de1b7aeac604b2417e83996caf4f4cf3d95d537e6db4127ee",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/types-config.d.md"
+    ],
+    "timestamp": "2026-01-31T10:15:22.711658"
+  },
+  "packages/runtime-ts/src/types/contract.d.ts": {
+    "hash": "93fa4c433babe2f882aeffac091d68dc3f8ae11749a82816392fa518c93f9a44",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/types-contract.d.md"
+    ],
+    "timestamp": "2026-01-31T10:15:54.973250"
+  },
+  "packages/tools/agent/src/adapters/apex-adapter.ts": {
+    "hash": "bf5aa959825ccecf68ff871bcacc77fb8428a3e5e8906ab4e51a0b6bce76c81d",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-apex-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:16:13.001792"
+  },
+  "packages/tools/agent/src/adapters/docker-adapter.ts": {
+    "hash": "098372ed82eb7d58e32e7edba32f2300351a37a4344df625a5893b16e48fc3bc",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-docker-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:16:34.121800"
+  },
+  "packages/tools/agent/src/adapters/interface.ts": {
+    "hash": "f2768e9d45e206d7f00f3b4c1b4f1de47b4278b6f233c741457ec05cefe83842",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-interface.md"
+    ],
+    "timestamp": "2026-01-31T10:16:50.278889"
+  },
+  "packages/tools/agent/src/adapters/json-adapter.ts": {
+    "hash": "fbdff4a5a66631702c17a404f4b360020230038017433e82b6b0aa0f16ab50d2",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-json-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:17:11.080676"
+  },
+  "packages/tools/agent/src/adapters/lwc-adapter.ts": {
+    "hash": "b49e1c6a1867343593bd52f58aca9365ea3ee9aa67113aa6132a5a858aa83fb5",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-lwc-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:17:33.411632"
+  },
+  "packages/tools/agent/src/adapters/md-adapter.ts": {
+    "hash": "c380558624685ccdabe95319d4d78e9d78ca966fb01ed996dd0900ed50cce976",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-md-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:17:58.161844"
+  },
+  "packages/tools/agent/src/adapters/py-adapter.ts": {
+    "hash": "8d2e85d94103c29d72984c3f34046684fc1ec3b7c96954d4cc1e5cd60a1b7e5f",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-py-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:18:26.127334"
+  },
+  "packages/tools/agent/src/adapters/terraform-adapter.ts": {
+    "hash": "7c28ae755942fb80ed2efcfecf4b5ac58629d14bc12bba1935b1c59f82527957",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-terraform-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:18:51.708859"
+  },
+  "packages/tools/agent/src/adapters/ts-adapter.ts": {
+    "hash": "677402b4dbd30061884f6e58be907cc88b88aa6ec9b6239b698cf907d2e33ab3",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-ts-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:19:11.079735"
+  },
+  "packages/tools/agent/src/adapters/yml-adapter.ts": {
+    "hash": "ca031af7b7ed139863454c2b9d49b1bdcbfe1037cfe30ed64c73e2f9d88dd15a",
+    "generatedFiles": [
+      "packages/tools/agent/docs/adapters-yml-adapter.md"
+    ],
+    "timestamp": "2026-01-31T10:19:39.596023"
+  },
+  "packages/tools/agent/src/generator.ts": {
+    "hash": "7c69d26ea41989b22a3650371168dda792888bcdf63bb35cc47921f990776a6d",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-generator.md"
+    ],
+    "timestamp": "2026-01-31T10:20:00.347177"
+  },
+  "packages/tools/agent/src/index.ts": {
+    "hash": "eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-index.md"
+    ],
+    "timestamp": "2026-01-31T10:20:14.429428"
+  },
+  "packages/tools/agent/src/llm-client.ts": {
+    "hash": "6936f5e724e055e48121feb3598ccbec69a7f115857cf8236e6897d4bc162ef2",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-llm-client.md"
+    ],
+    "timestamp": "2026-01-31T10:20:44.505765"
+  },
+  "packages/tools/agent/src/scanner.ts": {
+    "hash": "e72d6c8da430da632f90e9e248c9596fa06da0de3f12d3731f0267728bbf3356",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-scanner.md"
+    ],
+    "timestamp": "2026-01-31T10:21:02.263937"
+  },
+  "packages/tools/agent/src/validator.ts": {
+    "hash": "16ed4cfc2c65069c38113989639e5896ce05a75ddd3ff8f3a87cefccf6974f0b",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-validator.md"
+    ],
+    "timestamp": "2026-01-31T10:21:17.925481"
+  },
+  "packages/adapters/native/Dockerfile": {
+    "hash": "84f9b60160c1b3ff063fac221639ae76919d61d1e0a8761fefbca2fe254fd551",
+    "generatedFiles": [
+      "packages/adapters/native/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:03:17.409750"
+  },
+  "packages/knowledge/config/config.json": {
+    "hash": "20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde",
+    "generatedFiles": [
+      "packages/knowledge/docs/config-config.md"
+    ],
+    "timestamp": "2026-01-31T11:03:39.518004"
+  },
+  "packages/knowledge/config/prompts.yml": {
+    "hash": "fa0450b4b022cb08c826f4a7a5d3d82f9e04c2559269e31a838da7444eedfee5",
+    "generatedFiles": [
+      "packages/knowledge/docs/config-prompts.md"
+    ],
+    "timestamp": "2026-01-31T11:04:01.239243"
+  },
+  "packages/platform/sfdx-project.json": {
+    "hash": "06f30cefba9ff14ee0e89759a269061d3ef6688ba2cfef642e806bc82c07207d",
+    "generatedFiles": [
+      "packages/platform/docs/sfdx-project.md"
+    ],
+    "timestamp": "2026-01-31T11:05:07.786165"
+  },
+  "packages/runtime/action.yml": {
+    "hash": "ec91c30a592eb0967662ac9901db54840aebc296fa1897a08af5535daa8d354e",
+    "generatedFiles": [
+      "packages/runtime/docs/action.md"
+    ],
+    "timestamp": "2026-01-31T11:05:38.387819"
+  },
+  "packages/runtime/Dockerfile": {
+    "hash": "335afd8b950d1cbbdaa8c07079af1c61cb68b2480aa25df0e978ec233dcde8fd",
+    "generatedFiles": [
+      "packages/runtime/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:06:09.720820"
+  },
+  "packages/runtime-ts/action.yml": {
+    "hash": "51105da1b20fc22775e94d2a5b8f0b93a942c069a628f45b47f33c6d494426a3",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/action.md"
+    ],
+    "timestamp": "2026-01-31T11:06:43.774449"
+  },
+  "packages/runtime-ts/config/jest.config.js": {
+    "hash": "b18205ff56a3b280190ff342fc2274acbbac97f5209fb9cad0deaf2e74b1808b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.config.md"
+    ],
+    "timestamp": "2026-01-31T11:08:57.032189"
+  },
+  "packages/runtime-ts/config/jest.integration.config.js": {
+    "hash": "e015b22c69711d008eba43205f6f91622c2a2a9133f6434e4762ff636395b2a1",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.integration.config.md"
+    ],
+    "timestamp": "2026-01-31T11:09:14.886413"
+  },
+  "packages/runtime-ts/config/jest.integration.setup.js": {
+    "hash": "50ee3e4481b84677818a5aa4389662eeb26e01b9753a4b71e7d38555636d2959",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/config-jest.integration.setup.md"
+    ],
+    "timestamp": "2026-01-31T11:09:29.162595"
+  },
+  "packages/runtime-ts/Dockerfile": {
+    "hash": "49486a08faa7bfdf010281f10987d601013eccb90345e92416ebac0b837b9a2b",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/Dockerfile.md"
+    ],
+    "timestamp": "2026-01-31T11:09:52.889762"
+  },
+  "packages/runtime-ts/eslint.config.mjs": {
+    "hash": "6c18960259bdddac150641f8016881667a04e07d58087c38a3b44b6229458846",
+    "generatedFiles": [
+      "packages/runtime-ts/docs/eslint.config.md"
+    ],
+    "timestamp": "2026-01-31T11:10:12.363717"
+  },
+  "packages/tools/agent/eslint.config.mjs": {
+    "hash": "642d832bd1e30cccfe62dd437a93aa9a78a6f926e506cf45c4ea171fe501209c",
+    "generatedFiles": [
+      "packages/tools/agent/docs/eslint.config.md"
+    ],
+    "timestamp": "2026-01-31T11:10:24.845470"
+  },
+  "packages/tools/agent/src/prompts.yml": {
+    "hash": "f15f01e56e84a848ffe263878ad181c1ded7b012e586901035152f6acb5572e9",
+    "generatedFiles": [
+      "packages/tools/agent/docs/src-prompts.md"
+    ],
+    "timestamp": "2026-01-31T11:10:54.043304"
+  }
+}

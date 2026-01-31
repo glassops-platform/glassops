@@ -2,52 +2,56 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/index.ts
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/index.ts
-generated_at: 2026-01-26T14:12:49.970Z
-hash: f4a190c15881960f1608fc56abe70baa6d65bcbc06ec184b10b72e6bdab05757
+generated_at: 2026-01-31T10:20:14.426234
+hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 ---
 
 ## GlassOps Agent Documentation
 
 **Overview**
 
-The GlassOps Agent is a command-line tool designed to automatically generate documentation and metadata for GlassOps repositories. It analyzes source code and related files to produce up-to-date documentation, improving code understanding and maintainability.
+This tool is an AI-powered agent designed to automatically generate documentation and metadata for GlassOps projects. It analyzes source code and related files to produce up-to-date and informative documentation.
 
 **Key Features**
 
-*   **Automated Documentation:**  The agent simplifies the documentation process by automatically extracting information from your codebase.
-*   **Multi-Language Support:** It supports various programming languages and file types commonly used in GlassOps projects, including TypeScript, Python, JavaScript, Terraform, YAML, JSON, and more.
-*   **Configurable Patterns:**  You can specify which files and directories to include in the documentation generation process.
-*   **Error Handling:**  The agent provides informative error messages to help diagnose and resolve issues.
+*   **Automated Documentation:** Simplifies the process of creating and maintaining documentation.
+*   **Multi-Language Support:** Supports TypeScript, Python, JavaScript, Terraform, YAML, JSON, Markdown, and other common file types.
+*   **Configurable Patterns:** Allows you to specify which files and directories should be included in the documentation generation process.
+*   **Error Handling:** Provides informative error messages to assist with troubleshooting.
 
 **Installation**
 
-This tool is intended to be used as part of a larger GlassOps environment. Installation details are provided within that context.
+This tool is designed to be used as a command-line application. Installation instructions will be provided with the distribution package.
 
 **Usage**
 
-The agent is invoked from the command line. The primary command is `generate`.
+The primary command is `glassops-agent generate`.
 
-```bash
-glassops-agent generate [patterns...]
-```
+**Command: `generate [patterns...]`**
 
-*   `glassops-agent`: The name of the tool.
-*   `generate`:  The command to initiate documentation generation.
-*   `[patterns...]`: (Optional) One or more file patterns specifying the files to document. If no patterns are provided, a default set of patterns will be used.
+This command initiates the documentation generation process.
+
+*   **Description:** Generates documentation for the repository.
+*   **Arguments:**
+    *   `patterns` (optional): One or more file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used. Patterns are glob-style.
+*   **Example:**
+
+    *   `glassops-agent generate` – Generates documentation using the default file patterns.
+    *   `glassops-agent generate 'src/**/*.ts' 'docs/**/*.md'` – Generates documentation only for TypeScript files in the `src` directory and Markdown files in the `docs` directory.
 
 **Default File Patterns**
 
-If you do not specify any patterns, the agent will analyze the following file types by default:
+If you do not specify any patterns, the following file types will be included by default:
 
 *   `packages/**/*.ts`
 *   `packages/**/*.py`
 *   `packages/**/*.mjs`
 *   `packages/**/*.cls`
 *   `packages/**/*.trigger`
-*   `packages/**/*.js` (for LWC)
+*   `packages/**/*.js`
 *   `packages/**/*.tf`
 *   `packages/**/Dockerfile`
 *   `docs/**/*.md`
@@ -58,32 +62,18 @@ If you do not specify any patterns, the agent will analyze the following file ty
 *   `scripts/**/*.ts`
 *   `*.py`
 
-**Specifying Custom Patterns**
+**Technical Details**
 
-You can provide your own file patterns to control which files are processed. For example:
-
-```bash
-glassops-agent generate 'src/**/*.js' 'test/**/*.ts'
-```
-
-This command will only analyze JavaScript files in the `src` directory and TypeScript files in the `test` directory.
-
-**Root Directory Detection**
-
-The agent automatically detects the root directory of your GlassOps repository. It assumes the agent’s location is four levels deep from the repository root. This ensures correct file path resolution during documentation generation.
+The agent determines the project root directory automatically by traversing up four levels from its own location. This ensures accurate documentation generation even when the agent is executed from within a nested directory structure.
 
 **Error Handling**
 
-If an error occurs during the documentation generation process, the agent will display an error message and stack trace to the console. The process will then exit with a non-zero exit code.
+If an error occurs during the documentation generation process, the agent will display an error message to the console, including the error stack trace if available. The process will then exit with a non-zero exit code.
 
-**Example**
+**Future Enhancements**
 
-To generate documentation for all supported file types in your repository, simply run:
+We plan to add support for additional file types and customization options in future releases. We are also exploring integration with other documentation tools and platforms.
 
-```bash
-glassops-agent generate
-```
+**Support**
 
-**Version**
-
-The current version of the GlassOps Agent is 1.0.0.
+For questions or issues, please consult the project’s support channels.

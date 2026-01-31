@@ -27,9 +27,10 @@ class LLMClient:
     def __init__(self, model: str = "gemma-3-27b-it"):
         api_key = os.getenv("GOOGLE_API_KEY", "").strip().strip("'\"")
         if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment.")
-
-        self.client = genai.Client(api_key=api_key)
+            print("⚠️ Warning: GOOGLE_API_KEY not found. LLMClient will be disabled.")
+            self.client = None
+        else:
+            self.client = genai.Client(api_key=api_key)
         self.model = model
         self._request_history: list[dict] = []
         self._rpm_limit = 28  # Safety buffer below 30
@@ -101,6 +102,10 @@ class LLMClient:
             The generated text, or None on failure.
         """
         estimated_tokens = self._estimate_tokens(prompt) + 100  # Buffer for output
+        
+        if not self.client:
+            return None
+
         self._throttle(estimated_tokens)
 
         backoffs = [10, 30, 60]  # Retry delays in seconds

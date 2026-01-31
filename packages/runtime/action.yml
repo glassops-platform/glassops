@@ -58,5 +58,5 @@ outputs:
         description: 'Path to the generated deployment contract JSON file'
 
 runs:
-    using: 'node20'
-    main: 'dist/index.js'
+    using: 'docker'
+    image: 'Dockerfile'

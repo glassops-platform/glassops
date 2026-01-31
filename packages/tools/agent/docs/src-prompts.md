@@ -2,45 +2,50 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/prompts.yml
-last_modified: 2026-01-26
+last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/prompts.yml
-generated_at: 2026-01-26T05:19:58.589Z
-hash: 0abfaf7a606997a2061e4b43d5b4fd45d537610dd09ed5414a61edb910d03a04
+generated_at: 2026-01-31T11:10:54.036798
+hash: f15f01e56e84a848ffe263878ad181c1ded7b012e586901035152f6acb5572e9
 ---
 
-# `prompts.yml` Documentation
+# Prompts Configuration Documentation
 
-This file defines a set of prompts used by an agent to generate or refine technical documentation. Each prompt is tailored to a specific input file type and desired output. The structure consists of a `prompts` key, which contains a dictionary of prompts categorized by file extension.
+This document details the `prompts.yml` file, which defines instructions for a language model used to generate and refine technical documentation. We designed this configuration to support documentation creation for various file types.
 
-## `prompts`
+## Structure
 
-This is the root key, containing all prompt definitions.
+The `prompts` key contains a dictionary. Each key within this dictionary represents a different file type or documentation task. Currently, the supported types are:
 
-### `ts` (TypeScript/JavaScript Documentation Generation)
+*   `ts`: TypeScript/JavaScript documentation generation.
+*   `md`: Markdown documentation refinement.
+*   `json`: JSON schema/data structure documentation.
+*   `yml`: YAML configuration documentation.
 
-This section defines a prompt for generating documentation from TypeScript or JavaScript source code.
+Each file type entry contains two keys: `system` and `user`.
 
-*   **`system`**:  This key holds the system message, which instructs the agent on its role and behavior.  It specifies that the agent acts as a principal architect, translating code into high-level documentation suitable for both technical and non-technical audiences. It emphasizes generating *only* the document content, avoiding conversational elements or code blocks. Strict rules are enforced regarding language (no emojis, specific words prohibited) and pronoun usage ("We"/"I" for maintainers, "You" for user instructions). The system message is duplicated in the provided YAML.
-*   **`user`**: This key contains the user message, which provides the input to the agent. It instructs the agent to generate documentation for the provided TypeScript/JavaScript content, passed via the `{{content}}` variable.
+## Key Details
 
-### `md` (Markdown Documentation Refinement)
+### `ts` (TypeScript Documentation)
 
-This section defines a prompt for refining existing Markdown documentation.
+*   **`system`**: This key holds the system prompt. It instructs the language model to act as a principal architect and translate TypeScript/JavaScript code into high-level, concise documentation suitable for both technical and non-technical audiences. It emphasizes the need for a pristine, coherent, and professional document. The prompt explicitly instructs the model to *only* output the document content and to avoid conversational elements or code block wrapping. It also contains a list of prohibited words and guidelines for pronoun usage.
+*   **`user`**: This key holds the user prompt. It instructs the model to generate documentation for the provided TypeScript/JavaScript code, which is passed in as the `{{content}}` variable.
 
-*   **`system`**: This key holds the system message, instructing the agent to act as a principal architect and improve existing documentation while preserving its original intent and technical depth. It emphasizes a comprehensive, pristine, and coherent output. Similar to the `ts` prompt, it specifies generating only the document content and enforces strict language and pronoun usage rules.
-*   **`user`**: This key contains the user message, instructing the agent to audit and improve the provided Markdown documentation. It specifically requests checks for clarity, broken links (relative paths), and consistency with a "Container-First" platform vision. The content to be audited is passed via the `{{content}}` variable.
+### `md` (Markdown Refinement)
 
-### `json` (JSON Schema/Data Documentation)
+*   **`system`**: This key holds the system prompt. It instructs the language model to act as a principal architect and refine existing Markdown documentation, preserving its original intent and technical depth. It emphasizes creating a comprehensive, pristine, and coherent version of the original document. Similar to the `ts` prompt, it specifies output formatting and stylistic constraints.
+*   **`user`**: This key holds the user prompt. It instructs the model to audit and improve the provided Markdown documentation, focusing on clarity, broken links (specifically relative paths), and consistency with a "Container-First" platform vision. The original document is passed in as the `{{content}}` variable.
 
-This section defines a prompt for documenting JSON schemas or data structures.
+### `json` (JSON Documentation)
 
-*   **`system`**: This key holds the system message, instructing the agent to act as a technical documentation expert. It focuses on explaining the data's architectural role, required/optional fields, and common use cases. It emphasizes outputting valid Markdown only, avoiding conversational text or code blocks, and prohibits mentioning specific terms.
-*   **`user`**: This key contains the user message, instructing the agent to generate documentation for the provided JSON content, passed via the `{{content}}` variable.
+*   **`system`**: This key holds the system prompt. It instructs the language model to act as a technical documentation expert and document a provided JSON schema or data structure. The prompt emphasizes explaining the data's architectural role, identifying required and optional fields, and outlining common use cases. It also specifies output formatting and stylistic constraints.
+*   **`user`**: This key holds the user prompt. It instructs the model to generate documentation for the provided JSON content, which is passed in as the `{{content}}` variable.
 
-### `yml` (YAML Configuration Documentation)
+### `yml` (YAML Documentation)
 
-This section defines a prompt for documenting YAML configuration strings.
+*   **`system`**: This key holds the system prompt. It instructs the language model to act as a DevOps engineer and technical writer, documenting provided YAML configuration strings. The prompt emphasizes explaining the configuration's purpose, structure, and the function of each key. It also specifies output formatting and stylistic constraints.
+*   **`user`**: This key holds the user prompt. It instructs the model to generate documentation for the provided YAML content, which is passed in as the `{{content}}` variable.
 
-*   **`system`**: This key holds the system message, instructing the agent to act as a DevOps engineer and technical writer. It focuses on explaining the purpose, structure, and key controls within the provided YAML configuration. It emphasizes outputting valid Markdown only, avoiding conversational text or code blocks, and prohibits mentioning specific terms.
-*   **`user`**: This key contains the user message, instructing the agent to generate documentation for the provided YAML content, passed via the `{{content}}` variable.
+## Variable Substitution
+
+The `{{content}}` variable in the `user` prompts is a placeholder. You should replace this with the actual content of the file you want to document.
