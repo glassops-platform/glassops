@@ -5,52 +5,73 @@ origin: packages/runtime-ts/src/protocol/contract.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/protocol/contract.ts
-generated_at: 2026-01-31T09:13:49.112262
+generated_at: 2026-01-31T10:10:16.914480
 hash: 1b4bf84390a17dfe0003a547e8c270362a2a45bc6e276dae6611f4a4d7806f41
 ---
 
 ## Deployment Contract Specification
 
-This document details the structure and content of the Deployment Contract, a standardized format for communicating deployment information. It ensures consistent data exchange between systems involved in software delivery.
+This document details the structure and content of the Deployment Contract, a standardized format for communicating deployment information. It ensures consistent data exchange between different components within the system.
 
-**Purpose**
+### Overview
 
-The Deployment Contract provides a comprehensive record of a deployment attempt, including its configuration, execution status, quality metrics, and audit trail. You can use this contract to track, analyze, and manage deployments across different environments and platforms.
+The Deployment Contract defines a common interface for representing the outcome of a deployment process. It encompasses metadata about the deployment, its status, quality metrics, and audit information. This contract is validated using a schema to guarantee data integrity.
 
-**Schema Definition**
+### Schema Definition
 
-The contract is defined using a schema that validates the data structure and types. This schema is based on the Zod library and guarantees data integrity.
+The core of the Deployment Contract is defined by a Zod schema, ensuring type safety and validation. The schema specifies the following properties:
 
-**Contract Fields**
+*   **schemaVersion**: `string` (default: "1.0"). Indicates the version of the contract schema used. This allows for future evolution of the contract without breaking compatibility.
+*   **meta**: `object`. Contains metadata about the deployment environment and trigger.
+    *   **adapter**: `string`. Identifies the adapter used for the deployment.
+    *   **engine**: `enum` (`"native"`, `"hardis"`, `"custom"`). Specifies the execution engine used during deployment.
+    *   **timestamp**: `string` (datetime). Records the time the deployment was initiated.
+    *   **trigger**: `string`. Describes the event that initiated the deployment.
+*   **status**: `enum` (`"Succeeded"`, `"Failed"`, `"Blocked"`). Represents the overall outcome of the deployment.
+*   **quality**: `object`. Provides metrics related to the quality of the deployment.
+    *   **coverage**: `object`. Details code coverage information.
+        *   **actual**: `number` (min: 0, max: 100). The actual code coverage achieved.
+        *   **required**: `number` (min: 0, max: 100). The required code coverage threshold.
+        *   **met**: `boolean`. Indicates whether the actual coverage meets the required threshold.
+    *   **tests**: `object`. Summarizes test execution results.
+        *   **total**: `number` (min: 0). The total number of tests executed.
+        *   **passed**: `number` (min: 0). The number of tests that passed.
+        *   **failed**: `number` (min: 0). The number of tests that failed.
+*   **audit**: `object`. Contains information for auditing and traceability.
+    *   **triggeredBy**: `string`. Identifies the user or system that triggered the deployment.
+    *   **orgId**: `string`. The organization ID associated with the deployment.
+    *   **repository**: `string`. The repository where the code resides.
+    *   **commit**: `string`. The commit hash associated with the deployed code.
 
-The Deployment Contract consists of the following key fields:
+### Type Definition
 
-*   **schemaVersion:** (String, default: "1.0") – Indicates the version of the contract schema used. This allows for future compatibility and evolution of the contract format.
-*   **meta:** (Object) – Contains metadata about the deployment.
-    *   **adapter:** (String) – Identifies the adapter used for the deployment.
-    *   **engine:** (Enum: "native", "hardis", "custom") – Specifies the execution engine used during deployment.
-    *   **timestamp:** (DateTime String) – Records the date and time when the deployment was triggered.
-    *   **trigger:** (String) – Describes the event or process that initiated the deployment.
-*   **status:** (Enum: "Succeeded", "Failed", "Blocked") – Represents the overall outcome of the deployment attempt.
-*   **quality:** (Object) – Provides metrics related to the quality of the deployed code.
-    *   **coverage:** (Object) – Details code coverage information.
-        *   **actual:** (Number, 0-100) – The actual code coverage achieved.
-        *   **required:** (Number, 0-100) – The minimum required code coverage.
-        *   **met:** (Boolean) – Indicates whether the required coverage was met.
-    *   **tests:** (Object) – Summarizes test execution results.
-        *   **total:** (Number, >=0) – The total number of tests executed.
-        *   **passed:** (Number, >=0) – The number of tests that passed.
-        *   **failed:** (Number, >=0) – The number of tests that failed.
-*   **audit:** (Object) – Contains information for auditing and traceability.
-    *   **triggeredBy:** (String) – Identifies the user or system that triggered the deployment.
-    *   **orgId:** (String) – The organization identifier associated with the deployment.
-    *   **repository:** (String) – The repository where the deployed code resides.
-    *   **commit:** (String) – The commit hash of the deployed code.
+The `DeploymentContract` type is derived directly from the `DeploymentContractSchema` using `z.infer`. This ensures type safety and allows you to work with the contract data in a strongly-typed manner within your TypeScript code.
 
-**Data Type**
+```typescript
+export type DeploymentContract = z.infer<typeof DeploymentContractSchema>;
+```
 
-The `DeploymentContract` type is derived directly from the `DeploymentContractSchema`, ensuring type safety and consistency. 
+### Usage
 
-**Implementation Notes**
+You can use this contract to:
 
-I have designed this contract to be extensible. Future versions may include additional fields to accommodate evolving requirements. We will maintain backward compatibility whenever possible.
+1.  **Validate Deployment Data**: Ensure that incoming deployment data conforms to the defined schema.
+2.  **Standardize Data Exchange**: Facilitate consistent communication of deployment information between different system components.
+3.  **Improve Auditability**: Provide a structured format for tracking deployment history and identifying potential issues.
+
+To validate data against the schema, you can use the `DeploymentContractSchema.parse()` method. For example:
+
+```typescript
+const deploymentData = {
+  schemaVersion: "1.0",
+  meta: { adapter: "example", engine: "native", timestamp: "2024-01-01T00:00:00Z", trigger: "manual" },
+  status: "Succeeded",
+  quality: { coverage: { actual: 90, required: 80, met: true }, tests: { total: 100, passed: 95, failed: 5 } },
+  audit: { triggeredBy: "user123", orgId: "org456", repository: "repo789", commit: "abcdef123456" },
+};
+
+const parsedData = DeploymentContractSchema.parse(deploymentData);
+// parsedData will be of type DeploymentContract
+```
+
+If the data does not conform to the schema, `DeploymentContractSchema.parse()` will throw an error.

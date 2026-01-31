@@ -5,69 +5,93 @@ origin: packages/runtime-ts/src/services/identity.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/identity.ts
-generated_at: 2026-01-31T09:17:07.844370
+generated_at: 2026-01-31T10:13:31.716537
 hash: 7da4458a3bb94c021316e184cd6743876ac04c4f59fee21885b081066399ee60
 ---
 
 ## Identity Resolver Service Documentation
 
-**Introduction**
+This document details the functionality of the Identity Resolver service, responsible for authenticating with an external organization using a JSON Web Token (JWT).
 
-This document details the Identity Resolver service, a component designed to authenticate with an organization using a JSON Web Token (JWT) and retrieve the organization’s ID. This service is intended for automated processes requiring secure access to an organization’s resources.
+**Overview**
 
-**Functionality**
-
-The Identity Resolver service handles the authentication process against an organization’s security infrastructure. It accepts authentication credentials and securely obtains an organization ID, which can then be used for subsequent operations. The service incorporates retry logic to handle transient API failures.
+The Identity Resolver service provides a method to authenticate against an organization, obtaining an organization ID and access token. It is designed for use in automated environments where interactive login is not possible. The service handles temporary file management for the JWT key and incorporates retry logic for transient API failures.
 
 **Key Concepts**
 
-* **JWT Authentication:** The service authenticates using a JWT, a standard for securely transmitting information between parties as a JSON object.
-* **Organization ID:** A unique identifier for the target organization. This ID is the primary output of the authentication process.
-* **Transient Errors:** Temporary issues encountered when communicating with the organization’s API. The service is designed to automatically retry these operations.
+* **JWT Authentication:** This service supports authentication via JWT, a standard for securely transmitting information between parties as a JSON object.
+* **Salesforce CLI (sf):** The service leverages the Salesforce CLI (`sf`) to perform the authentication process.  Ensure the Salesforce CLI is installed and configured in the execution environment.
+* **Retry Logic:**  Transient errors during authentication are automatically retried up to three times with exponential backoff.
 
-**Inputs**
+**Data Structures**
 
-The `authenticate` function requires an `AuthRequest` object containing the following properties:
+* **AuthRequest:**  An interface defining the input parameters for the authentication process.
+    * `clientId`:  The client ID associated with the JWT. (string)
+    * `jwtKey`: The private key used to generate the JWT. (string)
+    * `username`: The username for the organization. (string)
+    * `instanceUrl`: (Optional) The instance URL of the organization. (string)
 
-* `clientId`: The client ID associated with the JWT. (String)
-* `jwtKey`: The private key used to generate the JWT. (String)
-* `username`: The username associated with the JWT. (String)
-* `instanceUrl` (Optional): The URL of the organization’s instance. If not provided, the service will attempt to connect to the default instance. (String)
+**Functions**
 
-**Outputs**
+* **`authenticate(req: AuthRequest): Promise<string>`**
 
-Upon successful authentication, the `authenticate` function returns the organization ID as a string.
+    This asynchronous function performs the authentication process.
 
-**Error Handling**
+    **Parameters:**
 
-If authentication fails, the `authenticate` function throws an error with a descriptive message. Common causes of failure include invalid client IDs or JWT keys.
+    * `req`: An `AuthRequest` object containing the necessary authentication details.
+
+    **Return Value:**
+
+    * A `Promise` that resolves with the organization ID (orgId) as a string upon successful authentication.
+
+    **Behavior:**
+
+    1.  Creates a temporary file to store the JWT key securely. The file is created with restricted permissions (mode 0o600).
+    2.  Constructs the command-line arguments for the `sf org login jwt` command.
+    3.  Executes the `sf org login jwt` command using the provided credentials and arguments.
+    4.  Parses the JSON output from the `sf` command to extract the organization ID and access token.
+    5.  Logs a success message including the authenticated username and organization ID.
+    6.  Returns the organization ID.
+    7.  In case of failure, throws an error indicating authentication failure.
+    8.  In the `finally` block, securely deletes the temporary JWT key file by first overwriting it with zeros and then unlinking it.
+
+    **Example Usage:**
+
+    ```typescript
+    const identityResolver = new IdentityResolver();
+    const authRequest: AuthRequest = {
+      clientId: "your_client_id",
+      jwtKey: "your_jwt_key",
+      username: "your_username",
+      instanceUrl: "your_instance_url",
+    };
+
+    try {
+      const orgId = await identityResolver.authenticate(authRequest);
+      console.log(`Successfully authenticated. Org ID: ${orgId}`);
+    } catch (error) {
+      console.error("Authentication failed:", error);
+    }
+    ```
 
 **Security Considerations**
 
-* **JWT Key Management:** The JWT key is written to a temporary file during the authentication process.
-* **Secure File Handling:** Before deletion, the temporary file containing the JWT key is overwritten with zeros to prevent data recovery.
-* **Permissions:** The temporary file is created with restricted permissions (mode 0o600) to limit access.
+*   The JWT key is stored in a temporary file with restricted permissions (0o600).
+*   The temporary file is securely overwritten with zeros before being deleted to prevent data recovery.
+*   Ensure the environment where this service runs is secure to protect the JWT key.
 
-**Usage**
+**Error Handling**
 
-To authenticate and retrieve the organization ID, you must:
+*   The `authenticate` function throws an error if authentication fails. The error message provides guidance on checking the client ID and JWT key.
+*   Transient errors during the `sf` command execution are handled with retry logic.
+*   File system operations include error handling to ensure best-effort cleanup of the temporary JWT key file.
 
-1.  Create an `AuthRequest` object with the necessary credentials.
-2.  Call the `authenticate` function with the `AuthRequest` object.
-3.  Handle the returned organization ID or any potential errors.
+**Dependencies**
 
-**Implementation Details**
-
-The service leverages the following dependencies:
-
-* `@actions/core`: For logging and managing environment variables.
-* `@actions/exec`: For executing external commands (specifically, the `sf` CLI).
-* `fs`: For file system operations (writing and deleting the temporary JWT key file).
-* `path`: For constructing file paths.
-* `os`: For accessing operating system-specific information (like the temporary directory).
-
-The service uses the `sf` command-line interface (CLI) to perform the actual authentication. It constructs the appropriate command arguments based on the provided input and parses the JSON output from the CLI.
-
-**Retry Mechanism**
-
-The service incorporates a retry mechanism to handle transient errors during the authentication process. It will attempt the authentication up to three times, with a two-second delay between each attempt. This improves the reliability of the service in environments with intermittent network connectivity or API availability issues.
+*   `@actions/core`: For logging and environment variable access.
+*   `@actions/exec`: For executing shell commands.
+*   `fs`: For file system operations.
+*   `path`: For constructing file paths.
+*   `os`: For accessing operating system-specific information (e.g., temporary directory).
+*   `./retry`: For implementing retry logic.

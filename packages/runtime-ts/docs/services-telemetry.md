@@ -5,48 +5,114 @@ origin: packages/runtime-ts/src/services/telemetry.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/telemetry.ts
-generated_at: 2026-01-31T09:18:21.656583
+generated_at: 2026-01-31T10:14:59.681998
 hash: effd62924f7ca6ef31b43af94c93a643466e7be582e31b7b472180bb6b2f408e
 ---
 
-## GlassOps Runtime Telemetry Service Documentation
+# GlassOps Runtime Telemetry Documentation
 
-This document details the telemetry service integrated within GlassOps Runtime, providing tracing and metrics capabilities for governance operations. It outlines initialization, usage, and shutdown procedures.
+This document details the telemetry integration within GlassOps Runtime, providing tracing and metrics for governance operations. It leverages the OpenTelemetry standard for observability.
 
-**Overview**
+## Overview
 
-The telemetry service leverages the OpenTelemetry standard for instrumenting applications. This allows for observability and performance analysis of GlassOps Runtime components. Data is exported to a configured OpenTelemetry Collector endpoint.
+We provide instrumentation to monitor the performance and behavior of GlassOps Runtime. This is achieved through tracing and metrics, exported to a configured OpenTelemetry collector.  Telemetry assists in identifying performance bottlenecks, understanding system interactions, and debugging issues.
 
-**Initialization**
+## Initialization
 
-The `initTelemetry` function establishes the OpenTelemetry SDK. 
+The `initTelemetry` function sets up the OpenTelemetry SDK.
 
-*   **Prerequisites:** To enable telemetry, the environment variable `OTEL_EXPORTER_OTLP_ENDPOINT` must be set to the URL of a compatible OpenTelemetry Collector.
-*   **Configuration:**
+```typescript
+async function initTelemetry(
+  serviceName: string = "glassops-runtime",
+  serviceVersion: string = "1.0.0",
+): Promise<void>
+```
+
+*   **Purpose:** Initializes the OpenTelemetry SDK, establishing a connection to an OpenTelemetry collector.
+*   **Parameters:**
     *   `serviceName` (optional):  A string representing the name of the service. Defaults to "glassops-runtime".
     *   `serviceVersion` (optional): A string representing the version of the service. Defaults to "1.0.0".
-    *   `OTEL_EXPORTER_OTLP_HEADERS` (optional):  A comma-separated list of headers to include in the trace export request (e.g., "Header=Value,Header2=Value2").
-*   **Behavior:** If `OTEL_EXPORTER_OTLP_ENDPOINT` is not defined, telemetry remains disabled, and the function completes without error. Initialization failures are logged as warnings and do not interrupt runtime operation.
+*   **Behavior:**
+    *   Checks for the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. If not set, telemetry is disabled.
+    *   Configures a resource with the provided service name and version.
+    *   Parses optional headers from the `OTEL_EXPORTER_OTLP_HEADERS` environment variable (format: "Header=Value,Header2=Value2").
+    *   Creates an OTLPTraceExporter configured with the endpoint URL and headers.
+    *   Starts the OpenTelemetry SDK.
+    *   Logs warnings if initialization fails, but does not halt execution.
 
-**Usage: Tracing Operations with `withSpan`**
+## Shutdown
 
-The `withSpan` function is the primary method for tracing asynchronous operations.
+The `shutdown` function gracefully shuts down the OpenTelemetry SDK.
 
+```typescript
+async function shutdown(): Promise<void>
+```
+
+*   **Purpose:**  Shuts down the OpenTelemetry SDK, releasing resources.
+*   **Behavior:**
+    *   If the SDK is initialized, attempts to shut it down.
+    *   Ignores any errors that occur during shutdown.
+    *   Sets the SDK to `null`.
+
+## Span Management
+
+We offer functions to manage OpenTelemetry spans for tracing specific operations.
+
+### `withSpan`
+
+```typescript
+async function withSpan<T>(
+  name: string,
+  fn: (span: Span) => Promise<T>,
+  attributes?: Record<string, string | number | boolean>,
+): Promise<T>
+```
+
+*   **Purpose:** Executes an asynchronous function within the context of an OpenTelemetry span.
 *   **Parameters:**
-    *   `name`: A string identifying the operation being traced.
-    *   `fn`: An asynchronous function representing the operation to be traced. This function receives the active `Span` object as an argument.
-    *   `attributes` (optional): A record of key-value pairs representing additional metadata to associate with the span. Values can be strings, numbers, or booleans.
-*   **Functionality:**  `withSpan` automatically starts a span, executes the provided function within that span, records the span’s status based on the function’s success or failure, and ends the span.  Exceptions thrown by the function are re-thrown after being recorded on the span.
+    *   `name`: A string representing the name of the span.
+    *   `fn`: An asynchronous function that accepts a `Span` object as an argument and returns a value of type `T`.
+    *   `attributes` (optional): A record of key-value pairs to add as attributes to the span. Values can be strings, numbers, or booleans.
+*   **Behavior:**
+    *   Starts a new span with the given name.
+    *   Adds the provided attributes to the span.
+    *   Executes the provided function `fn` within the span's context.
+    *   Sets the span status to `OK` if the function completes successfully.
+    *   Sets the span status to `ERROR` if the function throws an error, recording the error message and exception.
+    *   Ends the span in a `finally` block, ensuring it always completes.
+    *   Re-throws any errors that occur within the function.
 
-**Accessing and Augmenting the Current Span**
+### `getCurrentSpan`
 
-*   `getCurrentSpan()`: Returns the currently active `Span` object, if one exists.  Returns `undefined` if no span is active in the current context.
-*   `addSpanEvent()`: Adds an event to the current active span.
-    *   `name`: A string describing the event.
-    *   `attributes` (optional): A record of key-value pairs providing additional details about the event.
+```typescript
+function getCurrentSpan(): Span | undefined
+```
 
-**Shutdown**
+*   **Purpose:** Retrieves the currently active span, if one exists.
+*   **Returns:** A `Span` object if a span is active, otherwise `undefined`.
 
-The `shutdown` function gracefully shuts down the OpenTelemetry SDK. 
+### `addSpanEvent`
 
-*   **Behavior:**  It attempts to shut down the SDK, ignoring any errors that occur during the shutdown process.  After shutdown, the SDK is set to `null`. You should call this function when the application is exiting to ensure proper resource cleanup.
+```typescript
+function addSpanEvent(
+  name: string,
+  attributes?: Record<string, string | number | boolean>,
+): void
+```
+
+*   **Purpose:** Adds an event to the current active span.
+*   **Parameters:**
+    *   `name`: A string representing the name of the event.
+    *   `attributes` (optional): A record of key-value pairs to add as attributes to the event.
+*   **Behavior:**
+    *   Retrieves the current active span using `getCurrentSpan`.
+    *   If a span is active, adds an event to it with the given name and attributes.
+
+
+
+## Configuration
+
+Telemetry is controlled through environment variables:
+
+*   `OTEL_EXPORTER_OTLP_ENDPOINT`:  Specifies the URL of the OpenTelemetry collector.  If not set, telemetry is disabled.
+*   `OTEL_EXPORTER_OTLP_HEADERS`: Specifies custom headers to send with telemetry data (format: "Header=Value,Header2=Value2").

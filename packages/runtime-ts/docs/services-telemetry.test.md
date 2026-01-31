@@ -5,52 +5,40 @@ origin: packages/runtime-ts/src/services/telemetry.test.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/telemetry.test.ts
-generated_at: 2026-01-31T09:18:05.651699
+generated_at: 2026-01-31T10:14:34.428258
 hash: 56d6c19ce86ce7a7db9db3a9c9f6f32bb0af562b686006d765c5360258bd239b
 ---
 
-## OpenTelemetry Runtime Service Documentation
+## OpenTelemetry Integration Service Documentation
 
-This document details the functionality of the OpenTelemetry integration service, providing an overview for both developers and operators. This service facilitates distributed tracing within applications.
+This document details the functionality of the OpenTelemetry integration service, providing an overview for both developers and operators. This service facilitates the collection and export of tracing data for application monitoring and performance analysis.
 
-**Overview**
+### Overview
 
-The service provides tools for initializing OpenTelemetry, creating spans to track operation execution, adding events to spans, retrieving the current span context, and gracefully shutting down the telemetry system. It is designed to be configurable through environment variables.
+The service integrates with OpenTelemetry to instrument applications, capturing trace information. This data is then exported to a configured backend, such as an OpenTelemetry Collector, for storage and visualization. The primary functions of this service are initialization, span management, event logging, and graceful shutdown.
 
-**Initialization (initTelemetry)**
+### Key Components
 
-The `initTelemetry` function sets up the OpenTelemetry SDK.  Initialization is conditional: it only proceeds if the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is defined. This variable specifies the endpoint for exporting trace data.
+*   **`initTelemetry(serviceName, version)`**: Initializes the OpenTelemetry SDK. This function checks for the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. If present, it configures and starts the SDK, connecting to the specified endpoint. It also supports configuring headers via the `OTEL_EXPORTER_OTLP_HEADERS` environment variable. If the endpoint is not set, initialization is skipped.
+*   **`withSpan(spanName, callback, attributes)`**: Executes a provided asynchronous function within the context of a new OpenTelemetry span. This function automatically starts and ends the span, propagating tracing context. The `callback` function receives the active span as an argument, allowing for custom attribute addition or manual span control.
+*   **`addSpanEvent(eventName, attributes)`**: Adds an event to the currently active span. This allows for recording significant occurrences within a trace. The function handles cases where no span is active without error.
+*   **`getCurrentSpan()`**: Returns the currently active OpenTelemetry span, if one exists. Returns `undefined` if no span is active.
+*   **`shutdown()`**: Gracefully shuts down the OpenTelemetry SDK, ensuring that all pending data is exported before termination. This function can be called multiple times without error.
 
-*   **Parameters:**
-    *   `serviceName` (string): The name of the service being traced.
-    *   `serviceVersion` (string): The version of the service.
-*   **Configuration:**
-    *   `OTEL_EXPORTER_OTLP_ENDPOINT`: Required. Specifies the OTLP endpoint (e.g., `http://localhost:4318`).
-    *   `OTEL_EXPORTER_OTLP_HEADERS`: Optional. Allows setting custom headers for the OTLP exporter in the format “Key=Value,Key2=Value2”.
+### Configuration
 
-**Span Management**
+The service relies on environment variables for configuration:
 
-*   **withSpan(spanName, callback, attributes):**  This function executes a provided asynchronous callback function within the context of a new OpenTelemetry span. It automatically handles span creation, completion, and error propagation.
-    *   `spanName` (string): The name of the span.
-    *   `callback` (function): The asynchronous function to execute within the span.  The current span object is passed as an argument to the callback.
-    *   `attributes` (object, optional):  Key-value pairs to attach as attributes to the span.
-*   **addSpanEvent(eventName, attributes):** Records an event on the current span.  This function does not error if no span is active.
-    *   `eventName` (string): The name of the event.
-    *   `attributes` (object, optional): Key-value pairs to attach as attributes to the event.
-*   **getCurrentSpan():** Returns the currently active span, or `undefined` if no span is active.
+*   **`OTEL_EXPORTER_OTLP_ENDPOINT`**:  Specifies the URL of the OpenTelemetry collector or other OTLP receiver.  If this variable is not set, telemetry will not be initialized. Example: `http://localhost:4318`.
+*   **`OTEL_EXPORTER_OTLP_HEADERS`**: Specifies HTTP headers to be included in the trace export requests. Headers should be comma-separated key-value pairs. Example: `Authorization=Basic 123,Custom-Header=Values`.
 
-**Shutdown (shutdown)**
+### Usage
 
-The `shutdown` function gracefully shuts down the OpenTelemetry SDK, flushing any remaining data and releasing resources. It is safe to call multiple times or without prior initialization.
+1.  **Initialization:** Call `initTelemetry()` with your service name and version after environment variables are set.
+2.  **Tracing:** Wrap critical sections of code with `withSpan()` to create spans and capture timing information.
+3.  **Event Logging:** Use `addSpanEvent()` to record significant events within your spans.
+4.  **Shutdown:** Call `shutdown()` before your application exits to ensure all telemetry data is flushed.
 
-**Error Handling**
+### Error Handling
 
-The `withSpan` function propagates any errors thrown by the wrapped callback function.  Other functions are designed to be non-fatal and will not throw errors in common scenarios (e.g., attempting to add an event to a non-existent span).
-
-**Dependencies**
-
-This service relies on the OpenTelemetry SDK and exporter packages. Mock implementations are used in testing to isolate the service’s logic.
-
-**Usage**
-
-You can initialize the service by setting the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable and calling `initTelemetry`.  Then, use `withSpan` to wrap critical sections of your code for tracing. Remember to call `shutdown` when your application is exiting to ensure all trace data is exported.
+The service is designed to be resilient. Functions like `addSpanEvent()` and `shutdown()` will not throw errors if called in unexpected states (e.g., no active span, SDK not initialized). `withSpan()` propagates errors thrown by the wrapped function.

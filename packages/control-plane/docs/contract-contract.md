@@ -5,71 +5,72 @@ origin: packages/control-plane/internal/contract/contract.go
 last_modified: 2026-01-31
 generated: true
 source: packages/control-plane/internal/contract/contract.go
-generated_at: 2026-01-31T08:51:24.921785
+generated_at: 2026-01-31T09:46:21.406006
 hash: f6b1fae98e3691bd1375c6e96ecbe12185ba2ce76954ca639a7efb13859d2c67
 ---
 
-## Deployment Contract Specification
+## Deployment Contract Package Documentation
 
-This document details the structure of the Deployment Contract used within the system. This contract serves as a standardized format for representing the outcome of a deployment attempt, encompassing metadata, status, quality metrics, and audit information. It is designed to be machine-readable and human-interpretable, facilitating consistent reporting and decision-making.
+This package defines the `DeploymentContract` data structure, which represents the complete state of a deployment operation. It serves as a standardized format for communicating deployment results and associated metadata between different components of the system. We designed this contract to provide a clear and consistent view of deployment outcomes, enabling reliable monitoring, reporting, and auditing.
 
-**Package Responsibilities:**
+### Key Data Structures
 
-The `contract` package defines the data structures used to communicate the results of a deployment process. It provides a common language for different components of the system to understand and react to deployment outcomes.
+**DeploymentContract:** This is the central structure. It encapsulates all information related to a deployment.
 
-**Key Data Structures:**
+*   `SchemaVersion`: A string indicating the version of the contract schema used. This allows for future evolution of the contract without breaking compatibility.
+*   `Meta`: Contains metadata about the deployment itself, such as the adapter used, the execution engine, and the triggering event.
+*   `Status`: A string representing the overall status of the deployment. Possible values include "Succeeded", "Failed", or "Blocked".
+*   `Quality`: Holds information about the quality checks performed during the deployment.
+*   `Audit`: Contains audit information, detailing who or what initiated the deployment and the associated repository details.
 
-* **`DeploymentContract`:** This is the primary structure representing the complete contract. It encapsulates all information related to a single deployment.
-    * `SchemaVersion`: A string indicating the version of the contract schema used. This allows for future evolution of the contract without breaking compatibility.
-    * `Meta`: Contains metadata about the deployment.
-    * `Status`: A string representing the overall status of the deployment ("Succeeded", "Failed", or "Blocked").
-    * `Quality`: Holds quality-related metrics for the deployment.
-    * `Audit`: Provides audit information, tracking the origin and context of the deployment.
+**Meta:**  Provides contextual information about the deployment.
 
-* **`Meta`:**  Stores contextual information about the deployment.
-    * `Adapter`: The name of the adapter used to initiate the deployment.
-    * `Engine`: The deployment engine used (e.g., "native", "hardis", "custom").
-    * `Timestamp`: The time the deployment was triggered.
-    * `Trigger`:  Identifies the event that initiated the deployment.
+*   `Adapter`: The name of the adapter responsible for initiating the deployment.
+*   `Engine`: The deployment engine used (e.g., "native", "hardis", "custom").
+*   `Timestamp`: The time the deployment was triggered.
+*   `Trigger`:  A string describing the event that triggered the deployment.
 
-* **`Quality`:**  Aggregates quality assurance data.
-    * `Coverage`:  Details code coverage metrics.
-        * `Actual`: The actual code coverage achieved.
-        * `Required`: The minimum required code coverage.
-        * `Met`: A boolean indicating whether the required coverage was met.
-    * `Tests`:  Summarizes test execution results.
-        * `Total`: The total number of tests executed.
-        * `Passed`: The number of tests that passed.
-        * `Failed`: The number of tests that failed.
-    * `StaticAnalysis`: (Optional) Contains results from static analysis tools.  This field is included to support Phase 1.5 enhancements.
+**Quality:**  Aggregates quality-related metrics.
 
-* **`StaticAnalysis`:** Represents the findings from static analysis tools like MegaLinter or similar scanners.
-    * `Tool`: The name of the static analysis tool used.
-    * `Met`: A boolean indicating whether the static analysis criteria were met.
-    * `CriticalViolations`: The number of critical violations found.
-    * `HighViolations`: The number of high-severity violations found.
-    * `BlockingViolations`: A list of strings describing violations that are blocking the deployment.
+*   `Coverage`: Details code coverage results.
+*   `Tests`: Summarizes test execution results.
+*   `StaticAnalysis`: (Optional) Contains results from static analysis tools like MegaLinter.  This field is included starting with Phase 1.5.
 
-* **`Audit`:**  Provides traceability information.
-    * `TriggeredBy`: The user or system that initiated the deployment.
-    * `OrgID`: The organization ID associated with the deployment.
-    * `Repository`: The repository where the deployment occurred.
-    * `Commit`: The commit hash associated with the deployment.
+**Coverage:** Represents code coverage information.
 
-**Important Functions:**
+*   `Actual`: The actual code coverage percentage achieved.
+*   `Required`: The minimum required code coverage percentage.
+*   `Met`: A boolean indicating whether the required coverage was met.
 
-This package primarily defines data structures and does not contain functions.  The structures are populated and used by other components of the system.
+**Tests:** Summarizes test results.
 
-**Error Handling:**
+*   `Total`: The total number of tests executed.
+*   `Passed`: The number of tests that passed.
+*   `Failed`: The number of tests that failed.
 
-This package does not directly handle errors. Error handling is the responsibility of the components that create and process `DeploymentContract` instances.  Validation of the data within the contract should be performed by consuming services.
+**StaticAnalysis:** Represents findings from static analysis tools.
 
-**Concurrency:**
+*   `Tool`: The name of the static analysis tool used.
+*   `Met`: A boolean indicating whether the static analysis criteria were met.
+*   `CriticalViolations`: The number of critical violations found.
+*   `HighViolations`: The number of high-severity violations found.
+*   `BlockingViolations`: A list of strings describing violations that are blocking the deployment.
 
-This package does not employ concurrency patterns directly. However, the structures it defines may be accessed concurrently by different goroutines in other parts of the system.  It is the responsibility of those components to ensure appropriate synchronization if necessary.
+**Audit:**  Provides audit trail information.
 
-**Design Decisions:**
+*   `TriggeredBy`: The user or system that triggered the deployment.
+*   `OrgID`: The organization ID associated with the deployment.
+*   `Repository`: The repository where the deployment occurred.
+*   `Commit`: The commit hash associated with the deployment.
 
-* **JSON Serialization:** The structures are designed to be easily serialized to JSON for communication and storage. The `json:"..."` tags facilitate this process.
-* **Optional Fields:** The `StaticAnalysis` field within `Quality` is optional (using `json:",omitempty"`). This allows for flexibility and supports scenarios where static analysis is not performed.
-* **Clear Status Values:** The `Status` field uses a limited set of predefined values ("Succeeded", "Failed", "Blocked") to ensure clarity and consistency.
+### Error Handling
+
+This package primarily focuses on data representation. Error handling is expected to be managed by the components that consume and produce instances of the `DeploymentContract`. We anticipate that consumers will check the `Status` field and examine the `Quality` and `Audit` fields for details in case of failures.
+
+### Concurrency
+
+This package does not directly involve concurrency. The structures defined here are intended to be passed between goroutines, but concurrency management is the responsibility of the calling code.
+
+### Design Decisions
+
+We chose a structured approach with nested data structures to represent the deployment contract. This allows for a clear and organized representation of complex deployment information. The inclusion of the `SchemaVersion` field is important for maintaining compatibility as the contract evolves. The optional `StaticAnalysis` field allows for flexibility and the addition of new quality checks without breaking existing integrations.

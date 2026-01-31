@@ -5,7 +5,7 @@ origin: packages/tools/agent/src/adapters/docker-adapter.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/docker-adapter.ts
-generated_at: 2026-01-31T09:19:49.200004
+generated_at: 2026-01-31T10:16:34.118619
 hash: 098372ed82eb7d58e32e7edba32f2300351a37a4344df625a5893b16e48fc3bc
 ---
 
@@ -13,51 +13,49 @@ hash: 098372ed82eb7d58e32e7edba32f2300351a37a4344df625a5893b16e48fc3bc
 
 **1. Introduction**
 
-This document details the functionality of the Docker Adapter, a component designed to process Dockerfile content and generate documentation. It serves as a bridge between file-based input and documentation generation.
+This document details the Docker Adapter, a component designed to process Dockerfile content and generate documentation. It functions as an adapter within a larger agent system, responsible for handling files specifically identified as Dockerfiles.
 
 **2. Purpose**
 
-The Docker Adapter enables the automated creation of documentation for Dockerfiles. It identifies Dockerfiles, extracts their content, and prepares a prompt for a language model to produce comprehensive documentation.
+The Docker Adapter enables automated documentation generation for Dockerfiles. It parses the Dockerfile content, prepares a prompt for a language model, and formats the resulting output for presentation.
 
 **3. Core Functionality**
 
-The adapter operates through four primary functions:
+The adapter provides four primary functions:
 
-*   **File Handling (canHandle):** Determines if the adapter is capable of processing a given file. It checks if the file extension is “dockerfile” (case-insensitive).
-*   **Content Extraction (parse):** Reads the content of a Dockerfile and formats it for inclusion in a prompt. The output is an array of strings, with each string representing a section of the prompt.
-*   **Prompt Generation (generatePrompt):** Constructs a prompt for a language model. This prompt instructs the model to act as a DevOps Engineer and document the Dockerfile’s key aspects, including the base image, build stages, exposed ports, and runtime configuration. The parsed Dockerfile content is appended to this prompt.
-*   **Output Consolidation (postProcess):** Combines the outputs from the language model into a single, formatted string, separated by double newlines.
+*   **`canHandle(fileName: string): boolean`**: Determines if the adapter is capable of processing a given file based on its name. It returns `true` if the file name (case-insensitive) ends with “dockerfile”, and `false` otherwise.
 
-**4. Adapter Workflow**
+*   **`parse(filePath: string, content: string): Promise<string[]>`**:  Parses the Dockerfile content. This function takes the file path and the file’s content as input. It formats the content into a string array suitable for prompt generation. The output includes the file path and the Dockerfile content enclosed in a code block.
 
-1.  The system identifies a file for processing.
-2.  The `canHandle` function verifies if the file is a Dockerfile.
-3.  If confirmed, the `parse` function extracts the Dockerfile’s content.
-4.  The `generatePrompt` function creates a prompt containing instructions and the Dockerfile content.
-5.  This prompt is sent to a language model for documentation generation.
-6.  The language model’s outputs are received as an array of strings.
-7.  The `postProcess` function combines these outputs into a single documentation string.
+*   **`generatePrompt(filePath: string, parsedContent: string): string`**: Constructs a prompt for a language model. This prompt instructs the model to act as a DevOps Engineer and provide documentation for the provided Dockerfile content. The prompt includes the parsed content from the `parse` function.
 
-**5. Input Requirements**
+*   **`postProcess(filePath: string, outputs: string[]): string`**:  Combines the outputs from the language model into a single string, separated by double newlines. This function takes the file path and the array of outputs as input and returns a single, formatted string.
 
-*   **filePath:** A string representing the path to the Dockerfile.
-*   **content:** A string containing the complete content of the Dockerfile.
+**4. Adapter Interface**
 
-**6. Output**
+This adapter implements the `AgentAdapter` interface. This interface defines a standard contract for adapters within the agent system, ensuring consistency and interoperability.
 
-The adapter produces a single string containing the generated documentation for the Dockerfile. This documentation is formatted for readability and includes explanations of the Dockerfile’s key components.
+**5. Usage**
 
-**7. Dependencies**
+You integrate this adapter into the agent system. The system will call `canHandle` to determine if the adapter should process a file. If it can, the system will sequentially call `parse`, `generatePrompt`, and `postProcess` to obtain the final documentation.
 
-*   `path` module (Node.js built-in)
-*   `AgentAdapter` interface (defined in `./interface.js`)
+**6. Example**
 
-**8. Error Handling**
+Consider a Dockerfile located at `/path/to/Dockerfile` with the following content:
 
-The adapter does not explicitly include error handling within the provided code. It is assumed that any errors during file reading or prompt generation will be handled by the calling system.
+```dockerfile
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y nginx
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
 
-**9. Future Considerations**
+The `parse` function would produce the following output:
 
-*   Implement error handling for file access and content parsing.
-*   Add support for validating Dockerfile syntax before processing.
-*   Allow customization of the prompt template.
+```
+[
+  "File: /path/to/Dockerfile\n\nDockerfile Content:\n\`\`\`dockerfile\nFROM ubuntu:latest\nRUN apt-get update && apt-get install -y nginx\nEXPOSE 80\nCMD [\"nginx\", \"-g\", \"daemon off;\"]\n\`\`\`"
+]
+```
+
+This output is then passed to `generatePrompt` to create a prompt for the language model. The `postProcess` function then combines the language model’s responses into a single documentation string.

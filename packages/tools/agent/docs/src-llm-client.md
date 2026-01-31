@@ -5,68 +5,64 @@ origin: packages/tools/agent/src/llm-client.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/llm-client.ts
-generated_at: 2026-01-31T09:23:30.464008
+generated_at: 2026-01-31T10:20:44.500225
 hash: 6936f5e724e055e48121feb3598ccbec69a7f115857cf8236e6897d4bc162ef2
 ---
 
 ## glassops-agent LLM Client Documentation
 
-This document details the functionality of the Large Language Model (LLM) Client, designed to interact with the Gemini API. It provides a clear overview for both technical and non-technical users.
+This document details the functionality of the Large Language Model (LLM) client, specifically designed for interacting with the Gemini API. It provides an overview of the client’s features, setup, and usage.
 
-**Overview**
+### Overview
 
-The LLM Client facilitates communication with a language model to generate text based on provided prompts. It handles API key management, request formatting, rate limiting, and error handling to provide a reliable interface for accessing LLM capabilities.  I am designed to be easily integrated into applications requiring text generation.
+The LLM client facilitates communication with the Gemini API to generate text-based responses from provided prompts. It incorporates rate limiting and error handling to ensure reliable operation and adherence to API usage guidelines. The client is designed to be easily integrated into applications requiring natural language processing capabilities.
 
-**Key Features**
+### Setup and Configuration
 
-*   **Gemini API Integration:** Connects to the Gemini API for text generation.
-*   **API Key Management:** Securely retrieves the API key from environment variables.  You must set the `GOOGLE_API_KEY` environment variable.
-*   **Rate Limiting:** Implements rate limiting to prevent exceeding API usage limits and ensure fair usage. A minimum interval of 4 seconds between requests is enforced.
-*   **Error Handling:** Robust error handling with retry logic for common API errors (429 and 503 status codes). Detailed error messages are logged for debugging.
-*   **Configurable Model:** Allows selection of different Gemini models via the constructor. The default model is 'gemma-3-27b-it'.
-*   **Configurable Parameters:** Sets `maxOutputTokens` to 8192 and `temperature` to 0.2 for controlling the generated text.
+1.  **Environment Variables:** The client requires a `GOOGLE_API_KEY` to be set in a `.env` file. The client automatically searches for a `.env` file in parent directories, starting from the current working directory.  If no `.env` file is found, a warning is logged.
 
-**Installation & Setup**
+2.  **Installation:** Ensure you have the necessary dependencies installed: `axios`, `dotenv`, and `fs`.
 
-1.  Ensure you have an active Gemini API key.
-2.  Set the `GOOGLE_API_KEY` environment variable to your API key. This can be done by creating a `.env` file in the project root or setting the environment variable directly in your system. The client automatically searches for a `.env` file in parent directories.
-3.  Install the necessary dependencies: `axios`, `dotenv`, and `fs`.
+3.  **Initialization:** You initialize the client by creating an instance of the `GeminiClient` class. You can optionally specify the desired model during initialization. The default model is `gemma-3-27b-it`.
 
-**Usage**
-
-1.  **Import the Client:**
     ```typescript
-    import { GeminiClient } from './llm-client';
+    const client = new GeminiClient('gemma-3-27b-it');
     ```
 
-2.  **Instantiate the Client:**
-    ```typescript
-    const client = new GeminiClient(); // Uses default model 'gemma-3-27b-it'
-    // or
-    const client = new GeminiClient('another-model'); // Specify a different model
-    ```
+### Core Functionality
 
-3.  **Generate Content:**
-    ```typescript
-    const prompt = 'Write a short story about a robot.';
-    try {
-      const response = await client.generateContent(prompt);
-      console.log(response);
-    } catch (error) {
-      console.error('Error generating content:', error);
-    }
-    ```
+The primary function of this client is to generate content based on a given prompt.
 
-**Interfaces**
+#### `GeminiClient` Class
 
-*   `ChatMessage`: Represents a message in a conversation.
+*   **`constructor(model: string = 'gemma-3-27b-it')`**:  Initializes the Gemini client.
+    *   `model`: (Optional) Specifies the Gemini model to use. Defaults to `gemma-3-27b-it`.
+    *   Throws an error if the `GOOGLE_API_KEY` is not found in the environment.
+
+*   **`generateContent(prompt: string, retryCount: number = 0): Promise<string>`**:  Sends a prompt to the Gemini API and returns the generated text.
+    *   `prompt`: The text prompt to send to the Gemini API.
+    *   `retryCount`: (Optional) Internal parameter for retry logic. You should not need to specify this directly.
+    *   Implements rate limiting to avoid exceeding API limits.
+    *   Includes retry logic with exponential backoff for 429 (Overloaded) and 503 (Service Unavailable) errors.
+    *   Returns a `Promise` that resolves with the generated text.
+    *   Throws an error if the API request fails or returns an invalid response.
+
+### Data Structures
+
+*   **`ChatMessage` Interface:** Defines the structure of a chat message. While not directly used in the `GeminiClient` class, it is exported for potential use in related components.
     *   `role`:  Indicates the role of the message sender ('user' or 'model').
     *   `parts`: An array of text parts composing the message. Each part contains a `text` field.
 
-**Important Considerations**
+### Error Handling
 
-*   **API Key Security:** Protect your `GOOGLE_API_KEY`. Do not commit it to version control.
-*   **Rate Limits:** Be mindful of the Gemini API rate limits. The client includes rate limiting, but exceeding limits may still result in errors.
-*   **Error Handling:** Implement appropriate error handling in your application to gracefully handle potential API errors.
-*   **Cost:** Using the Gemini API may incur costs. Review the Gemini API pricing documentation for details.
-*   **Model Selection:** Choose the appropriate Gemini model based on your specific needs and budget.
+The client includes robust error handling:
+
+*   **Missing API Key:** Throws an error if the `GOOGLE_API_KEY` environment variable is not set.
+*   **API Errors:** Logs detailed error messages for API failures, including status codes and response data.
+*   **Rate Limiting:**  Pauses execution when rate limits are approached, logging the wait time.
+*   **Invalid Responses:**  Handles cases where the Gemini API returns an unexpected response format, logging the `finishReason` and full response for debugging.
+*   **Retry Mechanism:** Automatically retries requests on transient errors (429 and 503) with increasing delays.
+
+### Rate Limiting
+
+To prevent exceeding API limits, the client incorporates rate limiting. It enforces a minimum interval of 4 seconds between requests, allowing approximately 15 requests per minute. This helps avoid hitting the 15,000 tokens per minute limit.

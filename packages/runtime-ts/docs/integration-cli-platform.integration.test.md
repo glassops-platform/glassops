@@ -5,13 +5,13 @@ origin: packages/runtime-ts/src/integration/cli-platform.integration.test.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/cli-platform.integration.test.ts
-generated_at: 2026-01-31T09:11:48.721223
+generated_at: 2026-01-31T10:08:01.679233
 hash: c0fe62e004405747ec5aed3472ced22489880f70c7e4fec6ba9821c76fff59c7
 ---
 
 ## CLI Platform Integration Test Documentation
 
-This document details integration tests designed to verify the correct operation of command-line interface (CLI) functionality across different operating systems – Windows, macOS, and Linux. These tests ensure consistent behavior regardless of the underlying platform.
+This document details integration tests designed to verify the correct operation of command-line interface (CLI) functions across different operating systems – Windows, macOS, and Linux. These tests ensure consistent behavior regardless of the underlying platform.
 
 **Purpose**
 
@@ -21,39 +21,46 @@ The primary goal of these tests is to validate platform-specific CLI operations,
 
 The tests cover the following key areas:
 
-*   **Plugin Installation:** Verification of correct plugin installation procedures, including handling platform-specific command prefixes (e.g., `echo` on Windows vs. Unix-based systems) and error handling during installation failures.
-*   **CLI Installation:** Validation of CLI installation logic, including checks for existing installations and handling installation failures.
-*   **Cross-Platform Command Execution:** Confirmation that commands are executed using the appropriate shell for each operating system.
+*   **Plugin Installation:** Verifies that plugins are installed correctly on each platform, utilizing the appropriate shell commands (e.g., `cmd` on Windows, `sh` on Unix-based systems).  The tests confirm correct handling of both successful installations and failure scenarios.
+*   **CLI Installation:** Validates the installation process of the CLI itself, including scenarios where the CLI is already present on the system and cases where installation fails.
+*   **Cross-Platform Command Execution:** Confirms that commands are executed using the correct shell for the current operating system.
 
 **Testing Methodology**
 
-These tests employ mocking of external dependencies, specifically modules from the `@actions` suite (e.g., `@actions/exec`, `@actions/io`). This allows for controlled testing without relying on actual system commands or file system interactions.  The tests dynamically modify the `process.platform` property to simulate different operating systems.  After each test, the original platform is restored.
+The tests employ mocking of external dependencies, specifically modules from the `@actions` suite (e.g., `@actions/exec`, `@actions/io`). This allows for controlled testing without relying on actual system commands.  The `process.platform` property is temporarily modified within each test to simulate different operating system environments.  After each test, the original platform is restored.
 
 **Configuration**
 
-The tests utilize a `ProtocolConfig` object to define runtime parameters, including:
+The tests utilize a `ProtocolConfig` object to define runtime settings, including:
 
-*   **Governance:**  Settings related to plugin whitelisting and enablement.
-*   **Runtime:**  Specifications for the CLI and Node.js versions.
+*   `governance.enabled`:  A boolean indicating whether governance features are enabled.
+*   `governance.plugin_whitelist`: An array of strings specifying allowed plugins.
+*   `runtime.cli_version`: The desired CLI version.
+*   `runtime.node_version`: The required Node.js version.
 
-**Key Functionality Tested**
+**Key Components**
 
-*   **Platform-Specific Echo Prefix:** The tests confirm that the correct `echo` command prefix is used during plugin installation based on the operating system.
-*   **Installation Failure Handling:**  The tests verify that the system gracefully handles plugin installation failures and propagates appropriate error messages.
-*   **CLI Presence Check:** The tests validate that the CLI installation process is skipped if the CLI is already present on the system.
-*   **Command Execution Shell:** The tests ensure that commands are executed using the correct shell (e.g., `cmd` on Windows, `sh` on Unix-based systems).
+*   **RuntimeEnvironment:** This class encapsulates the CLI interaction logic and is the primary component under test.
+*   **ProtocolConfig:**  Defines the configuration parameters for the runtime environment.
+*   **Mocked Modules:**  The tests rely on mocked versions of `@actions/exec` and `@actions/io` to control the execution environment.
 
-**Requirements**
+**Test Cases**
 
-*   Node.js environment with TypeScript support.
-*   Dependencies specified in the project’s `package.json` file.
-*   Access to the test files.
+The tests include scenarios to verify:
 
-**Running the Tests**
+*   Correct shell command prefix for plugin installation on Windows, macOS, and Linux.
+*   Handling of plugin installation failures.
+*   CLI installation when the CLI is not already present.
+*   Handling of CLI installation failures.
+*   Skipping CLI installation when the CLI is already installed.
+*   Correct shell usage for command execution on Windows and Unix-based systems.
 
-You can execute these tests using a standard test runner for TypeScript/JavaScript projects, such as Jest.  Ensure the necessary dependencies are installed before running the tests.
+**Dependencies**
 
-**Related Documentation**
+*   TypeScript/JavaScript runtime
+*   Jest testing framework
+*   `@actions/exec` and `@actions/io` modules (mocked during testing)
 
-*   `RuntimeEnvironment` service documentation.
-*   `ProtocolConfig` interface documentation.
+**Usage**
+
+You can run these tests using the standard Jest command: `jest`.  Ensure that the necessary dependencies are installed.

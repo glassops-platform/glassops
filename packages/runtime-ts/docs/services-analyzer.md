@@ -5,74 +5,68 @@ origin: packages/runtime-ts/src/services/analyzer.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/analyzer.ts
-generated_at: 2026-01-31T09:15:14.851700
+generated_at: 2026-01-31T10:11:43.204796
 hash: f4a83f4fd444af30bcd6ae7b68ee09520db2abfa8fa0347167c5df9af9b446f7
 ---
 
 ## Analyzer Service Documentation
 
-This document details the functionality of the Analyzer service, designed to scan codebases for potential issues using the Salesforce Code Analyzer.
+This document details the functionality of the Analyzer service, designed to scan codebases for violations based on configurable rules.
 
 **Overview**
 
-The Analyzer service provides a streamlined interface for running the Salesforce Code Analyzer and interpreting its results. It focuses on providing a consistent and reliable method for identifying code quality and security concerns within Salesforce projects.
+The Analyzer service integrates with the Salesforce CLI (`sf`) to execute code analysis. It provides a standardized interface for running the `sf code-analyzer` command, parsing its output, and reporting violations.  The service prioritizes the use of `sf code-analyzer` and enforces this through compatibility checks.
 
-**Key Features**
+**Key Components**
 
-*   **Code Scanning:** Executes the Salesforce Code Analyzer against specified file paths or directories.
-*   **Ruleset Support:** Allows you to enforce specific coding standards by applying a custom ruleset.
-*   **Output Parsing:**  Processes the analyzer’s output, extracting violations and presenting them in a structured format.
-*   **Compatibility Enforcement:**  Promotes the use of the `code-analyzer` command, phasing out older scanning methods.
+*   **AnalyzerResult Interface:** Defines the structure of the analysis results, containing an array of `Violation` objects and the exit code from the analyzer execution.
+*   **Violation Interface:** Represents a single code violation, including the rule name, description, severity, file path, and line number.
+*   **Analyzer Class:** The core class responsible for executing the analysis and processing the results.
 
-**Interfaces**
+**Functionality**
 
-*   **AnalyzerResult:** Represents the outcome of a scan.
-    *   `violations`: An array of `Violation` objects detailing identified issues.
-    *   `exitCode`: The exit code returned by the analyzer process.
-*   **Violation:** Describes a single code violation.
-    *   `rule`: The name of the rule that was violated.
-    *   `description`: A human-readable description of the violation.
-    *   `severity`: A numerical representation of the violation’s severity (lower values indicate higher severity).
-    *   `file`: The path to the file containing the violation.
-    *   `line`: The line number where the violation occurred.
+**1. `scan(paths: string[], ruleset?: string): Promise<AnalyzerResult>`**
 
-**Usage**
-
-You can interact with the Analyzer service through its `scan` method.
-
-```typescript
-const analyzer = new Analyzer();
-const result = await analyzer.scan(
-  ["src", "test"],
-  "my-custom-ruleset" // Optional ruleset
-);
-
-// Process the results
-if (result.violations.length > 0) {
-  console.log("Violations found:");
-  for (const violation of result.violations) {
-    console.log(
-      `${violation.file}:${violation.line} - ${violation.rule}: ${violation.description}`
-    );
-  }
-} else {
-  console.log("No violations found.");
-}
-```
-
-**`scan` Method**
-
-The `scan` method initiates the code analysis process.
+This asynchronous function performs the code analysis.
 
 *   **Parameters:**
     *   `paths`: An array of strings representing the directories or files to scan.
-    *   `ruleset`: (Optional) A string specifying the ruleset to apply during the scan.
-*   **Return Value:** An `AnalyzerResult` object containing the scan results.
+    *   `ruleset?`: An optional string specifying the ruleset to enforce during the analysis. If not provided, a default ruleset is used.
+*   **Process:**
+    1.  Calls `ensureCompatibility()` to verify the environment is configured correctly.
+    2.  Constructs the command-line arguments for the `sf code-analyzer run` command.
+    3.  Executes the command using `@actions/exec`.
+    4.  Captures the standard output and standard error streams.
+    5.  Parses the JSON output from the analyzer.
+    6.  Returns an `AnalyzerResult` object containing the identified violations and the analyzer's exit code.
+*   **Return Value:** A `Promise` that resolves to an `AnalyzerResult` object.
 
-**Compatibility Policy**
+**2. `ensureCompatibility(): Promise<void>`**
 
-I enforce a policy to encourage the use of the `code-analyzer` command.  The service is designed to work with this command and does not support older scanning tools.
+This asynchronous function enforces the use of `sf code-analyzer`.
 
-**Output Parsing Details**
+*   **Process:**
+    Currently, this function serves as a placeholder for enforcing the policy of using `sf code-analyzer` instead of older tools like `sf scanner`. In a future implementation, it may include checks to verify the presence of `sf code-analyzer` and issue warnings or errors if it is not installed.
+*   **Return Value:** A `Promise` that resolves when the compatibility check is complete.
 
-The `parseOutput` method handles the extraction of violation data from the analyzer’s JSON output. It is designed to be resilient to variations in the output format, attempting to locate and parse the JSON array even if it is embedded within other text.  If parsing fails, it logs a warning and returns an empty set of violations. The service maps the analyzer’s output to the standardized `Violation` interface.
+**3. `parseOutput(jsonOutput: string, exitCode: number): AnalyzerResult`**
+
+This private function parses the JSON output from the `sf code-analyzer` command.
+
+*   **Parameters:**
+    *   `jsonOutput`: The raw JSON string output from the analyzer.
+    *   `exitCode`: The exit code returned by the analyzer execution.
+*   **Process:**
+    1.  Extracts the JSON array from the output string, handling potential clutter.
+    2.  Parses the JSON string into a JavaScript object.
+    3.  Maps the raw analyzer output to a simplified array of `Violation` objects. The mapping handles variations in the output format from different versions of the analyzer.
+    4.  Handles cases where the output is invalid or empty.
+*   **Return Value:** An `AnalyzerResult` object containing the parsed violations and the original exit code.
+
+**Error Handling**
+
+The `scan` function includes error handling to catch exceptions during analyzer execution. Errors are logged using `@actions/core`, and the exception is re-thrown to allow calling functions to handle the failure. The `parseOutput` function also includes error handling to gracefully handle invalid JSON output, logging a warning and returning an empty result.
+
+**Usage Notes**
+
+You should provide the paths to the code you want to analyze as an array of strings to the `scan` function. You can optionally specify a ruleset to customize the analysis. The service is designed to work with the Salesforce CLI and assumes it is installed and configured in the execution environment.

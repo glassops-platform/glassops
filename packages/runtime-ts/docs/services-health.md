@@ -5,60 +5,63 @@ origin: packages/runtime-ts/src/services/health.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/health.ts
-generated_at: 2026-01-31T09:16:28.480867
+generated_at: 2026-01-31T10:12:55.976710
 hash: d643450fca14f67821903d531e6c29e9a99b9b9bca34c02860de6cdc68024520
 ---
 
-## Health Service Documentation
+## Health Check Service Documentation
 
-**1. Introduction**
+This document details the functionality of the Health Check service, designed to verify the operational status of required dependencies. Specifically, it confirms the availability of the Salesforce CLI.
 
-This document details the Health Service, a component designed to verify the operational status of required dependencies. Specifically, it confirms the availability and version of the Salesforce CLI. This service provides a simple mechanism for assessing the environment before proceeding with core operations.
+### Overview
 
-**2. Functionality**
+The Health Check service provides a simple mechanism to assess the environment’s readiness for operations. It executes a command and interprets the output to determine if dependencies are functioning correctly. This service is essential for automated systems and provides informative feedback to users.
 
-The Health Service provides a single function, `healthCheck`, which performs the following actions:
+### HealthCheckResult Interface
 
-*   **Dependency Verification:** Executes the `sf version --json` command to determine if the Salesforce CLI is installed and accessible.
-*   **Version Extraction:** Parses the command output to extract the Salesforce CLI version. It attempts to locate the version information in multiple possible output structures.
-*   **Status Reporting:** Returns a `HealthCheckResult` object indicating the health status, the detected version (if available), and any error messages encountered.
+The service returns a `HealthCheckResult` object with the following properties:
 
-**3. HealthCheckResult Interface**
+*   `healthy`: A boolean value indicating the health status. `true` signifies a successful check; `false` indicates a failure.
+*   `version`: (Optional) A string representing the version of the checked component, if available.
+*   `error`: (Optional) A string containing an error message if the health check failed.
 
-The `HealthCheckResult` interface defines the structure of the service’s output:
+### healthCheck Function
 
-*   `healthy`: A boolean value indicating whether the Salesforce CLI is available. `true` signifies a healthy state; `false` indicates an issue.
-*   `version`: (Optional) A string representing the version of the Salesforce CLI. This field is populated when the CLI is detected.
-*   `error`: (Optional) A string containing an error message if the health check fails. This provides details about the reason for the failure.
+The `healthCheck()` function performs the core health verification.
 
-**4. Usage**
+**Function Signature:**
 
-To perform a health check, call the `healthCheck` function. 
+`async function healthCheck(): Promise<HealthCheckResult>`
+
+**Behavior:**
+
+This function checks for the presence and functionality of the Salesforce CLI (`sf`). It executes the command `sf version --json` and parses the output. 
+
+*   **Success:** If the command executes successfully and returns valid JSON, the function parses the JSON to extract the CLI version. The function then returns a `HealthCheckResult` object with `healthy` set to `true` and the extracted `version`. If the version information is found in different possible locations within the JSON response, the function attempts to retrieve it from each location.
+*   **Failure:** If the command fails to execute (e.g., `sf` is not found in the system’s PATH) or the output is not valid JSON, the function catches the error. It then returns a `HealthCheckResult` object with `healthy` set to `false` and the error message included in the `error` property.
+
+**Example Usage:**
 
 ```typescript
 import { healthCheck } from './health';
 
-async function exampleUsage() {
+async function checkHealth() {
   const result = await healthCheck();
 
   if (result.healthy) {
-    console.log('Salesforce CLI is healthy. Version:', result.version);
+    console.log('System is healthy. Salesforce CLI version:', result.version);
   } else {
-    console.error('Salesforce CLI health check failed:', result.error);
+    console.error('System is unhealthy:', result.error);
   }
 }
 
-exampleUsage();
+checkHealth();
 ```
 
-**5. Error Handling**
+**Dependencies:**
 
-If the `sf version --json` command fails to execute or produces invalid output, the `healthCheck` function catches the error. The `HealthCheckResult` will have `healthy` set to `false` and the `error` field will contain a descriptive error message.
+*   `@actions/exec`: This package is used to execute shell commands.
 
-**6. Dependencies**
+**Error Handling:**
 
-This service depends on the `@actions/exec` package for executing shell commands. Ensure this dependency is installed in your project.
-
-**7. Future Considerations**
-
-We plan to extend this service to include checks for other dependencies and system requirements as needed.
+The function includes robust error handling. It catches exceptions during command execution and JSON parsing, providing informative error messages in the `HealthCheckResult`. You should review the `error` property of the returned object to diagnose issues.

@@ -5,7 +5,7 @@ origin: packages/tools/agent/src/scanner.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/scanner.ts
-generated_at: 2026-01-31T09:23:50.473982
+generated_at: 2026-01-31T10:21:02.261432
 hash: e72d6c8da430da632f90e9e248c9596fa06da0de3f12d3731f0267728bbf3356
 ---
 
@@ -17,59 +17,72 @@ This document details the functionality of the Agent Scanner, a component design
 
 **Functionality**
 
-The Scanner identifies files matching provided glob patterns within a target directory. It incorporates a flexible ignore system, based on both a `.gitignore` file (if present) and a set of predefined exclusions. The scanner returns an array of absolute file paths.
+The Scanner identifies files matching given patterns within a root directory. It incorporates a flexible ignore system, based on `.gitignore` content and a default set of exclusions, to refine the search results. The scanner returns absolute paths to the identified files.
 
 **Key Features**
 
-*   **Pattern-Based Search:** Locates files using standard glob patterns.
-*   **.gitignore Support:** Automatically incorporates rules from a `.gitignore` file located in the target directory.
-*   **Predefined Exclusions:** Includes common build artifacts, dependency folders, and environment files in the default exclusion list.
-*   **Absolute Paths:** Returns file paths as absolute references, ensuring clarity and consistency.
-*   **Hidden File Inclusion:** Includes hidden files and directories in the search results.
+*   **Pattern-Based Search:** Locates files using glob patterns.
+*   **.gitignore Support:** Respects rules defined in a `.gitignore` file within the root directory.
+*   **Default Exclusions:** Automatically excludes common build artifacts, dependency folders, and environment files.
+*   **Absolute Paths:** Returns file paths as absolute references.
 
-**Implementation Details**
+**Classes**
 
-The Scanner class is initialized with a root directory. During construction, it loads any existing `.gitignore` file and adds a set of default exclusion rules. These rules are then applied during the file search process. The core file searching is performed using the `fast-glob` library for performance.
+*   **`Scanner`**
+
+    This class encapsulates the file scanning logic.
+
+    *   **Constructor (`rootDir: string`)**
+
+        Initializes the Scanner with the root directory to scan. It loads `.gitignore` rules, if present, and establishes a default set of exclusions.
+
+        *   `rootDir`: The base directory for the file search.
+
+    *   **`findFiles(patterns: string[]): Promise<string[]>`**
+
+        Asynchronously searches for files matching the provided patterns within the root directory.
+
+        *   `patterns`: An array of glob patterns to match against file paths.
+        *   Returns: A Promise that resolves to an array of absolute file paths that match the patterns and are not ignored.
 
 **Usage**
 
-1.  **Initialization:** Instantiate the `Scanner` class, providing the root directory to scan as an argument.
+1.  **Instantiation:** Create a `Scanner` instance, providing the root directory as an argument.
 
     ```typescript
     const scanner = new Scanner('/path/to/your/project');
     ```
 
-2.  **File Search:** Call the `findFiles` method, passing an array of glob patterns.
+2.  **File Search:** Call the `findFiles` method with an array of glob patterns.
 
     ```typescript
     const files = await scanner.findFiles(['*.txt', 'src/**/*.js']);
+    console.log(files); // Output: An array of absolute file paths
     ```
 
-    You should await this function as it is asynchronous. The `files` variable will contain an array of strings, each representing the absolute path to a matching file.
+**Default Ignored Patterns**
 
-**Configuration**
+The following patterns are always excluded from search results:
 
-*   **.gitignore:** Place a `.gitignore` file in the root directory to define custom exclusion rules. The scanner automatically loads and applies these rules.
-*   **Default Exclusions:** The following patterns are always excluded:
-    *   `node_modules/**`
-    *   `dist/**`
-    *   `package-lock.json`
-    *   `.env`
-    *   `docs/generated/**`
-    *   `venv/**`
-    *   `__pycache__/**`
+*   `node_modules/**`
+*   `dist/**`
+*   `package-lock.json`
+*   `.env`
+*   `docs/generated/**`
+*   `venv/**`
+*   `__pycache__/**`
 
-**Dependencies**
+**.gitignore Integration**
 
-*   `fast-glob`: For efficient file system traversal.
-*   `ignore`: For managing exclusion rules.
-*   `fs`: For file system operations.
-*   `path`: For path manipulation.
-
-**Return Value**
-
-The `findFiles` method returns a `Promise` that resolves to a string array. Each string in the array represents the absolute path to a file that matches the provided patterns and is not excluded by the ignore rules.
+If a `.gitignore` file exists in the root directory, its contents are automatically loaded and applied to the file search. This allows you to define exclusions specific to your project.
 
 **Error Handling**
 
-The `fast-glob` library handles most file system errors. Any errors encountered during the process will be propagated as rejections of the `Promise` returned by `findFiles`. You should implement appropriate error handling in your calling code.
+The `findFiles` method handles potential errors during file system access and glob matching. Errors are not explicitly thrown but may be logged internally by the underlying `fast-glob` library.
+
+**Dependencies**
+
+*   `fast-glob`: For efficient file system traversal and glob matching.
+*   `ignore`: For managing ignore patterns based on `.gitignore` and other rules.
+*   `fs`: For file system operations.
+*   `path`: For path manipulation.

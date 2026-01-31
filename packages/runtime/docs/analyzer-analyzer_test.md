@@ -5,43 +5,47 @@ origin: packages/runtime/internal/analyzer/analyzer_test.go
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/analyzer/analyzer_test.go
-generated_at: 2026-01-31T09:02:53.719928
+generated_at: 2026-01-31T09:58:37.600058
 hash: 94b6446da9b30d2741a9ad1f66da7ffbd5e662cc94eed56a6853fc4cda874adf
 ---
 
 ## Analyzer Package Documentation
 
-This package provides functionality for analyzing output from code quality tools and extracting violations. It is designed to parse structured data, specifically JSON, representing findings from these tools. We aim to provide a consistent way to interpret results regardless of the specific tool used.
+This package provides functionality for analyzing output from code analysis tools, specifically focusing on parsing JSON-formatted violation reports. It is designed to be a component within a larger system for automated code quality checks.
+
+**Package Responsibilities:**
+
+The primary responsibility of this package is to take raw output (typically from a command-line tool) and convert it into a structured format representing code violations. This allows for consistent processing and reporting of issues across different analysis tools.
 
 **Key Types:**
 
-*   **Analyzer:** This is the primary type in the package. It encapsulates the logic for ensuring compatibility and parsing output. You interact with the package through instances of this type.
-*   **Violation:** Represents a single code quality violation. It contains the following fields:
-    *   `File`: The name of the file where the violation occurred.
-    *   `Line`: The line number within the file where the violation occurred.
-    *   `Rule`: The name of the rule that was violated.
-    *   `Message`: A human-readable message describing the violation.
+*   **Analyzer:** This is the core type of the package. It encapsulates the logic for parsing output and extracting violation information. It is created using the `New()` function.
+*   **Violation:** Represents a single code violation detected by an analysis tool. It contains the following fields:
+    *   `File`: The name of the file where the violation occurred (string).
+    *   `Line`: The line number within the file where the violation occurred (int).
+    *   `Rule`: The name of the rule that was violated (string).
+    *   `Message`: A descriptive message explaining the violation (string).
     *   `Severity`: An integer representing the severity of the violation.
-*   **AnalysisResult:**  Holds the outcome of parsing an output string. It contains:
+*   **AnalysisResult:** This type holds the results of parsing the output.
     *   `Violations`: A slice of `Violation` structs, representing all detected violations.
-    *   `ExitCode`: The exit code associated with the analysis that generated the output.
+    *   `ExitCode`: The exit code of the process that generated the output (int).
 
-**Functions:**
+**Important Functions:**
 
-*   **New(): Analyzer:** This function creates and returns a new instance of the `Analyzer` type. It serves as the constructor for the analyzer.
-*   **EnsureCompatibility(): error:** This function performs any necessary compatibility checks. Currently, it does not return an error, but it is included for potential future expansion to validate the environment or tool versions.
-*   **parseOutput(output string, exitCode int) AnalysisResult:** This is the core function of the package. It takes the output string from a code quality tool and the tool’s exit code as input. It attempts to parse the output as a JSON array of violation objects. If the output is not valid JSON, or if no violations are found, it returns an `AnalysisResult` with an empty `Violations` slice.  The function handles cases where the JSON is embedded within other text. It gracefully handles invalid JSON by returning an empty result instead of panicking.
+*   **New(): Analyzer** – This function creates and returns a new instance of the `Analyzer` type. It takes no arguments and initializes the analyzer with default settings.
+*   **EnsureCompatibility(): error** – This function performs any necessary compatibility checks or setup required by the analyzer. Currently, it does not return an error.
+*   **parseOutput(output string, exitCode int) AnalysisResult** – This is the central function of the package. It takes the raw output from an analysis tool (as a string) and the exit code of the tool (as an integer) and attempts to parse it as a JSON array of violation objects. It returns an `AnalysisResult` containing the parsed violations and the original exit code. If the output is not valid JSON, it gracefully handles the error and returns an empty `AnalysisResult` (no violations). It also handles cases where the output is not JSON at all.
 
 **Error Handling:**
 
-The package employs a standard Go error handling pattern. Functions return an `error` value to indicate failure.  The `parseOutput` function does not return an error; instead, it handles parsing failures by returning an empty `AnalysisResult`. This approach prioritizes robustness and prevents unexpected program termination.
+The `parseOutput` function handles potential errors during JSON parsing. If the provided output is not valid JSON, it does not panic. Instead, it returns an `AnalysisResult` with an empty `Violations` slice, indicating that no violations were found.  The `EnsureCompatibility` function currently does not return an error.
 
 **Concurrency:**
 
-This package does not currently employ goroutines or channels. It operates in a single-threaded manner.
+This package does not currently employ any concurrency patterns (goroutines or channels). All operations are performed synchronously.
 
 **Design Decisions:**
 
-*   **JSON-centric Parsing:** We chose to focus on JSON as the primary input format because it is a widely used standard for representing structured data.
-*   **Robustness over Strictness:** The `parseOutput` function is designed to be resilient to malformed input. It prioritizes returning a usable result (even if empty) over throwing an error for minor parsing issues.
-*   **Extensibility:** The `EnsureCompatibility` function is included to allow for future expansion of compatibility checks as the package evolves.
+*   **JSON-centric:** The package is specifically designed to parse JSON output, as this is a common format for code analysis tools.
+*   **Graceful Error Handling:** The `parseOutput` function prioritizes robustness by handling invalid JSON gracefully, preventing crashes and providing a usable result even in error scenarios.
+*   **Simple Interface:** The package provides a straightforward interface with a minimal number of functions, making it easy to integrate into other systems.

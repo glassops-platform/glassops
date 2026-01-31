@@ -5,47 +5,79 @@ origin: packages/knowledge/llm/client.py
 last_modified: 2026-01-31
 generated: true
 source: packages/knowledge/llm/client.py
-generated_at: 2026-01-31T09:00:09.906275
+generated_at: 2026-01-31T09:55:45.827027
 hash: 5c3004e9f42636ddf1fc589893d5cbcf16779f191ba71625688658e4b79db9f5
 ---
 
 ## GlassOps Knowledge Pipeline - LLM Client Documentation
 
-This document details the functionality of the LLM Client, a component designed for interacting with the Google Generative AI models within the GlassOps Knowledge Pipeline. It provides a reusable interface for sending prompts to the model, handling potential errors through retry logic, and managing API request rates to avoid exceeding limits.
+This document details the functionality of the LLMClient, a component designed to provide a consistent interface for interacting with the Google Generative AI models within the GlassOps Knowledge Pipeline. It manages API calls, implements retry mechanisms for common errors, and enforces rate limiting to ensure responsible and reliable usage.
 
-**Module Responsibilities:**
+### Module Responsibilities
 
-The primary responsibility of this module is to abstract the complexities of interacting with the Google Generative AI API. It handles authentication, request formatting, error handling, and rate limiting, providing a simplified interface for other components of the Knowledge Pipeline.
+The `llm/client.py` module encapsulates all interactions with the Google Generative AI API. Its primary responsibilities include:
 
-**Key Classes:**
+*   Establishing a connection to the LLM service.
+*   Sending prompts to the LLM and receiving responses.
+*   Handling potential errors during API calls, including transient issues like rate limits and server errors.
+*   Implementing rate limiting to prevent exceeding API usage quotas.
+*   Providing a simple and reusable interface for other components of the Knowledge Pipeline.
 
-*   **`LLMClient`**: This class serves as the central point of interaction with the Google Generative AI service. It encapsulates the API client, manages request history for rate limiting, and provides a `generate` method for submitting prompts and receiving responses.
+### Key Classes
 
-    *   **`__init__(self, model: str = "gemma-3-27b-it")`**:  The constructor initializes the LLMClient. It retrieves the Google API key from the environment, creates a `genai.Client` instance if the key is found, and sets the default model to "gemma-3-27b-it". If the API key is missing, the client is disabled, and a warning message is printed. It also initializes internal data structures for request history and rate limiting. The `model` parameter allows you to specify which Google Generative AI model to use.
-    *   `_request_history: list[dict]`: A private list used to store information about recent requests, including their timestamps and token counts, for rate limiting purposes.
-    *   `_rpm_limit = 28`: A private integer defining the requests per minute limit.
-    *   `_tpm_limit = 14000`: A private integer defining the tokens per minute limit.
+#### `LLMClient`
 
-**Important Functions:**
+This class is the core of the module. It manages the connection to the LLM and provides the `generate` method for requesting content.
 
-*   **`_estimate_tokens(self, text: str) -> int`**: This private function provides a rough estimate of the number of tokens in a given text string. It uses a simple heuristic of 4 characters per token. This estimation is used for rate limiting.
-*   **`_throttle(self, estimated_tokens: int) -> None`**: This private function implements rate limiting logic. It checks the number of requests made within the last minute (RPM) and the total number of tokens used within the last minute (TPM) against predefined limits. If the limits are approaching, it pauses execution until sufficient headroom is available.
-*   **`generate(self, prompt: str, max_retries: int = 3, temperature: float = 0.2, max_output_tokens: int = 8192) -> Optional[str]`**: This is the core function for generating text from a given prompt. It takes the prompt as input, along with optional parameters for controlling the generation process (maximum retries, temperature, and maximum output tokens). It handles rate limiting before making the API call. It includes retry logic for transient errors (HTTP 429 and 503 errors, or "overloaded" messages). The function returns the generated text if successful, or `None` if it fails after multiple retries.
+*   **Attributes:**
+    *   `client`: An instance of the `genai.Client` object, representing the connection to the Google Generative AI API.  It is initialized to `None` if the API key is not found.
+    *   `model`: A string specifying the name of the LLM model to use (default: "gemma-3-27b-it").
+    *   `_request_history`: A list of dictionaries used to track recent requests for rate limiting purposes. Each dictionary contains the request timestamp and token count.
+    *   `_rpm_limit`: An integer defining the requests per minute limit (default: 28).
+    *   `_tpm_limit`: An integer defining the tokens per minute limit (default: 14000).
 
-    *   `prompt: str`: The input text prompt for the LLM.
-    *   `max_retries: int`: The maximum number of times to retry the request if it fails due to a transient error.
-    *   `temperature: float`: Controls the randomness of the generated text. Lower values produce more predictable output.
-    *   `max_output_tokens: int`: Limits the length of the generated text.
+*   **Initialization (`__init__`)**:
+    *   Loads the Google API key from the environment variables (specifically, `GOOGLE_API_KEY`).
+    *   Initializes the `genai.Client` if the API key is found. If the key is missing, it prints a warning and disables the client.
+    *   Sets the default model name.
+    *   Initializes the request history list.
+    *   Sets the rate limits for requests per minute and tokens per minute.
 
-**Type Hints:**
+### Important Functions
 
-The code extensively uses type hints (e.g., `str`, `int`, `Optional[str]`) to improve code readability and maintainability. These hints specify the expected data types for function arguments and return values, allowing for static analysis and early detection of potential errors.
+#### `_estimate_tokens(text: str) -> int`
 
-**Design Decisions and Patterns:**
+This private function provides a rough estimate of the number of tokens in a given text string. It assumes approximately 4 characters per token. This estimation is used for rate limiting.
 
-*   **Retry Logic:** The `generate` function incorporates a retry mechanism to handle transient errors, improving the robustness of the client.
-*   **Rate Limiting:** The `_throttle` function implements rate limiting to prevent exceeding the API usage limits, ensuring stable operation.
-*   **Configuration via Environment Variables:** The API key is loaded from an environment variable (`GOOGLE_API_KEY`), promoting secure configuration management.
+*   **Parameters:**
+    *   `text`: The input string.
+*   **Return Value:** An integer representing the estimated token count.
+
+#### `_throttle(estimated_tokens: int) -> None`
+
+This private function implements the rate limiting logic. It checks if the current request would exceed the defined RPM or TPM limits. If a limit is approaching, it pauses execution until sufficient headroom is available.
+
+*   **Parameters:**
+    *   `estimated_tokens`: The estimated number of tokens for the current request.
+*   **Return Value:** None.
+
+#### `generate(prompt: str, max_retries: int = 3, temperature: float = 0.2, max_output_tokens: int = 8192) -> Optional[str]`
+
+This is the primary function for interacting with the LLM. It sends a prompt to the model and returns the generated text.
+
+*   **Parameters:**
+    *   `prompt`: The text prompt to send to the LLM.
+    *   `max_retries`: The maximum number of times to retry the request if a transient error occurs (default: 3).
+    *   `temperature`: A value controlling the randomness of the generated text (default: 0.2). Lower values produce more deterministic output.
+    *   `max_output_tokens`: The maximum number of tokens to generate in the response (default: 8192).
+*   **Return Value:**
+    *   The generated text string if the request is successful.
+    *   `None` if the request fails after multiple retries or if the LLM client is not initialized.
+
+### Design Decisions and Patterns
+
+*   **Retry Logic:** The `generate` function incorporates a retry mechanism with exponential backoff to handle transient errors (429 and 503 errors, or errors containing "overloaded"). This improves the robustness of the client.
+*   **Rate Limiting:** The `_throttle` function enforces rate limits to prevent exceeding API quotas. It tracks requests and tokens within a sliding window (60 seconds) and pauses execution if necessary.
+*   **Type Hints:** The code uses type hints (e.g., `str`, `int`, `Optional[str]`) to improve code readability and maintainability. These hints help clarify the expected data types for function parameters and return values.
+*   **Environment Variables:** The API key is loaded from an environment variable (`GOOGLE_API_KEY`), which promotes security and allows for easy configuration without modifying the code.
 *   **Error Handling:** The code includes comprehensive error handling, logging informative messages when errors occur, and distinguishing between retryable and non-retryable errors.
-*   **Token Estimation:** A simple token estimation method is used to proactively manage token usage for rate limiting.
-*   **Safety Buffers:** The RPM and TPM limits are set with safety buffers to avoid accidental exceeding of the actual API limits.

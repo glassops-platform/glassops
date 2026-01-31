@@ -5,67 +5,66 @@ origin: packages/tools/agent/src/adapters/interface.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/interface.ts
-generated_at: 2026-01-31T09:20:09.673704
+generated_at: 2026-01-31T10:16:50.275304
 hash: f2768e9d45e206d7f00f3b4c1b4f1de47b4278b6f233c741457ec05cefe83842
 ---
 
-## Agent Adapter Interface Specification
+## Agent Adapter Interface Documentation
 
-**Document Version:** 1.0
-**Date:** October 26, 2023
+This document details the `AgentAdapter` interface, defining the contract for components responsible for processing files within the system. Adapters enable the system to work with diverse file types and content structures.
 
-**1. Introduction**
+### Overview
 
-This document details the `AgentAdapter` interface. This interface defines the contract for components responsible for processing files within the agent system. Adapters enable the system to work with diverse file types and formats.
+The `AgentAdapter` interface specifies a set of methods that any adapter must implement to integrate with the core processing pipeline. These methods handle file type identification, content parsing, prompt generation for language models, and post-processing of model outputs.
 
-**2. Purpose**
+### Interface Definition
 
-The `AgentAdapter` interface standardizes how file content is ingested, prepared for language model interaction, and finalized into a usable output. It promotes modularity and extensibility, allowing for easy integration of new file type support.
+```typescript
+export interface AgentAdapter {
+  canHandle(fileName: string): boolean;
+  parse(filePath: string, content: string): Promise<string[]>;
+  generatePrompt(filePath: string, parsedContent: string): string;
+  postProcess(filePath: string, outputs: string[]): string;
+}
+```
 
-**3. Interface Definition**
+### Method Descriptions
 
-The `AgentAdapter` interface requires implementing the following methods:
+#### `canHandle(fileName: string): boolean`
 
-**3.1. `canHandle(fileName: string): boolean`**
+This method determines if the adapter is capable of processing a file based on its name (including extension). 
 
-*   **Description:** This method determines if a specific adapter is capable of processing a file based on its name (including extension).
 *   **Parameters:**
     *   `fileName`: A string representing the name of the file.
 *   **Return Value:** A boolean value. `true` indicates the adapter can handle the file; `false` indicates it cannot.
 *   **Usage:** You should implement this method to check the file extension or other relevant characteristics to determine compatibility.
 
-**3.2. `parse(filePath: string, content: string): Promise<string[]>`**
+#### `parse(filePath: string, content: string): Promise<string[]>`
 
-*   **Description:** This method parses the content of a file and transforms it into a structured format suitable for processing by a language model. The method returns a promise that resolves to an array of strings, allowing for the handling of large files through chunking.
+This method parses the content of a file and transforms it into a structured format suitable for use with a language model. The method returns a Promise that resolves to an array of strings, allowing for the handling of large files through chunking.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
-    *   `content`: A string containing the file’s content.
+    *   `content`: A string containing the file's content.
 *   **Return Value:** A Promise resolving to a string array. Each string in the array represents a chunk of the parsed content.
-*   **Usage:** I recommend breaking down large files into smaller, manageable chunks within this method to avoid exceeding language model input limits.
+*   **Usage:** I recommend implementing this method to extract relevant information from the file content and prepare it for prompt generation.
 
-**3.3. `generatePrompt(filePath: string, parsedContent: string): string`**
+#### `generatePrompt(filePath: string, parsedContent: string): string`
 
-*   **Description:** This method constructs a prompt to be sent to a language model, using the parsed content of the file.
+This method constructs a prompt for a language model based on the parsed content of a file.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
     *   `parsedContent`: A string representing the parsed content of the file.
-*   **Return Value:** A string representing the generated prompt.
-*   **Usage:** We expect this method to format the `parsedContent` into a prompt that instructs the language model on the desired task.
+*   **Return Value:** A string containing the generated prompt.
+*   **Usage:** We expect this method to format the `parsedContent` into a prompt that instructs the language model to perform the desired task.
 
-**3.4. `postProcess(filePath: string, outputs: string[]): string`**
+#### `postProcess(filePath: string, outputs: string[]): string`
 
-*   **Description:** This method performs final processing on the output received from the language model. This includes tasks such as formatting, resolving relative links, and joining chunks if the file was processed in parts.
+This method performs post-processing on the output generated by a language model. This includes tasks such as formatting the output, resolving relative links, and joining chunks if the file was processed in parts.
+
 *   **Parameters:**
     *   `filePath`: A string representing the path to the file.
     *   `outputs`: A string array containing the outputs from the language model.
-*   **Return Value:** A string representing the final, processed output.
-*   **Usage:** If the `parse` method returned multiple chunks, you must combine them into a single coherent output within this method.
-
-
-
-**4. Implementation Considerations**
-
-*   Adapters should handle errors gracefully and provide informative error messages.
-*   The `parse` method should be designed to handle potentially large files efficiently.
-*   The `generatePrompt` method should create prompts that are clear, concise, and effective in guiding the language model.
-*   The `postProcess` method should ensure the final output is well-formatted and consistent.
+*   **Return Value:** A string containing the final, post-processed output.
+*   **Usage:** You should implement this method to refine the language model's output and ensure it is in the desired format. If the input file was chunked during parsing, this method is responsible for combining the outputs from each chunk into a single, coherent result.

@@ -5,7 +5,7 @@ origin: packages/runtime/internal/telemetry/telemetry.go
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/telemetry/telemetry.go
-generated_at: 2026-01-31T09:10:32.155837
+generated_at: 2026-01-31T10:06:35.005316
 hash: de6e42c3e0bcb05f5d41072920cb61dfd827fe759cc2b3874316d72a2191e789
 ---
 
@@ -15,34 +15,39 @@ This package provides integration with OpenTelemetry for distributed tracing wit
 
 **Package Responsibilities:**
 
-The primary responsibility of this package is to initialize, manage, and provide access to an OpenTelemetry tracer. It handles the configuration of the tracer based on environment variables, the creation of spans to track operations, and the reporting of trace data to a configured backend.  The package aims to be non-intrusive, allowing developers to easily add tracing to their code without significant modification.
+The primary responsibility of this package is to initialize, manage, and provide access to an OpenTelemetry tracer. It handles the configuration of the tracer based on environment variables, the creation of spans to track operations, and the reporting of trace data to a configured backend.  The package aims to be unobtrusive; if the necessary environment variables for configuration are not present, telemetry is effectively disabled.
 
 **Key Types and Interfaces:**
 
-*   **`trace.Tracer`:**  The core OpenTelemetry tracer interface.  This package provides access to a global tracer instance.  It is used to start new spans.
-*   **`trace.Span`:** Represents a single operation within a trace. Spans have a start and end time, and can contain attributes and events.
-*   **`attribute.KeyValue`:** Represents a key-value pair used to add metadata to spans and events.
-*   **`sdktrace.TracerProvider`:**  Manages the lifecycle of tracers and exporters. This package initializes and shuts down the tracer provider.
+*   **`trace.Tracer`**:  The core OpenTelemetry tracer interface.  This package uses this interface to start spans, add attributes, and record events.
+*   **`trace.Span`**: Represents a single operation within a trace. Spans have a start and end time, and can contain attributes and events.
+*   **`sdktrace.TracerProvider`**: Manages the lifecycle of tracers and exporters. This package creates and manages a single `TracerProvider` instance.
+*   **`attribute.KeyValue`**: Represents a key-value pair for adding attributes to spans and events.
 
 **Important Functions:**
 
-*   **`Init(ctx context.Context, serviceName, serviceVersion string) error`:**  Initializes the OpenTelemetry SDK. This function checks for the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. If set, it configures an OpenTelemetry exporter to send trace data to the specified endpoint. It also sets service name and version attributes. If the environment variable is not set, the function returns `nil`, effectively disabling telemetry.  It also parses optional headers from the `OTEL_EXPORTER_OTLP_HEADERS` environment variable.
-*   **`Shutdown(ctx context.Context) error`:**  Gracefully shuts down the OpenTelemetry tracer provider, flushing any pending data.  It handles the case where the tracer provider has not been initialized.
-*   **`WithSpan[T any](ctx context.Context, name string, fn func(context.Context, trace.Span) (T, error), attrs ...attribute.KeyValue) (T, error)`:**  A utility function for executing a function within a traced span. It starts a new span with the given name and attributes, executes the provided function with the span context, and ensures the span is ended (regardless of success or failure).  If the function returns an error, the span’s status is set to `Error` and the error is recorded on the span.
-*   **`GetCurrentSpan(ctx context.Context) trace.Span`:** Retrieves the currently active span from the provided context. Returns `nil` if no span is active in the context.
-*   **`AddSpanEvent(ctx context.Context, name string, attrs ...attribute.KeyValue)`:** Adds an event to the current span, if one exists in the provided context.  Events provide additional information about the operation being traced.
+*   **`Init(ctx context.Context, serviceName, serviceVersion string) error`**:
+    This function initializes the OpenTelemetry SDK. It reads the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable to determine the endpoint for sending trace data. If the environment variable is not set, the function returns `nil`, effectively disabling telemetry. It also parses `OTEL_EXPORTER_OTLP_HEADERS` to add custom headers to the outgoing requests. It creates a resource with service name and version attributes and configures the tracer provider.
+*   **`Shutdown(ctx context.Context) error`**:
+    This function gracefully shuts down the OpenTelemetry tracer provider, releasing resources. It returns `nil` if the tracer provider was never initialized.
+*   **`WithSpan[T any](ctx context.Context, name string, fn func(context.Context, trace.Span) (T, error), attrs ...attribute.KeyValue) (T, error)`**:
+    This is a utility function for executing a function within a traced span. It starts a new span with the given name, adds any provided attributes, executes the provided function `fn` with the span context, and then ends the span. It also handles error reporting by setting the span status and recording errors if they occur. The function returns the result of `fn` and any error it returns.
+*   **`GetCurrentSpan(ctx context.Context) trace.Span`**:
+    This function retrieves the currently active span from the provided context. It returns `nil` if no span is present in the context.
+*   **`AddSpanEvent(ctx context.Context, name string, attrs ...attribute.KeyValue)`**:
+    This function adds an event to the current span in the provided context. It retrieves the current span and adds an event with the given name and attributes. If no span is present in the context, the function does nothing.
 
 **Error Handling:**
 
-The package employs standard Go error handling practices. Functions return an `error` value to indicate failure. Errors during initialization (e.g., invalid endpoint configuration) are returned by `Init`.  The `WithSpan` function captures errors from the executed function and records them on the span.
+The package uses standard Go error handling patterns. Functions return an `error` value to indicate failure. Errors are recorded on spans using `span.RecordError(err)` when using `WithSpan`, and span status is set accordingly.
 
 **Concurrency:**
 
-The OpenTelemetry SDK itself is designed to be concurrency-safe. This package leverages that inherent safety. The `WithSpan` function is safe to be called from multiple goroutines concurrently.
+The package itself does not explicitly manage goroutines or channels. However, OpenTelemetry is designed to work in concurrent environments, and the underlying SDK handles concurrency internally. The `WithSpan` function is safe to use concurrently with other operations.
 
 **Design Decisions:**
 
-*   **Environment Variable Configuration:** The package relies on environment variables (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`) for configuration, allowing for flexible deployment without code changes.
-*   **Lazy Initialization:** Telemetry is only initialized if the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is set. This avoids unnecessary overhead when tracing is not required.
-*   **`WithSpan` Utility:** The `WithSpan` function simplifies the process of adding tracing to existing code by handling span creation, context propagation, and span completion automatically.
-*   **Global Tracer:** A single, global tracer instance is used to maintain consistency and reduce resource consumption.
+*   **Environment Variable Configuration:** The package relies on environment variables for configuration, making it easy to enable or disable telemetry without modifying code.
+*   **Lazy Initialization:** The tracer provider is only initialized if the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is set. This avoids unnecessary overhead when telemetry is not needed.
+*   **Context Propagation:** The package leverages the OpenTelemetry context propagation mechanism to ensure that spans are correctly associated with requests as they flow through the system.
+*   **Generic `WithSpan` Function:** The `WithSpan` function uses generics to provide type safety and flexibility when executing functions within a traced span.

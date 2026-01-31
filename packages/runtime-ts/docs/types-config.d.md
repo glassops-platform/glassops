@@ -5,71 +5,92 @@ origin: packages/runtime-ts/src/types/config.d.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/types/config.d.ts
-generated_at: 2026-01-31T09:18:38.204468
+generated_at: 2026-01-31T10:15:22.709139
 hash: 10e0f67f12da9b5de1b7aeac604b2417e83996caf4f4cf3d95d537e6db4127ee
 ---
 
-## GlassOps Configuration Document
+# GlassOps Configuration Reference
 
-This document details the structure of the GlassOps configuration file. This configuration drives the behavior of the system, defining execution parameters, governance rules, environment settings, and notification preferences.
+This document details the structure of the GlassOps configuration file. It provides a comprehensive overview of available settings and their purpose, intended for both developers and operators.
 
-**Configuration Version:**
+## Overview
 
-The `version` field, currently set to "1.0", indicates the configuration schema version. This allows for future compatibility and updates.
+The configuration file defines the behavior of the GlassOps system. It controls aspects such as execution environment, governance policies, environment-specific settings, and notification preferences. You can extend the configuration with custom properties as needed.
 
-**Metadata:**
+## Configuration Structure
 
-The optional `metadata` section provides information about the configuration itself.
-*   `last_updated`: A timestamp indicating the last modification date.
-*   `schema_version`:  Specifies the version of the configuration schema used.
+The top-level configuration is a JSON object conforming to the `GlassOpsConfiguration` interface.
 
-**Execution Settings:**
+### `version`
 
-The `execution` section controls how GlassOps operates.
-*   `engine`: Determines the execution engine. Options are "native" or "hardis".
-*   `fallback`: Specifies a fallback engine in case the primary engine fails. Options are "native" or "none".
+*Type:* `"1.0"`
+*Description:* Specifies the configuration file version. Currently, only `"1.0"` is supported.
 
-**Governance Policies:**
+### `metadata` (Optional)
 
-The `governance` section defines quality and security standards.
-*   `minCoverage`:  The minimum acceptable code coverage percentage.
-*   `requireTests`: A boolean value indicating whether tests are mandatory.
-*   `enforcedBy`:  An optional string identifying the entity responsible for enforcing these policies.
+*Type:* `object`
+*Description:* Contains metadata about the configuration itself.
 
-**Environment Configurations:**
+*   `last_updated` (Optional): *Type:* `string` - Timestamp of the last configuration update.
+*   `schema_version` (Optional): *Type:* `string` - Version of the configuration schema used.
 
-The `environments` section defines settings for each deployment environment.  Each environment is identified by a unique key.
-*   `display_name`: A user-friendly name for the environment.
-*   `branch_mapping`:  Associates the environment with a specific branch.
-*   `deployment_policy`: Controls deployment behavior.
-    *   `test_level`: Specifies the required test level.
-    *   `wait_time`: Defines a waiting period before deployment.
-    *   `use_delta`:  Indicates whether to deploy only changes.
-    *   `validation_required`:  Requires validation before deployment.
-    *   `auto_deploy_on_merge`: Automatically deploys on branch merge.
-*   `quality_gates`: Defines quality criteria for the environment.
-    *   `minCoverage`: Minimum code coverage for this environment.
-    *   `security_severity_threshold`:  Maximum acceptable security severity level.
-    *   `block_on_test_failure`:  Prevents deployment if tests fail.
-*   `github_environment`:  Links to a corresponding GitHub environment.
-*   `notes`:  Allows for adding descriptive notes about the environment.
+### `execution`
 
-**GlassOps Platform Features:**
+*Type:* `object`
+*Description:* Defines the execution environment for GlassOps operations.
 
-The optional `glassops` section controls platform-level features.
-*   `enablePlatformEvents`: Enables or disables platform events.
+*   `engine` *Required:* *Type:* `"native" | "hardis"` - Specifies the execution engine. `"native"` indicates the primary execution environment, while `"hardis"` designates an alternative.
+*   `fallback` (Optional): *Type:* `"native" | "none"` - Defines a fallback engine in case the primary engine is unavailable. `"native"` will attempt to fall back to the primary engine, while `"none"` disables fallback behavior.
 
-**Notification Settings:**
+### `governance`
 
-The optional `notifications` section configures how GlassOps sends notifications.
-*   `enabled_by_default`:  Enables or disables notifications globally.
-*   `channels`: Defines notification channels.
-    *   `slack`: Configures Slack notifications.
-        *   `enabled`: Enables or disables Slack notifications.
-        *   `mention_on_failure`: Mentions relevant users on failure.
-    *   `email`: Configures email notifications.
-        *   `enabled`: Enables or disables email notifications.
+*Type:* `object`
+*Description:* Sets governance policies for operations.
 
-**Extensibility:**
+*   `minCoverage` *Required:* *Type:* `number` - Minimum code coverage percentage required for operations.
+*   `requireTests` *Required:* *Type:* `boolean` - Indicates whether tests are required before operations can proceed.
+*   `enforcedBy` (Optional): *Type:* `string` - Identifies the entity responsible for enforcing these policies. This is primarily for documentation and audit purposes.
 
-The configuration supports extensions. You can add custom key-value pairs at the top level of the configuration object to extend functionality.  These extensions are dynamically handled by the system.
+### `environments`
+
+*Type:* `object`
+*Description:* Defines configurations for different environments (e.g., development, staging, production). Each key represents an environment name.
+
+*   `display_name` (Optional): *Type:* `string` - A user-friendly name for the environment.
+*   `branch_mapping` (Optional): *Type:* `string` - Maps a branch name to this environment.
+*   `deployment_policy` (Optional): *Type:* `object` - Defines policies governing deployments to this environment.
+    *   `test_level` (Optional): *Type:* `string` - The required test level for deployment.
+    *   `wait_time` (Optional): *Type:* `string` - Time to wait after deployment before considering it successful.
+    *   `use_delta` (Optional): *Type:* `boolean` - Whether to deploy only changes (delta) or the entire application.
+    *   `validation_required` (Optional): *Type:* `boolean` - Indicates whether validation is required before deployment.
+    *   `auto_deploy_on_merge` (Optional): *Type:* `boolean` - Enables automatic deployment upon merging to the mapped branch.
+*   `quality_gates` (Optional): *Type:* `object` - Defines quality gate criteria for this environment.
+    *   `minCoverage` (Optional): *Type:* `number` - Minimum code coverage required for this environment.
+    *   `security_severity_threshold` (Optional): *Type:* `number` - Maximum allowed security severity level.
+    *   `block_on_test_failure` (Optional): *Type:* `boolean` - Whether to block deployment if tests fail.
+*   `github_environment` (Optional): *Type:* `string` - The corresponding GitHub environment name.
+*   `notes` (Optional): *Type:* `string` -  Additional notes or documentation for the environment.
+
+### `glassops` (Optional)
+
+*Type:* `object`
+*Description:* GlassOps specific settings.
+
+*   `enablePlatformEvents` (Optional): *Type:* `boolean` - Enables or disables platform events.
+
+### `notifications` (Optional)
+
+*Type:* `object`
+*Description:* Configures notification settings.
+
+*   `enabled_by_default` (Optional): *Type:* `boolean` - Enables notifications by default.
+*   `channels` (Optional): *Type:* `object` - Defines notification channels.
+    *   `slack` (Optional): *Type:* `object`
+        *   `enabled` (Optional): *Type:* `boolean` - Enables Slack notifications.
+        *   `mention_on_failure` (Optional): *Type:* `boolean` - Mentions a designated user on failure.
+    *   `email` (Optional): *Type:* `object`
+        *   `enabled` (Optional): *Type:* `boolean` - Enables email notifications.
+
+### Extensions
+
+The configuration allows for arbitrary extensions. You can add any additional key-value pairs to the top-level object. These extensions will be preserved and can be accessed by the system or custom logic.

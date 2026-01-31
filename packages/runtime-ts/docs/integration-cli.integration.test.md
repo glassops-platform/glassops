@@ -5,57 +5,51 @@ origin: packages/runtime-ts/src/integration/cli.integration.test.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/integration/cli.integration.test.ts
-generated_at: 2026-01-31T09:12:05.516686
+generated_at: 2026-01-31T10:08:19.016598
 hash: 7bdd3344b00f64cd730b3fc47b16f07a62fb9c929c986afde8dc397872fe94f8
 ---
 
-## Runtime Environment CLI Integration Test Documentation
+## Runtime Environment Integration Test Documentation
 
-This document details the integration tests for the Runtime Environment Command Line Interface (CLI). These tests confirm the correct operation of the `RuntimeEnvironment` class, specifically focusing on module loading – including dynamic imports – while simulating external input/output operations.
+This document details the integration tests for the Runtime Environment, focusing on CLI installation and plugin management. These tests ensure the environment functions correctly with dynamic module loading while isolating external I/O operations through mocking.
 
-**Purpose**
+### Overview
 
-The primary goal of these tests is to ensure reliable CLI functionality, including installation and plugin management, within the broader runtime environment.
+The Runtime Environment provides functionality for installing the Salesforce CLI and managing its plugins.  The tests verify correct behavior in scenarios including: CLI presence, installation success/failure, plugin whitelisting, version constraints, and overall workflow execution.
 
-**Functionality Tested**
+### Key Components
 
-The tests cover the following key areas:
+*   **RuntimeEnvironment:** The primary class under test, responsible for CLI and plugin management.
+*   **ProtocolConfig:**  A configuration object defining runtime settings, including CLI version, Node version, and plugin whitelist.
+*   **Mocked Actions:**  External I/O operations are mocked using `@actions/exec`, `@actions/io`, and `@actions/core` modules.
 
-*   **CLI Installation:**
-    *   Skipping installation if the CLI is already present.
-    *   Installing the CLI when it is not found.
-    *   Handling installation failures.
-*   **Plugin Installation with Whitelist:**
-    *   Installing plugins without a whitelist configuration.
-    *   Installing whitelisted plugins with version constraints.
-    *   Installing scoped packages with version constraints.
-    *   Installing whitelisted plugins without version constraints.
-    *   Rejecting non-whitelisted plugins.
-    *   Installing multiple whitelisted plugins.
-    *   Skipping installation when no plugins are specified.
-    *   Verifying plugin installation.
-    *   Handling plugin verification failures.
-    *   Handling plugin installation errors.
-*   **End-to-End Plugin Flow:**
-    *   Validating the complete plugin installation workflow from start to finish.
+### CLI Installation Tests
 
-**Configuration**
+These tests verify the installation process for the Salesforce CLI.
 
-Plugin installation is governed by a `ProtocolConfig` object, which includes:
+*   **CLI Already Present:** If the CLI is detected in the environment, installation is skipped.
+*   **CLI Not Present:** If the CLI is not found, it is installed using `npm install -g @salesforce/cli@<version>`.
+*   **Installation Failure:**  Errors during installation are handled gracefully, and an error is thrown.
 
-*   **governance.enabled:** A boolean indicating whether governance features are enabled.
-*   **governance.plugin\_whitelist:** An array of strings representing allowed plugins and their optional version constraints (e.g., "sfdx-hardis@^6.0.0").
-*   **runtime.cli\_version:** The desired CLI version.
-*   **runtime.node\_version:** The required Node.js version.
+### Plugin Installation Tests
 
-**Behavior Notes**
+These tests focus on installing and verifying plugins based on a configured whitelist.
 
-*   The tests mock external interactions with the operating system and other tools (like `npm` and `sf`) to provide a controlled testing environment.
-*   Installation commands are constructed differently based on the operating system (Windows vs. others) to ensure compatibility.
-*   Version constraints are enforced during plugin installation when a whitelist is configured.
-*   Error handling is implemented to gracefully manage installation failures and provide informative error messages.
-*   Informational messages are logged to indicate the progress of installation and verification steps.
+*   **No Whitelist:** When no whitelist is configured, plugins are installed without validation, and a warning is issued.
+*   **Whitelisted Plugin with Version Constraint:** Plugins specified in the whitelist with version constraints (e.g., `sfdx-hardis@^6.0.0`) are installed with the specified constraint.
+*   **Whitelisted Plugin without Version Constraint:** Plugins specified in the whitelist without a version constraint (e.g., `sfdx-hardis`) are installed using the latest available version.
+*   **Scoped Package Installation:** Installation of scoped packages (e.g., `@salesforce/plugin-deploy-retrieve@^3.0.0`) with version constraints is verified.
+*   **Non-Whitelisted Plugin:** Attempts to install plugins not present in the whitelist are rejected with an error.
+*   **Multiple Plugins:**  Multiple whitelisted plugins can be installed in a single operation.
+*   **No Plugins Specified:** If no plugins are provided for installation, a message is logged, and no installation attempt is made.
+*   **Plugin Verification:** After installation, the environment verifies the plugin is installed correctly by querying the CLI.
+*   **Verification Failure:** If plugin verification fails (e.g., plugin not found), an error is thrown.
+*   **Installation Error Handling:** Errors during plugin installation are handled, and an appropriate error message is displayed.
 
-**User Instructions**
+### End-to-End Workflow Test
 
-You do not need to directly interact with these tests. They are part of the internal build and validation process. However, understanding the tested functionality provides insight into the reliability and security features of the runtime environment.
+This test validates the complete plugin installation workflow, from start to finish, including validation and verification steps. It confirms the correct sequence of operations and logging messages.
+
+### Platform Considerations
+
+The tests adapt to the operating system (Windows or other) when constructing shell commands, using `cmd` and `/c` for Windows and `sh` and `-c` for other systems.

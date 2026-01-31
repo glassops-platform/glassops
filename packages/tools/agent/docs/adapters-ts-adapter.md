@@ -5,41 +5,81 @@ origin: packages/tools/agent/src/adapters/ts-adapter.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/adapters/ts-adapter.ts
-generated_at: 2026-01-31T09:22:00.766023
+generated_at: 2026-01-31T10:19:11.077182
 hash: 677402b4dbd30061884f6e58be907cc88b88aa6ec9b6239b698cf907d2e33ab3
 ---
 
-## TypeScript/JavaScript Agent Adapter Documentation
+## TypeScript/JavaScript Adapter Documentation
 
-This document details the functionality of the TypeScript/JavaScript Agent Adapter, a component designed to process TypeScript, JavaScript, and MJS files for documentation generation.
+This document details the functionality of the TypeScript/JavaScript Adapter, a component designed to process TypeScript, JavaScript, and MJS files for documentation generation.
 
-**1. Overview**
+### Overview
 
-The adapter serves as an interface between a documentation generation system and TypeScript/JavaScript source code. It determines if a file can be handled, extracts its content, prepares a prompt for a language model, and consolidates the results.
+The adapter serves as an interface between the core documentation tool and source code files written in TypeScript or JavaScript. It determines if a file can be handled, extracts its content, prepares a prompt for a language model, and consolidates the results.
 
-**2. Core Functionality**
+### Functionality
 
-The adapter provides the following key functions:
+The adapter provides the following core functions:
 
-*   **File Handling:** The `canHandle` function identifies files with the extensions `.ts`, `.js`, or `.mjs`. This ensures that only appropriate files are processed.
-*   **Content Extraction:** The `parse` function currently extracts the entire file content along with its file path. This content is formatted for inclusion in a prompt. Future iterations may incorporate Abstract Syntax Tree (AST) parsing for more detailed docstring extraction.
-*   **Prompt Generation:** The `generatePrompt` function constructs a prompt for a language model. This prompt includes instructions to act as a principal architect and generate high-quality documentation from the provided code content. The prompt is designed to produce a concise, professional document suitable for both technical and non-technical audiences.
-*   **Output Consolidation:** The `postProcess` function combines multiple outputs from the language model into a single, formatted string, separated by double newlines.
+#### `canHandle(fileName: string): boolean`
 
-**3. Usage**
+This function determines whether the adapter can process a given file based on its extension. 
 
-You interact with this adapter through a documentation generation pipeline. The pipeline will:
+*   **Input:** `fileName` (string) – The name of the file to check.
+*   **Output:** `boolean` – Returns `true` if the file has a `.ts`, `.js`, or `.mjs` extension; otherwise, returns `false`.
 
-1.  Pass a file path and content to the `parse` function.
-2.  The `parse` function returns the file content formatted as a string.
-3.  The `generatePrompt` function creates a prompt using the file path and formatted content.
-4.  This prompt is sent to a language model.
-5.  The language model’s response is processed by the `postProcess` function and returned as the final documentation output.
+   Example:
+   ```typescript
+   canHandle('myFile.ts'); // Returns true
+   canHandle('index.html'); // Returns false
+   ```
 
-**4. Future Enhancements**
+#### `parse(filePath: string, content: string): Promise<string[]>`
 
-Planned improvements include:
+This asynchronous function extracts content from a file and prepares it for prompt generation. Currently, it performs a simple pass-through of the file content with contextual information. Future iterations may incorporate Abstract Syntax Tree (AST) parsing for more detailed docstring extraction.
 
-*   Implementation of AST parsing to enable extraction of specific code elements and docstrings.
-*   More sophisticated content formatting for improved prompt clarity.
-*   Support for additional JavaScript/TypeScript related file types.
+*   **Input:**
+    *   `filePath` (string) – The path to the file.
+    *   `content` (string) – The content of the file.
+*   **Output:** `Promise<string[]>` – A promise that resolves to an array of strings, where each string represents a parsed content segment.
+
+   Example:
+   ```typescript
+   parse('/path/to/myFile.ts', 'const x = 1;');
+   // Returns a Promise resolving to:
+   // ['File: /path/to/myFile.ts\n\nCode Content:\n\`\`\`typescript\nconst x = 1;\n\`\`\`']
+   ```
+
+#### `generatePrompt(filePath: string, parsedContent: string): string`
+
+This function constructs a prompt to be sent to a language model. The prompt instructs the model to act as a principal architect and generate high-level documentation from the provided code content.
+
+*   **Input:**
+    *   `filePath` (string) – The path to the file.
+    *   `parsedContent` (string) – The parsed content of the file.
+*   **Output:** `string` – The generated prompt.
+
+   Example:
+   ```typescript
+   generatePrompt('/path/to/myFile.ts', 'const x = 1;');
+   // Returns a string containing a prompt instructing the language model to document the code 'const x = 1;'.
+   ```
+
+#### `postProcess(filePath: string, outputs: string[]): string`
+
+This function combines the outputs generated by the language model into a single string, separated by double newlines.
+
+*   **Input:**
+    *   `filePath` (string) – The path to the file.
+    *   `outputs` (string[]) – An array of strings representing the outputs from the language model.
+*   **Output:** `string` – A single string containing the combined outputs.
+
+   Example:
+   ```typescript
+   postProcess('/path/to/myFile.ts', ['Output 1', 'Output 2']);
+   // Returns: 'Output 1\n\nOutput 2'
+   ```
+
+### Usage
+
+You can use this adapter by instantiating the `TSAdapter` class and calling its methods in sequence to process TypeScript and JavaScript files. The adapter is designed to be integrated into a larger documentation pipeline.

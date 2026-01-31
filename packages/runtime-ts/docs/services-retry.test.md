@@ -5,53 +5,73 @@ origin: packages/runtime-ts/src/services/retry.test.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/retry.test.ts
-generated_at: 2026-01-31T09:17:29.383022
+generated_at: 2026-01-31T10:13:53.584589
 hash: 8f8177f9522970e0c73f095aa11dee7604a2394058095c6d80ef9136115711a4
 ---
 
 ## executeWithRetry Service Documentation
 
-This document details the functionality of the `executeWithRetry` service, designed to reliably execute asynchronous operations that may encounter transient failures.
+This document details the functionality of the `executeWithRetry` service, designed to reliably execute asynchronous operations that may fail transiently.
 
 **Purpose**
 
-The `executeWithRetry` service automatically retries a provided asynchronous function (a function that returns a Promise) if it fails, offering configurable control over the retry behavior. This enhances application resilience by mitigating the impact of temporary issues.
+The `executeWithRetry` service automatically retries a provided asynchronous function if it fails, offering configurable control over the number of attempts and the delay between them. This improves application resilience when interacting with potentially unstable services or resources.
 
-**Functionality**
+**Function Signature**
 
-The `executeWithRetry` function accepts an asynchronous function and an optional configuration object. It attempts to execute the function and, upon failure, retries based on the provided configuration.
+```typescript
+function executeWithRetry<T>(
+  fn: () => Promise<T>,
+  options?: RetryOptions
+): Promise<T>
+```
 
 **Parameters**
 
-*   **`fn`**:  The asynchronous function (returning a Promise) to be executed.
-*   **`options`** (Optional): An object configuring the retry behavior.  Available options include:
-    *   **`maxRetries`**:  The maximum number of retry attempts. A value of 0 disables retries. Defaults to 3.
-    *   **`backoffMs`**: The initial delay in milliseconds between retries. The delay increases exponentially with each subsequent attempt. Defaults to 1000ms (1 second).
-    *   **`shouldRetry`**: A predicate function that determines whether a retry should be attempted based on the error encountered. It receives the error object as input and returns `true` to retry, or `false` to stop. If not provided, all errors will trigger a retry attempt.
+*   `fn`: A function that returns a Promise. This is the operation to be retried.
+*   `options`: (Optional) An object configuring the retry behavior.
+
+**RetryOptions Configuration**
+
+The `options` parameter accepts the following properties:
+
+*   `maxRetries`: (Number, default: 5) The maximum number of retry attempts.  The initial attempt is *not* included in this count.
+*   `backoffMs`: (Number, default: 1000) The initial delay in milliseconds between retries.  The delay increases exponentially with each subsequent attempt.
+*   `shouldRetry`: (Function, optional) A predicate function that determines whether a retry should be attempted. It receives the error thrown by `fn` as an argument and returns `true` to retry, or `false` to stop. If not provided, all errors will trigger a retry, up to `maxRetries`.
 
 **Return Value**
 
-*   If the function succeeds on any attempt, `executeWithRetry` returns the resolved value of the Promise returned by the function.
-*   If the function fails after exhausting all retry attempts, `executeWithRetry` rejects with the last error encountered.
+*   If the function `fn` succeeds on any attempt, `executeWithRetry` returns a Promise that resolves with the successful result of `fn`.
+*   If the function `fn` fails after exhausting all retry attempts (or if `shouldRetry` returns `false`), `executeWithRetry` returns a Promise that rejects with the last error thrown by `fn`.
 
-**Behavior**
+**Behavioral Notes**
 
-*   **Retry Logic:**  The service implements an exponential backoff strategy.  The delay between retries increases exponentially (2<sup>n</sup> * `backoffMs`), where n is the retry attempt number (starting from 0).
-*   **Error Handling:** The service propagates the final error if all retry attempts fail. It also handles cases where the function throws a non-Error value.
-*   **Predicate Control:** The `shouldRetry` function allows for selective retries based on the type of error encountered. This is useful for avoiding retries on errors that are unlikely to be resolved by repeating the operation.
-*   **Zero Retries:** When `maxRetries` is set to 0, the function is executed only once. If it fails, the Promise is immediately rejected.
-*   **Default Options:** If no options are provided, the service uses default values for `maxRetries` and `backoffMs`.
+*   **Exponential Backoff:** The delay between retries increases exponentially. The first retry occurs after `backoffMs`, the second after `backoffMs * 2`, the third after `backoffMs * 4`, and so on.
+*   **Error Handling:** The service propagates the original error from the function `fn` when all retries are exhausted. It also handles cases where `fn` throws a non-Error value.
+*   **Zero Retries:** If `maxRetries` is set to 0, the function `fn` is executed only once. If it fails, the Promise is immediately rejected.
+*   **Predicate Control:** The `shouldRetry` function allows for fine-grained control over which errors trigger a retry. This is useful for handling errors that are not transient and should not be retried.
+*   **Default Options:** If no `options` object is provided, the service uses default values for `maxRetries` and `backoffMs`.
 
 
 
-**Usage**
-
-You can use `executeWithRetry` as follows:
+**Example Usage**
 
 ```typescript
+// Example with default options
 const result = await executeWithRetry(async () => {
-  // Your asynchronous operation here
-  return "Operation Result";
-}, { maxRetries: 5, backoffMs: 500 });
+  // Some asynchronous operation
+  return "Success!";
+});
 
-console.log(result); // Output: Operation Result (or an error if all retries fail)
+// Example with custom options
+const result = await executeWithRetry(async () => {
+  // Some asynchronous operation
+}, { maxRetries: 3, backoffMs: 500 });
+
+// Example with a retry predicate
+const result = await executeWithRetry(async () => {
+  // Some asynchronous operation
+}, {
+  maxRetries: 2,
+  shouldRetry: (error) => error.message !== "NonRetryableError"
+});

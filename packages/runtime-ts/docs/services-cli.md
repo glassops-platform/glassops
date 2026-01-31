@@ -5,51 +5,77 @@ origin: packages/runtime-ts/src/services/cli.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/services/cli.ts
-generated_at: 2026-01-31T09:15:55.895477
+generated_at: 2026-01-31T10:12:18.158699
 hash: 973b422680240f152da76f14a615c66ecf48871b05f31f1e52fb30e52ddb2199
 ---
 
-## GlassOps Runtime Environment Documentation
+# GlassOps Runtime Environment Documentation
 
-This document details the functionality of the GlassOps Runtime Environment, a component responsible for managing the Salesforce CLI (sf) and its associated plugins. It provides a consistent and reliable environment for executing GlassOps operations.
+## Overview
 
-**Overview**
+This document describes the Runtime Environment service, responsible for managing the Salesforce CLI (sf) and its plugins. It provides functionality to install the CLI, install specified plugins, and verify their successful installation. This service is designed to operate within automated environments, such as CI/CD pipelines, and provides robust error handling and reporting.
 
-The Runtime Environment handles the installation and verification of the Salesforce CLI and specified plugins. It incorporates retry mechanisms for network instability and enforces plugin whitelisting based on configuration. This ensures a secure and predictable execution environment.
+## RuntimeEnvironment Class
 
-**Key Features**
+The `RuntimeEnvironment` class encapsulates the logic for managing the Salesforce CLI and its plugins.
 
-*   **Salesforce CLI Installation:** Automatically installs the Salesforce CLI if it is not already present in the environment. Supports specifying a version during installation.
-*   **Plugin Management:** Installs and verifies Salesforce CLI plugins.
-*   **Plugin Whitelisting:**  Enforces a configurable whitelist of allowed plugins, enhancing security.  If no whitelist is configured, plugins are installed without validation.
-*   **Version Constraints:** Supports specifying version constraints for plugins via the configuration.
-*   **Retry Logic:** Includes retry mechanisms for installation processes to handle transient network errors.
-*   **Automated Confirmation:** Handles prompts requiring confirmation during plugin installation.
+### `install(version)` Method
 
-**Usage**
+Installs the Salesforce CLI (sf) if it is not already present in the environment.
 
-The `RuntimeEnvironment` class provides the following methods:
+*   **Parameters:**
+    *   `version` (optional):  The version of the Salesforce CLI to install. Defaults to "latest".
+*   **Functionality:**
+    1.  Checks if the Salesforce CLI is already installed. If so, the method returns without action.
+    2.  If not installed, attempts to install the specified version of the Salesforce CLI using `npm install -g @salesforce/cli@${version}`.  This installation is retried up to three times with a two-second backoff between attempts to handle transient network issues.
+    3.  Verifies the installation by running `sf version`.
+    4.  Throws an error if the installation fails, indicating a potential issue with the NPM registry.
+*   **Output:** None.
 
-*   **`install(version?: string)`:**
-    *   Installs the Salesforce CLI if it is not already installed.
-    *   The optional `version` parameter allows you to specify a specific version of the CLI to install (e.g., "7.100.0"). If no version is provided, the latest version is installed.
-    *   You should call this method before attempting to install plugins.
-*   **`installPlugins(config: ProtocolConfig, plugins: string[])`:**
-    *   Installs a list of Salesforce CLI plugins.
-    *   The `config` parameter provides configuration details, including plugin whitelist settings and version constraints.
-    *   The `plugins` parameter is an array of plugin names to install.
-    *   This method validates plugins against the configured whitelist (if present) and installs them with any specified version constraints.
+### `installPlugins(config, plugins)` Method
 
-**Configuration**
+Installs a list of Salesforce CLI plugins.
 
-The behavior of the Runtime Environment is influenced by the `ProtocolConfig` object, specifically the `governance` property.
+*   **Parameters:**
+    *   `config`: A configuration object containing governance settings, including a plugin whitelist.
+    *   `plugins`: An array of strings, where each string represents the name of a plugin to install.
+*   **Functionality:**
+    1.  If the `plugins` array is empty, the method returns without action.
+    2.  Iterates through the provided `plugins` array.
+    3.  For each plugin:
+        *   Validates the plugin against a configured whitelist (if one exists). If no whitelist is configured, the plugin is installed without validation.
+        *   If a whitelist is configured, the plugin must be present in the whitelist to proceed.  If not, an error is thrown.
+        *   Retrieves any version constraints for the plugin from the configuration.
+        *   Constructs the installation command, including the version constraint if specified.
+        *   Installs the plugin using `sf plugins install`.
+        *   Verifies the installation by listing installed plugins using `sf plugins --json` and confirming the presence of the newly installed plugin.
+        *   Throws an error if the installation or verification fails.
+*   **Output:** None.
 
-*   **`governance.plugin_whitelist`:** An array of strings representing the allowed plugin names. If this array is empty or not defined, plugin installation proceeds without whitelisting.
+### `execWithAutoConfirm(command, args)` Method
 
-**Error Handling**
+Executes a shell command with automatic confirmation of any prompts.
 
-The Runtime Environment includes robust error handling.  Installation failures will result in exceptions with descriptive error messages.  These messages will assist in diagnosing and resolving issues.
+*   **Parameters:**
+    *   `command`: The command to execute (e.g., "sf").
+    *   `args`: An array of arguments to pass to the command.
+*   **Functionality:**
+    1.  Constructs the full command string.
+    2.  Prepends `echo y |` to the command on non-Windows platforms and `echo y|` on Windows to automatically answer "yes" to any prompts.
+    3.  Executes the command using `exec.exec`.
+*   **Output:** None.
 
-**Platform Support**
+## Error Handling
 
-This Runtime Environment is designed to function across multiple platforms, including Windows, macOS, and Linux. It adapts its execution commands based on the detected operating system.
+The service incorporates robust error handling:
+
+*   Installation failures are retried.
+*   Plugin installation failures result in detailed error messages.
+*   Whitelist validation prevents the installation of unauthorized plugins.
+*   Installation verification ensures that plugins are installed correctly.
+
+## Configuration
+
+The `ProtocolConfig` object provides configuration options, including:
+
+*   `governance.plugin_whitelist`: An array of strings representing allowed plugin names. If this is empty or not present, plugins are installed without validation.

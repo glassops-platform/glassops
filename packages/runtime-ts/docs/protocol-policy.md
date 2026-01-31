@@ -5,48 +5,98 @@ origin: packages/runtime-ts/src/protocol/policy.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime-ts/src/protocol/policy.ts
-generated_at: 2026-01-31T09:14:34.716270
+generated_at: 2026-01-31T10:11:07.724962
 hash: 010bcd70ed0165b80fec5d3c7beef6127deacdd2ca8158e77fc56047f2ebd024
 ---
 
 ## Protocol Policy Document
 
-This document details the Protocol Policy component, responsible for governing runtime behavior and enforcing operational constraints. It provides a centralized mechanism for managing Salesforce development and deployment processes.
+This document details the Protocol Policy component, responsible for governing runtime behavior and enforcing operational constraints. It provides a mechanism for configuring and validating Salesforce development and deployment processes.
 
-**Overview**
+### Overview
 
-The Protocol Policy component manages configuration settings related to governance and runtime environments. It allows administrators to define rules for plugin usage, schedule deployment freezes, and control analyzer behavior.  The policy is loaded from a configuration file, defaulting to an unsafe policy if the file is not found.
+The Protocol Policy component manages configuration settings related to governance and runtime environments. It allows administrators to define rules for plugin usage, schedule deployment freezes, and control analyzer behavior.  I provide a centralized location for defining and enforcing these policies.
 
-**Configuration**
+### Configuration
 
-The system’s behavior is determined by a JSON configuration file, validated against a defined schema. Key configuration sections include:
+The policy is driven by a JSON configuration file, `devops-config.json`, located by default in the `config` directory within the workspace (or as specified by the `GLASSOPS_CONFIG_PATH` environment variable). The configuration adheres to the following schema:
 
-*   **Governance:** Controls operational restrictions.
-    *   `enabled`: A boolean flag to enable or disable governance features. Defaults to `true`.
-    *   `freeze_windows`: Defines time periods during which deployments are blocked. Each window specifies a `day` of the week and a `start` and `end` time (HH:MM format).
-    *   `plugin_whitelist`:  An optional list of allowed Salesforce CLI plugins, potentially including version constraints (e.g., `sfdx-hardis@^4.0.0`). If empty, all plugins are permitted.
-    *   `analyzer`: Configures the code analyzer.
-        *   `enabled`: Enables or disables the analyzer. Defaults to `false`.
-        *   `severity_threshold`: Sets the minimum severity level for analyzer findings (1-3). Defaults to `1`.
-        *   `rulesets`: An optional array of rulesets to apply.
-        *   `opinionated`:  Determines whether the `sf code-analyzer` is preferred over `sf scanner`. Defaults to `true`.
-*   **Runtime:** Specifies runtime environment settings.
-    *   `cli_version`: The desired Salesforce CLI version. Defaults to `latest`.
-    *   `node_version`: The Node.js version to use. Defaults to `20`.
+```json
+{
+  "governance": {
+    "enabled": true,
+    "freeze_windows": [
+      {
+        "day": "Monday",
+        "start": "09:00",
+        "end": "17:00"
+      }
+    ],
+    "plugin_whitelist": [
+      "sfdx-hardis@^4.0.0",
+      "@salesforce/plugin-deploy-retrieve"
+    ],
+    "analyzer": {
+      "enabled": false,
+      "severity_threshold": 1,
+      "rulesets": [
+        "namespace1/rule1",
+        "namespace2/rule2"
+      ],
+      "opinionated": true
+    }
+  },
+  "runtime": {
+    "cli_version": "latest",
+    "node_version": "20"
+  }
+}
+```
 
-**Functionality**
+**Configuration Details:**
 
-The Protocol Policy component provides the following core functions:
+*   **governance.enabled**:  A boolean indicating whether governance features are active. Defaults to `true`.
+*   **governance.freeze_windows**: An optional array of objects defining time windows during which deployments are blocked. Each object requires a `day` (Monday-Sunday), `start` (HH:MM), and `end` (HH:MM) time.
+*   **governance.plugin_whitelist**: An optional array of strings representing allowed Salesforce CLI plugins. Version constraints can be included (e.g., `sfdx-hardis@^4.0.0`).
+*   **governance.analyzer.enabled**: A boolean indicating whether the analyzer is enabled. Defaults to `false`.
+*   **governance.analyzer.severity_threshold**: An integer (1-3) defining the minimum severity level for analyzer findings to be reported. Defaults to `1`.
+*   **governance.analyzer.rulesets**: An optional array of strings specifying the rulesets to be used by the analyzer.
+*   **governance.analyzer.opinionated**: A boolean indicating whether to prioritize the `sf code-analyzer` over the `sf scanner`. Defaults to `true`.
+*   **runtime.cli_version**: The desired Salesforce CLI version. Defaults to `latest`.
+*   **runtime.node_version**: The desired Node.js version. Defaults to `20`.
 
-*   **Configuration Loading:**  Loads the configuration from a JSON file specified by the `GLASSOPS_CONFIG_PATH` environment variable, or defaults to `config/devops-config.json`.  If the file is missing, a default, less restrictive policy is applied.  Invalid configuration files will result in an error.
-*   **Deployment Freeze Check:**  Evaluates whether the current time falls within a defined freeze window. If a match is found, deployment is blocked with an error message.  This function uses UTC time for consistency.
-*   **Plugin Whitelist Validation:**  Determines whether a given plugin is permitted based on the configured whitelist. If no whitelist is defined, all plugins are allowed.
-*   **Plugin Version Constraint Retrieval:**  If a plugin is whitelisted with a version constraint, this function retrieves that constraint.
+### Core Functionality
 
-**Usage**
+*   **Loading Configuration:** The `load()` method reads the configuration file and validates it against the defined schema. If the file is missing, a default, less restrictive policy is applied. Errors during file reading or schema validation result in exceptions.
+*   **Freeze Window Check:** The `checkFreeze()` method evaluates whether the current time falls within a defined freeze window. If a match is found, an error is thrown, blocking further execution.  This method uses UTC for consistent behavior.
+*   **Plugin Whitelist Validation:** The `validatePluginWhitelist()` method determines if a given plugin is allowed based on the configured whitelist. If no whitelist is defined, all plugins are permitted.
+*   **Version Constraint Retrieval:** The `getPluginVersionConstraint()` method retrieves the version constraint associated with a specific plugin from the whitelist, if available.
 
-You can interact with the Protocol Policy component through its class methods.  After instantiating the `ProtocolPolicy` class, you should call the `load()` method to retrieve the configuration.  Then, you can use the `checkFreeze()`, `validatePluginWhitelist()`, and `getPluginVersionConstraint()` methods to enforce governance rules.
+### Usage
 
-**Error Handling**
+You can instantiate the `ProtocolPolicy` class and use its methods to enforce policies within your workflows. For example:
 
-The component includes error handling for invalid configuration files and deployment freeze violations.  Warnings are issued if the configuration file is not found.  Detailed error messages are provided to aid in troubleshooting.
+```typescript
+import { ProtocolPolicy } from './policy';
+
+const policy = new ProtocolPolicy();
+
+try {
+  const config = await policy.load();
+  policy.checkFreeze(config);
+
+  if (!policy.validatePluginWhitelist(config, 'sfdx-cli')) {
+    throw new Error('Plugin not allowed');
+  }
+
+  const versionConstraint = policy.getPluginVersionConstraint(config, 'sfdx-hardis');
+  console.log(`Version constraint for sfdx-hardis: ${versionConstraint}`);
+
+} catch (error) {
+  core.setFailed(error.message);
+}
+```
+
+### Error Handling
+
+The component includes robust error handling. Invalid configuration files or violations of governance rules will result in descriptive error messages, facilitating troubleshooting and policy correction.

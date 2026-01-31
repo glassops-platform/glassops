@@ -5,44 +5,52 @@ origin: packages/runtime/internal/integration/contract_test.go
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/integration/contract_test.go
-generated_at: 2026-01-31T09:05:37.976781
+generated_at: 2026-01-31T10:01:39.001623
 hash: 7ab1e02da31199caf92781e9d2d113b04fe958b0db1d429763f36d052718bce2
 ---
 
 ## Integration Test Documentation: Contract Validation
 
-This document details the integration tests for the contract package. These tests verify the behavior of the `contract` package, ensuring it functions as expected when interacting with external components and validating data.
+This document details the integration tests for the contract package, focusing on validation and serialization functionality. The purpose of these tests is to ensure the contract object behaves as expected and enforces defined constraints.
 
-**Package Responsibilities:**
+**Package Responsibility:**
 
-The `integration` package contains tests that confirm the correct operation of the `contract` package. It focuses on validating the contract structure, data constraints, and serialization capabilities. These tests are designed to catch integration issues early in the development process.
+The `integration` package contains tests that verify the interaction between the components and the `contract` package. These tests are designed to confirm that the contract object can be created, validated, and serialized correctly.
 
-**Key Types and Interfaces:**
+**Key Types and Structures:**
 
-This package primarily interacts with types defined in the `github.com/glassops-platform/glassops/packages/runtime/internal/contract` package.  Specifically, the `contract.Contract` type is central to these tests.  The `contract.Contract` represents the agreement between different parts of the system, defining quality and audit criteria.
+The primary type involved in these tests is the `contract.Contract` struct (defined in the `github.com/glassops-platform/glassops/packages/runtime/internal/contract` package). This struct represents the core data structure for defining and validating operational agreements.  Key fields within the `Contract` struct, as tested here, include:
+
+*   `SchemaVersion`:  A string representing the version of the contract schema.
+*   `Status`: A string indicating the current status of the contract (e.g., "Succeeded", "Failed").
+*   `Meta`: A nested struct containing metadata about the contract, including the `Engine` used.
+*   `Quality`: A nested struct containing quality metrics, such as `Coverage` and `Tests`.
+*   `Audit`: A nested struct containing audit information, such as `TriggeredBy`, `OrgID`, and `Repository`.
 
 **Important Functions and Behavior:**
 
-The core of this package is the `TestContractIntegration` function, which houses a suite of sub-tests.  These sub-tests cover the following scenarios:
-
-*   **Creates Valid Contract with Defaults:** This test verifies that a newly created contract, using `contract.New()`, is initialized with sensible default values for key fields like `SchemaVersion`, `Status`, and `Meta` information.
-*   **Validates Contract Status:** This test checks the `Validate()` method’s behavior when provided with different status values. It confirms that valid statuses ("Succeeded", "Failed", "Blocked") are accepted, while invalid or empty statuses trigger an error.
-*   **Validates Engine Types:** Similar to the status validation, this test validates the `Validate()` method’s behavior with different engine types. It ensures that allowed engine types ("native", "hardis", "custom") pass validation, and invalid or empty types result in an error.
-*   **Validates Coverage Bounds:** This test validates the `Validate()` method when provided with different coverage values (actual and required). It verifies that negative or values exceeding 100% for both actual and required coverage trigger errors, while valid values are accepted.
-*   **Serializes to JSON:** This test confirms that a contract instance can be successfully serialized into JSON format using the `ToJSON()` method. It checks for a non-empty JSON output.
-*   **Contract with Test Data:** This test uses predefined test data structures (`TestData`) to populate a contract and then validates it. It verifies that the contract is valid when populated with good data and that the `Met` field is correctly calculated based on coverage values.
-*   **Failing Coverage Scenario:** This test specifically checks a scenario where coverage requirements are not met, ensuring the `Met` field is correctly set to false.
+*   `contract.New()`: This function creates a new `Contract` object with default values. The tests verify that these defaults are set correctly (schema version, status, engine).
+*   `contract.Validate()`: This function validates the `Contract` object, checking for invalid values in various fields.  The tests extensively use this function with different input values to confirm expected error conditions and successful validation.
+*   `contract.ToJSON()`: This function serializes the `Contract` object into a JSON string. The tests verify that the serialization process does not result in errors and produces a non-empty JSON output.
 
 **Error Handling:**
 
-The tests extensively use the `error` type returned by the `Validate()` and `ToJSON()` methods.  The tests assert that errors are returned when invalid data is provided, and that no errors are returned when valid data is used.  Specific error messages are not validated, only the presence or absence of an error.
+The `Validate()` function is central to error handling.  The tests systematically check that `Validate()` returns an error when invalid data is provided (e.g., an invalid status string, an unsupported engine type, negative coverage values).  Conversely, the tests confirm that `Validate()` does *not* return an error when valid data is provided.  The tests use `t.Errorf` to report validation failures, providing details about the expected and actual results.
 
-**Concurrency:**
+**Test Cases and Scenarios:**
 
-This package does not employ goroutines or channels, and therefore does not exhibit concurrent behavior. The tests are sequential and operate on single contract instances.
+The integration tests cover the following scenarios:
+
+*   **Default Values:** Verifies that a newly created contract has the expected default values for schema version, status, and engine.
+*   **Status Validation:** Tests the validation of the `Status` field, ensuring that only allowed values are accepted.
+*   **Engine Validation:** Tests the validation of the `Meta.Engine` field, ensuring that only supported engine types are accepted.
+*   **Coverage Validation:** Tests the validation of `Quality.Coverage.Actual` and `Quality.Coverage.Required`, ensuring that values are non-negative and within acceptable bounds. It also verifies the `Met` field is correctly calculated.
+*   **JSON Serialization:** Tests the serialization of a contract object to JSON, verifying that the process is successful and produces valid output.
+*   **Test Data Integration:** Demonstrates how to populate the contract with data from external test data structures (`TestData`) and validate the resulting contract.
+*   **Failing Coverage Scenario:** Specifically tests a scenario where coverage requirements are not met, verifying the correct behavior of the `Met` field.
 
 **Design Decisions:**
 
-*   **Table-Driven Tests:** The tests for status, engine, and coverage validation are implemented using a table-driven approach. This makes the tests more concise, readable, and easier to extend with new test cases.
-*   **Test Data Structures:** The use of `TestData` structures promotes code reuse and makes it easier to manage and update test data.
-*   **Focus on Validation:** The tests primarily focus on validating the contract’s data and ensuring that the `Validate()` method correctly enforces the defined constraints.
+*   **Table-Driven Tests:** The tests for status, engine, and coverage validation use a table-driven approach, making it easy to add new test cases and maintain the tests.
+*   **Clear Error Messages:** The tests provide informative error messages that clearly indicate the expected and actual values when a test fails.
+*   **Skip in Short Mode:** The entire test suite is skipped when running in short mode (`testing.Short()`), allowing for faster testing during development.

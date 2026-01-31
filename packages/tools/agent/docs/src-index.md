@@ -5,7 +5,7 @@ origin: packages/tools/agent/src/index.ts
 last_modified: 2026-01-31
 generated: true
 source: packages/tools/agent/src/index.ts
-generated_at: 2026-01-31T09:23:01.433678
+generated_at: 2026-01-31T10:20:14.426234
 hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 ---
 
@@ -13,29 +13,38 @@ hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 
 **Overview**
 
-This tool is an automated agent designed to produce documentation and metadata for GlassOps projects. It analyzes source code and related files within a repository to create up-to-date documentation assets.
+This tool is an AI-powered agent designed to automatically generate documentation and metadata for GlassOps projects. It analyzes source code and related files to produce up-to-date and informative documentation.
 
-**Purpose**
+**Key Features**
 
-The agent simplifies the process of maintaining accurate and comprehensive documentation, reducing the manual effort required for project onboarding, knowledge sharing, and overall maintainability.
+*   **Automated Documentation:** Simplifies the process of creating and maintaining documentation.
+*   **Multi-Language Support:** Supports TypeScript, Python, JavaScript, Terraform, YAML, JSON, Markdown, and other common file types.
+*   **Configurable Patterns:** Allows you to specify which files and directories should be included in the documentation generation process.
+*   **Error Handling:** Provides informative error messages to assist with troubleshooting.
 
-**Installation & Execution**
+**Installation**
 
-The agent is designed to be executed from the command line. Ensure Node.js and npm are installed on your system. Installation is typically handled through npm package management.
+This tool is designed to be used as a command-line application. Installation instructions will be provided with the distribution package.
 
-**Command-Line Interface**
+**Usage**
 
-The primary command is `glassops-agent`.
+The primary command is `glassops-agent generate`.
 
-*   `glassops-agent generate [patterns...]`
+**Command: `generate [patterns...]`**
 
-    This command initiates the documentation generation process.
+This command initiates the documentation generation process.
 
-    *   `[patterns...]` (Optional):  A space-separated list of file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used (see “Default File Patterns” below).  You can specify patterns like `'packages/**/*.ts'` to focus on TypeScript files within the `packages` directory.
+*   **Description:** Generates documentation for the repository.
+*   **Arguments:**
+    *   `patterns` (optional): One or more file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used. Patterns are glob-style.
+*   **Example:**
+
+    *   `glassops-agent generate` – Generates documentation using the default file patterns.
+    *   `glassops-agent generate 'src/**/*.ts' 'docs/**/*.md'` – Generates documentation only for TypeScript files in the `src` directory and Markdown files in the `docs` directory.
 
 **Default File Patterns**
 
-If no patterns are specified during the `generate` command, the agent will process files matching the following patterns:
+If you do not specify any patterns, the following file types will be included by default:
 
 *   `packages/**/*.ts`
 *   `packages/**/*.py`
@@ -53,24 +62,18 @@ If no patterns are specified during the `generate` command, the agent will proce
 *   `scripts/**/*.ts`
 *   `*.py`
 
-**Operation**
+**Technical Details**
 
-1.  **Root Directory Detection:** The agent automatically determines the root directory of the GlassOps project. It assumes a project structure where the agent’s execution location is four levels deep from the root.
-2.  **Pattern Application:** The agent applies the provided (or default) file patterns to identify relevant files within the project.
-3.  **Documentation Generation:** The agent analyzes the identified files and generates documentation. The specific output format and content are managed internally by the agent’s core logic.
-4.  **Error Handling:**  If an error occurs during the process, the agent will display an error message to the console and exit with a non-zero status code.
+The agent determines the project root directory automatically by traversing up four levels from its own location. This ensures accurate documentation generation even when the agent is executed from within a nested directory structure.
 
-**Dependencies**
+**Error Handling**
 
-The agent relies on the following dependencies:
+If an error occurs during the documentation generation process, the agent will display an error message to the console, including the error stack trace if available. The process will then exit with a non-zero exit code.
 
-*   Commander: For parsing command-line arguments.
-*   Built-in Node.js modules: `url`, `path`.
+**Future Enhancements**
 
-**Maintainability**
+We plan to add support for additional file types and customization options in future releases. We are also exploring integration with other documentation tools and platforms.
 
-I am designed for ongoing maintenance and improvement. Updates will include new features, bug fixes, and support for additional file types. We are committed to providing a reliable and effective documentation solution for GlassOps projects.
+**Support**
 
-**Error Reporting**
-
-If you encounter issues or have suggestions for improvement, please report them through the project’s issue tracker. Include detailed information about the problem, including the command used, any error messages, and your project’s structure.
+For questions or issues, please consult the project’s support channels.

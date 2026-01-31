@@ -5,43 +5,50 @@ origin: packages/runtime/internal/services/cli.go
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/services/cli.go
-generated_at: 2026-01-31T09:07:58.341380
+generated_at: 2026-01-31T10:03:57.856378
 hash: bdffb7a1ab67d92a28eb7709a10ddc33e93f9484d200010ddb9f2d4eb003dcb0
 ---
 
 ## GlassOps Runtime Environment Service Documentation
 
-This document details the `RuntimeEnvironment` service, responsible for managing the Salesforce CLI and its associated plugins. It provides an overview of the service’s purpose, key components, and functionality.
+This document details the `services` package, specifically the `RuntimeEnvironment` service, responsible for managing the Salesforce CLI and its plugins. This service ensures the necessary tools are present and configured correctly for GlassOps operations.
 
 **Package Purpose:**
 
-The `services` package contains implementations of runtime services for GlassOps. This specific service, `RuntimeEnvironment`, focuses on ensuring the Salesforce CLI is installed and configured correctly, along with the necessary plugins defined by policy.
+The `services` package provides implementations for runtime services within GlassOps. The `RuntimeEnvironment` within this package focuses on the installation and management of the Salesforce CLI (sf) and associated plugins.
 
-**Key Types and Interfaces:**
+**Key Types:**
 
-*   **`RuntimeEnvironment` struct:** This structure encapsulates the runtime environment’s state, currently storing the operating system platform. It provides methods for installing the CLI and managing plugins.
-*   **`policy.Config` struct:** (From the `policy` package) Represents the configuration settings related to governance, including plugin whitelists and version constraints.
-*   **`policy.PolicyEngine` interface:** (From the `policy` package) Provides methods for validating plugins against configured policies, such as checking the whitelist and retrieving version constraints.
+*   **`RuntimeEnvironment`**: This struct encapsulates the runtime environment’s configuration. Currently, it stores the operating system (`platform`) detected from the `GOOS` environment variable. This allows for platform-specific command execution.
 
-**Important Functions and Behavior:**
+**Important Functions:**
 
-*   **`NewRuntimeEnvironment()`:**  This function creates and returns a new `RuntimeEnvironment` instance, initializing it with the operating system detected from the `GOOS` environment variable.
-*   **`Install(version string)`:** This function installs the Salesforce CLI (`sf`) if it is not already present on the system. It accepts an optional version string; if none is provided, it defaults to installing the latest version.  The installation is performed using `npm install -g @salesforce/cli@version`. It includes retry logic with exponential backoff to handle transient network issues during the installation process.  After installation, it verifies the installation by running `sf version`.
-*   **`InstallPlugins(config *policy.Config, plugins []string)`:** This function installs a list of Salesforce CLI plugins. It iterates through the provided plugin list, performing the following steps for each plugin:
-    *   **Policy Validation:** Checks if a plugin whitelist is configured. If so, it validates the plugin against the whitelist using the `policy.PolicyEngine`. If a version constraint is defined in the policy, it appends it to the plugin name during installation. If no whitelist is configured, a warning is logged.
-    *   **Plugin Installation:** Installs the plugin using `sf plugins install plugin`.
-    *   **Installation Verification:**  Verifies the installation by running `sf plugins --json` and parsing the output to confirm the plugin is listed as installed. It handles potential variations in the JSON output format.
-*   **`execWithAutoConfirm(command string, args []string)`:** This helper function executes a shell command with automatic confirmation for prompts. It handles differences between Windows and other operating systems by using `echo y|` on non-Windows systems and `echo y|` within `cmd /c` on Windows. This is used to bypass prompts during plugin installation.
+*   **`NewRuntimeEnvironment()`**: This function creates and returns a new instance of the `RuntimeEnvironment` struct, initializing the `platform` field with the value of the `GOOS` environment variable.
+
+*   **`Install(version string)`**: This function installs the Salesforce CLI if it is not already present on the system.
+    *   It first checks if `sf` is in the system’s PATH. If found, it skips the installation.
+    *   If a `version` is provided, it attempts to install that specific version. If no version is given, it defaults to installing the “latest” version.
+    *   The installation is performed using `npm install -g @salesforce/cli@<version>`.
+    *   The function includes retry logic with exponential backoff to handle transient network issues during the `npm install` process. It retries up to three times.
+    *   After installation, it verifies the installation by running `sf version`.
+    *   Errors are returned if the installation or verification fails.
+
+*   **`InstallPlugins(config *policy.Config, plugins []string)`**: This function installs and validates a list of Salesforce CLI plugins.
+    *   It iterates through the provided `plugins` slice.
+    *   It checks a plugin whitelist defined in the provided `policy.Config`. If a whitelist is configured, it validates that each plugin is present in the whitelist using the `policyEngine.ValidatePluginWhitelist` method.  Version constraints from the policy are also applied.
+    *   If no whitelist is configured, a warning is logged, and the plugin is installed without validation.
+    *   Plugins are installed using `sf plugins install <plugin>`.
+    *   After installation, the function verifies the installation by running `sf plugins --json` and parsing the output to confirm the plugin is listed as installed. It handles two possible JSON output formats.
+    *   Errors are returned if plugin installation or verification fails.
+
+*   **`execWithAutoConfirm(command string, args []string)`**: This helper function executes a shell command with automatic confirmation for prompts.
+    *   It constructs the full command string, quoting each argument to handle spaces and special characters.
+    *   It uses different shell commands based on the operating system (`platform`). On Windows, it uses `cmd /c "echo y| <command>"`. On other systems, it uses `sh -c "echo y | <command>"`. This automatically answers "yes" to any prompts during command execution.
+    *   It returns an error if the command execution fails.
 
 **Error Handling:**
 
-The service employs robust error handling:
-
-*   Functions return explicit `error` values to indicate failure.
-*   Errors are wrapped using `fmt.Errorf("%w", err)` to preserve the original error context.
-*   The `Install` function includes retry logic for transient network errors.
-*   Plugin installation failures result in informative error messages including the plugin name and the underlying error.
-*   JSON parsing errors during plugin verification are handled with fallback logic to accommodate different output formats.
+The service employs standard Go error handling practices. Functions return an `error` value to indicate failure. Errors are often wrapped using `fmt.Errorf("%w", err)` to provide context and preserve the original error for debugging.  Retry logic is implemented in the `Install` function to handle transient errors.
 
 **Concurrency:**
 
@@ -49,7 +56,7 @@ This service does not currently employ explicit concurrency patterns like gorout
 
 **Design Decisions:**
 
-*   **npm as Installation Method:** The Salesforce CLI is installed using `npm` because it is a common package manager and simplifies the installation process.
-*   **Automatic Confirmation:** The `execWithAutoConfirm` function is used to automatically answer prompts during plugin installation, enabling unattended operation.
-*   **Plugin Verification:**  The service verifies plugin installations by parsing the output of `sf plugins --json` to ensure reliability.
-*   **Policy Integration:** The service integrates with a policy engine to enforce governance rules regarding plugin usage.
+*   **Platform-Specific Execution:** The `execWithAutoConfirm` function uses different shell commands based on the operating system to ensure compatibility.
+*   **Plugin Whitelisting:** The use of a plugin whitelist provides a governance mechanism to control which plugins can be installed, enhancing security and stability.
+*   **Installation Verification:**  The service verifies plugin installations by parsing the output of `sf plugins --json` to ensure that the plugins are correctly installed and reported by the CLI.
+*   **Retry Logic:** The `Install` function includes retry logic to handle intermittent network issues during the `npm install` process.

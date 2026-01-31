@@ -1,21 +1,21 @@
-# GlassOps Runtime (`@glassops/runtime`)
+# GlassOps Runtime
 
 > [!CAUTION]
 > **DEPRECATED:** The TypeScript implementation of the runtime is now fully deprecated.
 > All new development has moved to the **Go-based architecture**.
 >
-> For the legacy TypeScript implementation, see [@glassops/runtime-ts](../runtime-ts).
+> For the legacy TypeScript implementation, see [runtime-ts](../runtime-ts).
 
 > **The Bootstrapping Primitive for Secure, Governed Execution.**
 
 **Status:** Alpha (Re-implemented in Go)
 **Version:** 2.0.0
 
-The Runtime is the _only_ trusted primitive in the ecosystem. It is responsible for bootstrapping a secure environment where untrusted adapters can run.
+The Runtime is designed as a trusted primitive in the ecosystem. It is responsible for bootstrapping a secure environment where untrusted adapters can run.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The Runtime executes in **4 Strictly Defined Phases**:
 
@@ -37,7 +37,7 @@ The Runtime executes in **4 Strictly Defined Phases**:
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ```yaml
 - name: Boostrap Runtime
@@ -50,7 +50,7 @@ The Runtime executes in **4 Strictly Defined Phases**:
 
 ---
 
-## ⚙️ Inputs & Outputs
+## Inputs & Outputs
 
 | Input       | Required | Description                       |
 | ----------- | -------- | --------------------------------- |
@@ -65,7 +65,7 @@ The Runtime executes in **4 Strictly Defined Phases**:
 
 ---
 
-## 🛡️ Security Model
+## Security Model
 
 - **Zero-Trust:** The Runtime assumes the environment is hostile. It validates every input.
 - **Secret Isolation:** This Action is the _only_ one that requires the Private Key. Adapters generally do not need the private key if they reuse the session.

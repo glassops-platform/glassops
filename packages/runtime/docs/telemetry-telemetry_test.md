@@ -5,43 +5,45 @@ origin: packages/runtime/internal/telemetry/telemetry_test.go
 last_modified: 2026-01-31
 generated: true
 source: packages/runtime/internal/telemetry/telemetry_test.go
-generated_at: 2026-01-31T09:10:49.909310
+generated_at: 2026-01-31T10:06:57.808549
 hash: 32936707e300d67e620fffac350f9a49781e0acc63fd0680f537f440505e41a0
 ---
 
 ## Telemetry Package Documentation
 
-This package provides a lightweight wrapper around OpenTelemetry for application tracing and telemetry data collection. It aims to simplify the integration of tracing into applications without imposing strict requirements on the tracing backend. We designed it to function gracefully even when a full tracing setup is not available.
+This package provides functionality for integrating OpenTelemetry tracing into applications. It manages the initialization, shutdown, and interaction with the OpenTelemetry tracer. The primary goal is to offer a simple and robust way to add distributed tracing without requiring extensive configuration or impacting application behavior when tracing is not fully set up.
 
-**Package Responsibilities:**
+**Key Types**
 
-*   Initialization and shutdown of the OpenTelemetry tracer.
-*   Providing functions to access the current span within a given context.
-*   Adding events to the current span.
-*   Executing functions within the context of a new span.
+*   `testError`: A custom error type used solely for testing purposes to simulate errors within spans. It implements the `error` interface, allowing it to be returned from functions.
 
-**Key Types:**
+**Interfaces**
 
-*   `testError`: A custom error type used solely for testing purposes to simulate errors within span execution. It implements the `error` interface.
+This package does not define any custom interfaces. It directly uses the `trace.Span` interface from the `go.opentelemetry.io/otel/trace` package.
 
-**Important Functions:**
+**Functions**
 
-*   `Init(ctx context.Context, serviceName string, version string) error`: Initializes the OpenTelemetry tracer. It takes the context, service name, and service version as input. If the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is not set, it initializes a tracer without an exporter, effectively creating a no-op tracer.  It returns an error if initialization fails, but is designed to succeed silently when no endpoint is configured.
-*   `Shutdown(ctx context.Context) error`: Shuts down the OpenTelemetry tracer. It gracefully handles cases where the tracer was never initialized, preventing panics. It returns an error if shutdown fails, but will not return an error if the tracer was never initialized.
-*   `GetCurrentSpan(ctx context.Context) trace.Span`: Retrieves the currently active span from the provided context. If no span is active, it returns a no-op span, ensuring the application does not panic.
-*   `AddSpanEvent(ctx context.Context, name string)`: Adds an event to the current span. It handles cases where no span is active without causing a panic.
-*   `WithSpan(ctx context.Context, operationName string, fn func(context.Context, trace.Span) (string, error)) (string, error)`: Executes the provided function `fn` within the context of a new span. It automatically starts and ends the span.  It handles cases where the tracer is not initialized, still executing the function and returning its result. If the function `fn` returns an error, `WithSpan` propagates that error.
+*   `Init(ctx context.Context, serviceName string, version string) error`: This function initializes the OpenTelemetry tracer. It takes the context, service name, and version as input. It attempts to configure the tracer based on environment variables (specifically `OTEL_EXPORTER_OTLP_ENDPOINT`). If the endpoint is not set, it initializes a no-op tracer, allowing the application to run without requiring a tracing backend. It returns an error if initialization fails, but is designed to succeed silently when no endpoint is provided.
 
-**Error Handling:**
+*   `Shutdown(ctx context.Context) error`: This function shuts down the OpenTelemetry tracer, flushing any pending data. It is safe to call even if `Init` has not been called, preventing panics. It returns an error if shutdown fails, but will not return an error if the tracer was never initialized.
 
-The package prioritizes graceful error handling. Functions are designed to avoid panics, even in situations where the OpenTelemetry tracer is not fully configured. Errors are returned when appropriate, allowing the calling code to handle them.  Custom error types, like `testError`, are used in testing to simulate specific error scenarios.
+*   `GetCurrentSpan(ctx context.Context) trace.Span`: This function retrieves the currently active OpenTelemetry span from the provided context. If no span is active, it returns a no-op span, ensuring that accessing the span does not cause a panic.
 
-**Concurrency:**
+*   `AddSpanEvent(ctx context.Context, name string) `: This function adds an event to the currently active span. It gracefully handles cases where no span is active, preventing panics.
 
-This package itself does not explicitly manage goroutines or channels. However, OpenTelemetry, which this package wraps, is inherently concurrency-safe. The context passed to functions within this package is used to propagate tracing information across concurrent operations managed by the application.
+*   `WithSpan(ctx context.Context, name string, fn func(context.Context, trace.Span) (string, error)) (string, error)`: This function creates a new OpenTelemetry span, executes a provided function within that span’s context, and returns the function’s result. It handles cases where the tracer has not been initialized by creating a no-op span. It also propagates any errors returned by the provided function. The function `fn` receives the context and the created span as arguments.
 
-**Design Decisions:**
+**Error Handling**
 
-*   **No-op Tracer:** We chose to support a no-op tracer when a tracing endpoint is not configured. This allows applications to be deployed in environments where tracing is not available without requiring code changes.
-*   **Graceful Degradation:** Functions are designed to handle missing spans or uninitialized tracers without panicking, providing a more robust experience.
-*   **Simplified Interface:** The package provides a simple and intuitive interface for common tracing operations, reducing the complexity of integrating OpenTelemetry into applications.
+The package employs a non-panicking error handling strategy. Functions are designed to return errors when appropriate, but will often succeed with a no-op implementation if a dependency (like a tracing endpoint) is unavailable. Custom error types, like `testError`, are used in tests to simulate specific error conditions.
+
+**Concurrency**
+
+The package itself does not explicitly manage goroutines or channels. However, the underlying OpenTelemetry SDK may use concurrency internally for tasks such as exporting trace data. The `context.Context` is used for managing cancellation and deadlines, which can interact with concurrent operations within the OpenTelemetry SDK.
+
+**Design Decisions**
+
+*   **No-op Tracer:** The package prioritizes graceful degradation. When a tracing endpoint is not configured, it initializes a no-op tracer. This allows applications to run without requiring a tracing backend and avoids runtime errors.
+*   **Safe Access to Spans:** Functions like `GetCurrentSpan` and `AddSpanEvent` are designed to be safe to call even when no span is active, preventing panics.
+*   **Simplified Interface:** The package provides a minimal set of functions to manage OpenTelemetry tracing, making it easy to integrate into existing applications.
+*   **Context Propagation:** The package relies heavily on `context.Context` for propagating tracing information. You should ensure that contexts are properly managed throughout your application.
