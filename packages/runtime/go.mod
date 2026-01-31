@@ -1,6 +1,6 @@
 module github.com/glassops-platform/glassops/packages/runtime
 
-go 1.23
+go 1.25
 
 require (
 	go.opentelemetry.io/otel v1.24.0

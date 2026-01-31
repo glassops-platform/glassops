@@ -71,7 +71,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v5
               with:
-                  go-version: '1.23'
+                  go-version: '1.25'
                   cache-dependency-path: ${{ env.RUNTIME_DIR }}/go.sum
 
             - name: Run Go Vet
@@ -113,7 +113,7 @@ jobs:
             - name: Setup Go for Security Scan
               uses: actions/setup-go@v5
               with:
-                  go-version: '1.23'
+                  go-version: '1.25'
 
             - name: Run Go Vulnerability Check
               working-directory: ${{ env.RUNTIME_DIR }}
