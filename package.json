@@ -38,8 +38,8 @@
         "docs:generate-map": "node scripts/verify-docs.js generate",
         "docs:validate": "node scripts/verify-docs.js",
         "docs:regen": "node scripts/verify-docs.js generate && node scripts/verify-docs.js",
-        "docs:ai": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py --generate",
-        "knowledge:pipeline": "packages\\knowledge\\venv\\Scripts\\python.exe packages/knowledge/main.py",
+        "docs:ai": "python packages/knowledge/main.py --generate",
+        "knowledge:pipeline": "python packages/knowledge/main.py",
         "knowledge:index": "npm run knowledge:pipeline -- --index",
         "knowledge:ask": "npm run knowledge:pipeline --",
         "precommit": "npm run docs:validate"

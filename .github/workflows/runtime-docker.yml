@@ -61,40 +61,31 @@ jobs:
                     glassops/runtime:test || echo "Container exited (expected without full config)"
 
     test:
-        name: Unit Tests & Linting
+        name: Go Unit Tests & Linting
         runs-on: ubuntu-latest
 
         steps:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
+            - name: Setup Go
+              uses: actions/setup-go@v5
               with:
-                  node-version: '20'
-                  cache: 'npm'
-                  cache-dependency-path: ${{ env.RUNTIME_DIR }}/package-lock.json
+                  go-version: '1.22'
+                  cache-dependency-path: ${{ env.RUNTIME_DIR }}/go.sum
 
-            - name: Install Dependencies
+            - name: Run Go Vet
               working-directory: ${{ env.RUNTIME_DIR }}
-              run: npm ci
+              run: go vet ./...
 
-            - name: Run ESLint
+            - name: Run Go Tests
               working-directory: ${{ env.RUNTIME_DIR }}
-              run: npm run lint
-
-            - name: Run Prettier Check
-              working-directory: ${{ env.RUNTIME_DIR }}
-              run: npm run format:check
-
-            - name: Run Unit Tests
-              working-directory: ${{ env.RUNTIME_DIR }}
-              run: npm test
+              run: go test ./... -v -coverprofile=coverage.out
 
             - name: Upload Coverage
               uses: codecov/codecov-action@v4
               with:
-                  files: ./${{ env.RUNTIME_DIR }}/coverage/lcov.info
+                  files: ./${{ env.RUNTIME_DIR }}/coverage.out
                   flags: runtime-unit
 
     security-scan:
@@ -119,9 +110,16 @@ jobs:
               with:
                   sarif_file: 'trivy-results.sarif'
 
-            - name: npm Audit
+            - name: Setup Go for Security Scan
+              uses: actions/setup-go@v5
+              with:
+                  go-version: '1.22'
+
+            - name: Run Go Vulnerability Check
               working-directory: ${{ env.RUNTIME_DIR }}
-              run: npm audit --audit-level=high
+              run: |
+                  go install golang.org/x/vuln/cmd/govulncheck@latest
+                  govulncheck ./...
 
     integration-test:
         name: Integration Test
