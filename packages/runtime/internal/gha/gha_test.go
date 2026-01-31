@@ -69,6 +69,15 @@ func TestGetInputWithDefault(t *testing.T) {
 }
 
 func TestSetOutputFallback(t *testing.T) {
+	// Ensure we use the fallback path (stdout) by unsetting GITHUB_OUTPUT
+	oldGithubOutput := os.Getenv("GITHUB_OUTPUT")
+	os.Unsetenv("GITHUB_OUTPUT")
+	defer func() {
+		if oldGithubOutput != "" {
+			os.Setenv("GITHUB_OUTPUT", oldGithubOutput)
+		}
+	}()
+
 	// Capture stdout
 	old := os.Stdout
 	r, w, _ := os.Pipe()

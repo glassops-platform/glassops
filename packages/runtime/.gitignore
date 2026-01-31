@@ -1,5 +1,5 @@
 # Binaries
-glassops
+/glassops
 *.exe
 *.test
 *.prof
