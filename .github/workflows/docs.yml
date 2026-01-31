@@ -37,16 +37,58 @@ jobs:
               run: npm run build -w @glassops/agent
 
             - name: Regenerate Docs
-              run: npm run docs:ai
+              id: docs
+              shell: bash
+              run: |
+                  # Capture output of buffer to env vars for comment
+                  # We use 2>&1 to capture stderr too (logs often go there)
+                  OUTPUT=$(npm run docs:ai 2>&1)
+                  echo "$OUTPUT"
+
+                  # Save to ENV for next step
+                  echo "DOCS_SUMMARY<<EOF" >> $GITHUB_ENV
+                  echo "$OUTPUT" >> $GITHUB_ENV
+                  echo "EOF" >> $GITHUB_ENV
               env:
                   GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
+            - name: Post Generation Summary
+              uses: actions/github-script@v6
+              if: github.event_name == 'pull_request'
+              with:
+                  script: |
+                      const summary = process.env.DOCS_SUMMARY;
+                      const drift = process.env.DRIFT_STATUS || 'Unknown';
+
+                      // Extract key info or just dump the log?
+                      // Let's dump the log but maybe truncate if too long
+                      const logSection = summary.length > 60000 ? summary.substring(summary.length - 60000) : summary;
+
+                      const body = `### Documentation Generation Summary
+
+                      <details>
+                      <summary>Click to view generation logs</summary>
+
+                      \`\`\`text
+                      ${logSection}
+                      \`\`\`
+                      </details>
+                      `;
+
+                      await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          body: body
+                      });
+
             - name: Check for Drift
               run: |
-                  if ! git diff --quiet docs/generated/; then
-                    echo "❌ Generated docs are out of sync with code/schemas."
+                  # Check for any changes in the repo after generation
+                  if ! git diff --quiet; then
+                    echo "Generated docs are out of sync with code/schemas."
                     echo "Run 'npm run docs:ai' locally and commit the changes."
-                    git diff docs/generated/
+                    git diff --name-only
                     exit 1
                   fi
-                  echo "✅ Documentation is up to date."
+                  echo "Documentation is up to date."
