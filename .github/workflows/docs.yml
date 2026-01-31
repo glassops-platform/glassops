@@ -45,6 +45,12 @@ jobs:
                   files: |
                       packages/**/*.{ts,js,mjs,tsx,jsx,go,py,yml,yaml,json,tf,cls,trigger}
                       utils/**/*.{ts,js}
+                  files_ignore: |
+                      packages/**/dist/**
+                      packages/**/build/**
+                      packages/**/node_modules/**
+                      packages/**/.github/**
+                      packages/**/package-lock.json
 
             - name: Regenerate Docs
               id: docs
