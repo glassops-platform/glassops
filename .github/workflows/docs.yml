@@ -74,6 +74,7 @@ jobs:
             - name: Post Generation Summary
               uses: actions/github-script@v6
               if: github.event_name == 'pull_request'
+              continue-on-error: true
               with:
                   script: |
                       const anyChanged = '${{ steps.changed-files.outputs.any_changed }}';
