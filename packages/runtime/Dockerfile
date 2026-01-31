@@ -16,8 +16,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /glassops ./cmd/glasso
 # Runtime stage
 FROM alpine:3.19
 
-# Install Node.js and npm for Salesforce CLI
-RUN apk add --no-cache nodejs npm git
+# Install Node.js, npm, and coreutils (for GNU env -S support required by SF CLI)
+RUN apk add --no-cache nodejs npm git coreutils
 
 # Install Salesforce CLI globally
 RUN npm install -g @salesforce/cli
