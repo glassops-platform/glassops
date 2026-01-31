@@ -317,6 +317,8 @@ hash: {content_hash}
 
         try:
             content = file_path.read_text(encoding="utf-8")
+            # Normalize line endings to LF for consistent hashing across OS
+            content = content.replace("\r\n", "\n")
         except Exception as e:
             print(f"❌ Failed to read {file_path}: {e}")
             return None
@@ -399,6 +401,7 @@ hash: {content_hash}
 
                     # Read original content for hashing
                     original_content = file_path.read_text(encoding="utf-8")
+                    original_content = original_content.replace("\r\n", "\n")
                     content_hash = hashlib.sha256(original_content.encode("utf-8")).hexdigest()
                     frontmatter = self._generate_frontmatter(file_path, original_content)
                     final_content = frontmatter + doc
