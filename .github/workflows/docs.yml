@@ -96,7 +96,7 @@ jobs:
                           ${logSection}
                           \`\`\`
                           </details>
-                          `;
+                          `.replace(/^ +/gm, '');
                       }
 
                       await github.rest.issues.createComment({
