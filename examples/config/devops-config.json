@@ -1,0 +1,20 @@
+{
+    "environments": {
+        "main": {
+            "name": "production",
+            "org_alias": "prod",
+            "instance_url": "https://login.salesforce.com"
+        },
+        "develop": {
+            "name": "integration",
+            "org_alias": "int",
+            "instance_url": "https://test.salesforce.com"
+        }
+    },
+    "governance": {
+        "engine": "native",
+        "quality": {
+            "minCoverage": 75
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "packageDirectories": [
+        {
+            "path": "glassops-platform",
+            "default": false,
+            "package": "GlassOps",
+            "versionName": "ver 1.0",
+            "versionNumber": "1.0.0.NEXT"
+        },
+        {
+            "path": "force-app",
+            "default": true,
+            "package": "GlassOps Implementation",
+            "versionName": "ver 0.1",
+            "versionNumber": "0.1.0.NEXT"
+        }
+    ],
+    "name": "glassops",
+    "namespace": "",
+    "sfdcLoginUrl": "https://login.salesforce.com",
+    "sourceApiVersion": "60.0"
+}
