@@ -61,12 +61,16 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("missing required inputs: %s", strings.Join(missingInputs, ", "))
 	}
 
-	// Validate JWT key format
+	// Validate JWT key format (skip if skip_auth is true)
 	jwtKey := gha.GetInput("jwt_key")
-	if !strings.Contains(jwtKey, "BEGIN") || !strings.Contains(jwtKey, "END") {
-		return fmt.Errorf("invalid JWT key format - must contain BEGIN and END markers")
+	if gha.GetInput("skip_auth") != "true" {
+		if !strings.Contains(jwtKey, "BEGIN") || !strings.Contains(jwtKey, "END") {
+			return fmt.Errorf("invalid JWT key format - must contain BEGIN and END markers")
+		}
 	}
-	gha.SetSecret(jwtKey)
+	if jwtKey != "" {
+		gha.SetSecret(jwtKey)
+	}
 
 	// Validate Salesforce instance URL
 	instanceURL := gha.GetInputWithDefault("instance_url", "https://login.salesforce.com")
