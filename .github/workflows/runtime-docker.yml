@@ -12,6 +12,11 @@ on:
             - 'packages/runtime/**'
     workflow_dispatch:
 
+permissions:
+    contents: read
+    security-events: write
+    packages: write
+
 env:
     RUNTIME_DIR: packages/runtime
 
