@@ -27,8 +27,8 @@ This method accepts content as a string and an optional file path (currently unu
 
 **Parameters:**
 
-*   `content`: The string content to be validated.
-*   `_filePath`: The path to the file containing the content (not currently used for validation).
+- `content`: The string content to be validated.
+- `_filePath`: The path to the file containing the content (not currently used for validation).
 
 **Return Value:**
 
@@ -36,20 +36,20 @@ An array of strings representing validation errors. An empty array indicates no 
 
 **Validation Checks Performed:**
 
-1.  **Frontmatter Check:** Verifies that the content begins with a frontmatter block (`---`).  This is a common convention for metadata in documentation files.
+1.  **Frontmatter Check:** Verifies that the content begins with a frontmatter block (`---`). This is a common convention for metadata in documentation files.
 
-2.  **Conversational Phrase Detection:**  Identifies and flags the presence of common conversational phrases that are generally undesirable in formal documentation. The following phrases are currently checked:
-    *   "Here is the document"
-    *   "I hope this helps"
-    *   "Let me know if"
-    *   "Feel free to"
-    *   "As requested"
-    *   "Sure, here is"
-    *   "Here's the"
+2.  **Conversational Phrase Detection:** Identifies and flags the presence of common conversational phrases that are generally undesirable in formal documentation. The following phrases are currently checked:
+    - "Here is the document"
+    - "I hope this helps"
+    - "Let me know if"
+    - "Feel free to"
+    - "As requested"
+    - "Sure, here is"
+    - "Here's the"
 
     The check is case-insensitive.
 
-3.  **Relative Link Check (Placeholder):** Currently, this check identifies potential relative links using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`.  It does *not* currently validate the existence of the linked files. This functionality is reserved for future development and will involve asynchronous file system checks.
+3.  **Relative Link Check (Placeholder):** Currently, this check identifies potential relative links using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`. It does _not_ currently validate the existence of the linked files. This functionality is reserved for future development and will involve asynchronous file system checks.
 
 ### Usage
 
@@ -62,17 +62,17 @@ const myContent = `---
 title: My Document
 ---
 
-Here is the document.  This is some content. [Link to another page](./another-page.md)`;
+Here is the document.  This is some content. [Link to another page] (./another-page.md)`;
 
 const errors = Validator.validate(myContent, 'path/to/my/document.md');
 
 if (errors.length > 0) {
-  console.log('Validation Errors:');
-  for (const error of errors) {
-    console.log(error);
-  }
+    console.log('Validation Errors:');
+    for (const error of errors) {
+        console.log(error);
+    }
 } else {
-  console.log('Content is valid.');
+    console.log('Content is valid.');
 }
 ```
 
@@ -85,7 +85,7 @@ Conversational phrase detected: "Here is the document"
 
 ### Future Enhancements
 
-*   Implement robust relative link validation by checking file system existence.
-*   Expand the list of banned conversational phrases.
-*   Add support for validating other content aspects, such as heading structure and image alt text.
-*   Provide more detailed error messages with specific line numbers.
+- Implement robust relative link validation by checking file system existence.
+- Expand the list of banned conversational phrases.
+- Add support for validating other content aspects, such as heading structure and image alt text.
+- Provide more detailed error messages with specific line numbers.
