@@ -51,6 +51,7 @@ jobs:
                       packages/**/node_modules/**
                       packages/**/.github/**
                       packages/**/package-lock.json
+                      packages/**/*.config.*
 
             - name: Regenerate Docs
               id: docs
