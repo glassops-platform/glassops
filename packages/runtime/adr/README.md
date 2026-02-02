@@ -14,9 +14,10 @@ ADRs in this directory cover decisions related to:
 
 ## Current ADRs
 
-| Number | Title         | Status | Date |
-| ------ | ------------- | ------ | ---- |
-| -      | _No ADRs yet_ | -      | -    |
+| Number | Title                                                                | Status   | Date       |
+| ------ | -------------------------------------------------------------------- | -------- | ---------- |
+| 001    | [Six Phase Execution Model](001-six-phase-execution.md)              | Accepted | 2024-01-20 |
+| 002    | [Caching Strategy in Docker Runtime](002-docker-caching-strategy.md) | Accepted | 2024-02-01 |
 
 ## Proposed Decisions to Document
 

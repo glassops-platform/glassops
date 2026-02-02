@@ -1,15 +1,9 @@
 # GlassOps Runtime
 
-> [!CAUTION]
-> **DEPRECATED:** The TypeScript implementation of the runtime is now fully deprecated.
-> All new development has moved to the **Go-based architecture**.
->
-> For the legacy TypeScript implementation, see [runtime-ts](../runtime-ts).
-
 > **The Bootstrapping Primitive for Secure, Governed Execution.**
 
 **Status:** Alpha (Re-implemented in Go)
-**Version:** 2.0.0
+**Version:** 1.0.0
 
 The Runtime is designed as a trusted primitive in the ecosystem. It is responsible for bootstrapping a secure environment where untrusted adapters can run.
 

@@ -95,11 +95,11 @@ You can stop at any level and still get value.
 
 ### Implementation Status
 
-| Component              | Status                 | Description                                                                   |
-| :--------------------- | :--------------------- | :---------------------------------------------------------------------------- |
-| **Salesforce Adapter** | Active Development     | Containerized metadata translation (`docker://glassops/adapter-salesforce`).  |
-| **Scanner Adapter**    | In Development (Draft) | Containerized architectural invariants (`docker://glassops/adapter-scanner`). |
-| **Policy Engine**      | Active Development     | OPA-based policy resolution API.                                              |
+| Component            | Status           | Description                                                |
+| :------------------- | :--------------- | :--------------------------------------------------------- |
+| **GlassOps Runtime** | Active (v1.0.0)  | Unified governance primitive (`glassops/runtime:latest`).  |
+| **Native Adapter**   | Active (bundled) | Standard Salesforce CLI execution (bundled in Runtime v1). |
+| **Policy Engine**    | Active (bundled) | OPA-based policy resolution API.                           |
 
 This project is an **architectural reference implementation**, not a commercial product.
 
@@ -136,15 +136,12 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Resolve Policy
-              uses: docker://glassops/policy-resolver:v1
+            - name: GlassOps Runtime
+              uses: glassops-platform/glassops/packages/runtime@v1
               with:
-                  args: resolve --org ${{ github.repository_owner }} --output .glassops/policy.json
-
-            - name: Deploy with Governance
-              uses: docker://glassops/adapter-salesforce:v1
-              with:
-                  args: transform --input force-app --policy-ref .glassops/policy.json
+                  client_id: ${{ secrets.SF_CLIENT_ID }}
+                  jwt_key: ${{ secrets.SF_JWT_KEY }}
+                  username: ${{ vars.SF_USERNAME }}
 ```
 
 See [doc-map.md](docs/doc-map.md) for available guides.
