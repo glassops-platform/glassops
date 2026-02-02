@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import pathspec
 import yaml
 
 from knowledge.llm.client import LLMClient
@@ -76,6 +77,7 @@ class Generator:
         self.prompts_path = Path(__file__).parent.parent / "config" / "prompts.yml"
         self.cache: Dict[str, dict] = {}
         self.prompts: Dict[str, Any] = {}
+        self.gitignore_spec = self._load_gitignore()
 
         # Initialize all adapters (order matters - first match wins)
         self.adapters: List[BaseAdapter] = [
@@ -164,10 +166,35 @@ class Generator:
 
         return f"{system}\n\n{user}"
 
+    def _load_gitignore(self) -> Optional[pathspec.PathSpec]:
+        """Load .gitignore patterns."""
+        gitignore_path = self.root_dir / ".gitignore"
+        if gitignore_path.exists():
+            try:
+                with open(gitignore_path, "r", encoding="utf-8") as f:
+                    return pathspec.PathSpec.from_lines("gitwildmatch", f)
+            except Exception as e:
+                print(f"⚠️ Failed to load .gitignore: {e}")
+        return None
+
     def _should_ignore(self, path: Path) -> bool:
         """Check if a path should be ignored."""
+        # Check hardcoded ignores first
         parts = path.parts
-        return any(ignored in parts for ignored in self.IGNORED_DIRS)
+        if any(ignored in parts for ignored in self.IGNORED_DIRS):
+            return True
+        
+        # Check .gitignore
+        if self.gitignore_spec:
+            try:
+                # relative_to can fail if path is not relative to root_dir
+                rel_path = path.relative_to(self.root_dir).as_posix()
+                if self.gitignore_spec.match_file(rel_path):
+                    return True
+            except ValueError:
+                pass
+                
+        return False
 
     def _generate_frontmatter(self, source_path: Path, content: str) -> str:
         """
