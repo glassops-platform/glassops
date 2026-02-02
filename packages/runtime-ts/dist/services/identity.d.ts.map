@@ -1,1 +1,0 @@
-{"version":3,"file":"identity.d.ts","sourceRoot":"","sources":["file:///F:/Github/nobleforge/glassops/packages/runtime/src/services/identity.ts"],"names":[],"mappings":"AAOA,UAAU,WAAW;IACnB,QAAQ,EAAE,MAAM,CAAC;IACjB,MAAM,EAAE,MAAM,CAAC;IACf,QAAQ,EAAE,MAAM,CAAC;IACjB,WAAW,CAAC,EAAE,MAAM,CAAC;CACtB;AAED,qBAAa,gBAAgB;IACd,YAAY,CAAC,GAAG,EAAE,WAAW,GAAG,OAAO,CAAC,MAAM,CAAC;CA+D7D"}
