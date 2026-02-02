@@ -2,85 +2,76 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/py-adapter.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/adapters/py-adapter.ts
-generated_at: 2026-01-31T10:18:26.123986
+generated_at: 2026-02-01T19:49:02.505230
 hash: 8d2e85d94103c29d72984c3f34046684fc1ec3b7c96954d4cc1e5cd60a1b7e5f
 ---
 
 ## Python File Adapter Documentation
 
-This document details the functionality of the Python File Adapter, a component designed to process Python files within a larger system. It serves as an interface between the core system and Python source code, preparing the code for analysis and documentation generation.
+This document details the functionality of the Python File Adapter, a component designed to process Python files within a larger agent system. This adapter handles file identification, content parsing, prompt generation, and output post-processing.
 
 ### Overview
 
-The Python File Adapter is responsible for identifying, parsing, and preparing Python files for further processing. It determines if a given file is a Python file, extracts its content, and formats it into a prompt suitable for a language model. Finally, it consolidates the outputs from the language model into a single, coherent document.
+The Python File Adapter serves as an interface between the agent and Python source code. It determines if a given file is a Python file, extracts its content, prepares a prompt for a language model to document the code, and then combines the model’s outputs into a cohesive document.
 
 ### Core Functionality
 
-The adapter operates through four primary functions: `canHandle`, `parse`, `generatePrompt`, and `postProcess`.
+The adapter provides four primary functions:
 
-#### 1. `canHandle(fileName: string): boolean`
+1.  **File Type Identification (`canHandle`)**:
+    *   **Purpose**: Determines whether the adapter can process a given file based on its extension.
+    *   **Input**: `fileName` (string) – The name of the file to check.
+    *   **Output**: `boolean` – Returns `true` if the file has a `.py` extension, indicating it is a Python file; otherwise, returns `false`.
+    *   **Example**: `canHandle('my_script.py')` returns `true`. `canHandle('document.txt')` returns `false`.
 
-This function determines whether the adapter can process a given file based on its file extension. 
+2.  **Content Parsing (`parse`)**:
+    *   **Purpose**: Extracts the content of a Python file. Currently, this function performs a simple pass-through of the file content. Future versions will incorporate Python Abstract Syntax Tree (AST) parsing to identify and separate classes and functions.
+    *   **Input**:
+        *   `filePath` (string) – The path to the Python file.
+        *   `content` (string) – The content of the Python file.
+    *   **Output**: `Promise<string[]>` – Returns a promise that resolves to an array of strings. Currently, this array contains a single string formatted with the file path and the complete Python code content enclosed in a code block.
+    *   **Example**:
+        ```typescript
+        parse('/path/to/my_script.py', 'def my_function():\n  print("Hello")')
+        ```
+        returns a promise resolving to:
+        `['File: /path/to/my_script.py\n\nPython Code Content:\n\`\`\`python\ndef my_function():\n  print("Hello")\`\`\`']`
 
-*   **Input:** `fileName` – A string representing the name of the file.
-*   **Output:** A boolean value. Returns `true` if the file has a `.py` extension, indicating it is a Python file; otherwise, returns `false`.
+3.  **Prompt Generation (`generatePrompt`)**:
+    *   **Purpose**: Creates a prompt for a language model, instructing it to generate documentation for the provided Python code.
+    *   **Input**:
+        *   `filePath` (string) – The path to the Python file.
+        *   `parsedContent` (string) – The parsed content of the Python file (output from the `parse` function).
+    *   **Output**: `string` – A formatted prompt string designed for a language model. The prompt instructs the model to act as a principal engineer and Python expert, and to produce high-quality documentation.
+    *   **Example**:
+        ```typescript
+        generatePrompt('/path/to/my_script.py', 'File: /path/to/my_script.py\n\nPython Code Content:\n\`\`\`python\ndef my_function():\n  print("Hello")\`\`\`')
+        ```
+        returns a string containing a detailed prompt including the file path and code content.
 
-   ```typescript
-   const isPythonFile = adapter.canHandle('my_script.py'); // Returns true
-   const isJavaScriptFile = adapter.canHandle('script.js'); // Returns false
-   ```
+4.  **Output Post-Processing (`postProcess`)**:
+    *   **Purpose**: Combines multiple output strings from the language model into a single, formatted document.
+    *   **Input**:
+        *   `filePath` (string) – The path to the Python file.
+        *   `outputs` (string[]) – An array of strings representing the outputs from the language model.
+    *   **Output**: `string` – A single string containing all the outputs joined by double newlines.
+    *   **Example**:
+        ```typescript
+        postProcess('/path/to/my_script.py', ['Output 1', 'Output 2'])
+        ```
+        returns:
+        `'Output 1\n\nOutput 2'`
 
-#### 2. `parse(filePath: string, content: string): Promise<string[]>`
+### Usage
 
-This function takes the file path and content of a Python file and prepares it for prompt generation. Currently, it performs a simple pass-through, preserving the file path and content. Future versions will incorporate Python Abstract Syntax Tree (AST) parsing to identify and separate classes and functions within the code.
-
-*   **Input:**
-    *   `filePath` – A string representing the path to the Python file.
-    *   `content` – A string containing the content of the Python file.
-*   **Output:** A Promise resolving to an array of strings. Currently, this array contains a single string that includes the file path and the complete Python code content, formatted for inclusion in a prompt.
-
-   ```typescript
-   const parsedContent = await adapter.parse('/path/to/my_script.py', 'print("Hello, world!")');
-   // Returns: ['File: /path/to/my_script.py\n\nPython Code Content:\n```python\nprint("Hello, world!")\n```']
-   ```
-
-#### 3. `generatePrompt(filePath: string, parsedContent: string): string`
-
-This function constructs a prompt for a language model, instructing it to generate documentation for the provided Python code. The prompt frames the language model as a principal engineer and Python expert, emphasizing the need for clear, concise, and professional documentation suitable for both technical and non-technical audiences.
-
-*   **Input:**
-    *   `filePath` – A string representing the path to the Python file.
-    *   `parsedContent` – A string containing the parsed content of the Python file (output from the `parse` function).
-*   **Output:** A string representing the prompt to be sent to the language model.
-
-   ```typescript
-   const prompt = adapter.generatePrompt('/path/to/my_script.py', 'File: ...\n\nPython Code Content:\n```python\n...\n```');
-   // Returns a string containing the prompt instructions and the parsed content.
-   ```
-
-#### 4. `postProcess(filePath: string, outputs: string[]): string`
-
-This function consolidates the outputs received from the language model into a single string, separated by double newlines.
-
-*   **Input:**
-    *   `filePath` – A string representing the path to the Python file.
-    *   `outputs` – An array of strings, where each string represents a separate output from the language model.
-*   **Output:** A string containing the combined outputs, separated by double newlines.
-
-   ```typescript
-   const finalDocumentation = adapter.postProcess('/path/to/my_script.py', ['Section 1', 'Section 2']);
-   // Returns: 'Section 1\n\nSection 2'
-   ```
-
-### Dependencies
-
-*   The `path` module is used for extracting file extensions.
-*   The `AgentAdapter` interface defines the contract that this adapter implements.
+You can integrate this adapter into a larger system by instantiating the `PyAdapter` class and calling its methods in sequence. The typical workflow involves using `canHandle` to verify file type, `parse` to extract content, `generatePrompt` to create a prompt for a language model, and finally, `postProcess` to assemble the model’s responses into a final document.
 
 ### Future Enhancements
 
-*   Implement Python AST parsing within the `parse` function to enable more granular analysis and documentation generation, specifically separating classes and functions.
-*   Add error handling and logging to improve robustness and debugging capabilities.
+Planned improvements include:
+
+*   Implementing Python AST parsing within the `parse` function to enable more granular analysis and documentation of Python code elements (classes, functions, etc.).
+*   Adding support for more complex Python features and coding styles.

@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/yml-adapter.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/adapters/yml-adapter.ts
-generated_at: 2026-01-31T10:19:39.593986
+generated_at: 2026-02-01T19:49:53.762638
 hash: ca031af7b7ed139863454c2b9d49b1bdcbfe1037cfe30ed64c73e2f9d88dd15a
 ---
 
@@ -37,21 +37,20 @@ This function checks if the adapter supports a file with the given extension.
 *   **Parameter:**
     *   `extension`: A string representing the file extension (e.g., ".yml", ".yaml").
 *   **Return Value:**
-    *   `true` if the extension is ".yml" or ".yaml", `false` otherwise.
+    *   `true` if the extension is ".yml" or ".yaml", indicating the adapter can handle the file.
+    *   `false` otherwise.
 
 #### 4.2. `parse(filePath: string, content: string): Promise<string[]>`
 
-This asynchronous function takes a file path and its content as input and formats the content into a string array.
+This asynchronous function takes the file path and content as input and formats the content into a string array.
 
 *   **Parameters:**
     *   `filePath`: A string representing the path to the YAML file.
     *   `content`: A string containing the YAML file's content.
 *   **Return Value:**
-    *   A `Promise` that resolves to a string array containing the formatted file content, enclosed in a code block. Example:
+    *   A `Promise` that resolves to a string array containing a formatted representation of the file path and YAML content, enclosed in backticks for code formatting. Example:
         ```
-        [
-          "File: /path/to/file.yml\n\nYAML Content:\n\`\`\`yaml\nfile_content_here\n\`\`\`"
-        ]
+        ["File: /path/to/file.yml\n\nYAML Content:\n```yaml\nfile_content\n```"]
         ```
 
 #### 4.3. `generatePrompt(filePath: string, parsedContent: string): string`
@@ -62,22 +61,22 @@ This function creates a prompt for a language model, instructing it to analyze t
     *   `filePath`: A string representing the path to the YAML file.
     *   `parsedContent`: A string containing the parsed YAML content.
 *   **Return Value:**
-    *   A string representing the prompt. The prompt instructs the language model to act as a principal architect and validate/explain the provided YAML configuration.
+    *   A string containing the prompt. The prompt instructs the language model to act as a principal architect and validate and explain the provided YAML configuration. The `parsedContent` is embedded directly within the prompt.
 
 #### 4.4. `postProcess(filePath: string, outputs: string[]): string`
 
 This function combines the outputs from the language model into a single string, separated by double newlines.
 
 *   **Parameters:**
-    *   `filePath`: A string representing the path to the YAML file.
-    *   `outputs`: A string array containing the outputs from the language model.
+    *   `filePath`: A string representing the path to the YAML file. (Currently unused)
+    *   `outputs`: An array of strings, where each string represents an output from the language model.
 *   **Return Value:**
-    *   A string containing the combined outputs, separated by double newlines.
+    *   A string containing all outputs joined by double newlines (`\n\n`).
 
 **5. Usage**
 
-You can integrate this adapter into a larger system by instantiating the `YMLAdapter` class and calling its methods in sequence. First, check if the adapter can handle the file using `canHandle()`. If it can, use `parse()` to prepare the content, then `generatePrompt()` to create a prompt for analysis. Finally, after receiving outputs from the language model, use `postProcess()` to format the results.
+You would integrate this adapter into a system that processes files based on their extension. When a ".yml" or ".yaml" file is encountered, this adapter will be used to parse the content, generate a prompt, and process the resulting output.
 
-**6. Error Handling**
+**6. Dependencies**
 
-The `parse` function is asynchronous and may encounter errors during file reading or processing. Implement appropriate error handling mechanisms in your application to manage potential exceptions.
+This adapter has a dependency on the `AgentAdapter` interface, defined in `./interface.js`.

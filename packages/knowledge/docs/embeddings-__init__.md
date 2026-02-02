@@ -2,35 +2,51 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/embeddings/__init__.py
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/embeddings/__init__.py
-generated_at: 2026-01-31T09:47:55.953610
+generated_at: 2026-02-01T19:28:30.447139
 hash: 8155797cfbbac00bb501a46542405e653e9cc589aede51dfac27cdb69312dafd
 ---
 
 ## Knowledge Embeddings Package Documentation
 
-This package provides tools for generating embeddings from text data, a key component in many knowledge-based applications. Embeddings represent text as numerical vectors, allowing for semantic similarity comparisons and enabling tasks like search, clustering, and question answering. We offer multiple embedding models and a routing function to select the appropriate model for your needs.
+This package provides tools for generating and routing document embeddings, which are numerical representations of text used for semantic search and other natural language processing tasks. It offers access to different embedding models and a routing mechanism to select the most appropriate model for a given task.
 
-**Module Responsibilities:**
+**Key Components:**
 
-The primary responsibility of this module is to expose a clean and consistent API for accessing different embedding models. It acts as a central point for generating embeddings and managing model selection.
+* **`GeminiEmbedding` Class:** This class interfaces with the Gemini embedding model. It takes text as input and returns its corresponding embedding vector. We designed this for leveraging Google’s Gemini model capabilities.
 
-**Key Classes:**
+* **`Gemma12bItEmbedding` Class:** This class provides access to the Gemma 12B Italian embedding model. Similar to `GeminiEmbedding`, it converts text into embedding vectors, specifically tuned for the Italian language. This allows for language-specific semantic understanding.
 
-*   **`GeminiEmbedding`**: This class encapsulates the Gemini embedding model. It provides a method for generating embeddings using the Gemini API. It accepts text as input and returns a corresponding embedding vector.
+* **`get_embeddings_for_docs` Function:** This function serves as a router for embedding requests. It accepts a list of documents (text strings) and returns a list of corresponding embeddings. The function intelligently selects the appropriate embedding model based on the input documents, potentially considering factors like language or content type. The function signature is: `get_embeddings_for_docs(docs: list[str]) -> list[list[float]]`. The type hint `list[str]` indicates the function expects a list of strings as input, and `list[list[float]]` signifies that it returns a list of lists, where each inner list represents the embedding vector for a document (a list of floating-point numbers).
 
-*   **`Gemma12bItEmbedding`**: This class encapsulates the Gemma 12B Italian embedding model. Similar to `GeminiEmbedding`, it takes text input and produces an embedding vector, specifically tailored for Italian language data.
+**Design Considerations:**
 
-**Important Functions:**
+The package follows a modular design, separating the implementation details of each embedding model into its own class. This allows for easy addition of new models without modifying existing code. The `get_embeddings_for_docs` function provides a single entry point for generating embeddings, abstracting away the complexity of model selection.
 
-*   **`get_embeddings_for_docs(docs: list[str]) -> list[list[float]]`**: This function serves as a router, intelligently selecting an embedding model based on the input documents. It accepts a list of documents (strings) and returns a list of embeddings, where each embedding is a list of floats. The function handles the logic of choosing the best model for the provided text.
+**Usage:**
 
-**Type Hints:**
+You can access the embedding models directly:
 
-Throughout the package, type hints are used extensively (e.g., `docs: list[str]`, `-> list[list[float]]`). These hints improve code readability and maintainability, and allow for static analysis to catch potential errors. They clearly define the expected input and output types for each function and method.
+```python
+from knowledge.embeddings import GeminiEmbedding
 
-**Design Decisions:**
+gemini_embedder = GeminiEmbedding()
+embedding = gemini_embedder.embed("This is a sample document.")
+print(embedding)
+```
 
-The package is structured to promote flexibility and extensibility. By separating the embedding models into individual classes, we allow for easy addition of new models without modifying existing code. The `get_embeddings_for_docs` function provides a single entry point for generating embeddings, abstracting away the complexity of model selection. The `__all__` variable explicitly defines the public API of the package, controlling which classes and functions are exposed to users.
+Or, you can use the router function:
+
+```python
+from knowledge.embeddings import get_embeddings_for_docs
+
+documents = ["This is the first document.", "And this is the second one."]
+embeddings = get_embeddings_for_docs(documents)
+print(embeddings)
+```
+
+**`__all__` Variable:**
+
+The `__all__` list explicitly defines the public API of the package. This ensures that only the specified classes and functions are imported when using `from knowledge.embeddings import *`. This practice improves code clarity and maintainability.

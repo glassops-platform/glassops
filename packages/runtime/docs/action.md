@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/action.yml
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/action.yml
-generated_at: 2026-01-31T11:05:38.382936
+generated_at: 2026-02-01T19:37:36.711062
 hash: ec91c30a592eb0967662ac9901db54840aebc296fa1897a08af5535daa8d354e
 ---
 
@@ -20,7 +20,7 @@ The configuration is structured using YAML and defines the action's metadata, in
 *   `name`: A human-readable name for the action.
 *   `description`: A brief explanation of the action's purpose.
 *   `author`: The creator of the action.
-*   `branding`: Visual elements for the action.
+*   `branding`: Visual elements for the action's presentation.
 *   `inputs`: Parameters that You provide to customize the action's behavior.
 *   `outputs`: Values that the action returns after execution.
 *   `runs`: Specifies how the action is executed.

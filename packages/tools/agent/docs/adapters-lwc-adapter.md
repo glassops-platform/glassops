@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/lwc-adapter.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/adapters/lwc-adapter.ts
-generated_at: 2026-01-31T10:17:33.409617
+generated_at: 2026-02-01T19:48:19.520967
 hash: b49e1c6a1867343593bd52f58aca9365ea3ee9aa67113aa6132a5a858aa83fb5
 ---
 
@@ -13,66 +13,85 @@ hash: b49e1c6a1867343593bd52f58aca9365ea3ee9aa67113aa6132a5a858aa83fb5
 
 **Introduction**
 
-This document details the functionality of the LWC Adapter, a component designed to process Lightning Web Component files and prepare them for documentation generation. It identifies LWC JavaScript files, extracts associated HTML and CSS, and formats the content for input into a large language model.
+This document details the functionality of the LWC Adapter, a component designed to process Lightning Web Component files and prepare them for documentation generation. It is part of a larger system for automatically creating documentation from source code.
+
+**Purpose**
+
+The LWC Adapter identifies, parses, and formats LWC files (JavaScript, HTML, and CSS) into a structured bundle suitable for input to a language model. This allows for automated documentation of LWC components.
 
 **Functionality**
 
-The LWC Adapter operates as part of a larger system for automatically generating documentation from source code. It specifically targets Salesforce’s Lightning Web Component framework. The adapter’s core functions are: file identification, content parsing, prompt generation, and output post-processing.
+The adapter operates through a series of defined steps: file identification, content parsing, prompt generation, and post-processing.
 
-**Key Features**
+**1. File Identification (`canHandle`)**
 
-*   **File Identification:** The adapter determines if a file should be processed based on its extension and directory structure. It specifically looks for `.js` files containing “lwc” in the filename or path.
-*   **Content Parsing:**  Given a file path and its content, the adapter attempts to locate corresponding HTML and CSS files. It then bundles the JavaScript, HTML (if found), and CSS (if found) into a single string.
-*   **Prompt Generation:** The adapter constructs a prompt for a language model, instructing it to act as a Salesforce Developer Expert and document the provided LWC. The prompt includes the bundled component content.
-*   **Post-Processing:** The adapter combines multiple outputs from the language model into a single, formatted string.
+The adapter determines if a given file should be processed based on its name and extension. Specifically, it checks:
 
-**Adapter Interface & Methods**
+*   The file extension is `.js`.
+*   The file name or path includes “lwc” or “lwc/”.
 
-The LWC Adapter implements the `AgentAdapter` interface, requiring the following methods:
+This ensures that only JavaScript files associated with LWC components are considered.
 
-*   `canHandle(fileName: string): boolean`
-    *   **Purpose:** Determines if the adapter can process the given file.
-    *   **Input:** `fileName` (string) - The name of the file to check.
-    *   **Output:** `boolean` - `true` if the adapter can handle the file, `false` otherwise.
-*   `parse(filePath: string, content: string): Promise<string[]>`
-    *   **Purpose:** Parses the file content and extracts related assets.
-    *   **Input:**
-        *   `filePath` (string) - The path to the file.
-        *   `content` (string) - The content of the file.
-    *   **Output:** `Promise<string[]>` - A promise that resolves to an array of strings, each representing a bundled component section.
-*   `generatePrompt(filePath: string, parsedContent: string): string`
-    *   **Purpose:** Creates a prompt for the language model.
-    *   **Input:**
-        *   `filePath` (string) - The path to the file.
-        *   `parsedContent` (string) - The parsed content of the file.
-    *   **Output:** `string` - The prompt string.
-*   `postProcess(filePath: string, outputs: string[]): string`
-    *   **Purpose:** Processes the outputs from the language model.
-    *   **Input:**
-        *   `filePath` (string) - The path to the file.
-        *   `outputs` (string[]) - An array of strings representing the outputs from the language model.
-    *   **Output:** `string` - The combined and formatted output string.
+**2. Content Parsing (`parse`)**
 
-**Workflow**
+If a file is identified as an LWC component, the `parse` function extracts and combines the component’s code:
 
-1.  The system identifies a JavaScript file with a name or path containing “lwc”.
-2.  The LWC Adapter’s `canHandle` method confirms the file type.
-3.  The `parse` method reads the file content and attempts to locate corresponding HTML and CSS files in the same directory.
-4.  The adapter bundles the JavaScript, HTML, and CSS content into a single string.
-5.  The `generatePrompt` method creates a prompt instructing the language model to document the LWC.
-6.  The language model processes the prompt and generates documentation.
-7.  The `postProcess` method combines the documentation segments into a final output.
+*   It locates potential sibling HTML and CSS files based on the JavaScript file’s name.
+*   It reads the content of the JavaScript, HTML (if found), and CSS (if found) files.
+*   It constructs a bundled string containing the content of each file, clearly labeled as “Controller (JS)”, “Template (HTML)”, and “Styles (CSS)”.
+*   If the component does not have associated HTML or CSS files, only the JavaScript content is included in the bundle.
+
+The function returns an array containing the bundled string.
+
+**3. Prompt Generation (`generatePrompt`)**
+
+The `generatePrompt` function creates a prompt designed for a language model. This prompt instructs the model to act as a Salesforce Developer Expert and generate documentation for the provided LWC. The prompt includes the bundled content from the `parse` function.
+
+**4. Post-Processing (`postProcess`)**
+
+The `postProcess` function combines multiple outputs (generated by the language model) into a single string, separated by double newlines. This ensures a clean and readable final documentation output.
+
+**Internal Methods**
+
+*   `exists(p: string)`: Asynchronously checks if a file exists at the given path. Returns `true` if the file exists, `false` otherwise. This method handles potential file system errors gracefully.
 
 **Example**
 
-Consider a Lightning Web Component with the following files:
+Consider a component with the following files:
 
 *   `myComponent.js`
 *   `myComponent.html`
 *   `myComponent.css`
 
-The adapter will bundle the contents of all three files into a single string, which will then be used as input for the language model.
+The `parse` function would produce a bundle similar to this:
 
-**Error Handling**
+```
+File: myComponent.js
 
-The adapter includes a safety check to ensure it is processing a valid LWC. The `exists` method handles potential file access errors gracefully, returning `false` if a file is not found. This prevents the process from crashing if a corresponding HTML or CSS file is missing.
+Controller (JS):
+```javascript
+// Component JavaScript code
+```
+
+```
+Template (HTML):
+```html
+// Component HTML code
+```
+
+```
+Styles (CSS):
+```css
+// Component CSS code
+```
+
+This bundle would then be passed to the `generatePrompt` function to create the prompt for the language model.
+
+**Dependencies**
+
+*   `fs/promises`: For asynchronous file system operations.
+*   `path`: For manipulating file paths.
+
+**Interfaces**
+
+*   `AgentAdapter`: This adapter implements the `AgentAdapter` interface, ensuring compatibility with the broader documentation generation system.

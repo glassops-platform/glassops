@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/ingestion/federated_loader.py
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/ingestion/federated_loader.py
-generated_at: 2026-01-31T09:54:43.696049
+generated_at: 2026-02-01T19:34:04.697992
 hash: 16479342d05b9369478aa6657719d0de08cf932c3abacb79e515d7220a5e4e89
 ---
 
@@ -23,13 +23,13 @@ This module provides functionality for discovering, chunking, and hashing docume
 
 **Key Functions:**
 
-*   `hash_content(text: str) -> str`: This function takes a string as input and returns its SHA256 hash as a hexadecimal string. This is used to uniquely identify each chunk of documentation. The `text` parameter is type-hinted as a string, ensuring that the function receives the expected input type.
+*   `hash_content(text: str) -> str`: This function takes a string as input and returns its SHA256 hash as a hexadecimal string. This is used to uniquely identify each chunk of documentation. The `text` parameter is type-hinted as a string, ensuring that the input is always a string.
 
 *   `discover_and_chunk_docs(root_dir: str = ".") -> List[Dict]`: This is the core function of the module. It performs the following steps:
     1.  **Discovery:** It searches for Markdown (`.md`) and README files within the specified `root_dir` (defaults to the current directory) using a set of predefined glob patterns. These patterns include `docs/**/*.md`, `packages/**/docs/**/*.md`, `packages/**/adr/**/*.md`, and `packages/**/README.md`.
     2.  **Filtering:** It filters out files located within ignored directories such as `node_modules`, `venv`, `.git`, and others. This prevents irrelevant files from being processed.
     3.  **Reading:** It reads the content of each identified file, handling potential encoding errors with `utf-8`.
-    4.  **Chunking:** It splits the content into chunks based on header levels. It first attempts to split by Level 2 headers (`##`), then by Level 1 headers (`#`), and finally falls back to using the entire file if no headers are found. This strategy aims to preserve context within each chunk. A helper function `split_by_header` is used to perform the splitting based on regular expressions.
+    4.  **Chunking:** It splits the content into chunks based on header levels. It first attempts to split by Level 2 headers (`##`), then by Level 1 headers (`#`), and finally falls back to using the entire file if no headers are found. A helper function `split_by_header` is used to perform the splitting based on regular expressions.
     5.  **Hashing:** It calculates the SHA256 hash of each chunk using the `hash_content` function.
     6.  **Output:** It returns a list of dictionaries. Each dictionary contains the following keys:
         *   `path`: A unique identifier for the chunk, combining the original file path with a chunk index (e.g., `path/to/file.md#chunk-0`).
@@ -37,14 +37,29 @@ This module provides functionality for discovering, chunking, and hashing docume
         *   `content`: The text content of the chunk.
         *   `hash`: The SHA256 hash of the chunk's content.
 
-    The function is type-hinted to return a `List[Dict]`, indicating that it returns a list of dictionaries. The `root_dir` parameter is also type-hinted as a string.
+    The function is type-hinted to return a `List[Dict]`, indicating that it returns a list of dictionaries. The `root_dir` parameter is type-hinted as a string.
 
 **Design Decisions and Patterns:**
 
 *   **Glob Patterns:** The use of glob patterns allows for flexible and scalable document discovery.
-*   **Header-Based Chunking:** Splitting documents based on headers is a semantic approach that helps maintain context within each chunk.
+*   **Header-Based Chunking:** Splitting documents based on headers helps to preserve contextual information and create more meaningful chunks.
 *   **Hashing:**  Hashing ensures data integrity and allows for efficient content comparison and deduplication.
-*   **Error Handling:** The `try...except` block provides basic error handling, preventing the process from crashing if a file cannot be read.  Warnings are printed to the console.
+*   **Error Handling:** The code includes basic error handling to gracefully handle files that cannot be read.
 *   **Type Hints:** The use of type hints improves code readability and maintainability, and enables static analysis.
-*   **Directory Ignoring:** Explicitly ignoring common development directories prevents irrelevant content from being included.
-*   **Chunk ID Generation:** The `path#chunk-i` format provides a clear and unique identifier for each chunk, linking it back to its source file.
+*   **Directory Ignoring:** The explicit list of ignored directories prevents the ingestion of unwanted files.
+*   **Chunk ID Generation:** The `path` field in the output dictionary provides a unique identifier for each chunk, linking it back to its original source file.
+*   **Helper Function:** The `split_by_header` function encapsulates the logic for splitting text by regular expression patterns, promoting code reuse and readability.
+
+**Usage:**
+
+You can use the `discover_and_chunk_docs` function to process documentation files in a given directory. For example:
+
+```python
+from federated_loader import discover_and_chunk_docs
+
+docs = discover_and_chunk_docs(root_dir="/path/to/your/repository")
+
+for doc in docs:
+    print(f"Chunk Path: {doc['path']}")
+    print(f"Chunk Hash: {doc['hash']}")
+    # You can then use the 'content' field to further process the chunk

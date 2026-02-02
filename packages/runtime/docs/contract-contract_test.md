@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/contract/contract_test.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/contract/contract_test.go
-generated_at: 2026-01-31T09:59:20.933772
+generated_at: 2026-02-01T19:39:37.212546
 hash: 3a35b367629b06cac4dba35c15628d04648cf4fb51ce53f91f0bdbdf0ae3e0d1
 ---
 
@@ -15,7 +15,7 @@ This package defines the `Contract` type and associated methods for representing
 
 **Key Types and Interfaces**
 
-*   **`Contract`**: This is the central type of the package. It encapsulates all information related to a contract, including schema version, metadata (adapter, engine), status, quality metrics (coverage), and audit details.
+*   **`Contract`**: This is the central type in the package. It encapsulates all information related to a contract, including schema version, metadata (adapter, engine), status, quality metrics (coverage), and audit details.
 
     *   `SchemaVersion` (string): Indicates the version of the contract schema. Currently set to "1.0".
     *   `Meta` (struct): Contains metadata about the contract, specifically the adapter and engine used.
@@ -36,20 +36,20 @@ This package defines the `Contract` type and associated methods for representing
 **Important Functions**
 
 *   **`New()`**: This function creates and returns a new `Contract` instance with default values.  The default values ensure a baseline configuration for all contracts.
-*   **`ToJSON()`**: This function converts the `Contract` object into a JSON byte array. It returns an error if the conversion fails. You can use this to serialize the contract for storage or transmission.
+*   **`ToJSON()`**: This function converts the `Contract` object into a JSON byte slice. It returns an error if the conversion fails. You can use this to serialize the contract for storage or transmission.
 *   **`Validate()`**: This function validates the `Contract` instance, checking for valid status and engine values, and valid coverage metrics. It returns an error if any validation fails. This is important to ensure data integrity.
 
 **Error Handling**
 
-The package employs standard Go error handling practices. Functions return an `error` value to indicate failure.  The caller is responsible for checking the error and handling it appropriately.  Specific validation errors are returned by the `Validate()` function, providing details about what failed validation.
+The package employs standard Go error handling practices. Functions return an `error` value to indicate failure.  The `Validate()` function is central to error detection, ensuring the contract adheres to defined constraints.  Errors are checked after calling functions like `ToJSON()` and `Validate()` to handle potential issues.
 
 **Concurrency**
 
-This package does not currently employ goroutines or channels. It is designed to operate on single `Contract` instances in a synchronous manner.
+This package does not currently employ goroutines or channels, and is therefore not explicitly concurrent. The `Contract` type itself is not designed to be shared concurrently without external synchronization mechanisms.
 
 **Design Decisions**
 
 *   **Default Values:** The `New()` function provides sensible default values for key fields, simplifying contract creation.
-*   **Validation:** The `Validate()` function enforces constraints on allowed values for status and engine, ensuring data consistency.
-*   **JSON Serialization:** The `ToJSON()` function allows for easy serialization of contracts for storage and communication.
-*   **Coverage Calculation:** The `Contract` type includes a `CoverageMet` field that is automatically calculated based on `Actual` and `Required` coverage values. This simplifies checking if coverage requirements are met.
+*   **Validation:** The `Validate()` function enforces constraints on the contract data, ensuring consistency and reliability.
+*   **JSON Serialization:** The `ToJSON()` function allows for easy serialization of the contract data for storage or transmission.
+*   **Explicit Validation Rules:**  Specific tests validate the allowed values for `Status` and `Engine`, and the acceptable range for coverage metrics. This approach promotes clarity and maintainability.

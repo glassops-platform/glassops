@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/generation/adapters/json_adapter.py
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/generation/adapters/json_adapter.py
-generated_at: 2026-01-31T09:51:33.970976
+generated_at: 2026-02-01T19:31:09.136226
 hash: 51047741270ca1d311ab2b2ad45b14dbe6f1ad33eb711851b4a87c690b2cea1d
 ---
 
@@ -15,27 +15,31 @@ This document describes the JSON Adapter, a component responsible for processing
 
 **Module Purpose:**
 
-The primary purpose of this module is to adapt JSON files into a format suitable for large language models (LLMs) to generate technical documentation. It handles file identification, content parsing into manageable chunks, and prompt creation for the LLM.
+The primary responsibility of this module is to read JSON files, split them into manageable chunks if they exceed a defined size limit, and format these chunks for inclusion in prompts sent to a language model for documentation generation. It also defines a prompt template instructing the language model on how to document the JSON content.
 
 **Key Classes:**
 
-*   **`JSONAdapter`**: This class implements the adapter pattern for JSON files. It extends `BaseAdapter` and provides the specific logic for handling JSON content.
+*   **`JSONAdapter`**: This class implements the adapter pattern for JSON files. It determines if a file should be handled by this adapter, parses the file content into chunks, formats those chunks, and constructs a prompt for the language model.
 
-    *   **`TARGET_CHUNK_SIZE`**: A class-level constant set to 24000. This defines the maximum size, in characters, of each chunk the adapter will create when splitting large JSON files.
+    *   `TARGET_CHUNK_SIZE`: A constant integer defining the maximum size (in characters) of each chunk. Currently set to 24000.
 
-    *   **`can_handle(file_path: Path) -> bool`**: This method determines if the adapter can process a given file based on its path. It returns `True` if the file has a `.json` extension and is not a `package.json`, `package-lock.json`, or `tsconfig.json` file. These specific files are excluded as they typically contain build or dependency information, not architectural data. The `Path` type hint indicates that the input is a file path object.
+**Important Functions:**
 
-    *   **`parse(file_path: Path, content: str) -> List[str]`**: This method takes a file path and its content as input and splits the content into a list of strings (chunks). Each chunk is designed to be within the `TARGET_CHUNK_SIZE` limit. The `List[str]` type hint indicates that the method returns a list of strings. If the content is smaller than the target size, it returns a list containing a single chunk. Otherwise, it iterates through the lines of the content, building chunks until the `TARGET_CHUNK_SIZE` is reached.
+*   **`can_handle(file_path: Path) -> bool`**: This function determines whether the adapter can process a given file based on its path. It returns `True` if the file has a `.json` extension and is not one of the excluded files (`package.json`, `package-lock.json`, `tsconfig.json`). The `file_path` argument is a `Path` object representing the file's location.
 
-    *   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This is a private helper method that formats a single chunk of JSON content. It adds a header indicating the file path and, if applicable, a part number for chunked files. The `part` argument is optional and defaults to `None`. The method returns a formatted string containing the file path, part number (if any), and the JSON content enclosed in a code block.
+*   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and its content as input and splits the content into a list of strings (chunks). If the content is smaller than `TARGET_CHUNK_SIZE`, it returns a list containing the entire content formatted as a single chunk. Otherwise, it splits the content into multiple chunks, ensuring no chunk exceeds the size limit. The `file_path` argument is a `Path` object, and `content` is a string. The return value is a `List` of strings, where each string represents a chunk of the original content.
 
-    *   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This method constructs a prompt for the LLM, providing instructions and the parsed JSON content. The prompt instructs the LLM to act as a technical documentation expert and to explain the JSON schema or data structure, focusing on its architectural significance, field requirements, and common use cases. It also includes strict rules for the LLM’s output, prohibiting conversational text, specific words, and the mention of certain names. The `parsed_content` is directly embedded into the prompt.
+*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This is a private helper function that formats a single chunk of content. It adds a header indicating the file path and, if applicable, the chunk number. The `file_path` argument is a `Path` object, `content` is the string representing the chunk, and `part` is an optional integer indicating the chunk number. The function returns a formatted string.
 
+*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs the prompt that will be sent to the language model. It includes instructions for the model to act as a technical documentation expert, focusing on explaining the JSON schema or data structure's purpose, fields, and use cases. It also includes strict rules for the model's output, prohibiting conversational text, specific words, and the mention of certain names. The `file_path` argument is a `Path` object, and `parsed_content` is the string representing the JSON content. The function returns a string containing the prompt.
 
+**Type Hints:**
+
+The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. They clearly define the expected data types for function arguments and return values.
 
 **Design Decisions and Patterns:**
 
-*   **Adapter Pattern:** The `JSONAdapter` implements the adapter pattern, allowing the documentation generation system to work with different file types without modifying the core logic.
-*   **Chunking:** The `parse` method implements a chunking mechanism to handle large JSON files that might exceed the LLM’s input token limit. This ensures that the entire file content can be processed.
-*   **Type Hints:** The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`) to improve code readability and maintainability. These hints also enable static analysis tools to catch potential errors.
-*   **Prompt Engineering:** The `get_prompt` method demonstrates careful prompt engineering to guide the LLM towards generating high-quality technical documentation. The prompt includes specific instructions, constraints, and a clear task definition.
+*   **Adapter Pattern:** The `JSONAdapter` class implements the adapter pattern, allowing the documentation generation process to work with different file types without modifying the core logic.
+*   **Chunking:** The `parse` function implements a chunking mechanism to handle large JSON files that might exceed the language model's input limits. This ensures that the entire file content can be processed.
+*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering, providing clear instructions and constraints to the language model to ensure high-quality documentation output.
+*   **String Formatting:** The use of f-strings for formatting strings improves readability and maintainability.

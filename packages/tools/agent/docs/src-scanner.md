@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/scanner.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/scanner.ts
-generated_at: 2026-01-31T10:21:02.261432
+generated_at: 2026-02-01T19:51:21.447983
 hash: e72d6c8da430da632f90e9e248c9596fa06da0de3f12d3731f0267728bbf3356
 ---
 
@@ -22,7 +22,7 @@ The Scanner identifies files matching given patterns within a root directory. It
 **Key Features**
 
 *   **Pattern-Based Search:** Locates files using glob patterns.
-*   **.gitignore Support:** Respects rules defined in a `.gitignore` file within the root directory.
+*   **`.gitignore` Support:** Respects rules defined in a `.gitignore` file within the root directory.
 *   **Default Exclusions:** Automatically excludes common build artifacts, dependency folders, and environment files.
 *   **Absolute Paths:** Returns file paths as absolute references.
 
@@ -47,34 +47,32 @@ The Scanner identifies files matching given patterns within a root directory. It
 
 **Usage**
 
-1.  **Instantiation:** Create a `Scanner` instance, providing the root directory as an argument.
+1.  **Instantiation:** Create a new `Scanner` instance, providing the root directory as an argument.
 
     ```typescript
     const scanner = new Scanner('/path/to/your/project');
     ```
 
-2.  **File Search:** Call the `findFiles` method with an array of glob patterns.
+2.  **File Search:** Call the `findFiles` method, passing an array of glob patterns.
 
     ```typescript
     const files = await scanner.findFiles(['*.txt', 'src/**/*.js']);
     console.log(files); // Output: An array of absolute file paths
     ```
 
-**Default Ignored Patterns**
+**Ignored Files**
 
-The following patterns are always excluded from search results:
+The following file types and directories are always excluded from the scan:
 
-*   `node_modules/**`
-*   `dist/**`
+*   `node_modules/`
+*   `dist/`
 *   `package-lock.json`
 *   `.env`
-*   `docs/generated/**`
-*   `venv/**`
-*   `__pycache__/**`
+*   `docs/generated/`
+*   `venv/`
+*   `__pycache__/`
 
-**.gitignore Integration**
-
-If a `.gitignore` file exists in the root directory, its contents are automatically loaded and applied to the file search. This allows you to define exclusions specific to your project.
+Additionally, any rules specified in a `.gitignore` file within the root directory will be applied.
 
 **Error Handling**
 
@@ -83,6 +81,6 @@ The `findFiles` method handles potential errors during file system access and gl
 **Dependencies**
 
 *   `fast-glob`: For efficient file system traversal and glob matching.
-*   `ignore`: For managing ignore patterns based on `.gitignore` and other rules.
+*   `ignore`: For managing ignore patterns based on `.gitignore` and custom rules.
 *   `fs`: For file system operations.
 *   `path`: For path manipulation.

@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/services/identity.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/services/identity.go
-generated_at: 2026-01-31T10:05:11.418403
+generated_at: 2026-02-01T19:44:42.253696
 hash: 3940eb183960a36e834ef630b97962783208d0a0acd53fd5522e36dcb1c8a15d
 ---
 
@@ -15,48 +15,65 @@ This document describes the Identity Service, responsible for handling authentic
 
 ### Package Responsibilities
 
-The `services` package contains the `IdentityResolver` and `Identity` types, which encapsulate the logic for authenticating with Salesforce. The service supports two primary authentication methods: JWT-based authentication using a client ID and JWT key, and authentication via SFDX auth URLs.  It aims to securely manage credentials during the authentication process and provide a reliable interface for obtaining Salesforce organization IDs.
+The `services` package contains the `IdentityResolver` and `Identity` types, which encapsulate the logic for interacting with Salesforce authentication mechanisms. The primary goal is to securely obtain a Salesforce Organization ID (OrgID) for use by other components.
 
 ### Key Types and Interfaces
 
 *   **`AuthRequest`**: A structure that holds the parameters required for JWT-based authentication. It contains the following fields:
     *   `ClientID`: The Salesforce Client ID.
-    *   `JWTKey`: The JWT key used for authentication.
+    *   `JWTKey`: The private key used to generate the JWT.
     *   `Username`: The Salesforce username.
     *   `InstanceURL`: The Salesforce instance URL (optional).
 
-*   **`IdentityResolver`**: This type handles JWT-based authentication. It provides a method to authenticate with Salesforce using the `AuthRequest` parameters.
+*   **`IdentityResolver`**: This type handles JWT authentication. It provides a method to authenticate with Salesforce using a JWT key.
 
 *   **`Identity`**: This type handles authentication using SFDX auth URLs. It provides methods to parse and authenticate using these URLs.
 
 ### Important Functions
 
-**`NewIdentityResolver()`**:
-This function creates and returns a new instance of the `IdentityResolver` type. You can use this to initialize the JWT authentication functionality.
+**`IdentityResolver.Authenticate(req AuthRequest) (string, error)`**:
 
-**`Authenticate(req AuthRequest)` (method of `IdentityResolver`)**:
-This function performs JWT-based authentication with Salesforce. It takes an `AuthRequest` as input and returns the Salesforce organization ID and an error, if any. The function securely writes the JWT key to a temporary file, executes the `sf org login jwt` command, parses the response, and returns the organization ID. It includes retry logic for transient Salesforce API failures.  The JWT key file is securely overwritten with zeros before deletion.
+This function performs JWT-based authentication with Salesforce. It takes an `AuthRequest` as input and returns the Salesforce OrgID upon successful authentication, along with a potential error. The process involves:
 
-**`NewIdentity()`**:
-This function creates and returns a new instance of the `Identity` type. You can use this to initialize the SFDX auth URL authentication functionality.
+1.  Writing the JWT key to a temporary file with restricted permissions (0600).
+2.  Executing the `sf org login jwt` command using the Salesforce CLI (SFDX).
+3.  Retrying the command up to three times with exponential backoff in case of transient Salesforce API failures.
+4.  Parsing the JSON response from the SFDX command to extract the OrgID.
+5.  Securely deleting the temporary JWT key file by overwriting it with zeros before unlinking.
 
-**`ParseAuthURL(authURL string)` (method of `Identity`)**:
-This function parses and validates a Salesforce SFDX auth URL. It checks the URL format and validates the instance URL against a regular expression to ensure it is a valid Salesforce domain. It returns the instance URL if the validation is successful, or an error if the URL is invalid.
+**`Identity.ParseAuthURL(authURL string) (string, error)`**:
 
-**`AuthenticateWithURL(authURL string)` (method of `Identity`)**:
-This function authenticates with Salesforce using an SFDX auth URL. It first validates the URL using `ParseAuthURL`. It then writes the auth URL to a temporary file, executes the `sf org login sfdx-url` command, parses the response, and returns the Salesforce organization ID. The auth URL file is securely overwritten with zeros before deletion.
+This function parses a Salesforce SFDX auth URL and validates its format. It checks if the URL starts with "force://" and if it contains a valid Salesforce instance URL (ending with ".salesforce.com"). It returns the instance URL if the format is valid.
+
+**`Identity.AuthenticateWithURL(authURL string) (string, error)`**:
+
+This function authenticates with Salesforce using an SFDX auth URL. It takes the auth URL as input and returns the Salesforce OrgID upon successful authentication, along with a potential error. The process involves:
+
+1.  Validating the auth URL using `ParseAuthURL`.
+2.  Writing the auth URL to a temporary file with restricted permissions (0600).
+3.  Executing the `sf org login sfdx-url` command using the Salesforce CLI (SFDX).
+4.  Parsing the JSON response from the SFDX command to extract the OrgID.
+5.  Securely deleting the temporary auth URL file by overwriting it with zeros before unlinking.
+
+**`NewIdentityResolver() *IdentityResolver`**:
+
+This function creates and returns a new instance of the `IdentityResolver` type.
+
+**`NewIdentity() *Identity`**:
+
+This function creates and returns a new instance of the `Identity` type.
 
 ### Error Handling
 
-The service employs robust error handling. Functions return an error value alongside their primary return value. Errors are often wrapped using `fmt.Errorf` with `%w` to preserve the original error context, aiding in debugging. Specific error messages are provided for common issues like invalid URL formats, file write failures, and authentication failures.
+The service employs robust error handling. Functions return both a result (OrgID) and an error value. Errors are wrapped using `fmt.Errorf` to provide context and preserve the original error for debugging. Specific error messages are provided for common issues like invalid URL formats, file write failures, and authentication failures.
 
 ### Concurrency
 
-This service does not explicitly use goroutines or channels. However, the `Authenticate` function incorporates a retry mechanism with exponential backoff using `time.Sleep`, which can be considered a form of implicit concurrency management to handle transient errors.
+This service does not explicitly use goroutines or channels. However, the `Authenticate` function incorporates a retry mechanism with a `time.Sleep` to handle transient errors, which could be considered a form of implicit concurrency management.
 
 ### Design Decisions
 
-*   **Secure Credential Handling**: The service writes sensitive credentials (JWT key and auth URL) to temporary files with restricted permissions (0600) and securely overwrites the file contents with zeros before deleting them. This minimizes the risk of credential exposure.
-*   **SFDX CLI Dependency**: The service relies on the Salesforce CLI (SFDX) being installed and configured on the system. This allows it to leverage the SFDX tooling for authentication.
-*   **Retry Logic**: The `Authenticate` function includes retry logic to handle transient Salesforce API failures, improving the reliability of the authentication process.
-*   **Temporary Files**: The use of temporary files is essential for securely passing credentials to the SFDX CLI without exposing them in process memory or command-line arguments.
+*   **Secure Key Management**: The JWT key and auth URL are written to temporary files with restricted permissions (0600) and securely deleted after use by overwriting the file contents with zeros before removal. This minimizes the risk of sensitive information being exposed.
+*   **SFDX CLI Dependency**: The service relies on the Salesforce CLI (SFDX) being installed and configured on the system.
+*   **Retry Mechanism**: The `Authenticate` function includes a retry mechanism to handle transient Salesforce API failures, improving reliability.
+*   **Clear Error Messages**:  The service provides informative error messages to aid in troubleshooting.

@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/config/prompts.yml
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/config/prompts.yml
-generated_at: 2026-01-31T11:04:01.236653
+generated_at: 2026-02-01T19:27:45.708644
 hash: fa0450b4b022cb08c826f4a7a5d3d82f9e04c2559269e31a838da7444eedfee5
 ---
 
@@ -21,7 +21,7 @@ The YAML file is structured around a top-level key `prompts`. This key contains 
 
 ### `prompts`
 
-- **`_shared_rules`**:  A string containing a set of strict rules that are prepended to every system prompt. These rules govern the style and content of the generated documentation, prohibiting the use of certain words, emojis, and formatting conventions.  The value is a multi-line string defining these constraints.
+- **`_shared_rules`**:  A string containing a set of strict rules that are prepended to all system prompts. These rules govern the style and content of the generated documentation, prohibiting the use of certain words, emojis, and formatting conventions.  The value is a multi-line string defining these constraints.
 - **`go`**: Configuration for Go source code documentation.
     - **`system`**: A string defining the system prompt for the Go adapter. This prompt instructs the agent to act as a principal architect and platform engineer, translating Go code into comprehensive documentation. It includes the `{{shared_rules}}` variable to incorporate the shared rules.
     - **`user`**: A string defining the user prompt for the Go adapter. This prompt instructs the agent to generate documentation for the provided Go file, using the `{{content}}` variable to represent the file's content.

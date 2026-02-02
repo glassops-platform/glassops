@@ -2,10 +2,10 @@
 type: Documentation
 domain: native
 origin: packages/adapters/native/cmd/main.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/adapters/native/cmd/main.go
-generated_at: 2026-01-31T09:45:42.125394
+generated_at: 2026-02-01T19:25:11.286647
 hash: 2c4417b1c1c5b20a2809807e6d189a0b7a365808c5821a7565335171823efb5f
 ---
 
@@ -37,7 +37,7 @@ The following types define the data structures used for communication:
     	Output  OutputMetadata  `json:"output"`
     }
     ```
-*   **`AdapterMetadata`**: Contains information about the adapter itself, such as its name, version, and the underlying platform (substrate) it operates on.
+*   **`AdapterMetadata`**: Contains information about the adapter itself, such as its name, version, and the underlying platform (substrate).
     ```go
     type AdapterMetadata struct {
     	Name      string `json:"name"`
@@ -45,7 +45,7 @@ The following types define the data structures used for communication:
     	Substrate string `json:"substrate"`
     }
     ```
-*   **`OutputMetadata`**: Provides details about the output of an operation, including the path to the generated SARIF file, a trace ID, and any additional metadata.
+*   **`OutputMetadata`**: Provides details about the transformation output, including the path to the generated SARIF file, a trace ID, and any additional metadata.
     ```go
     type OutputMetadata struct {
     	SarifPath string                 `json:"sarif_path"`
@@ -58,8 +58,8 @@ The following types define the data structures used for communication:
 
 *   **`main()`**: This is the entry point of the application. It parses command-line arguments and dispatches execution to the appropriate handler function based on the provided command (`info`, `transform`, `validate`). If an unknown command is given, it prints an error message and exits.
 *   **`handleInfo()`**:  This function handles the `info` command. It creates an `InfoResponse` object with the adapter's details and prints it as a JSON string to standard output.
-*   **`handleTransform()`**: This function handles the `transform` command. It uses the `flag` package to parse command-line arguments specific to the transform operation, including the input file path, output SARIF file path, and policy reference. It validates that the required `--input` and `--output` flags are provided. Currently, it provides a mock implementation that prints a message indicating the transformation process and then constructs and prints a `TransformResponse` object as a JSON string.
-*   **`handleValidate()`**: This function handles the `validate` command. It uses the `flag` package to parse the `--input` flag. It validates that the `--input` flag is provided. Currently, it provides a mock implementation that prints a message indicating the validation process and then prints a simple JSON string indicating a successful validation with no violations.
+*   **`handleTransform()`**: This function handles the `transform` command. It uses the `flag` package to parse command-line arguments specific to the transform operation, including `--input` (path to the input source), `--output` (path to the output SARIF file), and `--policy-ref` (policy reference). It validates that `--input` and `--output` are provided. Currently, it provides a mock implementation that prints a message indicating the transformation process and then constructs and prints a `TransformResponse` object as a JSON string.
+*   **`handleValidate()`**: This function handles the `validate` command. It uses the `flag` package to parse the `--input` argument (path to the input source). It validates that `--input` is provided. Currently, it provides a mock implementation that prints a message indicating the validation process and then prints a simple JSON string indicating validation success with no violations.
 
 **Error Handling**
 
@@ -76,7 +76,7 @@ This initial version of the adapter CLI does not employ concurrency (goroutines 
 **Design Decisions**
 
 *   **Command-Based Structure**: The CLI is structured around commands (`info`, `transform`, `validate`) to provide a clear and organized interface.
-*   **Flag Parsing**: The `flag` package is used for parsing command-line arguments, providing a standard and reliable mechanism for handling options.
+*   **Flag Parsing**: The `flag` package is used for parsing command-line arguments, providing a standard and reliable mechanism.
 *   **JSON Output**:  All responses are formatted as JSON strings for easy parsing by other tools and systems.
-*   **Mock Implementations**: The `transform` and `validate` commands currently use mock implementations to provide a foundation for future development.  These will be replaced with actual adapter logic.
-*   **Data Structures**: The data structures (`InfoResponse`, `TransformResponse`, etc.) are designed to align with potential protobuf definitions, facilitating future integration with a more robust communication layer.
+*   **Mock Implementations**: The `transform` and `validate` commands currently use mock implementations to provide a foundation for future development.  You will replace these with actual adapter logic.
+*   **Clear Error Messages**:  The CLI provides informative error messages to help users diagnose and resolve issues.

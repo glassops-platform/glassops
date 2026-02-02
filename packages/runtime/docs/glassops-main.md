@@ -2,64 +2,81 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/cmd/glassops/main.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/cmd/glassops/main.go
-generated_at: 2026-01-31T09:57:50.306116
-hash: c16e6c382845f65a8d2af02a90b0d828dc4354bf2a489904917c35b59490031c
+generated_at: 2026-02-01T19:37:59.897465
+hash: ac422471f6c7e21810341ed39d4c4ff3918cb8385a5cfd46e01e56a27a48cb0e
 ---
 
 ## GlassOps Runtime Documentation
 
-This document details the functionality and design of the GlassOps Runtime, a tool designed to provide governance and automation for Salesforce deployments within a CI/CD pipeline. It is intended for both technical users (developers, platform engineers) and non-technical stakeholders (managers, security officers).
+This document describes the GlassOps Runtime, a system designed to provide governed execution of operations, particularly within a Salesforce environment. It details the runtime’s purpose, key components, and operational flow.
 
 **Package Purpose and Responsibilities**
 
-The `main` package serves as the entry point for the GlassOps Runtime. It orchestrates a series of checks and processes to ensure deployments adhere to defined policies and standards. The runtime focuses on validating the environment, enforcing policies, bootstrapping necessary tools, authenticating with Salesforce, and generating a deployment contract.
+The `main` package serves as the entry point for the GlassOps Runtime. Its primary responsibility is to orchestrate a series of validation, authentication, and configuration steps to establish a secure and governed environment for subsequent operations. The runtime ensures adherence to defined policies and provides contextual information for deployments.
 
 **Key Types and Interfaces**
 
-The runtime leverages several internal packages, but does not expose any public types or interfaces. Key internal components include:
+While this runtime doesn’t define explicit interfaces, it interacts with several internal packages that do. These packages provide the core functionality:
 
-*   `analyzer.CodeAnalyzer`: Performs static code analysis to identify potential issues.
-*   `contract.DeploymentContract`: Represents the agreement between the deployment process and governance rules. It captures details about the deployment, quality checks, and audit information.
-*   `gha.GitHubActions`: Provides an abstraction layer for interacting with the GitHub Actions environment, handling inputs, outputs, and status reporting.
-*   `policy.PolicyEngine`: Loads and evaluates governance policies.
-*   `services.RuntimeEnvironment`: Manages the Salesforce CLI and related tools.
-*   `services.IdentityResolver`: Handles authentication with Salesforce.
-*   `telemetry.TelemetryService`: Collects and exports runtime metrics.
+*   **validator:**  Handles validation of the environment, inputs, and context to ensure data integrity and compliance.
+*   **policy:**  Manages and evaluates governance policies, including freeze windows, to control execution.
+*   **gha:** Provides an abstraction layer for interacting with the GitHub Actions environment, handling inputs, outputs, and logging.
+*   **services:** Contains services for authenticating with external systems, such as Salesforce.
+*   **telemetry:**  Handles the initialization and shutdown of OpenTelemetry for tracing and monitoring.
+*   **analyzer:** Performs static analysis of code to identify potential issues.
+*   **permit:** Generates a permit file containing contextual information.
+*   **contract:** Generates a deployment contract file.
 
 **Important Functions and Their Behavior**
 
-*   `main()`: The primary entry point. It initializes the runtime context and calls the `run()` function. Handles top-level error reporting to GitHub Actions.
-*   `run(ctx context.Context) error`:  This function contains the core logic of the runtime. It performs the following stages:
-    *   **Environment Validation:** Checks for the presence of required environment variables (`GITHUB_WORKSPACE`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`).
-    *   **Input Validation:** Validates required inputs provided via GitHub Actions inputs (`client_id`, `jwt_key`, `username`).  It also validates the format of the JWT key and the Salesforce instance URL.
-    *   **Resource Limits:** Implements a timeout mechanism to prevent runaway executions. A goroutine is launched to terminate the process if it exceeds a predefined time limit (30 minutes).
-    *   **Data Integrity Checks:** Validates the context of the execution (e.g., pull request vs. direct commit) and issues warnings for potentially less secure scenarios (forked repositories). It also validates the repository format.
-    *   **Initialization:** Generates a unique runtime ID and initializes OpenTelemetry for tracing and monitoring.
-    *   **Policy Evaluation:** Loads and evaluates governance policies using the `policy.PolicyEngine`. This includes static code analysis (if enabled) and checks for active freeze windows.
-    *   **Bootstrap:** Installs the Salesforce CLI using the `services.RuntimeEnvironment`.  It also supports the installation of plugins.
-    *   **Identity Resolution:** Authenticates with Salesforce using the provided credentials via the `services.IdentityResolver`. Authentication can be skipped if configured.
-    *   **Contract Generation:** Creates a deployment contract (`contract.DeploymentContract`) summarizing the deployment details, quality checks (test results, code coverage), and audit information. The contract is written to a file.
-    *   **Output:** Sets GitHub Actions outputs with relevant information (runtime ID, org ID, contract path, lock status).
-*   `isValidURL(s string) bool`: Checks if a given string is a valid URL.
-*   `generateUUID() string`: Generates a Universally Unique Identifier (UUID).
-*   `splitAndTrim(s, sep string) []string`: Splits a string by a separator and trims whitespace from each resulting part.
-*   `parseFloat(s string, defaultVal float64) float64`: Parses a string to a float64, returning a default value if parsing fails.
+*   **`main()`:** This function is the program’s entry point. It initializes the runtime, calls the `run()` function to perform the core logic, and handles any errors that occur during execution. If an error occurs, it sets a failure status in the GitHub Actions environment and exits.
+*   **`run(ctx context.Context) error`:** This function encapsulates the main workflow of the runtime. It performs the following steps:
+    1.  **Environment and Input Validation:** Validates the environment and user-provided inputs.
+    2.  **Timeout Enforcement:** Starts a goroutine (`enforceTimeout`) to terminate the runtime if it exceeds a predefined execution time (30 minutes).
+    3.  **Policy Evaluation:** Loads and evaluates governance policies.  It checks for active freeze windows and sets an output indicating whether the runtime is locked. Static analysis is performed if enabled in the policy configuration.
+    4.  **Salesforce Authentication:** Authenticates with Salesforce using provided credentials or skips authentication if configured.
+    5.  **Permit Generation:** Generates a GlassOps Permit file containing runtime ID, organization ID, and policy information.
+    6.  **Contract Generation:** Generates a deployment contract file.
+    7.  **Output Session State:** Sets outputs in the GitHub Actions environment, including the organization ID, runtime ID, and a flag indicating that the runtime is ready.
+*   **`generateUUID()`:** Generates a Universally Unique Identifier (UUID) used as a runtime identifier.
+*   **`enforceTimeout(limit time.Duration)`:** This function, executed in a separate goroutine, sleeps for the specified duration and then terminates the runtime if the limit is exceeded.
 
 **Error Handling Patterns**
 
-The runtime employs a consistent error handling approach. Functions return an `error` value. Errors are checked immediately, and if an error occurs, the function returns, propagating the error up the call stack.  Errors are often wrapped using `fmt.Errorf("%w", err)` to provide additional context without losing the original error information.  Critical errors are reported to GitHub Actions using `gha.SetFailed()`, which sets the workflow status to failed.  Non-critical errors or warnings are reported using `gha.Warning()`.
+The runtime employs a consistent error handling pattern. Functions return an `error` value. The `run()` function checks for errors after each step and returns immediately if an error is encountered. Errors are wrapped using `fmt.Errorf` with `%w` to preserve the original error context.  The `gha.SetFailed()` function is used to report errors to the GitHub Actions environment.
 
 **Concurrency Patterns**
 
-The runtime uses a single goroutine for the timeout mechanism. This goroutine sleeps for a predefined duration and checks if the execution time has exceeded the limit. This prevents long-running or stalled deployments.
+The runtime uses a single goroutine for timeout enforcement (`enforceTimeout`). This goroutine operates independently and terminates the runtime if the execution time exceeds the defined limit.
 
 **Notable Design Decisions**
 
-*   **GitHub Actions Integration:** The runtime is specifically designed to operate within a GitHub Actions environment, leveraging its inputs, outputs, and status reporting mechanisms.
-*   **Policy-Driven Governance:** The runtime enforces governance policies through a dedicated `policy.PolicyEngine`, allowing for flexible and configurable rules.
-*   **Deployment Contract:** The generation of a deployment contract provides a clear and auditable record of the deployment process and its adherence to governance standards.
-*   **Modular Design:** The runtime is structured into distinct packages (analyzer, contract, policy, services) to promote code organization and maintainability.
-*   **Telemetry Integration:** OpenTelemetry is integrated to provide insights into runtime performance and behavior.
+*   **GitHub Actions Integration:** The runtime is designed to be executed within a GitHub Actions workflow, leveraging the `gha` package for input, output, and logging.
+*   **Policy-Driven Governance:** The runtime incorporates a policy engine to enforce governance rules and control execution.
+*   **Contextual Information:** The runtime generates a GlassOps Permit and a deployment contract to provide contextual information for subsequent operations.
+*   **Telemetry Integration:** The runtime integrates with OpenTelemetry for tracing and monitoring.
+*   **Defensive Programming:** The runtime includes multiple validation steps to ensure data integrity and prevent unexpected behavior.
+*   **Timeout Mechanism:** The use of a separate goroutine for timeout enforcement ensures that the runtime will terminate even if it becomes unresponsive.
+
+**Usage Instructions**
+
+You need to provide the following inputs to the runtime via GitHub Actions:
+
+*   `client_id`: The Salesforce client ID.
+*   `jwt_key`: The JWT key for Salesforce authentication.
+*   `username`: The Salesforce username.
+*   `instance_url`: The Salesforce instance URL (defaults to `https://login.salesforce.com`).
+*   `enforce_policy`: Set to "true" to enforce policies, or "false" to disable policy enforcement.
+*   `skip_auth`: Set to "true" to skip Salesforce authentication (for testing purposes only).
+*   `otel_service_name`: The name of the OpenTelemetry service (defaults to `glassops-runtime`).
+
+The runtime will output the following values:
+
+*   `runtime_id`: A unique identifier for the runtime.
+*   `is_locked`: Indicates whether the runtime is locked due to active freeze windows.
+*   `org_id`: The Salesforce organization ID.
+*   `contract_path`: The path to the generated deployment contract file.
+*   `glassops_ready`: Set to "true" when the runtime is ready for governed execution.

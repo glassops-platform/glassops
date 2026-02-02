@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/llm/client.py
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/llm/client.py
-generated_at: 2026-01-31T09:55:45.827027
+generated_at: 2026-02-01T19:35:10.862927
 hash: 5c3004e9f42636ddf1fc589893d5cbcf16779f191ba71625688658e4b79db9f5
 ---
 
@@ -15,30 +15,30 @@ This document details the functionality of the LLMClient, a component designed t
 
 ### Module Responsibilities
 
-The `llm/client.py` module encapsulates all interactions with the Google Generative AI API. Its primary responsibilities include:
+The `llm/client.py` module encapsulates all logic related to communicating with the Google Generative AI API. Its primary responsibilities include:
 
 *   Establishing a connection to the LLM service.
 *   Sending prompts to the LLM and receiving responses.
-*   Handling potential errors during API calls, including transient issues like rate limits and server errors.
-*   Implementing rate limiting to prevent exceeding API usage quotas.
+*   Handling potential errors during API calls, including retrying transient failures.
+*   Managing request rates to avoid exceeding API limits (Rate Limiting).
 *   Providing a simple and reusable interface for other components of the Knowledge Pipeline.
 
 ### Key Classes
 
 #### `LLMClient`
 
-This class is the core of the module. It manages the connection to the LLM and provides the `generate` method for requesting content.
+This class is the central component of the module. It handles the interaction with the Google Generative AI API.
 
 *   **Attributes:**
-    *   `client`: An instance of the `genai.Client` object, representing the connection to the Google Generative AI API.  It is initialized to `None` if the API key is not found.
+    *   `client`: An instance of the `genai.Client` object, representing the connection to the LLM service.  It is initialized to `None` if the API key is not found.
     *   `model`: A string specifying the name of the LLM model to use (default: "gemma-3-27b-it").
     *   `_request_history`: A list of dictionaries used to track recent requests for rate limiting purposes. Each dictionary contains the request timestamp and token count.
     *   `_rpm_limit`: An integer defining the requests per minute limit (default: 28).
     *   `_tpm_limit`: An integer defining the tokens per minute limit (default: 14000).
 
 *   **Initialization (`__init__`)**:
-    *   Loads the Google API key from the environment variables (specifically, `GOOGLE_API_KEY`).
-    *   Initializes the `genai.Client` if the API key is found. If the key is missing, it prints a warning and disables the client.
+    *   Loads the Google API key from the environment variables (using a `.env` file in the project root).
+    *   Initializes the `genai.Client` if the API key is found. If the API key is missing, the client is set to `None`, effectively disabling the LLM functionality.
     *   Sets the default model name.
     *   Initializes the request history list.
     *   Sets the rate limits for requests per minute and tokens per minute.
@@ -63,7 +63,7 @@ This private function implements the rate limiting logic. It checks if the curre
 
 #### `generate(prompt: str, max_retries: int = 3, temperature: float = 0.2, max_output_tokens: int = 8192) -> Optional[str]`
 
-This is the primary function for interacting with the LLM. It sends a prompt to the model and returns the generated text.
+This is the primary function for generating text from a given prompt. It handles the API call, retry logic, and rate limiting.
 
 *   **Parameters:**
     *   `prompt`: The text prompt to send to the LLM.
@@ -72,12 +72,16 @@ This is the primary function for interacting with the LLM. It sends a prompt to 
     *   `max_output_tokens`: The maximum number of tokens to generate in the response (default: 8192).
 *   **Return Value:**
     *   The generated text string if the request is successful.
-    *   `None` if the request fails after multiple retries or if the LLM client is not initialized.
+    *   `None` if the request fails after multiple retries or if the LLM client is not initialized (due to a missing API key).
+
+### Type Hints
+
+The code extensively uses type hints (e.g., `str`, `int`, `Optional[str]`) to improve code readability and maintainability. These hints specify the expected data types for function parameters and return values, allowing for static analysis and early detection of potential errors.
 
 ### Design Decisions and Patterns
 
-*   **Retry Logic:** The `generate` function incorporates a retry mechanism with exponential backoff to handle transient errors (429 and 503 errors, or errors containing "overloaded"). This improves the robustness of the client.
-*   **Rate Limiting:** The `_throttle` function enforces rate limits to prevent exceeding API quotas. It tracks requests and tokens within a sliding window (60 seconds) and pauses execution if necessary.
-*   **Type Hints:** The code uses type hints (e.g., `str`, `int`, `Optional[str]`) to improve code readability and maintainability. These hints help clarify the expected data types for function parameters and return values.
-*   **Environment Variables:** The API key is loaded from an environment variable (`GOOGLE_API_KEY`), which promotes security and allows for easy configuration without modifying the code.
-*   **Error Handling:** The code includes comprehensive error handling, logging informative messages when errors occur, and distinguishing between retryable and non-retryable errors.
+*   **Retry Logic:** The `generate` function incorporates a retry mechanism with exponential backoff to handle transient errors such as network issues or temporary API overload.
+*   **Rate Limiting:** The `_throttle` function implements a basic rate limiting strategy to prevent exceeding the API's usage limits. It tracks recent requests and pauses execution if necessary.
+*   **Environment Variables:** The API key is loaded from an environment variable, promoting secure configuration management and preventing hardcoding of sensitive information.
+*   **Error Handling:** The code includes robust error handling, logging informative messages when errors occur, and distinguishing between retryable and non-retryable errors.
+*   **Defensive Programming:** The client checks for the presence of the API key and disables functionality gracefully if it's missing. It also includes checks for empty responses from the LLM.

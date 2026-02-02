@@ -2,10 +2,10 @@
 type: Documentation
 domain: knowledge
 origin: packages/knowledge/generation/adapters/docker_adapter.py
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/knowledge/generation/adapters/docker_adapter.py
-generated_at: 2026-01-31T09:50:48.225644
+generated_at: 2026-02-01T19:30:35.066302
 hash: baf88548739965112f653460a79caab499eac6130e9bdca0e9984c296e006cd4
 ---
 
@@ -29,9 +29,9 @@ The primary responsibility of this module is to identify, parse, and prepare Doc
 
 *   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and content of a Dockerfile as input. It currently bypasses chunking due to the typically small size of Dockerfiles and returns a list containing a single string representing the formatted Dockerfile content. The `file_path` argument is a `Path` object, and `content` is a string containing the Dockerfile's content.
 
-*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This protected function formats a chunk of Dockerfile content into a string suitable for inclusion in a prompt. It includes the file path and an optional part number if the content is part of a larger file that has been split into chunks. The `file_path` argument is a `Path` object, `content` is the Dockerfile content, and `part` is an optional integer indicating the chunk number.
+*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This protected function formats a chunk of Dockerfile content into a string suitable for inclusion in a prompt. It includes the file path and an optional part number if the content is chunked. The `file_path` argument is a `Path` object, `content` is the Dockerfile content string, and `part` is an optional integer indicating the chunk number.
 
-*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs a prompt to be sent to a language model for documentation generation. The prompt instructs the model to act as a DevOps expert and document the provided Dockerfile, focusing on the base image, stages, instructions, security, and build/run procedures. It includes strict formatting rules to ensure the output is valid Markdown and avoids specific terms and phrasing. The `file_path` argument is a `Path` object, and `parsed_content` is the formatted Dockerfile content.
+*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs the prompt that will be sent to the language model. It includes instructions for the model to act as a DevOps expert and document the provided Dockerfile, focusing on the base image, stages, instructions, security, and build/run procedures. It also includes strict rules for the model's output, prohibiting conversational text, emojis, specific words, and mentions of the platform name. The `file_path` argument is a `Path` object, and `parsed_content` is the formatted Dockerfile content string.
 
 **Type Hints:**
 
@@ -40,6 +40,6 @@ The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `
 **Design Decisions and Patterns:**
 
 *   **Adapter Pattern:** The `DockerAdapter` class implements the adapter pattern, allowing the system to work with Dockerfiles without needing to know the specifics of their format. This promotes loose coupling and extensibility.
-*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering to guide the language model towards generating high-quality, relevant documentation. The prompt includes specific instructions, constraints, and a clear request for Markdown output.
-*   **Content Formatting:** The `_format_chunk` function ensures that the Dockerfile content is clearly presented within the prompt, including the file path for context.
-*   **Chunking Strategy:** The current implementation avoids chunking Dockerfiles, assuming they are small enough to be processed as a single unit. The `TARGET_CHUNK_SIZE` constant is defined but not currently used, allowing for potential future expansion of the chunking strategy if needed.
+*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering to guide the language model towards generating high-quality, relevant documentation. The prompt includes specific instructions and constraints to ensure the desired output format and content.
+*   **Content Formatting:** The `_format_chunk` function ensures that the Dockerfile content is clearly presented within the prompt, using Markdown code blocks for readability.
+*   **Chunking Strategy:** The current implementation avoids chunking Dockerfiles, assuming they are small enough to be processed as a single unit. The `TARGET_CHUNK_SIZE` constant is defined for potential future use if larger Dockerfiles need to be handled.

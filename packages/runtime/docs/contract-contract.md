@@ -2,127 +2,45 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/contract/contract.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/contract/contract.go
-generated_at: 2026-01-31T09:59:05.077763
-hash: a3f26726bb5f1246580a0587bbde1927f7284f9f574ef6261e317958a6f2bb26
+generated_at: 2026-02-01T19:39:18.195298
+hash: 617e74d7d32ea1207809060db3935c860af6d30ba7cba135faede149ae063c59
 ---
 
 ## Deployment Contract Package Documentation
 
-This package defines the schema for a Deployment Contract, representing the outcome of a deployment governance process. It provides a structured way to record details about the deployment, its quality, and an audit trail.
+This package defines the schema and functionality for a Deployment Contract, representing the outcome of a governance process during software deployment. The contract captures metadata about the deployment, its status, quality metrics, and audit information. It is designed to be a standardized output for various deployment adapters and engines.
 
-**Key Types**
+**Key Types:**
 
-*   **DeploymentContract**: The central type, encapsulating all information about a deployment’s contract. It includes metadata, status, quality metrics, and audit details.
-    ```go
-    type DeploymentContract struct {
-    	SchemaVersion string  `json:"schemaVersion"`
-    	Meta          Meta    `json:"meta"`
-    	Status        string  `json:"status"`
-    	Quality       Quality `json:"quality"`
-    	Audit         Audit   `json:"audit"`
-    }
-    ```
+*   **DeploymentContract:** The central structure representing the complete deployment contract. It contains fields for schema version, metadata, status, quality, and audit details.
+*   **Meta:**  Holds execution metadata such as the adapter used, the engine type ("native", "hardis", "custom"), a timestamp, and the trigger event.
+*   **Quality:** Encapsulates code quality metrics, including code coverage and test results.
+*   **Coverage:**  Details code coverage information, tracking actual coverage, required coverage, and whether the requirement is met.
+*   **TestResults:** Stores the results of test execution, including the total number of tests, the number passed, and the number failed.
+*   **Audit:** Contains audit trail information, including who triggered the deployment, the organization ID, the repository, and the commit hash.
+*   **ValidationError:** A custom error type used to report validation failures during contract checks.
 
-*   **Meta**: Contains metadata about the deployment execution environment.
-    ```go
-    type Meta struct {
-    	Adapter   string `json:"adapter"`
-    	Engine    string `json:"engine"`
-    	Timestamp string `json:"timestamp"`
-    	Trigger   string `json:"trigger"`
-    }
-    ```
+**Important Functions:**
 
-*   **Quality**: Holds code quality metrics associated with the deployment.
-    ```go
-    type Quality struct {
-    	Coverage Coverage    `json:"coverage"`
-    	Tests    TestResults `json:"tests"`
-    }
-    ```
+*   **New():** Creates a new `DeploymentContract` instance with default values.  The default status is "Succeeded", the adapter and engine are "native", and a current timestamp is recorded. Coverage is initialized with a requirement of 80%.
+*   **ToJSON():** Serializes a `DeploymentContract` instance into a JSON byte slice, formatted with indentation for readability.
+*   **Validate():**  Performs validation checks on the `DeploymentContract` to ensure data integrity. It verifies that the `Status` field is one of the allowed values ("Succeeded", "Failed", "Blocked"), the `Engine` field is valid ("native", "hardis", "custom"), and that `Coverage` values are within the range of 0 to 100.  Returns a `ValidationError` if any check fails, otherwise returns nil.
+*   **Generate(orgID string):**  Creates a `DeploymentContract` based on input parameters and environment variables, then writes it to a file named `glassops-contract.json` in the workspace. It retrieves test results and coverage data from GitHub Actions inputs.  If the inputs are invalid, it uses default values and logs a warning. It populates audit information using environment variables like `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, and `GITHUB_SHA`. The function returns the path to the generated contract file or an error if one occurred.
 
-*   **Coverage**: Represents code coverage information.
-    ```go
-    type Coverage struct {
-    	Actual   float64 `json:"actual"`
-    	Required float64 `json:"required"`
-    	Met      bool    `json:"met"`
-    }
-    ```
+**Error Handling:**
 
-*   **TestResults**: Stores the results of test execution.
-    ```go
-    type TestResults struct {
-    	Total  int `json:"total"`
-    	Passed int `json:"passed"`
-    	Failed int `json:"failed"`
-    }
-    ```
+The package employs standard Go error handling practices. Functions return an error value when operations fail, allowing calling code to handle errors appropriately. A custom `ValidationError` type is defined for validation failures, providing specific information about the invalid field and the reason for the error.
 
-*   **Audit**: Contains information for auditing the deployment.
-    ```go
-    type Audit struct {
-    	TriggeredBy string `json:"triggeredBy"`
-    	OrgID       string `json:"orgId"`
-    	Repository  string `json:"repository"`
-    	Commit      string `json:"commit"`
-    }
-    ```
+**Concurrency:**
 
-*   **ValidationError**: A custom error type used to signal validation failures within the contract.
-    ```go
-    type ValidationError struct {
-    	Field   string
-    	Message string
-    }
-    ```
+This package does not explicitly use goroutines or channels. It operates in a synchronous manner.
 
-**Important Functions**
+**Design Decisions:**
 
-*   **New()**: Creates a new `DeploymentContract` instance with default values. The default status is set to "Succeeded", the adapter and engine are set to "native", and the timestamp is set to the current UTC time. The coverage requirement is initialized to 80.
-    ```go
-    func New() *DeploymentContract {
-    	return &DeploymentContract{
-    		SchemaVersion: "1.0",
-    		Meta: Meta{
-    			Adapter:   "native",
-    			Engine:    "native",
-    			Timestamp: time.Now().UTC().Format(time.RFC3339),
-    		},
-    		Status: "Succeeded",
-    		Quality: Quality{
-    			Coverage: Coverage{Required: 80},
-    			Tests:    TestResults{},
-    		},
-    	}
-    }
-    ```
-
-*   **ToJSON()**: Serializes a `DeploymentContract` instance into a JSON byte slice with indentation for readability.
-    ```go
-    func (c *DeploymentContract) ToJSON() ([]byte, error) {
-    	return json.MarshalIndent(c, "", "  ")
-    }
-    ```
-
-*   **Validate()**: Validates the `DeploymentContract` to ensure data integrity. It checks the validity of the `Status` and `Engine` fields against predefined allowed values, and verifies that `Coverage.Actual` and `Coverage.Required` fall within the range of 0 to 100. Returns a `ValidationError` if any validation fails; otherwise, returns nil.
-    ```go
-    func (c *DeploymentContract) Validate() error {
-    	// ... validation logic ...
-    	return nil
-    }
-    ```
-
-**Error Handling**
-
-The package employs a custom error type, `ValidationError`, to provide specific information about validation failures. This allows callers to easily identify which field failed validation and the reason for the failure. The `Error()` method on `ValidationError` provides a human-readable error message.
-
-**Design Decisions**
-
-*   **JSON Serialization**: The use of JSON for serialization allows for easy integration with other systems and services.
-*   **Explicit Validation**: The `Validate()` method provides a clear and explicit way to ensure the integrity of the contract data.
-*   **Default Values**: The `New()` function provides sensible default values, simplifying contract creation.
-*   **Schema Versioning**: The `SchemaVersion` field allows for future evolution of the contract schema without breaking compatibility. You should increment this value when making changes to the contract structure.
+*   **JSON Serialization:** The contract is serialized to JSON for portability and ease of integration with other systems.
+*   **Validation:**  The `Validate` function ensures the contract adheres to a defined schema, preventing invalid data from being processed.
+*   **Environment Variable Handling:** The `Generate` function relies on environment variables for audit information and input parameters, making it suitable for use in CI/CD pipelines like GitHub Actions.  The `hasEnvOr` helper function provides a convenient way to retrieve environment variables with a fallback value.
+*   **Input Parsing:** The `parseFloat` function handles the conversion of string inputs to float64, providing a default value if the input is invalid or empty.
