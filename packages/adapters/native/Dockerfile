@@ -15,7 +15,10 @@ RUN go build -o /adapter ./cmd/main.go
 FROM alpine:3.19
 
 # Install runtime dependencies (git, sf cli dependencies if needed)
-RUN apk add --no-cache ca-certificates git
+RUN apk add --no-cache ca-certificates git nodejs npm coreutils
+
+# Install Salesforce CLI globally
+RUN npm install -g @salesforce/cli
 
 # Create non-root user
 RUN addgroup -g 1000 glassops && \

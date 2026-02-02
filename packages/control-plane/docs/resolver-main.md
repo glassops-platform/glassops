@@ -2,10 +2,10 @@
 type: Documentation
 domain: control-plane
 origin: packages/control-plane/cmd/resolver/main.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/control-plane/cmd/resolver/main.go
-generated_at: 2026-01-31T09:46:02.544899
+generated_at: 2026-02-01T19:25:56.154703
 hash: e53a85af9c11df19f7caa52717a03e4fe1f512958c414471e02e77ad2ada38bc
 ---
 
@@ -28,13 +28,13 @@ The `main` package implements the core logic for the resolver. Its primary respo
     1.  **Loads the Deployment Contract:** Reads the deployment contract from the file `.glassops/deployment-contract.json`. If the file is not found, the program exits with a fatal error.
     2.  **Resolves the Policy:** Calls the `policy.ResolvePolicy()` function to obtain the effective policy. In this example, it uses "devops-config.json" as the policy source and an 80.0 threshold.
     3.  **Enforces Quality Gates:**
-        *   **Coverage Check:** Compares the actual code coverage reported in the deployment contract (`dc.Quality.Coverage.Actual`) against the minimum coverage required by the policy (`effPolicy.Governance.MinCoverage`). If the actual coverage is below the required minimum, the program prints an error message and exits with a non-zero exit code (1).
-        *   **Static Analysis Check:** Checks if static analysis is enabled in the policy (`effPolicy.Governance.StaticAnalysis.Enabled`) and if the deployment contract indicates that static analysis passed (`dc.Quality.StaticAnalysis.Met`). If static analysis is enabled and has not passed, the program prints an error message indicating the tool used for static analysis and exits with a non-zero exit code (1).
-    4.  **Success:** If all checks pass, the program prints a success message indicating that the deployment meets the policy requirements.
+        *   **Code Coverage:** Checks if the actual code coverage reported in the deployment contract is below the minimum coverage required by the policy. If it is, the program prints an error message and exits with a non-zero exit code (1).
+        *   **Static Analysis:** Checks if static analysis is enabled in the policy and, if so, verifies that the deployment contract indicates static analysis passed. If static analysis is enabled but failed, the program prints an error message and exits with a non-zero exit code.
+    4.  **Reports Success:** If all quality gates pass, the program prints a success message.
 
 **Error Handling Patterns**
 
-The resolver employs a straightforward error handling approach. Critical errors, such as the inability to read the deployment contract, are handled using `log.Fatalf()`, which prints an error message to the console and terminates the program. Other errors, such as those potentially returned by `policy.ResolvePolicy()`, are currently ignored for simplicity, but should be handled more robustly in a production environment.
+The resolver employs a straightforward error handling approach. Critical errors, such as the inability to read the deployment contract, are handled using `log.Fatalf()`, which prints an error message to the console and terminates the program.  Other errors, such as those potentially returned by `policy.ResolvePolicy()`, are currently ignored for simplicity, but should be handled more robustly in a production environment.
 
 **Concurrency Patterns**
 
@@ -42,11 +42,11 @@ This version of the resolver does not employ any concurrency patterns (goroutine
 
 **Notable Design Decisions**
 
-*   **Policy Resolution:** The `policy.ResolvePolicy()` function abstracts the process of loading and interpreting policies. This allows for flexibility in how policies are defined and managed.
-*   **Contract-Based Governance:** The use of a deployment contract provides a standardized way for the runtime environment to communicate the state of a deployment to the control plane.
-*   **Gatekeeper Approach:** The resolver acts as a gatekeeper, preventing deployments that do not meet the defined quality and architectural standards from proceeding.
-*   **Exit Codes:** The use of non-zero exit codes (specifically 1) signals failure to calling processes, allowing for integration into CI/CD pipelines.
+*   **Policy Resolution:** The policy resolution is currently hardcoded to use a specific policy file ("devops-config.json") and threshold (80.0). This could be made more configurable through command-line arguments or environment variables.
+*   **Contract Location:** The deployment contract is expected to be located at a fixed path (`.glassops/deployment-contract.json`). This simplifies deployment but may require adjustments for different environments.
+*   **Exit Codes:** The resolver uses a non-zero exit code (1) to indicate failure, which is a standard practice for command-line tools and allows for easy integration into CI/CD pipelines.
+*   **Gate Implementation:** The quality gates are implemented as simple `if` statements. More complex gating logic could be added as needed.
 
 **Usage Instructions**
 
-You must ensure that a file named `.glassops/deployment-contract.json` exists in the current directory, containing a valid `DeploymentContract` as defined by the `contract` package. You also need a policy file named `devops-config.json` for the policy resolution. The resolver will then evaluate the deployment against the policy and report whether it passes or fails.
+You must ensure that a valid `.glassops/deployment-contract.json` file exists in the current directory before running the resolver. This file should contain the deployment contract data in JSON format. You should also have a `devops-config.json` file available for policy resolution.

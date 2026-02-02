@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/services/health.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/services/health.go
-generated_at: 2026-01-31T10:04:36.804973
+generated_at: 2026-02-01T19:44:09.438919
 hash: dc0d532648eaba96338eac5b57315c16984bf5a279ba8dc55a8413c0a9c7fb2d
 ---
 
@@ -35,7 +35,7 @@ The `services` package provides internal services for the larger application. Th
 
 **Error Handling:**
 
-The `HealthCheck` function employs robust error handling. It checks for errors during command execution and JSON parsing. When an error occurs during command execution, it attempts to retrieve the error message from the CLI’s standard error stream. This provides more specific information about the failure. If JSON parsing fails, a generic error message is returned.
+The `HealthCheck` function employs robust error handling. It checks for errors during command execution and JSON parsing. When an error occurs, it returns a `HealthCheckResult` with `Healthy` set to `false` and a descriptive error message in the `Error` field. The function attempts to provide specific error messages from the Salesforce CLI when available.
 
 **Concurrency:**
 
@@ -43,7 +43,7 @@ This service does not currently employ goroutines or channels. The `HealthCheck`
 
 **Design Decisions:**
 
-*   **External Dependency:** The health check relies on the external Salesforce CLI. This design assumes the CLI is a necessary dependency for the application's functionality.
-*   **JSON Parsing:** Using the `--json` flag with the `sf version` command and parsing the output as JSON provides a structured and reliable way to extract the CLI version.
+*   **External Dependency:** The service relies on the external Salesforce CLI being installed and accessible in the system's PATH.
+*   **JSON Parsing:** Using the `--json` flag with the `sf version` command allows for reliable parsing of the CLI version, avoiding potential issues with text-based parsing.
 *   **Error Message Clarity:** The function prioritizes providing informative error messages to aid in troubleshooting.
-*   **Version Fallback:** The code includes a fallback mechanism to retrieve the version from different locations within the JSON response, accommodating potential changes in the CLI’s output format.
+*   **Version Fallback:** The code includes a fallback mechanism to retrieve the CLI version from different locations within the JSON response, accommodating potential changes in the CLI's output format.

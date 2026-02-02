@@ -2,66 +2,64 @@
 type: Documentation
 domain: platform
 origin: packages/platform/sfdx-project.json
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/platform/sfdx-project.json
-generated_at: 2026-01-31T11:05:07.783357
+generated_at: 2026-02-01T19:37:09.228996
 hash: 06f30cefba9ff14ee0e89759a269061d3ef6688ba2cfef642e806bc82c07207d
 ---
 
 # SFDX Project Configuration
 
-This document details the structure of the `sfdx-project.json` file. This file is the central configuration for projects managed with the Salesforce DX (SFDX) command-line interface. It defines the project’s structure, Salesforce organization connection details, and package definitions.
+This document details the structure of the `sfdx-project.json` file. This file is central to managing a project within the platform and defines how the Salesforce DX CLI interacts with your source code and Salesforce organization. It provides metadata about the project, including package definitions, source API version, and login URL.
 
 ## Overview
 
-The `sfdx-project.json` file instructs the SFDX CLI how to interact with a Salesforce project. It specifies which directories contain source code, the default package for commands, and other project-level settings. We use this file to manage metadata-driven development for Salesforce.
+The `sfdx-project.json` file configures a Salesforce DX project. It tells the Salesforce DX CLI where to find your source code, how to package it, and which Salesforce organization to connect to.  We use this file to manage multiple packages within a single project. You should place this file at the root of your project.
 
 ## Schema Details
 
-The `sfdx-project.json` file is a JSON object with the following key attributes:
+The `sfdx-project.json` file is a JSON object with the following key-value pairs:
 
 ### `packageDirectories` (Array of Objects, Required)
 
-This array defines the packages within the project. Each object in the array represents a single package.
+This array defines the packages within your project. Each object in the array represents a single package.
 
-*   **`path`** (String, Required): The relative path to the directory containing the package’s source code.  Example: `"glassops-platform"`
-*   **`default`** (Boolean, Required):  Indicates whether this package is the default package for SFDX commands. Only one package can be designated as the default.  Example: `true` or `false`
-*   **`package`** (String, Required): The name of the package. This is a human-readable identifier. Example: `"GlassOps"`
-*   **`versionName`** (String, Required): A user-friendly version name for the package. Example: `"ver 1.0"`
-*   **`versionNumber`** (String, Required): The version number of the package, following semantic versioning principles. The `.NEXT` suffix indicates an unreleased version. Example: `"1.0.0.NEXT"`
+*   **`path`** (String, Required): The relative path to the directory containing the package's source code.
+*   **`default`** (Boolean, Required):  Indicates whether this package is the default package for certain DX commands. Only one package can be designated as the default.
+*   **`package`** (String, Required): The name of the package. This is the identifier used when managing the package.
+*   **`versionName`** (String, Required): A human-readable version name for the package (e.g., "ver 1.0").
+*   **`versionNumber`** (String, Required): The version number of the package, following semantic versioning (e.g., "1.0.0.NEXT"). The `.NEXT` suffix indicates an unreleased version.
 
 ### `name` (String, Required)
 
-The name of the project. This is a human-readable identifier. Example: `"glassops"`
+The name of the project. This is a descriptive name for your overall development effort.
 
 ### `namespace` (String, Optional)
 
-The namespace for the project. If not specified, the project operates in the default namespace. Example: `""` (empty string for no namespace)
+The namespace for your Salesforce organization. If not specified, it defaults to an empty string.  This is important for managing customizations in a multi-tenant environment.
 
 ### `sfdcLoginUrl` (String, Optional)
 
-The URL used to log in to a Salesforce organization. Defaults to `https://login.salesforce.com`. You may need to change this for sandboxes or other specific environments. Example: `"https://login.salesforce.com"`
+The login URL for your Salesforce organization. Defaults to `https://login.salesforce.com`. You may need to change this for sandboxes or other specific environments.
 
 ### `sourceApiVersion` (String, Required)
 
-The Salesforce API version used for source migration and deployment.  This value must be a valid Salesforce API version string (e.g., `"60.0"`). Example: `"60.0"`
+The Salesforce API version that your project is designed for.  This ensures compatibility between your code and the Salesforce platform.  We recommend keeping this up to date with the latest generally available API version.
 
 ## Common Use Cases
 
-*   **Package Development:** Defining multiple packages within a single project allows for modular development and version control of different components.
-*   **Default Package Selection:** Setting the `default` flag simplifies command execution by automatically targeting the most frequently used package.
-*   **Source Management:**  The `packageDirectories` array enables the SFDX CLI to correctly identify and manage source code within the project.
-*   **Environment Configuration:** The `sfdcLoginUrl` allows you to specify the correct login URL for different Salesforce environments.
-*   **API Version Control:**  The `sourceApiVersion` ensures compatibility between your project’s source code and the target Salesforce organization.
+*   **Managing Multiple Packages:**  The `packageDirectories` array allows you to organize your project into logical packages, such as a managed package and an unmanaged package for implementation details.
+*   **Defining Default Package:** Setting `default` to `true` for a package simplifies commands by making that package the target for operations like source:pull and source:push.
+*   **Version Control:** The `versionName` and `versionNumber` fields enable you to track and manage different versions of your packages.
+*   **Sandbox/Production Configuration:**  The `sfdcLoginUrl` field allows you to easily switch between different Salesforce environments.
+*   **API Compatibility:** The `sourceApiVersion` field ensures that your project remains compatible with the Salesforce platform as it evolves.
 
 ## Example
 
-The provided `sfdx-project.json` file defines two packages:
+The provided example `sfdx-project.json` file defines two packages:
 
-1.  `GlassOps`: Located in the `glassops-platform` directory, not the default package. Version `1.0.0.NEXT`.
-2.  `GlassOps Implementation`: Located in the `force-app` directory, designated as the default package. Version `0.1.0.NEXT`.
+*   `GlassOps`: Located in the `glassops-platform` directory, this package is not the default.
+*   `GlassOps Implementation`: Located in the `force-app` directory, this package *is* the default.
 
-The project is named `glassops`, uses no namespace, connects to the production Salesforce instance, and targets API version 60.0.
-
-You should modify this file to reflect the specific structure and requirements of your Salesforce project.
+The project is named `glassops`, uses an empty namespace, connects to the standard Salesforce login URL, and is designed for API version 60.0.

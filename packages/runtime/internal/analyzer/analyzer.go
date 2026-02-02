@@ -3,10 +3,12 @@ package analyzer
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/glassops-platform/glassops/packages/runtime/internal/gha"
+	"github.com/glassops-platform/glassops/packages/runtime/internal/policy"
 )
 
 // Result contains analysis results.
@@ -62,6 +64,46 @@ func (a *Analyzer) Scan(paths []string, ruleset string) (*Result, error) {
 	}
 
 	return a.parseOutput(string(output), exitCode), nil
+}
+
+// RunIfEnabled checks the policy configuration and runs the analyzer if enabled.
+// It handles compliance checks, scanning, and violation filtering.
+func (a *Analyzer) RunIfEnabled(config *policy.Config) error {
+	if config.Governance.Analyzer == nil || !config.Governance.Analyzer.Enabled {
+		return nil
+	}
+
+	gha.Info("[Analyzer] Running static code analysis...")
+
+	if config.Governance.Analyzer.Opinionated {
+		if err := a.EnsureCompatibility(); err != nil {
+			return err
+		}
+	}
+
+	ruleset := ""
+	if len(config.Governance.Analyzer.Rulesets) > 0 {
+		ruleset = config.Governance.Analyzer.Rulesets[0]
+	}
+
+	scanResults, err := a.Scan([]string{"."}, ruleset)
+	if err != nil {
+		return fmt.Errorf("static analysis failed: %w", err)
+	}
+
+	var criticalViolations []Violation
+	threshold := config.Governance.Analyzer.SeverityThreshold
+	for _, v := range scanResults.Violations {
+		if v.Severity <= threshold {
+			criticalViolations = append(criticalViolations, v)
+		}
+	}
+
+	if len(criticalViolations) > 0 {
+		return fmt.Errorf("static analysis failed: %d critical violations found", len(criticalViolations))
+	}
+	gha.Info("[Analyzer] ✅ Static analysis passed")
+	return nil
 }
 
 // EnsureCompatibility verifies the environment is correctly configured.

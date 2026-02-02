@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/adapters/apex-adapter.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/adapters/apex-adapter.ts
-generated_at: 2026-01-31T10:16:12.998544
+generated_at: 2026-02-01T19:47:11.450868
 hash: bf5aa959825ccecf68ff871bcacc77fb8428a3e5e8906ab4e51a0b6bce76c81d
 ---
 
@@ -13,70 +13,62 @@ hash: bf5aa959825ccecf68ff871bcacc77fb8428a3e5e8906ab4e51a0b6bce76c81d
 
 **1. Introduction**
 
-This document details the Apex Adapter, a component designed to process Salesforce Apex code files (.cls and .trigger) and prepare them for analysis and documentation generation. It functions as an interface between the core agent system and Apex-specific file handling.
+This document details the Apex Adapter, a component designed to process Salesforce Apex code files (.cls and .trigger) within a larger agent system. It handles file identification, content parsing, prompt generation for analysis, and output formatting.
 
-**2. Functionality**
+**2. Functionality Overview**
 
-The Apex Adapter provides the following core capabilities:
+The Apex Adapter enables the system to understand and work with Apex code. It prepares the code for review by creating a structured prompt that guides a language model to generate relevant documentation.
 
-*   **File Type Recognition:** Determines if a given file is an Apex class or trigger based on its extension.
-*   **Content Parsing:** Extracts the content of Apex files.
-*   **Prompt Generation:** Constructs a prompt tailored for a large language model (LLM), instructing it to generate technical documentation for the provided Apex code.
-*   **Output Post-Processing:** Combines multiple outputs from the LLM into a single, formatted string.
+**3. Core Components**
 
-**3. Adapter Details**
+*   **File Handling:** The adapter determines if a given file should be processed based on its extension.
+*   **Parsing:** It extracts the file content and formats it for inclusion in a prompt.
+*   **Prompt Engineering:** It constructs a prompt tailored for Apex code analysis, instructing the language model to focus on key areas like business logic, triggers, and security.
+*   **Output Formatting:** It combines the outputs from the language model into a readable format.
 
-The Apex Adapter implements the `AgentAdapter` interface. This ensures consistent behavior across different file type adapters within the system.
+**4. Adapter Interface & Methods**
 
-**3.1. `canHandle(fileName: string): boolean`**
+This adapter implements the `AgentAdapter` interface, providing the following methods:
 
-This function checks if the adapter can process a file based on its name. It returns `true` if the file has a `.cls` or `.trigger` extension; otherwise, it returns `false`.
+*   **`canHandle(fileName: string): boolean`**
+    *   Purpose: Determines if the adapter can process a file based on its name.
+    *   Input: `fileName` (string) – The name of the file.
+    *   Return Value: `boolean` – `true` if the adapter can handle the file (extension is `.cls` or `.trigger`), `false` otherwise.
+    *   Example: `canHandle('MyTrigger.trigger')` returns `true`.
 
-*   **Parameter:**
-    *   `fileName`: A string representing the name of the file.
-*   **Return Value:** A boolean indicating whether the adapter can handle the file.
+*   **`async parse(filePath: string, content: string): Promise<string[]>`**
+    *   Purpose: Parses the file content and prepares it for prompt generation.
+    *   Input:
+        *   `filePath` (string) – The path to the file.
+        *   `content` (string) – The content of the file.
+    *   Return Value: `Promise<string[]>` – A promise that resolves to an array of strings containing the parsed content. The content is formatted as a code block.
+    *   Example:
+        ```typescript
+        parse('/path/to/MyClass.cls', 'public class MyClass { ... }')
+        // Returns: ['File: /path/to/MyClass.cls\n\nApex Code Content:\n\`\`\`apex\npublic class MyClass { ... }\n\`\`\`']
+        ```
 
-**3.2. `parse(filePath: string, content: string): Promise<string[]>`**
+*   **`generatePrompt(filePath: string, parsedContent: string): string`**
+    *   Purpose: Generates a prompt for the language model, incorporating the parsed content.
+    *   Input:
+        *   `filePath` (string) – The path to the file.
+        *   `parsedContent` (string) – The parsed content of the file.
+    *   Return Value: `string` – The generated prompt.
+    *   Example: The prompt instructs the language model to act as a Salesforce Architect and focus on business logic, triggers, and security implications.
 
-This asynchronous function takes the file path and content as input and formats the content into a structured string array. Each element in the array represents a segment of parsed content.
+*   **`postProcess(filePath: string, outputs: string[]): string`**
+    *   Purpose: Combines the outputs from the language model into a single string.
+    *   Input:
+        *   `filePath` (string) – The path to the file.
+        *   `outputs` (string[]) – An array of strings representing the outputs from the language model.
+    *   Return Value: `string` – A single string containing the combined outputs, separated by double newlines.
+    *   Example: `postProcess('/path/to/MyTrigger.trigger', ['Output 1', 'Output 2'])` returns `"Output 1\n\nOutput 2"`.
 
-*   **Parameters:**
-    *   `filePath`: A string representing the path to the file.
-    *   `content`: A string containing the file's content.
-*   **Return Value:** A Promise that resolves to a string array containing the parsed content. The content is formatted as follows:
+**5. Usage**
 
-    ```
-    File: <filePath>
+You integrate this adapter into the agent system to enable processing of Apex code files. The system will call `canHandle` to determine if the adapter should be used for a given file. If it can handle the file, the system will then call `parse`, `generatePrompt`, and `postProcess` to prepare the code for analysis and format the results.
 
-    Apex Code Content:
-    ```apex
-    <content>
-    ```
-    ```
+**6. Dependencies**
 
-**3.3. `generatePrompt(filePath: string, parsedContent: string): string`**
-
-This function creates a prompt for an LLM, providing context and instructions for generating documentation. The prompt includes the parsed content of the Apex file.
-
-*   **Parameters:**
-    *   `filePath`: A string representing the path to the file.
-    *   `parsedContent`: A string containing the parsed content of the file.
-*   **Return Value:** A string representing the prompt for the LLM. The prompt instructs the LLM to act as a helper for a Salesforce Architect and generate technical documentation focusing on business logic, triggers, and security implications.
-
-**3.4. `postProcess(filePath: string, outputs: string[]): string`**
-
-This function combines the outputs generated by the LLM into a single string, separated by double newlines.
-
-*   **Parameters:**
-    *   `filePath`: A string representing the path to the file.
-    *   `outputs`: A string array containing the outputs from the LLM.
-*   **Return Value:** A string containing the combined outputs.
-
-**4. Usage**
-
-You integrate this adapter into the agent system by registering it for files with `.cls` or `.trigger` extensions. The agent will then use the adapter’s functions to parse the file, generate a prompt, and process the LLM’s response.
-
-**5. Dependencies**
-
-*   `path`: Node.js built-in module for working with file paths.
-*   `AgentAdapter` interface: Defines the contract for all agent adapters.
+*   `path` (Node.js built-in module) – Used for extracting file extensions.
+*   `AgentAdapter` interface – Defines the contract for all adapters.

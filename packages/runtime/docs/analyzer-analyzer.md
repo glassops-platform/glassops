@@ -2,92 +2,49 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/analyzer/analyzer.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/analyzer/analyzer.go
-generated_at: 2026-01-31T09:58:18.932701
-hash: ab8077a3cce90b5885928134a18eb94679791ce20f5d36dac52f7283c6149388
+generated_at: 2026-02-01T19:38:40.791650
+hash: c5b6ac129f4af1b79959556a81e3ca2f45ebf910e463ec949a678191d18f0eea
 ---
 
 ## Analyzer Package Documentation
 
-This package provides an interface to the Salesforce Code Analyzer command-line tool (`sf code-analyzer`). It allows You to scan Salesforce projects for code quality issues and security vulnerabilities.
+This package provides an interface to the Salesforce Code Analyzer, a static analysis tool for Salesforce development. It allows You to scan Salesforce projects for potential issues based on defined rulesets and severity thresholds.
 
 **Package Responsibilities:**
 
-The primary responsibility of this package is to execute the `sf code-analyzer` tool, parse its output, and present the results in a structured format. It handles the complexities of running the external process and converting the JSON output into Go data structures.
+*   Executing the Salesforce Code Analyzer command-line interface (CLI).
+*   Parsing the analyzer’s JSON output to extract violation details.
+*   Integrating with policy configurations to determine when and how to run the analyzer.
+*   Filtering violations based on configured severity thresholds.
 
 **Key Types:**
 
-*   **`Result`**: Represents the overall outcome of a code analysis scan. It contains a slice of `Violation` objects and the exit code of the analyzer process.
-    ```go
-    type Result struct {
-    	Violations []Violation
-    	ExitCode   int
-    }
-    ```
-
-*   **`Violation`**: Represents a single code quality or security issue found during the analysis. It includes details such as the rule that was violated, a description of the issue, its severity, the file name, and the line number.
-    ```go
-    type Violation struct {
-    	Rule        string `json:"rule"`
-    	Description string `json:"description"`
-    	Severity    int    `json:"severity"`
-    	File        string `json:"file"`
-    	Line        int    `json:"line"`
-    }
-    ```
-
-*   **`Analyzer`**:  A struct that encapsulates the logic for interacting with the `sf code-analyzer` tool.
-    ```go
-    type Analyzer struct{}
-    ```
+*   `Result`: Represents the outcome of a code analysis scan. It contains a slice of `Violation` objects and the analyzer’s exit code.
+*   `Violation`:  Describes a single code quality issue detected by the analyzer. It includes the rule name, a descriptive message, severity level, the file name, and the line number where the issue occurs.
+*   `Analyzer`:  A struct that encapsulates the logic for interacting with the Salesforce Code Analyzer.
 
 **Important Functions:**
 
-*   **`New()`**:  A constructor function that returns a new instance of the `Analyzer` struct.
-    ```go
-    func New() *Analyzer {
-    	return &Analyzer{}
-    }
-    ```
-
-*   **`Scan(paths []string, ruleset string) (*Result, error)`**: This is the main function for performing a code analysis scan.
-    *   `paths`: A slice of strings representing the file paths or directories to be scanned.
-    *   `ruleset`: An optional string specifying the name of a ruleset to use for the analysis. If empty, the default ruleset is used.
-    *   Returns: A pointer to a `Result` struct containing the scan results, or an error if the scan failed.
-    This function executes the `sf code-analyzer run` command with the provided arguments, captures the output, and parses it to extract violations. It handles potential errors during command execution and JSON parsing.
-
-*   **`EnsureCompatibility()`**: This function checks if the environment is correctly configured for using the `sf code-analyzer` tool. Currently, it is a placeholder for future compatibility checks. It is designed to prevent the use of older, deprecated scanning tools.
-    ```go
-    func (a *Analyzer) EnsureCompatibility() error {
-    	// Placeholder for opinionated policy enforcement.
-    	return nil
-    }
-    ```
-
-*   **`parseOutput(jsonOutput string, exitCode int) *Result`**: This function parses the JSON output from the `sf code-analyzer` tool and converts it into a `Result` struct. It handles cases where the JSON output might be incomplete or contain extraneous data.
-    ```go
-    func (a *Analyzer) parseOutput(jsonOutput string, exitCode int) *Result {
-    	// ... parsing logic ...
-    }
-    ```
+*   `New()`:  Returns a new instance of the `Analyzer` struct. This is the standard way to create an analyzer object.
+*   `Scan(paths []string, ruleset string) (*Result, error)`: Executes the Salesforce Code Analyzer against the specified file paths.  The `ruleset` parameter allows You to specify a custom ruleset to use during the analysis. The function returns a `Result` object containing the analysis findings and any errors encountered during execution.  The analyzer’s exit code is also captured in the `Result`.
+*   `RunIfEnabled(config *policy.Config) error`:  Determines whether to run the analyzer based on the provided policy configuration. If the analyzer is enabled in the configuration, it performs a scan of the current directory (`.`) using the specified ruleset (if any). It then filters the violations based on the configured severity threshold. If critical violations (those meeting the threshold) are found, an error is returned.
+*   `EnsureCompatibility() error`:  Currently a placeholder, this function is intended to verify that the environment is correctly configured for using the analyzer. It currently does not perform any checks, but could be extended to validate the Salesforce CLI version or the presence of legacy tools.
+*   `parseOutput(jsonOutput string, exitCode int) *Result`:  Parses the JSON output from the Salesforce Code Analyzer and converts it into a `Result` object containing a slice of `Violation` objects. It handles potential errors during JSON unmarshaling and extracts the relevant information from the analyzer’s output.
 
 **Error Handling:**
 
-The `Scan` function handles errors in the following ways:
-
-*   If `EnsureCompatibility` returns an error, the `Scan` function immediately returns that error.
-*   If the `sf code-analyzer` command fails to execute, the `Scan` function logs the error using `gha.Error` and returns it.
-*   If the JSON output from the analyzer cannot be parsed, the `Scan` function logs a warning using `gha.Warning` and returns a `Result` struct with an empty slice of violations.
-*   The exit code of the `sf code-analyzer` command is captured and included in the `Result` struct, even if the command completes successfully (as the analyzer uses non-zero exit codes to indicate violations).
+The package employs standard Go error handling practices. Functions return an `error` value to indicate failure. Errors are often wrapped using `fmt.Errorf` to provide context.  The `gha.Error` function is used to log errors for observability.  The `Scan` function handles non-zero exit codes from the analyzer as expected behavior (indicating violations) and continues processing the output.
 
 **Concurrency:**
 
-This package does not currently employ goroutines or channels for concurrent processing. The `Scan` function executes the `sf code-analyzer` command synchronously. Future versions might introduce concurrency to improve performance.
+This package does not currently employ goroutines or channels for concurrent processing. The analyzer is executed as a single process.
 
 **Design Decisions:**
 
-*   **External Dependency:** The package relies on the `sf code-analyzer` command-line tool, which must be installed and configured separately. This allows the package to leverage the existing functionality and expertise of the Salesforce Code Analyzer.
-*   **JSON Parsing:** The package uses the `encoding/json` package to parse the JSON output from the analyzer. This provides a flexible and reliable way to extract the violation data.
-*   **Error Logging:** The package uses the `gha.Error` and `gha.Warning` functions to log errors and warnings. This provides a consistent way to report issues to the user.
+*   The package is designed to be a wrapper around the existing Salesforce Code Analyzer CLI. This approach leverages the existing functionality and avoids duplicating logic.
+*   The use of a policy configuration allows for flexible control over when and how the analyzer is run.
+*   The severity threshold filtering provides a mechanism for focusing on the most critical issues.
+*   The `parseOutput` function is designed to be resilient to variations in the analyzer’s output format by attempting to locate the JSON array within the overall output string.

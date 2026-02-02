@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/validator.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/validator.ts
-generated_at: 2026-01-31T10:21:17.919667
+generated_at: 2026-02-01T19:51:37.419592
 hash: 16ed4cfc2c65069c38113989639e5896ce05a75ddd3ff8f3a87cefccf6974f0b
 ---
 
@@ -15,30 +15,27 @@ This document details the functionality of the Agent Validator, a tool designed 
 
 ### Overview
 
-The Agent Validator provides static analysis of content, returning a list of identified errors. It is intended to be integrated into content pipelines to ensure consistency and quality before deployment. We focus on identifying common issues that detract from professional documentation.
+The Agent Validator provides static analysis of content, returning a list of identified errors. It is intended to be integrated into content pipelines to ensure consistency and improve the overall quality of generated documentation or text assets.
 
 ### Functionality
 
-The core functionality is provided by the `Validator` class and its static `validate` method.
+The core function of this tool is the `validate` method. You provide the content as a string, and optionally a file path for context. The function returns an array of strings, where each string represents a detected error.
 
-#### `Validator.validate(content: string, _filePath: string): string[]`
+#### `validate(content: string, _filePath: string): string[]`
 
-This method accepts content as a string and an optional file path (currently unused) and returns an array of strings, where each string represents a detected error.
+This static method performs the validation checks.
 
-**Parameters:**
+- **`content`**: The string containing the content to be validated.
+- **`_filePath`**: The path to the file containing the content. This parameter is currently unused but is reserved for future functionality, such as providing more context-aware error messages.
+- **Return Value**: An array of strings. Each string in the array describes an error found within the content. If no errors are found, an empty array is returned.
 
-- `content`: The string content to be validated.
-- `_filePath`: The path to the file containing the content (not currently used for validation).
+### Validation Checks
 
-**Return Value:**
+The `validate` method currently performs the following checks:
 
-An array of strings representing validation errors. An empty array indicates no errors were found.
+1.  **Frontmatter Check**: Verifies that the content begins with a frontmatter block, denoted by `---`. This is a common convention for metadata in many documentation formats.
 
-**Validation Checks Performed:**
-
-1.  **Frontmatter Check:** Verifies that the content begins with a frontmatter block (`---`). This is a common convention for metadata in documentation files.
-
-2.  **Conversational Phrase Detection:** Identifies and flags the presence of common conversational phrases that are generally undesirable in formal documentation. The following phrases are currently checked:
+2.  **Conversational Filler Check**: Identifies and flags the presence of common conversational phrases that are often undesirable in technical documentation. The following phrases are currently checked:
     - "Here is the document"
     - "I hope this helps"
     - "Let me know if"
@@ -49,22 +46,22 @@ An array of strings representing validation errors. An empty array indicates no 
 
     The check is case-insensitive.
 
-3.  **Relative Link Check (Placeholder):** Currently, this check identifies potential relative links using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`. It does _not_ currently validate the existence of the linked files. This functionality is reserved for future development and will involve asynchronous file system checks.
+3.  **Relative Link Check (Placeholder)**: Currently, this check identifies potential relative links within the content using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`. However, it does _not_ currently validate the existence of the linked files. Future development will include robust link validation, potentially involving asynchronous file system access.
 
-### Usage
-
-You can use the `Validator.validate` method to check content. For example:
+### Example Usage
 
 ```typescript
 import { Validator } from './validator';
 
-const myContent = `---
+const content = `---
 title: My Document
 ---
 
-Here is the document.  This is some content. [Link to another page] (./another-page.md)`;
+Here is the document.  This is some content.
+[Link to another document](https://example.com/doc)
+`;
 
-const errors = Validator.validate(myContent, 'path/to/my/document.md');
+const errors = Validator.validate(content, 'my_document.md');
 
 if (errors.length > 0) {
     console.log('Validation Errors:');
@@ -76,16 +73,11 @@ if (errors.length > 0) {
 }
 ```
 
-This will output the following errors:
-
-```
-Validation Errors:
-Conversational phrase detected: "Here is the document"
-```
-
 ### Future Enhancements
 
-- Implement robust relative link validation by checking file system existence.
-- Expand the list of banned conversational phrases.
-- Add support for validating other content aspects, such as heading structure and image alt text.
-- Provide more detailed error messages with specific line numbers.
+We plan to expand the capabilities of the Agent Validator to include:
+
+- More comprehensive link validation, including checking for broken links and ensuring correct link targets.
+- Support for additional validation checks, such as grammar and spelling checks.
+- Customizable validation rules, allowing users to define their own criteria for content quality.
+- Integration with other content management and publishing tools.

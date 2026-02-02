@@ -2,10 +2,10 @@
 type: Documentation
 domain: agent
 origin: packages/tools/agent/src/index.ts
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/tools/agent/src/index.ts
-generated_at: 2026-01-31T10:20:14.426234
+generated_at: 2026-02-01T19:50:32.392981
 hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 ---
 
@@ -13,45 +13,35 @@ hash: eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5
 
 **Overview**
 
-This tool is an AI-powered agent designed to automatically generate documentation and metadata for GlassOps projects. It analyzes source code and related files to produce up-to-date and informative documentation.
+This tool is an AI-powered agent designed to automatically generate documentation and metadata for GlassOps repositories. It analyzes source code and related files to produce up-to-date and informative documentation.
 
-**Key Features**
+**Purpose**
 
-*   **Automated Documentation:** Simplifies the process of creating and maintaining documentation.
-*   **Multi-Language Support:** Supports TypeScript, Python, JavaScript, Terraform, YAML, JSON, Markdown, and other common file types.
-*   **Configurable Patterns:** Allows you to specify which files and directories should be included in the documentation generation process.
-*   **Error Handling:** Provides informative error messages to assist with troubleshooting.
+The agent simplifies the process of maintaining accurate documentation, reducing manual effort and improving overall project understanding. It supports a variety of file types commonly found in software projects.
 
-**Installation**
+**Installation & Execution**
 
-This tool is designed to be used as a command-line application. Installation instructions will be provided with the distribution package.
+The agent is designed to be executed from the command line. Ensure Node.js is installed on your system.
 
-**Usage**
+**Command-Line Interface**
 
-The primary command is `glassops-agent generate`.
+The primary command is `glassops-agent`.
 
-**Command: `generate [patterns...]`**
+*   `glassops-agent --version`: Displays the agent’s version number (currently 1.0.0).
+*   `glassops-agent generate [patterns...]`:  Initiates the documentation generation process.
 
-This command initiates the documentation generation process.
-
-*   **Description:** Generates documentation for the repository.
-*   **Arguments:**
-    *   `patterns` (optional): One or more file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used. Patterns are glob-style.
-*   **Example:**
-
-    *   `glassops-agent generate` – Generates documentation using the default file patterns.
-    *   `glassops-agent generate 'src/**/*.ts' 'docs/**/*.md'` – Generates documentation only for TypeScript files in the `src` directory and Markdown files in the `docs` directory.
+    *   `[patterns...]`:  Optional. Specifies file patterns to include in the documentation generation. If no patterns are provided, a default set of patterns will be used.
 
 **Default File Patterns**
 
-If you do not specify any patterns, the following file types will be included by default:
+If you do not specify any patterns, the agent will analyze files matching the following patterns:
 
 *   `packages/**/*.ts`
 *   `packages/**/*.py`
 *   `packages/**/*.mjs`
 *   `packages/**/*.cls`
 *   `packages/**/*.trigger`
-*   `packages/**/*.js`
+*   `packages/**/*.js` (for LWC)
 *   `packages/**/*.tf`
 *   `packages/**/Dockerfile`
 *   `docs/**/*.md`
@@ -62,18 +52,37 @@ If you do not specify any patterns, the following file types will be included by
 *   `scripts/**/*.ts`
 *   `*.py`
 
-**Technical Details**
+**How it Works**
 
-The agent determines the project root directory automatically by traversing up four levels from its own location. This ensures accurate documentation generation even when the agent is executed from within a nested directory structure.
+1.  **Root Directory Detection:** The agent automatically determines the root directory of the GlassOps repository. It assumes a specific directory structure relative to its location.
+2.  **Generator Initialization:** An instance of the `Generator` class is created, initialized with the repository root directory.
+3.  **Pattern Application:** The agent applies the provided (or default) file patterns to identify relevant files within the repository.
+4.  **Documentation Generation:** The `Generator` processes the identified files, extracting information and generating documentation.
+5.  **Error Handling:**  The agent includes error handling to gracefully manage potential issues during the process. Errors are logged to the console, and the process exits with a non-zero code.
 
-**Error Handling**
+**Example Usage**
 
-If an error occurs during the documentation generation process, the agent will display an error message to the console, including the error stack trace if available. The process will then exit with a non-zero exit code.
+*   To generate documentation for all supported file types in the repository:
 
-**Future Enhancements**
+    ```bash
+    glassops-agent generate
+    ```
 
-We plan to add support for additional file types and customization options in future releases. We are also exploring integration with other documentation tools and platforms.
+*   To generate documentation only for TypeScript files in the `packages` directory:
 
-**Support**
+    ```bash
+    glassops-agent generate packages/**/*.ts
+    ```
 
-For questions or issues, please consult the project’s support channels.
+**Error Reporting**
+
+If an error occurs during execution, the agent will print an error message and stack trace to the console.  A non-zero exit code will also be returned.
+
+**Dependencies**
+
+The agent relies on the `commander` package for command-line argument parsing.
+
+**Internal Components**
+
+*   `Generator` Class: This class encapsulates the core logic for traversing the file system, analyzing files, and generating documentation.
+*   Command Definition: The `commander` library is used to define the command-line interface and handle user input.

@@ -2,10 +2,10 @@
 type: Documentation
 domain: runtime
 origin: packages/runtime/internal/gha/gha_test.go
-last_modified: 2026-01-31
+last_modified: 2026-02-01
 generated: true
 source: packages/runtime/internal/gha/gha_test.go
-generated_at: 2026-01-31T10:00:49.871291
+generated_at: 2026-02-01T19:41:00.139841
 hash: 78792b077f78dcf3f17aa320e2dd3e7fb2cc6d08b94f25a00d6add71f4b7b6b3
 ---
 
@@ -15,7 +15,7 @@ This package provides functions for interacting with the GitHub Actions environm
 
 **Key Concepts:**
 
-The package centers around the idea of interacting with a specific environment â€“ GitHub Actions. It reads environment variables prefixed with `INPUT_` or `GLASSOPS_` to retrieve input values and writes to standard output using a specific format to set outputs, report errors, warnings, and secrets.
+The package centers around the idea of interacting with a specific environment â€“ GitHub Actions. It reads configuration from environment variables prefixed with `INPUT_` or `GLASSOPS_` and writes status and output information to standard output in a format understood by GitHub Actions.
 
 **Key Functions:**
 
@@ -23,9 +23,9 @@ The package centers around the idea of interacting with a specific environment â
 
 *   `GetInputWithDefault(name string, defaultValue string) string`: This function retrieves the value of an input variable, similar to `GetInput`. However, if the variable is not found in the environment, it returns the provided `defaultValue`.
 
-*   `SetOutput(name string, value string)`: This function sets a GitHub Actions output variable. It writes a formatted string to standard output that GitHub Actions recognizes as an output definition. If the `GITHUB_OUTPUT` environment variable is not set, it defaults to writing to standard output.
+*   `SetOutput(name string, value string)`: This function sets a GitHub Actions output variable. It writes a formatted string to standard output that GitHub Actions parses to set the output. If the `GITHUB_OUTPUT` environment variable is not set, it defaults to writing to standard output.
 
-*   `SetSecret(value string)`: This function sets a secret in GitHub Actions. It writes a formatted string to standard output that instructs GitHub Actions to mask the provided `value` in logs.
+*   `SetSecret(value string)`: This function sets a secret in GitHub Actions. It writes a formatted string to standard output that masks the provided `value` in the GitHub Actions logs.
 
 *   `SetFailed(message string)`: This function marks the GitHub Actions workflow as failed. It writes a formatted error message to standard output.
 
@@ -37,14 +37,10 @@ The package centers around the idea of interacting with a specific environment â
 
 **Error Handling:**
 
-The functions in this package do not typically return explicit error values. Instead, failures are often indicated by the absence of an expected environment variable or by the inability to format the output correctly. The `SetFailed` function is used to explicitly signal a workflow failure.
-
-**Concurrency:**
-
-This package does not appear to use goroutines or channels. The functions are designed to be called sequentially within a single workflow step.
+The functions in this package do not typically return explicit error values. Instead, failures are often indicated by the absence of an expected environment variable or by the inability to format the output correctly for GitHub Actions. The `SetFailed` function is used to explicitly signal a workflow failure.
 
 **Design Decisions:**
 
-*   **Prefix Prioritization:** The package prioritizes `INPUT_` prefixed environment variables over `GLASSOPS_` prefixed variables. This allows users to override default values provided by the package with their own custom inputs.
-*   **Standard Output for Outputs:** The package uses standard output to communicate outputs, secrets, errors, and warnings to GitHub Actions. This is the standard mechanism for interacting with the GitHub Actions environment.
-*   **No Explicit Error Returns:** The decision to not return errors simplifies the API, but requires users to rely on the absence of expected values or the `SetFailed` function to detect failures.
+*   **Environment Variable Prefixes:** The use of `INPUT_` and `GLASSOPS_` prefixes allows for a degree of flexibility in configuring the tool, while also providing a fallback mechanism.
+*   **Standard Output for Output/Status:**  Writing output and status information to standard output is a common pattern in GitHub Actions and allows for easy integration with the platform's logging and output mechanisms.
+*   **No Explicit Error Returns:** The decision to avoid explicit error returns simplifies the function signatures and aligns with the typical usage pattern in GitHub Actions, where the absence of a value or a formatted error message on standard output indicates a problem.

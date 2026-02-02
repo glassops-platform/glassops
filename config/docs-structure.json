@@ -155,6 +155,94 @@
       }
     ]
   },
+  "docs/doc-map.md": {
+    "anchors": [
+      "documentation-map",
+      "-discovery-central",
+      "-implementation-federated",
+      "-quick-links"
+    ],
+    "links": [
+      {
+        "original": "[Vision](vision.md)",
+        "text": "Vision",
+        "url": "vision.md",
+        "lineNo": 13
+      },
+      {
+        "original": "[Architecture](architecture/overview.md)",
+        "text": "Architecture",
+        "url": "architecture/overview.md",
+        "lineNo": 14
+      },
+      {
+        "original": "[Platform Reference](reference/platform-reference.md)",
+        "text": "Platform Reference",
+        "url": "reference/platform-reference.md",
+        "lineNo": 15
+      },
+      {
+        "original": "[`packages/glassspec/README.md`](../packages/glassspec/README.md)",
+        "text": "`packages/glassspec/README.md`",
+        "url": "../packages/glassspec/README.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`/adr`](../packages/glassspec/adr/README.md)",
+        "text": "`/adr`",
+        "url": "../packages/glassspec/adr/README.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`packages/runtime/README.md`](../packages/runtime/README.md)",
+        "text": "`packages/runtime/README.md`",
+        "url": "../packages/runtime/README.md",
+        "lineNo": 24
+      },
+      {
+        "original": "[`/adr`](../packages/runtime/adr/README.md)",
+        "text": "`/adr`",
+        "url": "../packages/runtime/adr/README.md",
+        "lineNo": 24
+      },
+      {
+        "original": "[`packages/control-plane/README.md`](../packages/control-plane/README.md)",
+        "text": "`packages/control-plane/README.md`",
+        "url": "../packages/control-plane/README.md",
+        "lineNo": 25
+      },
+      {
+        "original": "[`/adr`](../packages/control-plane/adr/README.md)",
+        "text": "`/adr`",
+        "url": "../packages/control-plane/adr/README.md",
+        "lineNo": 25
+      },
+      {
+        "original": "[`packages/adapters/native/README.md`](../packages/adapters/native/README.md)",
+        "text": "`packages/adapters/native/README.md`",
+        "url": "../packages/adapters/native/README.md",
+        "lineNo": 26
+      },
+      {
+        "original": "[`/adr`](../packages/adapters/native/adr/README.md)",
+        "text": "`/adr`",
+        "url": "../packages/adapters/native/adr/README.md",
+        "lineNo": 26
+      },
+      {
+        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
+        "text": "GitHub Repo",
+        "url": "https://github.com/glassops-platform/glassops",
+        "lineNo": 32
+      },
+      {
+        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
+        "text": "Discussions",
+        "url": "https://github.com/glassops-platform/glassops/discussions",
+        "lineNo": 33
+      }
+    ]
+  },
   "docs/adr-index.md": {
     "anchors": [
       "glassops-architecture-decision-records-adr-index",
@@ -364,94 +452,6 @@
       }
     ]
   },
-  "docs/doc-map.md": {
-    "anchors": [
-      "documentation-map",
-      "-discovery-central",
-      "-implementation-federated",
-      "-quick-links"
-    ],
-    "links": [
-      {
-        "original": "[Vision](vision.md)",
-        "text": "Vision",
-        "url": "vision.md",
-        "lineNo": 13
-      },
-      {
-        "original": "[Architecture](architecture/overview.md)",
-        "text": "Architecture",
-        "url": "architecture/overview.md",
-        "lineNo": 14
-      },
-      {
-        "original": "[Platform Reference](reference/platform-reference.md)",
-        "text": "Platform Reference",
-        "url": "reference/platform-reference.md",
-        "lineNo": 15
-      },
-      {
-        "original": "[`packages/glassspec/README.md`](../packages/glassspec/README.md)",
-        "text": "`packages/glassspec/README.md`",
-        "url": "../packages/glassspec/README.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[`/adr`](../packages/glassspec/adr/README.md)",
-        "text": "`/adr`",
-        "url": "../packages/glassspec/adr/README.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[`packages/runtime/README.md`](../packages/runtime/README.md)",
-        "text": "`packages/runtime/README.md`",
-        "url": "../packages/runtime/README.md",
-        "lineNo": 24
-      },
-      {
-        "original": "[`/adr`](../packages/runtime/adr/README.md)",
-        "text": "`/adr`",
-        "url": "../packages/runtime/adr/README.md",
-        "lineNo": 24
-      },
-      {
-        "original": "[`packages/control-plane/README.md`](../packages/control-plane/README.md)",
-        "text": "`packages/control-plane/README.md`",
-        "url": "../packages/control-plane/README.md",
-        "lineNo": 25
-      },
-      {
-        "original": "[`/adr`](../packages/control-plane/adr/README.md)",
-        "text": "`/adr`",
-        "url": "../packages/control-plane/adr/README.md",
-        "lineNo": 25
-      },
-      {
-        "original": "[`packages/adapters/native/README.md`](../packages/adapters/native/README.md)",
-        "text": "`packages/adapters/native/README.md`",
-        "url": "../packages/adapters/native/README.md",
-        "lineNo": 26
-      },
-      {
-        "original": "[`/adr`](../packages/adapters/native/adr/README.md)",
-        "text": "`/adr`",
-        "url": "../packages/adapters/native/adr/README.md",
-        "lineNo": 26
-      },
-      {
-        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
-        "text": "GitHub Repo",
-        "url": "https://github.com/glassops-platform/glassops",
-        "lineNo": 32
-      },
-      {
-        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
-        "text": "Discussions",
-        "url": "https://github.com/glassops-platform/glassops/discussions",
-        "lineNo": 33
-      }
-    ]
-  },
   "docs/scripts-build-docs.md": {
     "anchors": [
       "documentation-build-process-build-docspy",
@@ -502,7 +502,7 @@
       }
     ]
   },
-  ".github/ISSUE_TEMPLATE/bug_report.md": {
+  ".github/ISSUE_TEMPLATE/feature_request.md": {
     "anchors": [],
     "links": []
   },
@@ -510,7 +510,7 @@
     "anchors": [],
     "links": []
   },
-  ".github/ISSUE_TEMPLATE/feature_request.md": {
+  ".github/ISSUE_TEMPLATE/bug_report.md": {
     "anchors": [],
     "links": []
   },
@@ -537,14 +537,18 @@
     ],
     "links": []
   },
-  "docs/adr/004-schema-contract-config.md": {
+  "docs/architecture/overview.md": {
     "anchors": [
-      "adr-004-schema-contract-over-yaml-parsing",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
+      "glassops-architecture-design",
+      "1-high-level-architecture",
+      "the-control-loop",
+      "component-breakdown",
+      "2-governance-flow-the-pipeline",
+      "3-security-model",
+      "confused-deputy-protection",
+      "secrets-management",
+      "4-failure-modes-recovery",
+      "5-directory-structure"
     ],
     "links": []
   },
@@ -572,6 +576,88 @@
       "alternatives"
     ],
     "links": []
+  },
+  "docs/adr/004-schema-contract-config.md": {
+    "anchors": [
+      "adr-004-schema-contract-over-yaml-parsing",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/007-protocol-supremacy-enforcement.md": {
+    "anchors": [
+      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
+      "context",
+      "the-strategic-gap",
+      "decision",
+      "protocol-supremacy-hierarchy",
+      "rationale",
+      "why-this-matters",
+      "why-custom-schemas-are-dangerous",
+      "implementation",
+      "changes-made-to-adapter-developmentmd",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "validation",
+      "how-to-verify-compliance",
+      "validate-sarif-schema",
+      "validate-structure",
+      "future-considerations",
+      "potential-next-steps",
+      "related-adrs",
+      "references",
+      "alternatives"
+    ],
+    "links": [
+      {
+        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
+        "text": "ADR-001: System API Primitive",
+        "url": "001-system-api-primitive.md",
+        "lineNo": 153
+      },
+      {
+        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
+        "text": "ADR-004: Schema Contract Config",
+        "url": "004-schema-contract-config.md",
+        "lineNo": 154
+      },
+      {
+        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
+        "text": "ADR-006: Documentation as Governed Artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 155
+      },
+      {
+        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
+        "text": "OASIS SARIF 2.1.0 Specification",
+        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
+        "lineNo": 161
+      },
+      {
+        "original": "[GlassOps Protocol](../../packages/glassspec/README.md)",
+        "text": "GlassOps Protocol",
+        "url": "../../packages/glassspec/README.md",
+        "lineNo": 162
+      },
+      {
+        "original": "[Adapter Interface](../../packages/glassspec/README.md)",
+        "text": "Adapter Interface",
+        "url": "../../packages/glassspec/README.md",
+        "lineNo": 163
+      },
+      {
+        "original": "[Adapter Development Guide](../../packages/adapters/docs/adapter-development.md)",
+        "text": "Adapter Development Guide",
+        "url": "../../packages/adapters/docs/adapter-development.md",
+        "lineNo": 164
+      }
+    ]
   },
   "docs/adr/006-documentation-as-governed-artifact.md": {
     "anchors": [
@@ -660,91 +746,218 @@
       }
     ]
   },
-  "docs/adr/007-protocol-supremacy-enforcement.md": {
+  "docs/adr/010-identity-contract.md": {
     "anchors": [
-      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
+      "adr-010-identity-contract",
       "context",
-      "the-strategic-gap",
+      "the-identity-gap",
+      "real-world-scenario",
       "decision",
-      "protocol-supremacy-hierarchy",
-      "rationale",
-      "why-this-matters",
-      "why-custom-schemas-are-dangerous",
-      "implementation",
-      "changes-made-to-adapter-developmentmd",
+      "core-principle",
+      "identity-contract-schema",
+      "minimal-contract",
+      "full-contract-with-authorization",
+      "implementation-strategy",
+      "phase-1-identity-detection-current",
+      "phase-2-identity-resolution-bridge",
+      "phase-3-identity-authorization-future",
+      "sarif-integration",
+      "where-identity-goes",
+      "audit-trail-benefits",
+      "before-identity-contract",
+      "after-identity-contract",
+      "cross-substrate-correlation",
+      "example-override-request-flow",
       "consequences",
       "positive",
       "negative",
       "neutral",
-      "validation",
-      "how-to-verify-compliance",
-      "validate-sarif-schema",
-      "validate-structure",
-      "future-considerations",
-      "potential-next-steps",
+      "privacy-security-considerations",
+      "personal-data-in-sarif",
+      "alternatives-considered",
+      "alternative-1-no-identity-contract",
+      "alternative-2-provider-specific-identity-only",
+      "alternative-3-external-identity-provider-oauth2",
+      "alternative-4-sign-sarif-contracts-with-private-keys",
+      "migration-path",
+      "existing-contracts-without-identity",
       "related-adrs",
       "references",
       "alternatives"
     ],
     "links": [
       {
-        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
-        "text": "ADR-001: System API Primitive",
-        "url": "001-system-api-primitive.md",
-        "lineNo": 153
+        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "ADR-007: Protocol Supremacy Enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 475
       },
       {
-        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
-        "text": "ADR-004: Schema Contract Config",
-        "url": "004-schema-contract-config.md",
-        "lineNo": 154
+        "original": "[ADR-009: The 8/10 vs 10/10 Bridge Strategy](009-8-10-vs-10-10-bridge-strategy.md)",
+        "text": "ADR-009: The 8/10 vs 10/10 Bridge Strategy",
+        "url": "009-8-10-vs-10-10-bridge-strategy.md",
+        "lineNo": 476
       },
+      {
+        "original": "[GlassSpec ADR-001: Layered Contract Model](../../packages/glassspec/adr/001-layered-contract-model.md)",
+        "text": "GlassSpec ADR-001: Layered Contract Model",
+        "url": "../../packages/glassspec/adr/001-layered-contract-model.md",
+        "lineNo": 477
+      },
+      {
+        "original": "[OASIS SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/)",
+        "text": "OASIS SARIF 2.1.0",
+        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/",
+        "lineNo": 483
+      },
+      {
+        "original": "[OAuth 2.0 RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749)",
+        "text": "OAuth 2.0 RFC 6749",
+        "url": "https://datatracker.ietf.org/doc/html/rfc6749",
+        "lineNo": 484
+      },
+      {
+        "original": "[NIST SP 800-63B: Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)",
+        "text": "NIST SP 800-63B: Digital Identity Guidelines",
+        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
+        "lineNo": 485
+      }
+    ]
+  },
+  "docs/adr/008-federated-documentation-structure.md": {
+    "anchors": [
+      "adr-008-federated-documentation-structure",
+      "context",
+      "decision",
+      "7-tier-hierarchy",
+      "rationale",
+      "why-federated-structure",
+      "why-federated",
+      "implementation",
+      "phase-1-core-restructure-completed",
+      "phase-2-large-file-splitting-future",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "design-principles",
+      "1-clear-ownership",
+      "2-no-duplication",
+      "3-protocol-supremacy",
+      "4-audience-first",
+      "alternatives-considered",
+      "alternative-1-keep-flat-structure",
+      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
+      "alternative-3-single-mega-document",
+      "alternative-4-wiki-style-with-heavy-cross-linking",
+      "validation-checklist",
+      "migration-path",
+      "future-enhancements",
+      "potential-additions",
+      "automation-opportunities",
+      "related-adrs",
+      "references",
+      "alternatives"
+    ],
+    "links": [
       {
         "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
         "text": "ADR-006: Documentation as Governed Artifact",
         "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 155
+        "lineNo": 252
       },
       {
-        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
-        "text": "OASIS SARIF 2.1.0 Specification",
-        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
-        "lineNo": 161
+        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "ADR-007: Protocol Supremacy Enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 253
+      },
+      {
+        "original": "[Divio Documentation System](https://documentation.divio.com/)",
+        "text": "Divio Documentation System",
+        "url": "https://documentation.divio.com/",
+        "lineNo": 259
       },
       {
         "original": "[GlassOps Protocol](../../packages/glassspec/README.md)",
         "text": "GlassOps Protocol",
         "url": "../../packages/glassspec/README.md",
-        "lineNo": 162
-      },
-      {
-        "original": "[Adapter Interface](../../packages/glassspec/README.md)",
-        "text": "Adapter Interface",
-        "url": "../../packages/glassspec/README.md",
-        "lineNo": 163
-      },
-      {
-        "original": "[Adapter Development Guide](../../packages/adapters/docs/adapter-development.md)",
-        "text": "Adapter Development Guide",
-        "url": "../../packages/adapters/docs/adapter-development.md",
-        "lineNo": 164
+        "lineNo": 260
       }
     ]
   },
-  "docs/adr/011-monorepo-strategy.md": {
+  "docs/adr/README.md": {
     "anchors": [
-      "adr-011-monorepo-strategy-for-protocol-ecosystem",
-      "context",
-      "the-problem-with-polyrepos-separate-repos",
-      "decision",
-      "the-structure",
-      "the-publisher-pattern-for-distribution",
-      "rationale",
-      "strategic-extensibility",
-      "consequences",
-      "alternatives"
+      "platform-adrs"
     ],
-    "links": []
+    "links": [
+      {
+        "original": "[001-system-api-primitive](001-system-api-primitive.md)",
+        "text": "001-system-api-primitive",
+        "url": "001-system-api-primitive.md",
+        "lineNo": 5
+      },
+      {
+        "original": "[002-github-execution-authority](002-github-execution-authority.md)",
+        "text": "002-github-execution-authority",
+        "url": "002-github-execution-authority.md",
+        "lineNo": 6
+      },
+      {
+        "original": "[003-additive-governance](003-additive-governance.md)",
+        "text": "003-additive-governance",
+        "url": "003-additive-governance.md",
+        "lineNo": 7
+      },
+      {
+        "original": "[004-schema-contract-config](004-schema-contract-config.md)",
+        "text": "004-schema-contract-config",
+        "url": "004-schema-contract-config.md",
+        "lineNo": 8
+      },
+      {
+        "original": "[005-control-plane-architecture](005-control-plane-architecture.md)",
+        "text": "005-control-plane-architecture",
+        "url": "005-control-plane-architecture.md",
+        "lineNo": 9
+      },
+      {
+        "original": "[006-documentation-as-governed-artifact](006-documentation-as-governed-artifact.md)",
+        "text": "006-documentation-as-governed-artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 10
+      },
+      {
+        "original": "[007-protocol-supremacy-enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "007-protocol-supremacy-enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 11
+      },
+      {
+        "original": "[008-federated-documentation-structure](008-federated-documentation-structure.md)",
+        "text": "008-federated-documentation-structure",
+        "url": "008-federated-documentation-structure.md",
+        "lineNo": 12
+      },
+      {
+        "original": "[009-8-10-vs-10-10-bridge-strategy](009-8-10-vs-10-10-bridge-strategy.md)",
+        "text": "009-8-10-vs-10-10-bridge-strategy",
+        "url": "009-8-10-vs-10-10-bridge-strategy.md",
+        "lineNo": 13
+      },
+      {
+        "original": "[010-identity-contract](010-identity-contract.md)",
+        "text": "010-identity-contract",
+        "url": "010-identity-contract.md",
+        "lineNo": 14
+      },
+      {
+        "original": "[011-monorepo-strategy](011-monorepo-strategy.md)",
+        "text": "011-monorepo-strategy",
+        "url": "011-monorepo-strategy.md",
+        "lineNo": 15
+      }
+    ]
   },
   "docs/adr/009-8-10-vs-10-10-bridge-strategy.md": {
     "anchors": [
@@ -830,234 +1043,6 @@
       }
     ]
   },
-  "docs/adr/008-federated-documentation-structure.md": {
-    "anchors": [
-      "adr-008-federated-documentation-structure",
-      "context",
-      "decision",
-      "7-tier-hierarchy",
-      "rationale",
-      "why-federated-structure",
-      "why-federated",
-      "implementation",
-      "phase-1-core-restructure-completed",
-      "phase-2-large-file-splitting-future",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "design-principles",
-      "1-clear-ownership",
-      "2-no-duplication",
-      "3-protocol-supremacy",
-      "4-audience-first",
-      "alternatives-considered",
-      "alternative-1-keep-flat-structure",
-      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
-      "alternative-3-single-mega-document",
-      "alternative-4-wiki-style-with-heavy-cross-linking",
-      "validation-checklist",
-      "migration-path",
-      "future-enhancements",
-      "potential-additions",
-      "automation-opportunities",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
-        "text": "ADR-006: Documentation as Governed Artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 252
-      },
-      {
-        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "ADR-007: Protocol Supremacy Enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 253
-      },
-      {
-        "original": "[Divio Documentation System](https://documentation.divio.com/)",
-        "text": "Divio Documentation System",
-        "url": "https://documentation.divio.com/",
-        "lineNo": 259
-      },
-      {
-        "original": "[GlassOps Protocol](../../packages/glassspec/README.md)",
-        "text": "GlassOps Protocol",
-        "url": "../../packages/glassspec/README.md",
-        "lineNo": 260
-      }
-    ]
-  },
-  "docs/adr/010-identity-contract.md": {
-    "anchors": [
-      "adr-010-identity-contract",
-      "context",
-      "the-identity-gap",
-      "real-world-scenario",
-      "decision",
-      "core-principle",
-      "identity-contract-schema",
-      "minimal-contract",
-      "full-contract-with-authorization",
-      "implementation-strategy",
-      "phase-1-identity-detection-current",
-      "phase-2-identity-resolution-bridge",
-      "phase-3-identity-authorization-future",
-      "sarif-integration",
-      "where-identity-goes",
-      "audit-trail-benefits",
-      "before-identity-contract",
-      "after-identity-contract",
-      "cross-substrate-correlation",
-      "example-override-request-flow",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "privacy-security-considerations",
-      "personal-data-in-sarif",
-      "alternatives-considered",
-      "alternative-1-no-identity-contract",
-      "alternative-2-provider-specific-identity-only",
-      "alternative-3-external-identity-provider-oauth2",
-      "alternative-4-sign-sarif-contracts-with-private-keys",
-      "migration-path",
-      "existing-contracts-without-identity",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "ADR-007: Protocol Supremacy Enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 475
-      },
-      {
-        "original": "[ADR-009: The 8/10 vs 10/10 Bridge Strategy](009-8-10-vs-10-10-bridge-strategy.md)",
-        "text": "ADR-009: The 8/10 vs 10/10 Bridge Strategy",
-        "url": "009-8-10-vs-10-10-bridge-strategy.md",
-        "lineNo": 476
-      },
-      {
-        "original": "[GlassSpec ADR-001: Layered Contract Model](../../packages/glassspec/adr/001-layered-contract-model.md)",
-        "text": "GlassSpec ADR-001: Layered Contract Model",
-        "url": "../../packages/glassspec/adr/001-layered-contract-model.md",
-        "lineNo": 477
-      },
-      {
-        "original": "[OASIS SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/)",
-        "text": "OASIS SARIF 2.1.0",
-        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/",
-        "lineNo": 483
-      },
-      {
-        "original": "[OAuth 2.0 RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749)",
-        "text": "OAuth 2.0 RFC 6749",
-        "url": "https://datatracker.ietf.org/doc/html/rfc6749",
-        "lineNo": 484
-      },
-      {
-        "original": "[NIST SP 800-63B: Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)",
-        "text": "NIST SP 800-63B: Digital Identity Guidelines",
-        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
-        "lineNo": 485
-      }
-    ]
-  },
-  "docs/architecture/overview.md": {
-    "anchors": [
-      "glassops-architecture-design",
-      "1-high-level-architecture",
-      "the-control-loop",
-      "component-breakdown",
-      "2-governance-flow-the-pipeline",
-      "3-security-model",
-      "confused-deputy-protection",
-      "secrets-management",
-      "4-failure-modes-recovery",
-      "5-directory-structure"
-    ],
-    "links": []
-  },
-  "docs/adr/README.md": {
-    "anchors": [
-      "platform-adrs"
-    ],
-    "links": [
-      {
-        "original": "[001-system-api-primitive](001-system-api-primitive.md)",
-        "text": "001-system-api-primitive",
-        "url": "001-system-api-primitive.md",
-        "lineNo": 5
-      },
-      {
-        "original": "[002-github-execution-authority](002-github-execution-authority.md)",
-        "text": "002-github-execution-authority",
-        "url": "002-github-execution-authority.md",
-        "lineNo": 6
-      },
-      {
-        "original": "[003-additive-governance](003-additive-governance.md)",
-        "text": "003-additive-governance",
-        "url": "003-additive-governance.md",
-        "lineNo": 7
-      },
-      {
-        "original": "[004-schema-contract-config](004-schema-contract-config.md)",
-        "text": "004-schema-contract-config",
-        "url": "004-schema-contract-config.md",
-        "lineNo": 8
-      },
-      {
-        "original": "[005-control-plane-architecture](005-control-plane-architecture.md)",
-        "text": "005-control-plane-architecture",
-        "url": "005-control-plane-architecture.md",
-        "lineNo": 9
-      },
-      {
-        "original": "[006-documentation-as-governed-artifact](006-documentation-as-governed-artifact.md)",
-        "text": "006-documentation-as-governed-artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 10
-      },
-      {
-        "original": "[007-protocol-supremacy-enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "007-protocol-supremacy-enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 11
-      },
-      {
-        "original": "[008-federated-documentation-structure](008-federated-documentation-structure.md)",
-        "text": "008-federated-documentation-structure",
-        "url": "008-federated-documentation-structure.md",
-        "lineNo": 12
-      },
-      {
-        "original": "[009-8-10-vs-10-10-bridge-strategy](009-8-10-vs-10-10-bridge-strategy.md)",
-        "text": "009-8-10-vs-10-10-bridge-strategy",
-        "url": "009-8-10-vs-10-10-bridge-strategy.md",
-        "lineNo": 13
-      },
-      {
-        "original": "[010-identity-contract](010-identity-contract.md)",
-        "text": "010-identity-contract",
-        "url": "010-identity-contract.md",
-        "lineNo": 14
-      },
-      {
-        "original": "[011-monorepo-strategy](011-monorepo-strategy.md)",
-        "text": "011-monorepo-strategy",
-        "url": "011-monorepo-strategy.md",
-        "lineNo": 15
-      }
-    ]
-  },
   "docs/reference/platform-reference.md": {
     "anchors": [
       "platform-reference-api",
@@ -1078,6 +1063,21 @@
       }
     ]
   },
+  "docs/adr/011-monorepo-strategy.md": {
+    "anchors": [
+      "adr-011-monorepo-strategy-for-protocol-ecosystem",
+      "context",
+      "the-problem-with-polyrepos-separate-repos",
+      "decision",
+      "the-structure",
+      "the-publisher-pattern-for-distribution",
+      "rationale",
+      "strategic-extensibility",
+      "consequences",
+      "alternatives"
+    ],
+    "links": []
+  },
   "packages/control-plane/README.md": {
     "anchors": [
       "glassops-control-plane-glassopscontrol-plane",
@@ -1091,22 +1091,6 @@
       "4-components",
       "resolve-policy",
       "enforce-governance"
-    ],
-    "links": []
-  },
-  "packages/glassspec/README.md": {
-    "anchors": [
-      "glassops-protocol-specification-glassops-platformglassspec",
-      "1-the-layered-contract-model",
-      "the-invariant",
-      "2-adapter-interface",
-      "21-command-line-contract",
-      "input-the-policy-to-enforce",
-      "output-the-contract-to-emit",
-      "22-behavior-contract",
-      "23-schema-mapping-native---sarif",
-      "3-deployment-contract-schema",
-      "4-contributing"
     ],
     "links": []
   },
@@ -1125,35 +1109,21 @@
     ],
     "links": []
   },
-  "packages/platform/README.md": {
+  "packages/glassspec/README.md": {
     "anchors": [
-      "glassops-platform"
+      "glassops-protocol-specification-glassops-platformglassspec",
+      "1-the-layered-contract-model",
+      "the-invariant",
+      "2-adapter-interface",
+      "21-command-line-contract",
+      "input-the-policy-to-enforce",
+      "output-the-contract-to-emit",
+      "22-behavior-contract",
+      "23-schema-mapping-native---sarif",
+      "3-deployment-contract-schema",
+      "4-contributing"
     ],
     "links": []
-  },
-  "packages/runtime/CHANGELOG.md": {
-    "anchors": [
-      "changelog",
-      "unreleased",
-      "added",
-      "fixed",
-      "changed",
-      "security"
-    ],
-    "links": [
-      {
-        "original": "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)",
-        "text": "Keep a Changelog",
-        "url": "https://keepachangelog.com/en/1.0.0/",
-        "lineNo": 5
-      },
-      {
-        "original": "[Semantic Versioning](https://semver.org/spec/v2.0.0.html)",
-        "text": "Semantic Versioning",
-        "url": "https://semver.org/spec/v2.0.0.html",
-        "lineNo": 6
-      }
-    ]
   },
   "packages/runtime/CONTRIBUTING.md": {
     "anchors": [
@@ -1182,6 +1152,30 @@
       }
     ]
   },
+  "packages/runtime/CHANGELOG.md": {
+    "anchors": [
+      "changelog",
+      "unreleased",
+      "added",
+      "fixed",
+      "changed",
+      "security"
+    ],
+    "links": [
+      {
+        "original": "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)",
+        "text": "Keep a Changelog",
+        "url": "https://keepachangelog.com/en/1.0.0/",
+        "lineNo": 5
+      },
+      {
+        "original": "[Semantic Versioning](https://semver.org/spec/v2.0.0.html)",
+        "text": "Semantic Versioning",
+        "url": "https://semver.org/spec/v2.0.0.html",
+        "lineNo": 6
+      }
+    ]
+  },
   "packages/runtime/README.md": {
     "anchors": [
       "glassops-runtime",
@@ -1189,15 +1183,6 @@
       "usage",
       "inputs-outputs",
       "security-model"
-    ],
-    "links": []
-  },
-  "packages/runtime/TRADEMARK.md": {
-    "anchors": [
-      "glassops-trademark-policy",
-      "permitted-uses",
-      "restricted-uses",
-      "commercial-licensing"
     ],
     "links": []
   },
@@ -1212,6 +1197,32 @@
       "out-of-scope",
       "security-best-practices",
       "acknowledgments"
+    ],
+    "links": []
+  },
+  "packages/runtime/TRADEMARK.md": {
+    "anchors": [
+      "glassops-trademark-policy",
+      "permitted-uses",
+      "restricted-uses",
+      "commercial-licensing"
+    ],
+    "links": []
+  },
+  "packages/platform/README.md": {
+    "anchors": [
+      "glassops-platform"
+    ],
+    "links": []
+  },
+  "packages/adapters/scanner/README.md": {
+    "anchors": [
+      "glassops-scanner-adapter",
+      "role-in-glassops-protocol",
+      "-data-flow",
+      "-usage",
+      "github-actions",
+      "-governance-capabilities"
     ],
     "links": []
   },
@@ -1395,6 +1406,18 @@
     ],
     "links": []
   },
+  "packages/control-plane/adr/001-kubernetes-operator-pattern.md": {
+    "anchors": [
+      "adr-001-kubernetes-operator-pattern",
+      "context",
+      "decision",
+      "rationale",
+      "structure",
+      "consequences",
+      "alternatives"
+    ],
+    "links": []
+  },
   "packages/adapters/megalinter/README.md": {
     "anchors": [
       "megalinter-scanner-adapter",
@@ -1428,29 +1451,6 @@
         "lineNo": 97
       }
     ]
-  },
-  "packages/adapters/scanner/README.md": {
-    "anchors": [
-      "glassops-scanner-adapter",
-      "role-in-glassops-protocol",
-      "-data-flow",
-      "-usage",
-      "github-actions",
-      "-governance-capabilities"
-    ],
-    "links": []
-  },
-  "packages/control-plane/adr/001-kubernetes-operator-pattern.md": {
-    "anchors": [
-      "adr-001-kubernetes-operator-pattern",
-      "context",
-      "decision",
-      "rationale",
-      "structure",
-      "consequences",
-      "alternatives"
-    ],
-    "links": []
   },
   "packages/control-plane/adr/README.md": {
     "anchors": [
@@ -1487,6 +1487,24 @@
       }
     ]
   },
+  "packages/control-plane/docs/policy-policy.md": {
+    "anchors": [
+      "policy-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/control-plane/docs/resolver-main.md": {
+    "anchors": [
+      "glassops-control-plane-resolver-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-go.md": {
+    "anchors": [
+      "go-language-adapter-documentation"
+    ],
+    "links": []
+  },
   "packages/control-plane/docs/contract-contract.md": {
     "anchors": [
       "deployment-contract-package-documentation",
@@ -1497,15 +1515,245 @@
     ],
     "links": []
   },
-  "packages/control-plane/docs/policy-policy.md": {
+  "packages/knowledge/docs/adapters-base.md": {
     "anchors": [
-      "policy-package-documentation"
+      "documentation-generation-adapters-base-class",
+      "core-concepts",
+      "baseadapter-class",
+      "type-hints",
+      "design-considerations"
     ],
     "links": []
   },
-  "packages/control-plane/docs/resolver-main.md": {
+  "packages/knowledge/docs/adapters-json_adapter.md": {
     "anchors": [
-      "glassops-control-plane-resolver-documentation"
+      "json-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-apex_adapter.md": {
+    "anchors": [
+      "apex-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-lwc_adapter.md": {
+    "anchors": [
+      "lightning-web-component-lwc-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-terraform_adapter.md": {
+    "anchors": [
+      "terraform-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-python.md": {
+    "anchors": [
+      "python-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-docker_adapter.md": {
+    "anchors": [
+      "dockerfile-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-yaml_adapter.md": {
+    "anchors": [
+      "yaml-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-typescript.md": {
+    "anchors": [
+      "typescript-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/adapters-__init__.md": {
+    "anchors": [
+      "knowledge-generation-adapters-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/config-prompts.md": {
+    "anchors": [
+      "prompts-configuration-documentation",
+      "structure",
+      "key-breakdown",
+      "prompts",
+      "variables"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/drift-__init__.md": {
+    "anchors": [
+      "knowledge-drift-detection-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/config-config.md": {
+    "anchors": [
+      "knowledge-configuration",
+      "overview",
+      "configuration-parameters",
+      "embedding_models",
+      "vector_store",
+      "federated_doc_paths",
+      "retrieval_triggers",
+      "batch_size",
+      "drift_threshold",
+      "system_context"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/drift-detect_drift.md": {
+    "anchors": [
+      "knowledge-drift-detection-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/embeddings-gemini_embedding.md": {
+    "anchors": [
+      "geminiembedding-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/embeddings-__init__.md": {
+    "anchors": [
+      "knowledge-embeddings-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/embeddings-router_embedding.md": {
+    "anchors": [
+      "router-embedding-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/generation-validator.md": {
+    "anchors": [
+      "documentation-validator-document",
+      "module-purpose",
+      "key-classes",
+      "validator-class",
+      "responsibilities",
+      "important-functions",
+      "validatorvalidatecontent-str-file_path-str---liststr",
+      "parameters",
+      "return-value",
+      "behavior",
+      "type-hints",
+      "design-decisions"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md": {
+    "anchors": [
+      "gemma-12b-italian-embedding-model-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/generation-generator.md": {
+    "anchors": [
+      "documentation-generator-documentation",
+      "core-components",
+      "design-considerations"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/generation-__init__.md": {
+    "anchors": [
+      "glassops-knowledge-pipeline-generation-module-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/ingestion-__init__.md": {
+    "anchors": [
+      "knowledge-ingestion-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/ingestion-index_builder.md": {
+    "anchors": [
+      "glassops-knowledge-index-builder-documentation",
+      "module-purpose",
+      "key-classes-and-roles",
+      "important-functions-and-their-behavior",
+      "build_or_update_indexembeddings",
+      "notable-patterns-and-design-decisions"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/ingestion-federated_loader.md": {
+    "anchors": [
+      "federated-document-loader-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/llm-client.md": {
+    "anchors": [
+      "glassops-knowledge-pipeline---llm-client-documentation",
+      "module-responsibilities",
+      "key-classes",
+      "llmclient",
+      "important-functions",
+      "_estimate_tokenstext-str---int",
+      "_throttleestimated_tokens-int---none",
+      "generateprompt-str-max_retries-int-3-temperature-float-02-max_output_tokens-int-8192---optionalstr",
+      "type-hints",
+      "design-decisions-and-patterns"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/llm-__init__.md": {
+    "anchors": [
+      "glassops-knowledge-pipeline-llm-module-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/rag-__init__.md": {
+    "anchors": [
+      "knowledge-retrieval-augmented-generation-rag-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/main.md": {
+    "anchors": [
+      "glassops-knowledge-pipeline-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/utils-batch.md": {
+    "anchors": [
+      "batch-processing-utility-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/utils-file_hash.md": {
+    "anchors": [
+      "file-hash-utility-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/rag-query_engine.md": {
+    "anchors": [
+      "glassops-knowledge-query-engine-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/__init__.md": {
+    "anchors": [
+      "knowledge-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/knowledge/docs/utils-__init__.md": {
+    "anchors": [
+      "knowledge-package-utilities-documentation"
     ],
     "links": []
   },
@@ -1569,281 +1817,14 @@
       }
     ]
   },
-  "packages/knowledge/docs/adapters-apex_adapter.md": {
+  "packages/runtime/adr/001-six-phase-execution.md": {
     "anchors": [
-      "apex-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-base.md": {
-    "anchors": [
-      "documentation-generation-adapters-base-class",
-      "core-concepts",
-      "baseadapter-class",
-      "type-hints",
-      "design-decisions"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-docker_adapter.md": {
-    "anchors": [
-      "dockerfile-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-lwc_adapter.md": {
-    "anchors": [
-      "lightning-web-component-lwc-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-terraform_adapter.md": {
-    "anchors": [
-      "terraform-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-go.md": {
-    "anchors": [
-      "go-language-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-python.md": {
-    "anchors": [
-      "python-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-typescript.md": {
-    "anchors": [
-      "typescript-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-json_adapter.md": {
-    "anchors": [
-      "json-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-__init__.md": {
-    "anchors": [
-      "knowledge-generation-adapters-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/config-config.md": {
-    "anchors": [
-      "knowledge-configuration",
-      "overview",
-      "configuration-parameters",
-      "embedding_models",
-      "vector_store",
-      "federated_doc_paths",
-      "retrieval_triggers",
-      "batch_size",
-      "drift_threshold",
-      "system_context"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-yaml_adapter.md": {
-    "anchors": [
-      "yaml-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/config-prompts.md": {
-    "anchors": [
-      "prompts-configuration-documentation",
-      "structure",
-      "key-breakdown",
-      "prompts",
-      "variables"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/drift-detect_drift.md": {
-    "anchors": [
-      "knowledge-drift-detection-documentation",
-      "key-components",
-      "design-and-operation",
-      "notable-patterns"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/drift-__init__.md": {
-    "anchors": [
-      "knowledge-drift-detection-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-gemini_embedding.md": {
-    "anchors": [
-      "gemini-embedding-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md": {
-    "anchors": [
-      "gemma-12b-italian-embedding-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-router_embedding.md": {
-    "anchors": [
-      "router-embedding-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-__init__.md": {
-    "anchors": [
-      "knowledge-embeddings-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-generator.md": {
-    "anchors": [
-      "documentation-generator-overview",
-      "core-components",
-      "key-data-structures",
-      "design-considerations"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-validator.md": {
-    "anchors": [
-      "documentation-validator-document",
-      "module-purpose",
-      "key-classes",
-      "validator-class",
-      "important-functions",
-      "validatorvalidatecontent-str-file_path-str---liststr",
-      "type-hints",
-      "design-decisions"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-__init__.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-generation-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-index_builder.md": {
-    "anchors": [
-      "glassops-knowledge-index-builder-documentation",
-      "module-purpose",
-      "key-classes-and-roles",
-      "important-functions-and-their-behavior",
-      "build_or_update_indexembeddings",
-      "notable-patterns-and-design-decisions"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-federated_loader.md": {
-    "anchors": [
-      "federated-document-loader-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-__init__.md": {
-    "anchors": [
-      "knowledge-ingestion-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/llm-client.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline---llm-client-documentation",
-      "module-responsibilities",
-      "key-classes",
-      "llmclient",
-      "important-functions",
-      "_estimate_tokenstext-str---int",
-      "_throttleestimated_tokens-int---none",
-      "generateprompt-str-max_retries-int-3-temperature-float-02-max_output_tokens-int-8192---optionalstr",
-      "design-decisions-and-patterns"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/llm-__init__.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-llm-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/main.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/rag-query_engine.md": {
-    "anchors": [
-      "glassops-knowledge-query-engine-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/rag-__init__.md": {
-    "anchors": [
-      "knowledge-retrieval-augmented-generation-rag-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-batch.md": {
-    "anchors": [
-      "knowledge-package-batching-utility-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-file_hash.md": {
-    "anchors": [
-      "file-hash-utility-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-__init__.md": {
-    "anchors": [
-      "knowledge-package-utilities-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/__init__.md": {
-    "anchors": [
-      "knowledge-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/platform/docs/README.md": {
-    "anchors": [
-      "glassops-platform-documentation"
-    ],
-    "links": []
-  },
-  "packages/platform/docs/sfdx-project.md": {
-    "anchors": [
-      "sfdx-project-configuration",
-      "overview",
-      "schema-details",
-      "packagedirectories-array-of-objects-required",
-      "name-string-required",
-      "namespace-string-optional",
-      "sfdcloginurl-string-optional",
-      "sourceapiversion-string-required",
-      "common-use-cases",
-      "example"
-    ],
-    "links": []
-  },
-  "packages/runtime/.github/pull_request_template.md": {
-    "anchors": [
-      "description",
-      "type-of-change",
-      "testing",
-      "checklist",
-      "related-issues"
+      "adr-001-6-phase-runtime-execution-model",
+      "context",
+      "decision",
+      "rationale",
+      "consequences",
+      "alternatives"
     ],
     "links": []
   },
@@ -1856,6 +1837,16 @@
       "rationale",
       "consequences",
       "alternatives"
+    ],
+    "links": []
+  },
+  "packages/runtime/.github/pull_request_template.md": {
+    "anchors": [
+      "description",
+      "type-of-change",
+      "testing",
+      "checklist",
+      "related-issues"
     ],
     "links": []
   },
@@ -1909,17 +1900,6 @@
       }
     ]
   },
-  "packages/runtime/adr/001-six-phase-execution.md": {
-    "anchors": [
-      "adr-001-6-phase-runtime-execution-model",
-      "context",
-      "decision",
-      "rationale",
-      "consequences",
-      "alternatives"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/.github-dependabot.md": {
     "anchors": [
       "dependabot-configuration-documentation",
@@ -1951,15 +1931,15 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/analyzer-analyzer_test.md": {
-    "anchors": [
-      "analyzer-package-documentation"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/config-jest.config.md": {
     "anchors": [
       "jest-configuration-for-runtime-package"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/analyzer-analyzer_test.md": {
+    "anchors": [
+      "analyzer-package-documentation"
     ],
     "links": []
   },
@@ -1969,15 +1949,15 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/config-jest.integration.setup.md": {
-    "anchors": [
-      "integration-test-environment-configuration"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/contract-contract.md": {
     "anchors": [
       "deployment-contract-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/config-jest.integration.setup.md": {
+    "anchors": [
+      "integration-test-environment-configuration"
     ],
     "links": []
   },
@@ -1987,33 +1967,9 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/errors-errors.md": {
-    "anchors": [
-      "glassops-runtime-error-package-documentation"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/errors-errors_test.md": {
     "anchors": [
       "glassops-error-handling-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/eslint.config.md": {
-    "anchors": [
-      "eslint-configuration-runtime-package"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/gha-gha.md": {
-    "anchors": [
-      "github-actions-integration-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/gha-gha_test.md": {
-    "anchors": [
-      "package-gha-documentation"
     ],
     "links": []
   },
@@ -2030,21 +1986,33 @@
     ],
     "links": []
   },
+  "packages/runtime/docs/eslint.config.md": {
+    "anchors": [
+      "eslint-configuration-runtime-package"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/gha-gha_test.md": {
+    "anchors": [
+      "package-gha-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/errors-errors.md": {
+    "anchors": [
+      "glassops-runtime-error-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/gha-gha.md": {
+    "anchors": [
+      "github-actions-integration-package-documentation"
+    ],
+    "links": []
+  },
   "packages/runtime/docs/glassops-main.md": {
     "anchors": [
       "glassops-runtime-documentation"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/integration-analyzer.integration.test.md": {
-    "anchors": [
-      "analyzer-integration-test-documentation"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/integration-cli-platform.integration.test.md": {
-    "anchors": [
-      "cli-platform-integration-test-documentation"
     ],
     "links": []
   },
@@ -2054,9 +2022,9 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/integration-contract_test.md": {
+  "packages/runtime/docs/integration-analyzer.integration.test.md": {
     "anchors": [
-      "integration-test-documentation-contract-validation"
+      "analyzer-integration-test-documentation"
     ],
     "links": []
   },
@@ -2066,11 +2034,18 @@
     ],
     "links": []
   },
+  "packages/runtime/docs/integration-cli-platform.integration.test.md": {
+    "anchors": [
+      "cli-platform-integration-test-documentation"
+    ],
+    "links": []
+  },
   "packages/runtime/docs/integration-helpers.md": {
     "anchors": [
-      "integration-test-helpers-documentation",
+      "integration-test-helpers-package-documentation",
+      "key-concepts",
       "package-responsibilities",
-      "key-types-and-interfaces",
+      "key-types",
       "important-functions",
       "error-handling",
       "concurrency",
@@ -2078,9 +2053,9 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/integration-identity_test.md": {
+  "packages/runtime/docs/integration-contract_test.md": {
     "anchors": [
-      "identity-integration-test-documentation"
+      "integration-test-documentation-contract-validation"
     ],
     "links": []
   },
@@ -2093,6 +2068,12 @@
   "packages/runtime/docs/integration-policy.integration.test.md": {
     "anchors": [
       "policy-integration-test-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/integration-identity_test.md": {
+    "anchors": [
+      "identity-integration-test-documentation"
     ],
     "links": []
   },
@@ -2120,15 +2101,15 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/policy-policy.md": {
+  "packages/runtime/docs/permit-permit.md": {
     "anchors": [
-      "policy-engine-documentation"
+      "permit-package-documentation"
     ],
     "links": []
   },
-  "packages/runtime/docs/policy-policy_test.md": {
+  "packages/runtime/docs/policy-policy.md": {
     "anchors": [
-      "policy-package-documentation"
+      "policy-engine-documentation"
     ],
     "links": []
   },
@@ -2138,9 +2119,15 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/protocol-contract.test.md": {
+  "packages/runtime/docs/policy-policy_test.md": {
     "anchors": [
-      "deployment-contract-schema-documentation"
+      "policy-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/permit-permit_test.md": {
+    "anchors": [
+      "permit-package-documentation"
     ],
     "links": []
   },
@@ -2162,9 +2149,15 @@
     ],
     "links": []
   },
+  "packages/runtime/docs/protocol-contract.test.md": {
+    "anchors": [
+      "deployment-contract-schema-documentation"
+    ],
+    "links": []
+  },
   "packages/runtime/docs/services-cli.md": {
     "anchors": [
-      "glassops-runtime-environment-service-documentation"
+      "runtime-environment-service-documentation"
     ],
     "links": []
   },
@@ -2186,6 +2179,18 @@
     ],
     "links": []
   },
+  "packages/runtime/docs/services-identity.md": {
+    "anchors": [
+      "identity-service-documentation",
+      "package-responsibilities",
+      "key-types-and-interfaces",
+      "important-functions",
+      "error-handling",
+      "concurrency",
+      "design-decisions"
+    ],
+    "links": []
+  },
   "packages/runtime/docs/services-health.md": {
     "anchors": [
       "health-service-documentation"
@@ -2198,15 +2203,9 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/services-identity.md": {
+  "packages/runtime/docs/services-retry.md": {
     "anchors": [
-      "identity-service-documentation",
-      "package-responsibilities",
-      "key-types-and-interfaces",
-      "important-functions",
-      "error-handling",
-      "concurrency",
-      "design-decisions"
+      "retry-service-documentation"
     ],
     "links": []
   },
@@ -2222,9 +2221,9 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/services-retry.md": {
+  "packages/runtime/docs/src-index.md": {
     "anchors": [
-      "retry-service-documentation"
+      "glassops-runtime-architecture-overview"
     ],
     "links": []
   },
@@ -2234,19 +2233,19 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/src-index.md": {
-    "anchors": [
-      "glassops-runtime-architecture-overview"
-    ],
-    "links": []
-  },
-  "packages/runtime/docs/telemetry-telemetry.md": {
+  "packages/runtime/docs/telemetry-telemetry_test.md": {
     "anchors": [
       "telemetry-package-documentation"
     ],
     "links": []
   },
-  "packages/runtime/docs/telemetry-telemetry_test.md": {
+  "packages/runtime/docs/types-config.d.md": {
+    "anchors": [
+      "glassops-configuration-document"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/telemetry-telemetry.md": {
     "anchors": [
       "telemetry-package-documentation"
     ],
@@ -2264,15 +2263,21 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/types-config.d.md": {
-    "anchors": [
-      "glassops-configuration-document"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/types-contract.d.md": {
     "anchors": [
       "deployment-contract-specification"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/validator-validator.md": {
+    "anchors": [
+      "validator-package-documentation"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/validator-validator_test.md": {
+    "anchors": [
+      "runtime-validator-package-documentation"
     ],
     "links": []
   },
@@ -2291,17 +2296,6 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/workflows-plugin-whitelist-test.md": {
-    "anchors": [
-      "plugin-whitelist-governance-test-workflow-documentation",
-      "workflow-triggers",
-      "jobs",
-      "job-structure-common-elements",
-      "devops-configjson-configuration",
-      "key-takeaways"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/workflows-release.md": {
     "anchors": [
       "release-workflow-documentation",
@@ -2311,6 +2305,17 @@
       "on",
       "jobs",
       "steps-breakdown"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/workflows-plugin-whitelist-test.md": {
+    "anchors": [
+      "plugin-whitelist-governance-test-workflow-documentation",
+      "workflow-triggers",
+      "jobs",
+      "job-structure-common-elements",
+      "devops-configjson-configuration",
+      "key-takeaways"
     ],
     "links": []
   },
@@ -2325,17 +2330,6 @@
     ],
     "links": []
   },
-  "packages/runtime/docs/workflows-verify-governance.md": {
-    "anchors": [
-      "governance-validation-workflow-documentation",
-      "workflow-triggers",
-      "jobs",
-      "1-test-freeze-logic---verify-freeze-window-enforcement",
-      "2-test-bypass-logic---verify-manual-bypass",
-      "devops-configjson-structure"
-    ],
-    "links": []
-  },
   "packages/runtime/docs/workflows-verify-primitives.md": {
     "anchors": [
       "primitive-logic-verification-workflow-documentation",
@@ -2344,6 +2338,17 @@
       "1-unit-tests-job",
       "2-code-hygiene-job",
       "3-dependency-review-job"
+    ],
+    "links": []
+  },
+  "packages/runtime/docs/workflows-verify-governance.md": {
+    "anchors": [
+      "governance-validation-workflow-documentation",
+      "workflow-triggers",
+      "jobs",
+      "1-test-freeze-logic---verify-freeze-window-enforcement",
+      "2-test-bypass-logic---verify-manual-bypass",
+      "devops-configjson-structure"
     ],
     "links": []
   },
@@ -2373,6 +2378,27 @@
       "targeted-patterns-positional",
       "generate-docs-for-specific-paths",
       "architecture"
+    ],
+    "links": []
+  },
+  "packages/platform/docs/README.md": {
+    "anchors": [
+      "glassops-platform-documentation"
+    ],
+    "links": []
+  },
+  "packages/platform/docs/sfdx-project.md": {
+    "anchors": [
+      "sfdx-project-configuration",
+      "overview",
+      "schema-details",
+      "packagedirectories-array-of-objects-required",
+      "name-string-required",
+      "namespace-string-optional",
+      "sfdcloginurl-string-optional",
+      "sourceapiversion-string-required",
+      "common-use-cases",
+      "example"
     ],
     "links": []
   },
@@ -2424,9 +2450,29 @@
       }
     ]
   },
-  "packages/adapters/native/docs/cmd-main.md": {
+  "packages/adapters/scanner/docs/README.md": {
     "anchors": [
-      "adapter-command-line-interface-documentation"
+      "glassops-scanner-adapter-documentation"
+    ],
+    "links": [
+      {
+        "original": "[Architecture Decision Records](adr/README.md)",
+        "text": "Architecture Decision Records",
+        "url": "adr/README.md",
+        "lineNo": 3
+      }
+    ]
+  },
+  "packages/adapters/native/docs/Dockerfile.md": {
+    "anchors": [
+      "dockerfile-documentation-native-adapter",
+      "base-image-and-rationale",
+      "build-stages",
+      "stage-1-builder",
+      "stage-2-runtime-stage",
+      "key-instructions-and-purpose",
+      "security-considerations",
+      "building-and-running-the-container"
     ],
     "links": []
   },
@@ -2476,49 +2522,17 @@
       }
     ]
   },
-  "packages/adapters/native/docs/Dockerfile.md": {
+  "packages/adapters/native/docs/cmd-main.md": {
     "anchors": [
-      "dockerfile-documentation-native-adapter",
-      "base-image-and-rationale",
-      "stages",
-      "key-instructions-and-purpose",
-      "builder-stage-golang121-alpine",
-      "runtime-stage-alpine319",
-      "security-considerations",
-      "building-and-running-the-container"
+      "adapter-command-line-interface-documentation"
     ],
     "links": []
-  },
-  "packages/adapters/scanner/docs/README.md": {
-    "anchors": [
-      "glassops-scanner-adapter-documentation"
-    ],
-    "links": [
-      {
-        "original": "[Architecture Decision Records](adr/README.md)",
-        "text": "Architecture Decision Records",
-        "url": "adr/README.md",
-        "lineNo": 3
-      }
-    ]
   },
   "packages/knowledge/docs/generated/drift_report.md": {
     "anchors": [
       "knowledge-base-health-report",
       "-conflicting-duplicate-documentation-detected",
       "drift-status"
-    ],
-    "links": []
-  },
-  "packages/tools/adr-enforcer/docs/package.md": {
-    "anchors": [
-      "glassopsadr-enforcer-package-documentation",
-      "data-representation",
-      "fields",
-      "name-string-required",
-      "version-string-required",
-      "private-boolean-optional",
-      "common-use-cases"
     ],
     "links": []
   },
@@ -2547,9 +2561,21 @@
     ],
     "links": []
   },
-  "packages/tools/agent/docs/adapters-docker-adapter.md": {
+  "packages/tools/agent/docs/adapters-json-adapter.md": {
     "anchors": [
-      "docker-adapter-documentation"
+      "json-adapter-documentation"
+    ],
+    "links": []
+  },
+  "packages/tools/adr-enforcer/docs/package.md": {
+    "anchors": [
+      "glassopsadr-enforcer-package-documentation",
+      "data-representation",
+      "fields",
+      "name-string-required",
+      "version-string-required",
+      "private-boolean-optional",
+      "common-use-cases"
     ],
     "links": []
   },
@@ -2562,13 +2588,14 @@
       "canhandlefilename-string-boolean",
       "parsefilepath-string-content-string-promisestring",
       "generatepromptfilepath-string-parsedcontent-string-string",
-      "postprocessfilepath-string-outputs-string-string"
+      "postprocessfilepath-string-outputs-string-string",
+      "implementation-guidance"
     ],
     "links": []
   },
-  "packages/tools/agent/docs/adapters-json-adapter.md": {
+  "packages/tools/agent/docs/adapters-docker-adapter.md": {
     "anchors": [
-      "json-adapter-documentation"
+      "docker-adapter-documentation"
     ],
     "links": []
   },
@@ -2583,11 +2610,7 @@
       "python-file-adapter-documentation",
       "overview",
       "core-functionality",
-      "1-canhandlefilename-string-boolean",
-      "2-parsefilepath-string-content-string-promisestring",
-      "3-generatepromptfilepath-string-parsedcontent-string-string",
-      "4-postprocessfilepath-string-outputs-string-string",
-      "dependencies",
+      "usage",
       "future-enhancements"
     ],
     "links": []
@@ -2595,12 +2618,6 @@
   "packages/tools/agent/docs/adapters-md-adapter.md": {
     "anchors": [
       "markdown-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/tools/agent/docs/adapters-terraform-adapter.md": {
-    "anchors": [
-      "terraform-adapter-documentation"
     ],
     "links": []
   },
@@ -2617,6 +2634,12 @@
     ],
     "links": []
   },
+  "packages/tools/agent/docs/adapters-terraform-adapter.md": {
+    "anchors": [
+      "terraform-adapter-documentation"
+    ],
+    "links": []
+  },
   "packages/tools/agent/docs/adapters-yml-adapter.md": {
     "anchors": [
       "yml-adapter-documentation",
@@ -2627,29 +2650,15 @@
     ],
     "links": []
   },
-  "packages/tools/agent/docs/eslint.config.md": {
-    "anchors": [
-      "agent-eslint-configuration"
-    ],
-    "links": []
-  },
-  "packages/tools/agent/docs/package.md": {
-    "anchors": [
-      "glassopsagent-package-documentation",
-      "overview",
-      "fields"
-    ],
-    "links": []
-  },
   "packages/tools/agent/docs/src-generator.md": {
     "anchors": [
       "glassops-agent-documentation"
     ],
     "links": []
   },
-  "packages/tools/agent/docs/src-index.md": {
+  "packages/tools/agent/docs/eslint.config.md": {
     "anchors": [
-      "glassops-agent-documentation"
+      "agent-eslint-configuration"
     ],
     "links": []
   },
@@ -2659,16 +2668,11 @@
       "overview",
       "setup-and-configuration",
       "core-functionality",
-      "geminiclient-class",
+      "geminiclientgeneratecontentprompt-string-retrycount-number-0-promisestring",
+      "rate-limiting",
       "data-structures",
-      "error-handling",
-      "rate-limiting"
-    ],
-    "links": []
-  },
-  "packages/tools/agent/docs/src-scanner.md": {
-    "anchors": [
-      "agent-scanner-documentation"
+      "chatmessage-interface",
+      "important-considerations"
     ],
     "links": []
   },
@@ -2685,14 +2689,42 @@
     ],
     "links": []
   },
+  "packages/tools/agent/docs/package.md": {
+    "anchors": [
+      "glassopsagent-package-documentation",
+      "overview",
+      "fields"
+    ],
+    "links": []
+  },
   "packages/tools/agent/docs/src-validator.md": {
     "anchors": [
       "agent-validator-documentation",
       "overview",
       "functionality",
-      "validatorvalidatecontent-string-_filepath-string-string",
-      "usage",
+      "validatecontent-string-_filepath-string-string",
+      "validation-checks",
+      "example-usage",
       "future-enhancements"
+    ],
+    "links": [
+      {
+        "original": "[Link to another document](https://example.com/doc)",
+        "text": "Link to another document",
+        "url": "https://example.com/doc",
+        "lineNo": 61
+      }
+    ]
+  },
+  "packages/tools/agent/docs/src-scanner.md": {
+    "anchors": [
+      "agent-scanner-documentation"
+    ],
+    "links": []
+  },
+  "packages/tools/agent/docs/src-index.md": {
+    "anchors": [
+      "glassops-agent-documentation"
     ],
     "links": []
   },
