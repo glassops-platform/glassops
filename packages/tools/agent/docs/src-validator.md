@@ -25,28 +25,28 @@ The core function of this tool is the `validate` method. You provide the content
 
 This static method performs the validation checks.
 
-*   **`content`**:  The string containing the content to be validated.
-*   **`_filePath`**: The path to the file containing the content. This parameter is currently unused but is reserved for future functionality, such as providing more context-aware error messages.
-*   **Return Value**: An array of strings. Each string in the array describes an error found within the content. If no errors are found, an empty array is returned.
+- **`content`**: The string containing the content to be validated.
+- **`_filePath`**: The path to the file containing the content. This parameter is currently unused but is reserved for future functionality, such as providing more context-aware error messages.
+- **Return Value**: An array of strings. Each string in the array describes an error found within the content. If no errors are found, an empty array is returned.
 
 ### Validation Checks
 
 The `validate` method currently performs the following checks:
 
-1.  **Frontmatter Check**:  Verifies that the content begins with a frontmatter block, denoted by `---`.  This is a common convention for metadata in many documentation formats.
+1.  **Frontmatter Check**: Verifies that the content begins with a frontmatter block, denoted by `---`. This is a common convention for metadata in many documentation formats.
 
-2.  **Conversational Filler Check**:  Identifies and flags the presence of common conversational phrases that are often undesirable in technical documentation. The following phrases are currently checked:
-    *   "Here is the document"
-    *   "I hope this helps"
-    *   "Let me know if"
-    *   "Feel free to"
-    *   "As requested"
-    *   "Sure, here is"
-    *   "Here's the"
+2.  **Conversational Filler Check**: Identifies and flags the presence of common conversational phrases that are often undesirable in technical documentation. The following phrases are currently checked:
+    - "Here is the document"
+    - "I hope this helps"
+    - "Let me know if"
+    - "Feel free to"
+    - "As requested"
+    - "Sure, here is"
+    - "Here's the"
 
     The check is case-insensitive.
 
-3.  **Relative Link Check (Placeholder)**:  Currently, this check identifies potential relative links within the content using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`.  However, it does *not* currently validate the existence of the linked files.  Future development will include robust link validation, potentially involving asynchronous file system access.
+3.  **Relative Link Check (Placeholder)**: Currently, this check identifies potential relative links within the content using a regular expression: `\[.*?\]\((\.\.?\/.*?)\)`. However, it does _not_ currently validate the existence of the linked files. Future development will include robust link validation, potentially involving asynchronous file system access.
 
 ### Example Usage
 
@@ -58,18 +58,18 @@ title: My Document
 ---
 
 Here is the document.  This is some content.
-[Link to another document](./another_document.md)
+[Link to another document](https://example.com/doc)
 `;
 
 const errors = Validator.validate(content, 'my_document.md');
 
 if (errors.length > 0) {
-  console.log('Validation Errors:');
-  for (const error of errors) {
-    console.log(error);
-  }
+    console.log('Validation Errors:');
+    for (const error of errors) {
+        console.log(error);
+    }
 } else {
-  console.log('Content is valid.');
+    console.log('Content is valid.');
 }
 ```
 
@@ -77,7 +77,7 @@ if (errors.length > 0) {
 
 We plan to expand the capabilities of the Agent Validator to include:
 
-*   More comprehensive link validation, including checking for broken links and ensuring correct link targets.
-*   Support for additional validation checks, such as grammar and spelling checks.
-*   Customizable validation rules, allowing users to define their own criteria for content quality.
-*   Integration with other content management and publishing tools.
+- More comprehensive link validation, including checking for broken links and ensuring correct link targets.
+- Support for additional validation checks, such as grammar and spelling checks.
+- Customizable validation rules, allowing users to define their own criteria for content quality.
+- Integration with other content management and publishing tools.
