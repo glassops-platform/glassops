@@ -95,11 +95,11 @@ You can stop at any level and still get value.
 
 ### Implementation Status
 
-| Component            | Status           | Description                                                |
-| :------------------- | :--------------- | :--------------------------------------------------------- |
-| **GlassOps Runtime** | Active (v1.0.0)  | Unified governance primitive (`glassops/runtime:latest`).  |
-| **Native Adapter**   | Active (bundled) | Standard Salesforce CLI execution (bundled in Runtime v1). |
-| **Policy Engine**    | Active (bundled) | OPA-based policy resolution API.                           |
+| Component            | Status         | Description                                                |
+| :------------------- | :------------- | :--------------------------------------------------------- |
+| **GlassOps Runtime** | In Development | Unified governance primitive (`glassops/runtime:latest`).  |
+| **Native Adapter**   | In Development | Standard Salesforce CLI execution (bundled in Runtime v1). |
+| **Policy Engine**    | In Development | OPA-based policy resolution API.                           |
 
 This project is an **architectural reference implementation**, not a commercial product.
 

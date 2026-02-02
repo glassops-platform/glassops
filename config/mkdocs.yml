@@ -65,6 +65,7 @@ exclude_docs: |
     **coverage/**
     **docs_staging/**
     **glassops_site/**
+    **docs/internal/**
 
 nav:
     - Home: README.md
