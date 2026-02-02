@@ -3,7 +3,12 @@ package contract
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/glassops-platform/glassops/packages/runtime/internal/gha"
 )
 
 // DeploymentContract represents the governance output contract.
@@ -106,4 +111,72 @@ type ValidationError struct {
 
 func (e *ValidationError) Error() string {
 	return "validation error: " + e.Field + " " + e.Message
+}
+
+// Generate creates and writes the contract to the workspace.
+func Generate(orgID string) (string, error) {
+	// Parse test results from input
+	testResults := TestResults{Total: 0, Passed: 0, Failed: 0}
+	testResultsInput := gha.GetInput("test_results")
+	if testResultsInput != "" {
+		if err := json.Unmarshal([]byte(testResultsInput), &testResults); err != nil {
+			gha.Warning("Invalid test_results JSON, using defaults: " + err.Error())
+		} else {
+			gha.Info(fmt.Sprintf("Parsed test results: %d/%d passed", testResults.Passed, testResults.Total))
+		}
+	}
+
+	// Get coverage data
+	coverageActual := parseFloat(gha.GetInput("coverage_percentage"), 0)
+	coverageRequired := parseFloat(gha.GetInputWithDefault("coverage_required", "80"), 80)
+
+	contract := New()
+	contract.Quality = Quality{
+		Coverage: Coverage{
+			Actual:   coverageActual,
+			Required: coverageRequired,
+			Met:      coverageActual >= coverageRequired,
+		},
+		Tests: testResults,
+	}
+
+	// Audit Context
+	contract.Audit.TriggeredBy = hasEnvOr("GITHUB_ACTOR", "unknown")
+	contract.Audit.OrgID = orgID
+	contract.Audit.Repository = hasEnvOr("GITHUB_REPOSITORY", "unknown")
+	contract.Audit.Commit = hasEnvOr("GITHUB_SHA", "unknown")
+	contract.Meta.Trigger = hasEnvOr("GITHUB_EVENT_NAME", "manual")
+
+	contractJSON, err := contract.ToJSON()
+	if err != nil {
+		return "", err
+	}
+
+	workspace := hasEnvOr("GITHUB_WORKSPACE", ".")
+	contractPath := filepath.Join(workspace, "glassops-contract.json")
+
+	if err := os.WriteFile(contractPath, contractJSON, 0644); err != nil {
+		return "", err
+	}
+
+	return contractPath, nil
+}
+
+func hasEnvOr(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return fallback
+}
+
+func parseFloat(s string, defaultVal float64) float64 {
+	if s == "" {
+		return defaultVal
+	}
+	var f float64
+	_, err := fmt.Sscanf(s, "%f", &f)
+	if err != nil {
+		return defaultVal
+	}
+	return f
 }
