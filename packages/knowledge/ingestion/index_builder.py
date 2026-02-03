@@ -37,7 +37,18 @@ def build_or_update_index(embeddings):
         
         ids.append(doc["path"]) 
         documents.append(doc["content"])
-        metadatas.append({"path": doc["path"], "hash": doc["hash"]})
+        
+        # Merge system metadata with extracted doc metadata
+        meta = {
+            "path": doc["path"], 
+            "hash": doc["hash"]
+        }
+        # Copy relevant fields from doc if present (excluding content/path/hash which are handled)
+        for k, v in doc.items():
+            if k not in ["content", "path", "hash"] and isinstance(v, (str, int, float, bool)):
+                meta[k] = v
+                
+        metadatas.append(meta)
         embedding_vectors.append(emb)
 
     if not ids:
@@ -52,6 +63,6 @@ def build_or_update_index(embeddings):
             documents=documents,
             metadatas=metadatas
         )
-        print(f"✅ Successfully indexed {len(ids)} documents in ChromaDB.")
+        print(f"[SUCCESS] Successfully indexed {len(ids)} documents in ChromaDB.")
     except Exception as e:
-        print(f"❌ Error indexing documents: {e}")
+        print(f"[ERROR] Error indexing documents: {e}")

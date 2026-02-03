@@ -42,7 +42,7 @@ import argparse
 
 def run_generate(patterns: list[str]) -> None:
     """Run documentation generation for the given patterns."""
-    print("🚀 Starting documentation generation...")
+    print("[INFO] Starting documentation generation...")
     generator = Generator(str(ROOT_DIR))
     generator.run(patterns)
 

@@ -21,6 +21,9 @@ class DockerAdapter(BaseAdapter):
         # Dockerfiles are usually small, no chunking needed
         return [self._format_chunk(file_path, content)]
 
+    def validate_content(self, content: str) -> List[str]:
+        return []
+
     def _format_chunk(self, file_path: Path, content: str, part: int = None) -> str:
         part_suffix = f" (Part {part})" if part else ""
         return f"File: {file_path}{part_suffix}\n\nContent:\n```dockerfile\n{content}\n```"

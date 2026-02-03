@@ -1,46 +1,53 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/internal/gha/gha_test.go
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/runtime/internal/gha/gha_test.go
-generated_at: 2026-02-01T19:41:00.139841
+generated_at: 2026-02-02T22:36:53.272166
 hash: 78792b077f78dcf3f17aa320e2dd3e7fb2cc6d08b94f25a00d6add71f4b7b6b3
 ---
 
 ## Package gha Documentation
 
-This package provides functions for interacting with the GitHub Actions environment. It allows reading input parameters, setting output variables, and emitting diagnostic messages. The package is designed to be a lightweight abstraction over the GitHub Actions workflow environment variables and standard output.
+This package provides functions for interacting with the GitHub Actions environment. It allows reading input parameters, setting output variables, and emitting diagnostic messages. The package is designed to facilitate the creation of tools and actions that run within the GitHub Actions workflow.
 
 **Key Concepts:**
 
-The package centers around the idea of interacting with a specific environment – GitHub Actions. It reads configuration from environment variables prefixed with `INPUT_` or `GLASSOPS_` and writes status and output information to standard output in a format understood by GitHub Actions.
+The package centers around the idea of interacting with the environment variables and standard output streams that GitHub Actions provides to its workflows. It abstracts away the specific formatting required by GitHub Actions for setting outputs, secrets, errors, and warnings.
 
-**Key Functions:**
+**Types and Interfaces:**
 
-*   `GetInput(name string) string`: This function retrieves the value of an input variable. It first checks for an environment variable prefixed with `INPUT_`. If not found, it falls back to checking for a variable prefixed with `GLASSOPS_`. If neither is found, it returns an empty string.  The `INPUT_` prefix takes precedence over `GLASSOPS_`.
+This package does not define any custom types or interfaces. It operates directly on environment variables and standard output.
 
-*   `GetInputWithDefault(name string, defaultValue string) string`: This function retrieves the value of an input variable, similar to `GetInput`. However, if the variable is not found in the environment, it returns the provided `defaultValue`.
+**Functions:**
 
-*   `SetOutput(name string, value string)`: This function sets a GitHub Actions output variable. It writes a formatted string to standard output that GitHub Actions parses to set the output. If the `GITHUB_OUTPUT` environment variable is not set, it defaults to writing to standard output.
+*   **`GetInput(name string) string`**: This function retrieves the value of an input parameter from the GitHub Actions environment. It first checks for an environment variable prefixed with `INPUT_`. If not found, it falls back to checking for a variable prefixed with `GLASSOPS_`.  If neither prefix is found, an empty string is returned. `INPUT_` prefixed variables take precedence over `GLASSOPS_` prefixed variables.
 
-*   `SetSecret(value string)`: This function sets a secret in GitHub Actions. It writes a formatted string to standard output that masks the provided `value` in the GitHub Actions logs.
+*   **`GetInputWithDefault(name string, defaultValue string) string`**: This function retrieves the value of an input parameter, similar to `GetInput`. However, if the parameter is not found in the environment, it returns the provided `defaultValue`.
 
-*   `SetFailed(message string)`: This function marks the GitHub Actions workflow as failed. It writes a formatted error message to standard output.
+*   **`SetOutput(name string, value string)`**: This function sets an output variable in the GitHub Actions environment. It formats the output string according to the GitHub Actions standard (`::set-output name=<name>::<value>`) and writes it to standard output. If the `GITHUB_OUTPUT` environment variable is not set, the output is written directly to standard output.
 
-*   `Warning(message string)`: This function emits a warning message to the GitHub Actions log. It writes a formatted warning message to standard output.
+*   **`SetSecret(value string)`**: This function sets a secret value in the GitHub Actions environment. It formats the output string according to the GitHub Actions standard (`::add-mask::<value>`) and writes it to standard output, masking the value.
 
-*   `StartGroup(name string)`: This function starts a named group in the GitHub Actions log.  Subsequent log messages will be indented until `EndGroup` is called.
+*   **`SetFailed(message string)`**: This function marks the current step as failed in the GitHub Actions workflow. It formats the output string according to the GitHub Actions standard (`::error::<message>`) and writes it to standard output.
 
-*   `EndGroup()`: This function ends the currently active group in the GitHub Actions log, removing the indentation.
+*   **`Warning(message string)`**: This function emits a warning message in the GitHub Actions workflow. It formats the output string according to the GitHub Actions standard (`::warning::<message>`) and writes it to standard output.
+
+*   **`StartGroup(name string)`**: This function starts a named group in the GitHub Actions log. It formats the output string according to the GitHub Actions standard (`::group::<name>`) and writes it to standard output.
+
+*   **`EndGroup()`**: This function ends the current group in the GitHub Actions log. It formats the output string according to the GitHub Actions standard (`::endgroup::`) and writes it to standard output.
 
 **Error Handling:**
 
-The functions in this package do not typically return explicit error values. Instead, failures are often indicated by the absence of an expected environment variable or by the inability to format the output correctly for GitHub Actions. The `SetFailed` function is used to explicitly signal a workflow failure.
+The functions in this package do not return explicit error values. Instead, they rely on the behavior of the GitHub Actions environment.  For example, `GetInput` returns an empty string if the input is not found. `SetFailed` signals a workflow failure through standard output.
+
+**Concurrency:**
+
+This package does not explicitly use goroutines or channels. The functions are designed to be called sequentially within a single workflow step.
 
 **Design Decisions:**
 
-*   **Environment Variable Prefixes:** The use of `INPUT_` and `GLASSOPS_` prefixes allows for a degree of flexibility in configuring the tool, while also providing a fallback mechanism.
-*   **Standard Output for Output/Status:**  Writing output and status information to standard output is a common pattern in GitHub Actions and allows for easy integration with the platform's logging and output mechanisms.
-*   **No Explicit Error Returns:** The decision to avoid explicit error returns simplifies the function signatures and aligns with the typical usage pattern in GitHub Actions, where the absence of a value or a formatted error message on standard output indicates a problem.
+*   **Environment Variable Prefixes:** The package supports two environment variable prefixes (`INPUT_` and `GLASSOPS_`) for input parameters. This allows for flexibility and potential compatibility with existing tools. The `INPUT_` prefix is given priority.
+*   **Standard Output for Outputs/Diagnostics:** The package uses standard output to communicate outputs, secrets, errors, and warnings to the GitHub Actions environment. This is the standard mechanism for these types of interactions.
+*   **No Explicit Error Returns:** The decision to not return explicit errors simplifies the API and aligns with the typical usage pattern in GitHub Actions, where failures are signaled through the workflow status.

@@ -65,7 +65,9 @@ jobs:
                   # Let's try running it and capturing stdout
                   # Redirect stderr to devnull to avoid noise
 
-                  OUTPUT=$(npm run knowledge:ask -- "$QUESTION")
+                  # We force indexing (--index) so the bot ingests the latest docs (from Docs Bot)
+                  # before answering. This logic in main.py allows index + query in one run.
+                  OUTPUT=$(npm run knowledge:ask -- --index "$QUESTION")
 
                   # Extract the response part.
                   # Assuming the python script prints "RAG Response:" followed by the answer.

@@ -1,43 +1,62 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/generation/adapters/typescript.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
-source: packages/knowledge/generation/adapters/typescript.py
-generated_at: 2026-02-01T19:32:20.757008
-hash: 38edc897ad829164a4fa8e31f1d033c31f53ae2e1924bbe7f308e5d525489af4
+source: packages/knowledge/adapters/typescript.py
+generated_at: 2026-02-02T22:26:24.090726
+hash: 9356d32a599402f09de7b513080f979bae64821623b24dc2e9f8614e4b63c7f6
 ---
 
 ## TypeScript Adapter Documentation
 
-This document details the functionality of the TypeScript Adapter, a component designed for documentation generation from TypeScript and JavaScript source code. It is a port of functionality originally present in a related project.
+This module provides an adapter for processing TypeScript and JavaScript source files during documentation generation. It is designed to split files into manageable chunks and format them for input to a language model. The adapter’s functionality is inspired by a TypeScript implementation.
 
-**Module Purpose:**
+**Responsibilities:**
 
-The primary responsibility of this adapter is to read TypeScript or JavaScript files, split their content into manageable chunks, and format those chunks for processing by a language model. This prepares the code for documentation generation.
+*   Determine if a file can be handled based on its extension.
+*   Parse file content into chunks of a defined size.
+*   Format chunks with file context for inclusion in prompts.
+*   Provide a base for content validation (currently a placeholder).
+*   Construct a prompt for a language model to generate documentation.
 
-**Key Classes:**
+### TypeScriptAdapter Class
 
-*   **`TypeScriptAdapter`**: This class inherits from `BaseAdapter` and implements the specific logic for handling TypeScript and JavaScript files. It determines if a file can be processed, parses the file content into chunks, and formats those chunks with relevant context.
+The `TypeScriptAdapter` class inherits from `BaseAdapter` and implements the core logic for handling TypeScript and JavaScript files.
 
-**Important Functions:**
+**Attributes:**
 
-*   **`can_handle(file_path: Path) -> bool`**: This function checks if the adapter can process a given file based on its extension. It returns `True` if the file has a `.ts`, `.js`, `.mjs`, `.tsx`, or `.jsx` extension; otherwise, it returns `False`. The `file_path` argument is a `Path` object representing the file's location.
+*   `TARGET_CHUNK_SIZE`: An integer representing the maximum size of a chunk in characters (currently 24000). This value is intended to correspond to approximately 6000 tokens.
 
-*   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and content as input and splits the content into a list of strings (chunks). Each chunk is designed to be within a target size (`TARGET_CHUNK_SIZE`), which is approximately 6000 tokens. The function handles cases where the file content is smaller than the target size, as well as cases where it needs to be split into multiple chunks. The `file_path` argument is a `Path` object, and `content` is a string containing the file's content. The return value is a `List[str]`, where each string is a chunk of the original content.
+**Methods:**
 
-*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This is a helper function that formats a single chunk of code with file context. It adds a header indicating the file name and, if applicable, the chunk number (e.g., "Part 2"). The content is enclosed within a code block using triple backticks and the "typescript" language identifier. The `file_path` argument is a `Path` object, `content` is the string representing the chunk, and `part` is an optional integer indicating the chunk number. The function returns a formatted string.
+*   `can_handle(file_path: Path) -> bool`:
+    This method checks if the adapter can handle a given file based on its extension. It returns `True` if the file extension is one of `.ts`, `.js`, `.mjs`, `.tsx`, or `.jsx`; otherwise, it returns `False`.
 
-*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs a prompt to be sent to a language model. The prompt instructs the model to act as a principal architect and generate high-level documentation from the provided code content. It includes specific instructions regarding the desired output format and constraints, such as avoiding certain words and phrases. The `file_path` argument is a `Path` object, and `parsed_content` is the string containing the code chunk. The function returns a string representing the prompt.
+*   `parse(file_path: Path, content: str) -> List[str]`:
+    This method parses the content of a TypeScript or JavaScript file into a list of chunks. It splits the content into chunks that are no larger than `TARGET_CHUNK_SIZE`. If the entire content is smaller than `TARGET_CHUNK_SIZE`, it returns a list containing a single chunk with the entire content. The method iterates through the lines of the content, adding them to the current chunk until the `TARGET_CHUNK_SIZE` is exceeded. It then creates a new chunk and continues.
 
-**Type Hints:**
+*   `validate_content(content: str) -> List[str]`:
+    This method is currently a placeholder for content validation. It always returns an empty list. We intend to add functionality to validate the TypeScript content in future versions.
 
-The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. They also clarify the expected input and output types for each function.
+*   `_format_chunk(file_path: Path, content: str, part: int = None) -> str`:
+    This private method formats a chunk of content with file context. It adds the file path and an optional part number to the beginning of the chunk, and wraps the content in a code block with the `typescript` language identifier. The `part` argument is used to indicate the chunk number when a file is split into multiple chunks.
 
-**Notable Patterns and Design Decisions:**
+*   `get_prompt(file_path: Path, parsed_content: str) -> str`:
+    This method constructs a prompt for a language model. The prompt instructs the model to act as a principal architect and translate the provided TypeScript/JavaScript code into high-level documentation. It includes specific instructions regarding the desired output format and constraints, such as avoiding certain words and phrases. The `parsed_content` is inserted directly into the prompt.
 
-*   **Adapter Pattern:** The `TypeScriptAdapter` follows the Adapter pattern, inheriting from a base class (`BaseAdapter`) to provide a consistent interface for handling different file types.
-*   **Chunking Strategy:** The `parse` function implements a simple chunking strategy based on a fixed target size. This ensures that the input to the language model remains within reasonable limits. The chunking logic attempts to split the content at line boundaries to avoid breaking code statements.
-*   **Contextual Formatting:** The `_format_chunk` function adds contextual information (file name, chunk number) to each chunk, providing the language model with valuable information for generating accurate documentation.
-*   **Prompt Engineering:** The `get_prompt` function carefully crafts a prompt that guides the language model towards generating the desired documentation style and content. The prompt includes specific instructions and constraints to ensure high-quality output.
+### Type Hints
+
+The code makes extensive use of type hints to improve code readability and maintainability. For example:
+
+*   `file_path: Path` indicates that the `file_path` argument should be a `Path` object.
+*   `content: str` indicates that the `content` argument should be a string.
+*   `-> List[str]` indicates that the method returns a list of strings.
+
+These type hints help to prevent errors and make the code easier to understand.
+
+### Design Decisions
+
+*   **Chunking Strategy:** The `parse` method uses a line-based chunking strategy to avoid splitting lines of code. This helps to maintain the integrity of the code and makes it easier to understand.
+*   **File Context:** The `_format_chunk` method adds file context to each chunk, which helps the language model to understand the origin of the code.
+*   **Prompt Engineering:** The `get_prompt` method carefully crafts a prompt that instructs the language model to generate high-quality documentation. The prompt includes specific instructions regarding the desired output format and constraints.

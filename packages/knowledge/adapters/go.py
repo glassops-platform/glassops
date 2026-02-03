@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import List
 
+import subprocess
 from .base import BaseAdapter
 
 
@@ -65,6 +66,37 @@ class GoAdapter(BaseAdapter):
             chunks.append(self._format_chunk(file_path, current_chunk, chunk_count if chunk_count > 1 else None))
 
         return chunks if chunks else [self._format_chunk(file_path, content)]
+
+    def validate_content(self, content: str) -> List[str]:
+        """
+        Validate Go content using 'go fmt'.
+        Requires 'go' to be in the PATH.
+        """
+        try:
+            # Check if go is available
+            subprocess.run(["go", "version"], check=True, capture_output=True)
+            
+            # Write to temporary file effectively (or pipe to stdin of go fmt)
+            # go fmt reads from stdin if no file is specified but it formats it to stdout
+            # A better check for syntax is `go vet`, but that usually requires a module context.
+            # `gofmt -e` reports all errors.
+            
+            process = subprocess.run(
+                ["gofmt", "-e"],
+                input=content.encode("utf-8"),
+                capture_output=True,
+                check=False
+            )
+            
+            if process.returncode != 0:
+                stderr = process.stderr.decode("utf-8")
+                return [f"Go Syntax Error: {line}" for line in stderr.splitlines() if line]
+                
+            return []
+        except FileNotFoundError:
+            return ["Go validation skipped: 'go' executable not found"]
+        except Exception as e:
+            return [f"Go validation error: {str(e)}"]
 
     def _format_chunk(self, file_path: Path, content: str, part: int = None) -> str:
         """Format a chunk with file context."""

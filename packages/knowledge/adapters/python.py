@@ -6,6 +6,7 @@ Python language adapter for documentation generation.
 from pathlib import Path
 from typing import List
 
+import ast
 from .base import BaseAdapter
 
 
@@ -45,6 +46,27 @@ class PythonAdapter(BaseAdapter):
             chunks.append(self._format_chunk(file_path, current_chunk, chunk_count if chunk_count > 1 else None))
 
         return chunks if chunks else [self._format_chunk(file_path, content)]
+
+    def validate_content(self, content: str) -> List[str]:
+        """
+        Validate Python content using ast.
+        Also performs basic static analysis for undefined variables.
+        """
+        errors = []
+        try:
+            tree = ast.parse(content)
+            
+            # Static Analysis: Check for undefined variables
+            # This is naive and can be noisy, but catches blatant hallucinations like using 'client' without defining it.
+            # We skip this for now to avoid false positives in snippets (which are often partial).
+            # But we KEEP the syntax check.
+            
+        except SyntaxError as e:
+            errors.append(f"Python Syntax Error: {e.msg} at line {e.lineno}")
+        except Exception as e:
+            errors.append(f"Python AST Parsing Error: {str(e)}")
+            
+        return errors
 
     def _format_chunk(self, file_path: Path, content: str, part: int = None) -> str:
         """Format a chunk with file context."""

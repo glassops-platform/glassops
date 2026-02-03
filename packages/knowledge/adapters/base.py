@@ -53,6 +53,19 @@ class BaseAdapter(ABC):
         """
         pass
 
+    @abstractmethod
+    def validate_content(self, content: str) -> List[str]:
+        """
+        Validate content for syntax or quality issues.
+        
+        Args:
+            content: The code content to validate.
+            
+        Returns:
+            List of error messages, or empty list if valid.
+        """
+        return []
+
     def post_process(self, file_path: Path, outputs: List[str]) -> str:
         """
         Combine multiple LLM outputs into final documentation.

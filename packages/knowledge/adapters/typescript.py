@@ -43,6 +43,13 @@ class TypeScriptAdapter(BaseAdapter):
 
         return chunks if chunks else [self._format_chunk(file_path, content)]
 
+    def validate_content(self, content: str) -> List[str]:
+        """
+        Validate TypeScript content.
+        Currently a placeholder.
+        """
+        return []
+
     def _format_chunk(self, file_path: Path, content: str, part: int = None) -> str:
         """Format a chunk with file context."""
         part_suffix = f" (Part {part})" if part else ""

@@ -12,6 +12,7 @@ prompts:
         - Do NOT mention "NobleForge" or "Noble Forge" anywhere in the document.
         - Do NOT create hyperlinks for function signatures, types, or code examples. Use code blocks or backticks only.
         - Be extremely careful not to generate invalid Markdown syntax (e.g., links inside code blocks).
+        - "IT" in model names (e.g., Gemma 12b IT) stands for "Instruction Tuned", NOT Italian.
 
     go:
         system: |

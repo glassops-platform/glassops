@@ -1,111 +1,70 @@
 ---
 type: Documentation
 domain: control-plane
-origin: packages/control-plane/internal/contract/contract.go
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/control-plane/internal/contract/contract.go
-generated_at: 2026-02-01T19:26:18.446166
+generated_at: 2026-02-02T22:23:03.246611
 hash: f6b1fae98e3691bd1375c6e96ecbe12185ba2ce76954ca639a7efb13859d2c67
 ---
 
 ## Deployment Contract Package Documentation
 
-This package defines the `DeploymentContract` data structure, which represents the complete state of a deployment operation. It serves as a standardized format for communicating deployment results and associated metadata between different components of the system. We designed this contract to provide a clear and consistent view of deployment outcomes, enabling effective monitoring, auditing, and decision-making.
+This package defines the `DeploymentContract` data structure, which represents the complete state of a deployment operation within the system. It serves as a standardized format for communicating deployment results and associated metadata between different components of the platform. We designed this contract to provide a clear, consistent view of deployment outcomes, enabling effective monitoring, auditing, and decision-making.
 
-### Key Data Structures
+**Key Types**
 
-**DeploymentContract:** This is the central structure. It encapsulates all information related to a deployment.
+*   **`DeploymentContract`**: This is the central type. It encapsulates all information related to a deployment, including its status, quality metrics, and audit trail.
+    *   `SchemaVersion`: A string indicating the version of the contract schema used. This allows for future evolution of the contract without breaking compatibility.
+    *   `Meta`: Contains metadata about the deployment itself.
+    *   `Status`: A string representing the overall deployment status. Possible values include "Succeeded", "Failed", and "Blocked".
+    *   `Quality`: Holds quality-related metrics for the deployment.
+    *   `Audit`: Stores information about the deployment's origin and context.
 
-*   `SchemaVersion`: A string indicating the version of the contract schema used. This allows for future evolution of the contract without breaking compatibility.
-*   `Meta`: Contains metadata about the deployment itself, such as the adapter used, the execution engine, and the triggering event.
-*   `Status`: A string representing the overall status of the deployment. Possible values include "Succeeded", "Failed", or "Blocked".
-*   `Quality`: Holds information about the quality checks performed during the deployment.
-*   `Audit`: Provides audit trail information, identifying who or what triggered the deployment and the associated repository details.
+*   **`Meta`**:  Provides contextual information about how the deployment was executed.
+    *   `Adapter`: The name of the adapter used to initiate the deployment.
+    *   `Engine`: The deployment engine used (e.g., "native", "hardis", "custom").
+    *   `Timestamp`: The time the deployment was triggered.
+    *   `Trigger`:  Indicates what caused the deployment (e.g., a pull request, a manual trigger).
 
-**Meta:**  Metadata about the deployment execution.
+*   **`Quality`**:  Aggregates quality assurance data.
+    *   `Coverage`:  Details about code coverage.
+        *   `Actual`: The actual code coverage achieved.
+        *   `Required`: The minimum required code coverage.
+        *   `Met`: A boolean indicating whether the required coverage was met.
+    *   `Tests`:  Information about the executed tests.
+        *   `Total`: The total number of tests executed.
+        *   `Passed`: The number of tests that passed.
+        *   `Failed`: The number of tests that failed.
+    *   `StaticAnalysis`: (Optional, introduced in Phase 1.5) Results from static analysis tools.
 
-*   `Adapter`: The name of the adapter responsible for initiating the deployment.
-*   `Engine`: The deployment engine used (e.g., "native", "hardis", "custom").
-*   `Timestamp`: The time the deployment was triggered.
-*   `Trigger`:  A description of the event that initiated the deployment.
+*   **`StaticAnalysis`**: Represents the output of static analysis tools like MegaLinter or similar scanners.
+    *   `Tool`: The name of the static analysis tool used.
+    *   `Met`: A boolean indicating whether the static analysis criteria were met.
+    *   `CriticalViolations`: The number of critical violations found.
+    *   `HighViolations`: The number of high-severity violations found.
+    *   `BlockingViolations`: A list of strings describing violations that are blocking the deployment.
 
-**Quality:**  Aggregates quality-related data.
+*   **`Audit`**:  Provides traceability information.
+    *   `TriggeredBy`: The user or system that initiated the deployment.
+    *   `OrgID`: The organization ID associated with the deployment.
+    *   `Repository`: The repository where the code was deployed from.
+    *   `Commit`: The commit hash associated with the deployment.
 
-*   `Coverage`: Details about code coverage metrics.
-*   `Tests`: Results of automated tests.
-*   `StaticAnalysis`: Findings from static analysis tools (optional, introduced in Phase 1.5).
+**Important Functions**
 
-**Coverage:** Represents code coverage information.
+This package currently focuses on data structures and does not include any functions. Future iterations may include functions for validating or manipulating `DeploymentContract` instances.
 
-*   `Actual`: The actual code coverage percentage achieved.
-*   `Required`: The minimum required code coverage percentage.
-*   `Met`: A boolean indicating whether the required coverage was met.
+**Error Handling**
 
-**Tests:** Summarizes test execution results.
+This package does not currently define any error types or error handling logic. Error handling is expected to be implemented in the components that consume and process the `DeploymentContract` data.
 
-*   `Total`: The total number of tests executed.
-*   `Passed`: The number of tests that passed.
-*   `Failed`: The number of tests that failed.
+**Concurrency**
 
-**StaticAnalysis:**  Details findings from static analysis tools.
+This package does not employ any concurrency patterns (goroutines or channels) as it primarily defines data structures.
 
-*   `Tool`: The name of the static analysis tool used.
-*   `Met`: A boolean indicating whether the static analysis criteria were met.
-*   `CriticalViolations`: The number of critical violations found.
-*   `HighViolations`: The number of high-severity violations found.
-*   `BlockingViolations`: A list of strings describing violations that are blocking the deployment.
+**Design Decisions**
 
-**Audit:**  Provides information for auditing purposes.
-
-*   `TriggeredBy`: The user or system that triggered the deployment.
-*   `OrgID`: The organization ID associated with the deployment.
-*   `Repository`: The repository where the deployment occurred.
-*   `Commit`: The commit hash associated with the deployment.
-
-### Error Handling
-
-This package primarily focuses on data representation. Error handling is expected to be managed by the components that consume and process the `DeploymentContract` data. We anticipate that consumers will validate the data within the contract and handle any inconsistencies or invalid states appropriately.
-
-### Concurrency
-
-This package does not directly involve concurrency. The data structures are designed to be safely accessed and modified by concurrent processes, but concurrency management is the responsibility of the calling code.
-
-### Design Decisions
-
-*   **Schema Versioning:** The inclusion of `SchemaVersion` in the `DeploymentContract` is a deliberate design choice to support future evolution of the contract. This allows us to introduce new fields or modify existing ones without breaking compatibility with older systems.
-*   **Optional Static Analysis:** The `StaticAnalysis` field is optional (`omitempty`) to accommodate scenarios where static analysis is not performed or not available.
-*   **Clear Status Indicators:** The `Status` field provides a simple and unambiguous indication of the deployment outcome.
-*   **Detailed Audit Information:** The `Audit` structure provides comprehensive information for tracking and auditing deployments.
-
-You can create instances of these structures to represent the state of your deployments. For example:
-
-```go
-deployment := DeploymentContract{
-    SchemaVersion: "1.0",
-    Status:        "Succeeded",
-    Meta: Meta{
-        Adapter:   "github-adapter",
-        Engine:    "native",
-        Timestamp: time.Now(),
-        Trigger:   "Pull Request Merge",
-    },
-    Quality: Quality{
-        Coverage: Coverage{
-            Actual:   85.0,
-            Required: 80.0,
-            Met:      true,
-        },
-        Tests: Tests{
-            Total:  100,
-            Passed: 95,
-            Failed: 5,
-        },
-    },
-    Audit: Audit{
-        TriggeredBy: "user123",
-        OrgID:       "my-org",
-        Repository:  "my-repo",
-        Commit:      "abcdef123456",
-    },
-}
+*   **Schema Versioning**: The inclusion of `SchemaVersion` in the `DeploymentContract` is a deliberate design choice to support future evolution of the contract. This allows us to introduce changes without breaking compatibility with existing systems.
+*   **Optional Static Analysis**: The `StaticAnalysis` field is optional (`omitempty`) to accommodate scenarios where static analysis is not performed or not available.
+*   **Clear Status Values**: The `Status` field uses a limited set of predefined values ("Succeeded", "Failed", "Blocked") to ensure clarity and consistency in reporting deployment outcomes.

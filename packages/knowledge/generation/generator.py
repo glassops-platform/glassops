@@ -15,9 +15,9 @@ from typing import Any, Dict, List, Optional
 
 import pathspec
 import yaml
+from ..llm.client import LLMClient
 
-from knowledge.llm.client import LLMClient
-from knowledge.generation.adapters import (
+from knowledge.adapters import (
     BaseAdapter,
     GoAdapter,
     PythonAdapter,
@@ -97,9 +97,9 @@ class Generator:
         try:
             if self.cache_path.exists():
                 self.cache = json.loads(self.cache_path.read_text(encoding="utf-8"))
-                print(f"📦 Loaded cache ({len(self.cache)} entries)")
+                print(f"[CACHE] Loaded cache ({len(self.cache)} entries)")
         except Exception as e:
-            print(f"⚠️ Failed to load cache: {e}")
+            print(f"[ERROR] Failed to load cache: {e}")
             self.cache = {}
 
     def _save_cache(self) -> None:
@@ -111,7 +111,7 @@ class Generator:
                 encoding="utf-8"
             )
         except Exception as e:
-            print(f"⚠️ Failed to save cache: {e}")
+            print(f"[ERROR] Failed to save cache: {e}")
 
     def _load_prompts(self) -> None:
         """Load prompts configuration from YAML file."""
@@ -119,12 +119,13 @@ class Generator:
             if self.prompts_path.exists():
                 raw = yaml.safe_load(self.prompts_path.read_text(encoding="utf-8"))
                 self.prompts = raw.get("prompts", {})
-                print(f"📝 Loaded prompts from {self.prompts_path.name}")
+                self.prompts = raw.get("prompts", {})
+                print(f"[CONFIG] Loaded prompts from {self.prompts_path.name}")
             else:
-                print(f"⚠️ Prompts file not found: {self.prompts_path}")
+                print(f"[WARNING] Prompts file not found: {self.prompts_path}")
                 self.prompts = {}
         except Exception as e:
-            print(f"⚠️ Failed to load prompts: {e}")
+            print(f"[ERROR] Failed to load prompts: {e}")
             self.prompts = {}
 
     def _get_prompt_for_file(self, file_path: Path, parsed_content: str) -> Optional[str]:
@@ -174,7 +175,7 @@ class Generator:
                 with open(gitignore_path, "r", encoding="utf-8") as f:
                     return pathspec.PathSpec.from_lines("gitwildmatch", f)
             except Exception as e:
-                print(f"⚠️ Failed to load .gitignore: {e}")
+                print(f"[ERROR] Failed to load .gitignore: {e}")
         return None
 
     def _should_ignore(self, path: Path) -> bool:
@@ -225,7 +226,6 @@ class Generator:
         return f"""---
 type: {doc_type}
 domain: {domain}
-origin: {relative_path}
 last_modified: {today}
 generated: true
 source: {relative_path}
@@ -339,7 +339,7 @@ hash: {content_hash}
         """
         adapter = self._find_adapter(file_path)
         if not adapter:
-            print(f"⏭️ No adapter for: {file_path.name}")
+            print(f"[SKIP] No adapter for: {file_path.name}")
             return None
 
         try:
@@ -347,11 +347,11 @@ hash: {content_hash}
             # Normalize line endings to LF for consistent hashing across OS
             content = content.replace("\r\n", "\n")
         except Exception as e:
-            print(f"❌ Failed to read {file_path}: {e}")
+            print(f"[ERROR] Failed to read {file_path}: {e}")
             return None
 
         if not content.strip():
-            print(f"⏭️ Empty file: {file_path.name}")
+            print(f"[SKIP] Empty file: {file_path.name}")
             return None
 
         # Check cache
@@ -360,12 +360,12 @@ hash: {content_hash}
 
         if relative_path in self.cache:
             if self.cache[relative_path].get("hash") == content_hash:
-                print(f"⏭️ Unchanged (cached): {file_path.name}")
+                print(f"[SKIP] Unchanged (cached): {file_path.name}")
                 return None  # Skip, already generated
 
         # Parse into chunks
         chunks = adapter.parse(file_path, content)
-        print(f"📄 Processing {file_path.name} ({len(chunks)} chunk(s))")
+        print(f"[PROCESSING] {file_path.name} ({len(chunks)} chunk(s))")
 
         # Generate documentation for each chunk
         outputs = []
@@ -382,9 +382,9 @@ hash: {content_hash}
                 result = self._clean_llm_output(result)
                 outputs.append(result)
                 if len(chunks) > 1:
-                    print(f"   ✓ Chunk {i + 1}/{len(chunks)}")
+                    print(f"   [OK] Chunk {i + 1}/{len(chunks)}")
             else:
-                print(f"   ⚠️ Chunk {i + 1}/{len(chunks)} failed")
+                print(f"   [FAILED] Chunk {i + 1}/{len(chunks)} failed")
 
         if not outputs:
             return None
@@ -399,17 +399,17 @@ hash: {content_hash}
         Args:
             patterns: List of glob patterns to process.
         """
-        print(f"🔍 Scanning from: {self.root_dir}")
+        print(f"[INFO] Scanning from: {self.root_dir}")
         self._load_cache()
         self._load_prompts()
 
         files = self.scan_files(patterns)
 
         if not files:
-            print("❌ No files matched the patterns.")
+            print("[INFO] No files matched the patterns.")
             return
 
-        print(f"📁 Found {len(files)} file(s) to process\n")
+        print(f"[INFO] Found {len(files)} file(s) to process\n")
 
         success_count = 0
         skip_count = 0
@@ -418,7 +418,7 @@ hash: {content_hash}
         try:
             for idx, file_path in enumerate(files, 1):
                 relative_path = file_path.relative_to(self.root_dir).as_posix()
-                print(f"👉 Processing {idx}/{total_files}: {relative_path}")
+                print(f"[INFO] Processing {idx}/{total_files}: {relative_path}")
                 
                 doc = self.generate_for_file(file_path)
 
@@ -434,14 +434,13 @@ hash: {content_hash}
                     final_content = frontmatter + doc
 
                     # Validate content
-                    errors = Validator.validate(final_content, str(output_path))
-                    if errors:
-                        print(f"   ⚠️ Validation warnings:")
-                        for err in errors:
-                            print(f"      - {err}")
+                    val_results = Validator.validate(final_content, str(output_path))
+                    
+                    # Print Summary
+                    Validator.print_report(val_results)
 
                     output_path.write_text(final_content, encoding="utf-8")
-                    print(f"   💾 Saved: {output_path.relative_to(self.root_dir)}\n")
+                    print(f"   [SAVED] {output_path.relative_to(self.root_dir)}\n")
 
                     # Update cache
                     relative_path = file_path.relative_to(self.root_dir).as_posix()
@@ -453,9 +452,9 @@ hash: {content_hash}
 
                     success_count += 1
                 else:
-                    print(f"   ⏩ Skipped (no content generated)\n")
+                    print(f"   [SKIPPED] (no content generated)\n")
                     skip_count += 1
         finally:
             self._save_cache()
 
-        print(f"\n✅ Generation complete: {success_count} generated, {skip_count} skipped")
+        print(f"\n[DONE] Generation complete: {success_count} generated, {skip_count} skipped")

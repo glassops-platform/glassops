@@ -1,6 +1,6 @@
-# generation/adapters/terraform_adapter.py
+# generation/adapters/apex_adapter.py
 """
-Terraform adapter for documentation generation.
+Salesforce Apex adapter for documentation generation.
 """
 
 from pathlib import Path
@@ -9,13 +9,13 @@ from typing import List
 from .base import BaseAdapter
 
 
-class TerraformAdapter(BaseAdapter):
-    """Adapter for Terraform configuration files."""
+class ApexAdapter(BaseAdapter):
+    """Adapter for Salesforce Apex classes and triggers."""
 
     TARGET_CHUNK_SIZE = 24000
 
     def can_handle(self, file_path: Path) -> bool:
-        return file_path.suffix == ".tf"
+        return file_path.suffix in {".cls", ".trigger"}
 
     def parse(self, file_path: Path, content: str) -> List[str]:
         if len(content) <= self.TARGET_CHUNK_SIZE:
@@ -39,17 +39,21 @@ class TerraformAdapter(BaseAdapter):
 
         return chunks if chunks else [self._format_chunk(file_path, content)]
 
+    def validate_content(self, content: str) -> List[str]:
+        return []
+
     def _format_chunk(self, file_path: Path, content: str, part: int = None) -> str:
         part_suffix = f" (Part {part})" if part else ""
-        return f"File: {file_path}{part_suffix}\n\nContent:\n```hcl\n{content}\n```"
+        file_type = "Apex Trigger" if file_path.suffix == ".trigger" else "Apex Class"
+        return f"File: {file_path} ({file_type}){part_suffix}\n\nContent:\n```apex\n{content}\n```"
 
     def get_prompt(self, file_path: Path, parsed_content: str) -> str:
-        return f"""You are an Infrastructure as Code expert. Document the provided Terraform configuration. Explain:
-- Resources being provisioned
-- Variables and their purpose
-- Outputs and what they expose
-- Dependencies between resources
-- Security and compliance considerations
+        return f"""You are a Salesforce architect. Document the provided Apex code. Explain:
+- The class/trigger purpose and responsibilities
+- Key methods and their behavior
+- Governor limit considerations
+- Integration points with other Salesforce components
+- Test coverage requirements
 
 IMPORTANT: Output valid Markdown only. No conversational text. Do NOT wrap the output in ```markdown code blocks. Do not mention "NobleForge" or "Noble Forge" anywhere.
 
@@ -58,5 +62,5 @@ STRICT RULES:
 - Do NOT use the words: utilize, crucial, showcasing, delve, underscores, watershed, groundbreaking.
 - Use "We" or "I" when referring to the project maintainers.
 
-Generate documentation for this Terraform configuration:
+Generate documentation for this Apex code:
 {parsed_content}"""

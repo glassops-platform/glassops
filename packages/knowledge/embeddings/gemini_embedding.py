@@ -15,7 +15,7 @@ class GeminiEmbedding:
     def __init__(self):
         self.api_key = os.getenv("GOOGLE_API_KEY")
         if not self.api_key:
-             print("⚠️ Warning: GOOGLE_API_KEY not set. GeminiEmbedding will return mock data.")
+             print("[WARNING] Warning: GOOGLE_API_KEY not set. GeminiEmbedding will return mock data.")
         elif genai:
             genai.configure(api_key=self.api_key)
 
@@ -68,7 +68,7 @@ class GeminiEmbedding:
                      )
                      embeddings.append(result['embedding'])
                  except Exception as e:
-                     print(f"⚠️ Error embedding chunk: {e}")
+                     print(f"[ERROR] Error embedding chunk: {e}")
                      # Random fallback for failed chunk to keep alignment
                      import random
                      embeddings.append([random.random() for _ in range(768)])
