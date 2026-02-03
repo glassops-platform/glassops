@@ -27,7 +27,7 @@ class LLMClient:
     def __init__(self, model: str = "gemma-3-27b-it"):
         api_key = os.getenv("GOOGLE_API_KEY", "").strip().strip("'\"")
         if not api_key:
-            print("⚠️ Warning: GOOGLE_API_KEY not found. LLMClient will be disabled.")
+            print("[WARNING] Warning: GOOGLE_API_KEY not found. LLMClient will be disabled.")
             self.client = None
         else:
             self.client = genai.Client(api_key=api_key)
@@ -59,7 +59,7 @@ class LLMClient:
             oldest = self._request_history[0]
             wait_time = (oldest["time"] + window_size) - now
             if wait_time > 0:
-                print(f"⏳ RPM Limit: Waiting {wait_time:.1f}s...")
+                print(f"[THROTTLE] RPM Limit: Waiting {wait_time:.1f}s...")
                 time.sleep(wait_time)
                 return self._throttle(estimated_tokens)  # Re-check
 
@@ -76,7 +76,7 @@ class LLMClient:
                     break
 
             if wait_time > 0:
-                print(f"⏳ TPM Limit ({current_tokens}/{self._tpm_limit}): Waiting {wait_time:.1f}s...")
+                print(f"[THROTTLE] TPM Limit ({current_tokens}/{self._tpm_limit}): Waiting {wait_time:.1f}s...")
                 time.sleep(wait_time)
                 return self._throttle(estimated_tokens)
 
@@ -125,7 +125,7 @@ class LLMClient:
                     return response.text
 
                 # No text but no exception - check finish reason
-                print(f"⚠️ Gemini returned no text. Finish reason: {response.candidates[0].finish_reason if response.candidates else 'Unknown'}")
+                print(f"[WARNING] Gemini returned no text. Finish reason: {response.candidates[0].finish_reason if response.candidates else 'Unknown'}")
                 return None
 
             except Exception as e:
@@ -134,11 +134,11 @@ class LLMClient:
 
                 if is_retryable and attempt < max_retries:
                     wait = backoffs[min(attempt, len(backoffs) - 1)]
-                    print(f"⚠️ Retryable error ({error_str[:50]}...). Retrying in {wait}s (attempt {attempt + 1}/{max_retries})...")
+                    print(f"[WARNING] Retryable error ({error_str[:50]}...). Retrying in {wait}s (attempt {attempt + 1}/{max_retries})...")
                     time.sleep(wait)
                     continue
 
-                print(f"❌ LLM Error: {e}")
+                print(f"[ERROR] LLM Error: {e}")
                 return None
 
         return None
