@@ -1,95 +1,77 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/Dockerfile
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/runtime/Dockerfile
-generated_at: 2026-02-01T19:38:24.441058
+generated_at: 2026-02-02T22:34:30.264859
 hash: 335afd8b950d1cbbdaa8c07079af1c61cb68b2480aa25df0e978ec233dcde8fd
 ---
 
 # Dockerfile Documentation: glassops Runtime
 
-This document details the Dockerfile located at `F:\Github\nobleforge\glassops\packages\runtime\Dockerfile`. It describes the build process, image layers, and instructions for building and running the container.
+## Overview
 
-## Base Image and Rationale
+This Dockerfile defines the build and runtime environment for the `glassops` application, a Go-based tool. It employs a multi-stage build to minimize the final image size and improve security. We aim to provide a self-contained environment for running `glassops` with the Salesforce CLI.
 
-The Dockerfile employs a multi-stage build. The first stage uses `golang:1.25-alpine` as its base image. This image is selected because it provides a lightweight environment with the Go toolchain pre-installed. Alpine Linux is a security-focused distribution known for its small size, reducing the final image size and attack surface. The version `1.25` specifies a particular Go version, ensuring build reproducibility.
+## Base Images
 
-The second stage uses `alpine:3.19`. This image provides an even smaller base for the runtime environment, containing only the necessary dependencies to execute the compiled Go binary.
+*   **`golang:1.25-alpine` (Builder Stage):** This image is based on Alpine Linux and includes the Go 1.25 toolchain. Alpine is chosen for its small size, reducing the build image footprint.
+*   **`alpine:3.19` (Runtime Stage):**  This image is also based on Alpine Linux, providing a minimal base for the runtime environment. Its small size contributes to a smaller final image.
 
 ## Stages
 
-The Dockerfile consists of two stages: `builder` and the final runtime stage.
+The Dockerfile consists of two stages:
 
-### Builder Stage
-
-This stage is responsible for compiling the Go application.
-
-*   **`FROM golang:1.25-alpine AS builder`**: Defines the base image for this stage as `golang:1.25-alpine` and assigns it the alias `builder`.
-*   **`WORKDIR /app`**: Sets the working directory inside the container to `/app`. Subsequent commands will be executed from this directory.
-*   **`COPY go.mod go.sum* ./`**: Copies the `go.mod` and `go.sum` files to the `/app` directory. These files define the project's dependencies.
-*   **`RUN go mod download || true`**: Downloads the Go dependencies specified in `go.mod`. The `|| true` ensures the build doesn't fail if the download fails (e.g., if dependencies are already cached).
-*   **`COPY . .`**: Copies the entire project source code to the `/app` directory.
-*   **`RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /glassops ./cmd/glassops`**: Compiles the Go application.
-    *   `CGO_ENABLED=0`: Disables CGO, resulting in a statically linked binary and reducing dependencies.
-    *   `GOOS=linux`: Sets the target operating system to Linux.
-    *   `-ldflags="-s -w"`:  Removes debugging information and symbol table from the binary, further reducing its size.
-    *   `-o /glassops`: Specifies the output path and name of the compiled binary as `/glassops`.
-    *   `./cmd/glassops`: Specifies the main package to build.
-
-### Runtime Stage
-
-This stage creates the final container image with only the necessary runtime dependencies.
-
-*   **`FROM alpine:3.19`**: Defines the base image for this stage as `alpine:3.19`.
-*   **`RUN apk add --no-cache nodejs npm git coreutils`**: Installs required packages using the Alpine package manager (`apk`).
-    *   `nodejs` and `npm`: Required for installing the Salesforce CLI.
-    *   `git`: May be required by the Salesforce CLI or the application itself.
-    *   `coreutils`: Provides essential utilities, including `env` with `-S` support, which is needed by the Salesforce CLI. The `--no-cache` flag minimizes image size by preventing apk from storing package caches.
-*   **`RUN npm install -g @salesforce/cli`**: Installs the Salesforce CLI globally using npm.
-*   **`COPY --from=builder /glassops /usr/local/bin/glassops`**: Copies the compiled Go binary from the `builder` stage to `/usr/local/bin/glassops` in the final image.
-*   **`ENTRYPOINT ["/usr/local/bin/glassops"]`**: Sets the entrypoint for the container. When the container starts, it will execute the `/usr/local/bin/glassops` binary.
+1.  **Builder Stage:** Responsible for compiling the Go application.
+2.  **Runtime Stage:**  Responsible for creating the final image containing only the compiled binary and necessary runtime dependencies.
 
 ## Key Instructions and Purpose
 
-*   **`FROM`**: Specifies the base image for a stage.
-*   **`WORKDIR`**: Sets the working directory for subsequent instructions.
-*   **`COPY`**: Copies files or directories from the host machine to the container.
-*   **`RUN`**: Executes commands inside the container during the build process.
-*   **`ENTRYPOINT`**: Configures the container to run as an executable.
+*   **`FROM <image> AS <name>`:** Defines the base image for a stage and assigns it a name for referencing in later stages.
+*   **`WORKDIR /app`:** Sets the working directory inside the container. Subsequent commands will be executed from this directory.
+*   **`COPY <src> <dest>`:** Copies files or directories from the host machine to the container's filesystem.
+*   **`RUN <command>`:** Executes a command inside the container during the build process.
+*   **`go mod download`:** Downloads the Go module dependencies defined in `go.mod` and `go.sum`. The `|| true` ensures the build doesn't fail if the download fails (e.g., due to network issues) during initial setup.
+*   **`CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /glassops ./cmd/glassops`:** Compiles the Go application.
+    *   `CGO_ENABLED=0`: Disables CGO, resulting in a more portable binary.
+    *   `GOOS=linux`: Sets the target operating system to Linux.
+    *   `-ldflags="-s -w"`: Strips debug information and symbol table from the binary, reducing its size.
+    *   `-o /glassops`: Specifies the output path and name of the compiled binary.
+    *   `./cmd/glassops`: Specifies the main package to build.
+*   **`apk add --no-cache nodejs npm git coreutils`:** Installs Node.js, npm, git, and coreutils within the runtime stage. `--no-cache` minimizes image size by not storing the package cache. Coreutils provides the `env -S` command, required by the Salesforce CLI.
+*   **`npm install -g @salesforce/cli`:** Installs the Salesforce CLI globally using npm.
+*   **`COPY --from=builder /glassops /usr/local/bin/glassops`:** Copies the compiled binary from the builder stage to the runtime stage.
+*   **`ENTRYPOINT ["/usr/local/bin/glassops"]`:** Defines the command that will be executed when the container starts.
 
 ## Security Considerations
 
-*   **Alpine Linux**: Using Alpine Linux as the base image reduces the attack surface due to its minimal package set.
-*   **Static Linking**: Disabling CGO and statically linking the Go binary reduces external dependencies and potential vulnerabilities.
-*   **Package Management**: Using `apk --no-cache` minimizes the image size and reduces the risk of outdated packages.
-*   **Least Privilege**: The runtime stage only includes the necessary dependencies for running the application, adhering to the principle of least privilege.
-*   **Regular Updates**: We recommend regularly rebuilding the image to incorporate the latest security patches from the base images and dependencies.
+*   **Minimal Base Images:** Using Alpine Linux as the base image reduces the attack surface due to its small size and limited number of installed packages.
+*   **Stripped Binary:** Removing debug information from the binary using `-ldflags="-s -w"` reduces the amount of potentially sensitive information included in the image.
+*   **No Root User:** The Dockerfile does not explicitly create or switch to a root user. The application will run as the default user within the Alpine image.
+*   **Package Management:** Using `apk add --no-cache` avoids caching package lists, reducing the risk of outdated or vulnerable packages.
+*   **Dependency Management:** The `go.mod` and `go.sum` files ensure reproducible builds and help prevent dependency-related vulnerabilities.
 
 ## Building and Running the Container
 
-**Building the Image:**
+1.  **Build the image:**
 
-You can build the Docker image using the following command:
+    You can build the Docker image using the following command from the directory containing the Dockerfile:
 
-```bash
-docker build -t glassops .
-```
+    ```bash
+    docker build -t glassops-runtime .
+    ```
 
-This command builds the image and tags it as `glassops`. The `.` specifies that the Dockerfile is located in the current directory.
+2.  **Run the container:**
 
-**Running the Container:**
+    You can run the container using the following command:
 
-You can run the container using the following command:
+    ```bash
+    docker run -it --rm glassops-runtime
+    ```
 
-```bash
-docker run -it --rm glassops
-```
+    *   `-it`: Allocates a pseudo-TTY and keeps STDIN open, allowing you to interact with the container.
+    *   `--rm`: Automatically removes the container when it exits.
+    *   `glassops-runtime`: The name of the image to run.
 
-*   `-it`: Allocates a pseudo-TTY and keeps STDIN open, allowing you to interact with the container.
-*   `--rm`: Automatically removes the container when it exits.
-*   `glassops`: Specifies the image to run.
-
-You may need to add volume mounts or environment variables to the `docker run` command depending on the application's requirements.
+You may need to configure the Salesforce CLI within the container after it starts, using `sf config set ...`.

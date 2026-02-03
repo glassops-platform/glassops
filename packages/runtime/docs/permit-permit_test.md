@@ -1,11 +1,10 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/internal/permit/permit_test.go
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/runtime/internal/permit/permit_test.go
-generated_at: 2026-02-01T19:42:45.595293
+generated_at: 2026-02-02T22:38:31.998460
 hash: 2e501bf163588d77f411b1ab391472d9d99a3eccb2aa8c342f9af5e83467be11
 ---
 
@@ -15,41 +14,39 @@ This package is responsible for generating permit files. These files contain run
 
 **Key Types**
 
-*   `Permit`: This is the core data structure representing the permit. It is a JSON-serializable type containing:
-    *   `RuntimeID`: A string identifying the runtime environment.
-    *   `OrgID`: A string identifying the organization.
-    *   `Context`: A map of strings representing contextual information (e.g., the user triggering the action).
-    *   `Inputs`: A map of strings representing input parameters (e.g., instance URLs).
+*   `Permit`: This is the central data structure. It’s a JSON-serializable type that holds the runtime ID, organization ID, a context map for environment-specific information, and an inputs map for configuration details.  The structure is defined elsewhere in the codebase and is not explicitly shown in this file.
 
 **Functions**
 
-*   `Generate(runtimeID string, orgID string, config *policy.Config, instanceURL string) (string, error)`:
-    This function creates a permit file. It takes the runtime ID, organization ID, a policy configuration (currently unused in the test), and an instance URL as input. It constructs a `Permit` object, marshals it to JSON, and writes the JSON to a file within a temporary directory (defined by the `GITHUB_WORKSPACE` environment variable). The function returns the path to the generated permit file and an error if any occurred during the process.
+*   `Generate(runtimeID string, orgID string, config *policy.Config, instanceURL string) (string, error)`: This function creates a permit file.
+    *   `runtimeID`: A string identifying the runtime environment.
+    *   `orgID`: A string identifying the organization.
+    *   `config`: A pointer to a `policy.Config` struct (defined in the `policy` package). This parameter is currently unused in the provided code.
+    *   `instanceURL`: A string representing the instance URL.
+    *   Return values:
+        *   A string representing the file path of the generated permit.
+        *   An error if the permit generation fails.
+
+    The function leverages environment variables (`GITHUB_WORKSPACE`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_SHA`) to populate the permit's context. It constructs a `Permit` object, marshals it to JSON, and writes the JSON data to a file within the `GITHUB_WORKSPACE` directory.
 
 **Error Handling**
 
-The `Generate` function returns an error value. Errors can occur during file creation, JSON marshaling, or if there are issues accessing environment variables. The test suite verifies that errors are handled correctly.
-
-**Environment Variables**
-
-The `Generate` function relies on the following environment variables to populate the permit's context:
-
-*   `GITHUB_WORKSPACE`: Specifies the directory where the permit file will be created.
-*   `GITHUB_ACTOR`:  Provides the actor (user or system) initiating the action. This value is added to the permit's `Context`.
-*   `GITHUB_REPOSITORY`: Provides the repository information.
-*   `GITHUB_SHA`: Provides the commit SHA.
-
-**Design Decisions**
-
-*   **JSON Format:** The permit is serialized as JSON for easy parsing and portability.
-*   **Environment Variable Integration:** The package leverages environment variables to inject contextual information, making it suitable for use in CI/CD pipelines and other automated environments.
-*   **Temporary File Creation:** The permit file is created in a temporary directory to avoid conflicts and ensure clean operation. The test suite cleans up the environment variables after execution.
-*   **Policy Configuration:** The `policy.Config` parameter is currently accepted by the `Generate` function but is not actively used in the provided code. This suggests potential future expansion to incorporate policy-based permit generation.
+The `Generate` function returns an error value. The test case checks for errors during file creation, file reading, and JSON unmarshaling.  Specific errors handled include file not found errors when verifying the permit file's existence and errors during JSON parsing.
 
 **Testing**
 
-The included test case (`TestGenerate`) verifies the following:
+The `TestGenerate` function verifies the functionality of the `Generate` function. It performs the following checks:
 
-*   The `Generate` function creates a file at the expected path.
-*   The generated file contains valid JSON.
-*   The `Permit` object unmarshaled from the file has the correct `RuntimeID`, `OrgID`, `Context`, and `Inputs` values, based on the input parameters and environment variables.
+1.  Sets up a temporary directory and environment variables to simulate a CI/CD environment.
+2.  Calls the `Generate` function with test data.
+3.  Confirms that the permit file is created at the expected path.
+4.  Reads the permit file content.
+5.  Unmarshals the JSON content into a `Permit` object.
+6.  Validates that the `RuntimeID`, `OrgID`, `Context["actor"]`, and `Inputs["instance_url"]` fields of the `Permit` object match the expected values.
+
+**Design Decisions**
+
+*   **Environment Variable Reliance:** The package depends on environment variables for contextual information. This design choice allows for flexibility and integration with CI/CD pipelines.
+*   **JSON Format:** The permit is serialized as JSON, which is a widely supported and human-readable format.
+*   **Temporary Directory:** The test case uses a temporary directory to avoid modifying the file system during testing.
+*   **Unused Config Parameter:** The `policy.Config` parameter is passed to the `Generate` function but is not currently used. This suggests potential future expansion of the function's capabilities.

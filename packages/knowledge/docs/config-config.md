@@ -1,17 +1,16 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/config/config.json
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/knowledge/config/config.json
-generated_at: 2026-02-01T19:27:27.114812
+generated_at: 2026-02-02T22:26:57.983881
 hash: 20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde
 ---
 
 # Knowledge Configuration
 
-This document details the configuration options for the knowledge retrieval system. This system powers intelligent responses within the GlassOps platform by indexing documentation and providing context to language models.
+This document details the configuration options for the knowledge retrieval system. This system powers intelligent responses within the GlassOps platform by indexing documentation and providing relevant context to language models.
 
 ## Overview
 
@@ -35,37 +34,39 @@ This section configures the vector database used to store and retrieve document 
 
 ### `federated_doc_paths`
 
-This array defines the file paths and patterns to be included in the knowledge base. The system recursively searches these locations for documentation files.
+This is a list of file paths or glob patterns that define the locations of documentation to be indexed.
 
-*   `federated_doc_paths` (array of strings, required): A list of paths to documentation sources.
-    *   `docs/`: Includes all files within the `docs/` directory.
-    *   `packages/**/adr`: Includes all files with the `.adr` extension within any `packages/` subdirectory.
-    *   `packages/**/docs`: Includes all files within any `packages/` subdirectory's `docs/` directory.
+*   `federated_doc_paths` (array of strings, required):  Each string represents a path or pattern.
+    *   `docs/`: Indexes the main documentation directory.
+    *   `packages/**/adr`: Indexes Architecture Decision Records (ADR) within any package.
+    *   `packages/**/docs`: Indexes documentation within any package.
 
 ### `retrieval_triggers`
 
-This section maps specific query types (triggers) to a specific documentation file. This allows for targeted retrieval of information related to specific system events or reports.
+This section maps specific query types (triggers) to a specific documentation file.
 
-*   `audit` (string, required): Path to the documentation file for audit-related queries. Currently points to `packages/knowledge/docs/generated/drift_report.md`.
-*   `backup` (string, required): Path to the documentation file for backup-related queries. Currently points to `packages/knowledge/docs/generated/drift_report.md`.
-*   `legacy` (string, required): Path to the documentation file for legacy-related queries. Currently points to `packages/knowledge/docs/generated/drift_report.md`.
-*   `overlap` (string, required): Path to the documentation file for overlap-related queries. Currently points to `packages/knowledge/docs/generated/drift_report.md`.
-*   `drift` (string, required): Path to the documentation file for drift-related queries. Currently points to `packages/knowledge/docs/generated/drift_report.md`.
+*   `audit` (string, required): Path to the drift report for "audit" related queries.
+*   `backup` (string, required): Path to the drift report for "backup" related queries.
+*   `legacy` (string, required): Path to the drift report for "legacy" related queries.
+*   `overlap` (string, required): Path to the drift report for "overlap" related queries.
+*   `drift` (string, required): Path to the drift report for "drift" related queries.
+
+All triggers currently point to `packages/knowledge/docs/generated/drift_report.md`.
 
 ### `batch_size`
 
 This parameter controls the number of documents processed in each batch during indexing.
 
-*   `batch_size` (integer, required): Specifies the batch size. Currently set to `10`.  Adjusting this value can impact performance.
+*   `batch_size` (integer, required):  Currently set to `10`.  Adjusting this value can impact indexing performance.
 
 ### `drift_threshold`
 
-This parameter defines the similarity score threshold used to identify significant changes (drift) between documentation versions.
+This parameter defines the threshold for determining significant drift between documentation versions.
 
-*   `drift_threshold` (float, required): Specifies the drift threshold. Currently set to `0.85`.  Values closer to 1 indicate higher similarity.
+*   `drift_threshold` (float, required): Currently set to `0.85`. This value is used in the drift report generation process.
 
 ### `system_context`
 
-This string provides the language model with contextual information about the knowledge base and how to respond to specific queries.
+This parameter provides the initial context given to the language model when answering questions.
 
-*   `system_context` (string, required): A multi-line string containing instructions for the language model.  This context guides the model's responses, particularly when handling queries related to documentation drift, overlap, backup, and legacy content.  It instructs the model to prioritize information from the `drift_report.md` file when relevant.
+*   `system_context` (string, required): A multi-line string that sets the role of the language model and provides information about the documentation structure and how to handle specific query types (overlap, backup, legacy, drift).  It instructs the model to prioritize the `drift_report.md` file when relevant queries are detected.

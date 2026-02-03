@@ -1,44 +1,42 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/embeddings/gemma_12b_it_embedding.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/knowledge/embeddings/gemma_12b_it_embedding.py
-generated_at: 2026-02-01T19:29:03.553998
-hash: 3e3940290334fd2df5c0c9bce7d51d3fc5c9c6889f7b792208e3d1fdeec0ea93
+generated_at: 2026-02-02T22:28:32.765230
+hash: 28c50564436702b39df30e24786c2fda737063ba87335759ecdce2c2052b5426
 ---
 
-## Gemma 12B Italian Embedding Model Documentation
+## Gemma 12b IT Embedding Module Documentation
 
-This document describes the `Gemma12bItEmbedding` class, which provides a mechanism for generating embeddings from text using a mock implementation of the Gemma 12B Italian language model. Embeddings are numerical representations of text that capture semantic meaning, enabling various downstream tasks like similarity comparisons and information retrieval.
+This module provides a class for generating text embeddings using the Google GenAI API, specifically designed as an alternative to GeminiEmbedding when working with Gemma 12b IT models. It handles API key configuration, embedding generation, and fallback mechanisms to ensure robustness.
 
-**Module Purpose:**
+**Module Responsibilities:**
 
-The primary responsibility of this module is to offer an interface for creating text embeddings. Currently, it serves as a fallback or placeholder, providing a simulated embedding generation process. This allows other parts of the system to function without requiring immediate access to the actual Gemma 12B Italian model.
+The primary responsibility of this module is to convert text into numerical vector representations (embeddings). These embeddings capture the semantic meaning of the text and are suitable for tasks like semantic search, similarity comparison, and machine learning.  The module prioritizes using the Google GenAI API but includes fallback strategies if the API is unavailable or encounters errors.
 
 **Key Classes:**
 
-*   **`Gemma12bItEmbedding`**: This class encapsulates the embedding generation logic. It currently provides a mock implementation, but is designed to be replaced with a genuine Gemma 12B Italian model integration in the future.
+*   **`Gemma12bItEmbedding`**: This class encapsulates the logic for interacting with the Google GenAI API to generate embeddings.
 
-**Important Functions:**
+    *   **`__init__(self)`**: The constructor initializes the class. It attempts to retrieve the Google API key from the environment variable `GOOGLE_API_KEY`. If the API key is found, it configures the `genai` library. If the API key is missing, a warning message is printed, and the class will return mock data when embeddings are requested. It also handles the case where the `google.generativeai` library is not installed.
 
-*   **`get_embeddings(self, texts: list[str]) -> list[list[float]]`**:
-    This function takes a list of strings (`texts`) as input and returns a list of embeddings. Each embedding is represented as a list of floating-point numbers.
+    *   **`get_embeddings(self, texts: list[str]) -> list[list[float]]`**: This method takes a list of strings (`texts`) as input and returns a list of embeddings. Each embedding is a list of floats representing the vector representation of the corresponding text.
 
-    *   **Parameters:**
-        *   `texts` (`list[str]`): A list of text strings for which embeddings are to be generated.
-    *   **Return Value:**
-        *   `list[list[float]]`: A list where each element is a list of 768 floats, representing the embedding for the corresponding text in the input list.
-    *   **Behavior:**
-        The current implementation generates random floating-point numbers for each embedding dimension. The dimension size is fixed at 768, aligning with typical embedding sizes used by models like Gemini and expected for Gemma. This mock behavior allows for testing and development without relying on the actual model.
+        *   **Input:** `texts` – A list of strings to be embedded. The type hint `list[str]` clearly indicates the expected input type.
+        *   **Output:** A list of lists of floats, where each inner list represents an embedding vector. The type hint `list[list[float]]` specifies the output type.
+        *   **Behavior:**
+            1.  **API Call (Batch):** First, it attempts to generate embeddings for all texts in a single batch using the `genai.embed_content` function with the `models/text-embedding-004` model and `retrieval_document` task type.
+            2.  **API Call (Sequential):** If the batch call fails, it falls back to embedding each text sequentially. This handles potential issues with large input sizes or API limitations. Error handling is included within the loop, and if an individual embedding fails, a random vector is used as a placeholder.
+            3.  **Mock Data:** If the API key is not set or the `genai` library is not available, the method generates random embedding vectors as a fallback. This ensures the application can still function, albeit with reduced accuracy.
+        *   **Error Handling:** The code includes `try...except` blocks to catch potential exceptions during the API calls. This prevents the application from crashing and allows it to gracefully fall back to alternative strategies.
 
-**Type Hints:**
+**Notable Design Decisions:**
 
-The code extensively uses type hints (e.g., `list[str]`, `list[list[float]]`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. They clearly define the expected data types for function parameters and return values.
-
-**Design Decisions and Patterns:**
-
-*   **Mock Implementation:** The current implementation is a mock. This design choice allows for independent development and testing of components that depend on embeddings, even before the actual Gemma 12B Italian model is integrated. You should replace this with a proper model integration when available.
-*   **Fixed Embedding Dimension:** The embedding dimension is fixed at 768. This is a common dimension size for many language models and ensures compatibility with other parts of the system.
-*   **Clear Interface:** The `Gemma12bItEmbedding` class provides a simple and well-defined interface for generating embeddings, making it easy to integrate into other modules.
+*   **Fallback Mechanisms:** The module incorporates multiple fallback mechanisms (sequential embedding and mock data) to ensure robustness and prevent failures due to API unavailability or errors.
+*   **Type Hints:** The use of type hints (`list[str]`, `list[list[float]]`) improves code readability and maintainability, and allows for static analysis to catch potential type errors.
+*   **Environment Variable for API Key:** Storing the API key in an environment variable (`GOOGLE_API_KEY`) is a secure practice that avoids hardcoding sensitive information in the code.
+*   **Warning Message:** The module provides a warning message if the API key is not set, informing the user that mock data will be used.
+*   **Model Selection:** The code explicitly uses the `models/text-embedding-004` model, which is currently the most capable text embedding model available through the GenAI API.
+*   **Suppression of Warnings:** The code suppresses `FutureWarning` messages from the `google.generativeai` and `google.auth` modules to avoid cluttering the logs with irrelevant warnings.

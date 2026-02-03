@@ -1,44 +1,44 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/generation/adapters/base.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
-source: packages/knowledge/generation/adapters/base.py
-generated_at: 2026-02-01T19:30:17.222373
-hash: 08dc52069e4b5afdbe50fa7d005e2706291f518aebe606d8763794075205d917
+source: packages/knowledge/adapters/base.py
+generated_at: 2026-02-02T22:24:17.214071
+hash: 396af1f6b6335274e9b4fa47355eb740acb1cd8996e026329ad9cc0b80086af8
 ---
 
-# Documentation Generation Adapters: Base Class
+## Knowledge Adapter Base Class Documentation
 
-This document describes the base adapter interface for documentation generation within the system. It defines the core components and methods required for integrating different language-specific documentation tools. The primary responsibility of these adapters is to bridge the gap between source code files and the large language model (LLM) used for documentation creation.
+This document describes the base class for adapters used in the documentation generation process. These adapters are responsible for handling different programming languages or file types. The core purpose is to provide a consistent interface for parsing, prompting, and processing source code to create documentation.
 
-## Core Concepts
+**Module Responsibilities:**
 
-The system employs an adapter pattern to support various programming languages and documentation styles. Each adapter encapsulates the logic for parsing, prompting, and post-processing documentation for a specific language. This design promotes extensibility and maintainability.
+The `knowledge.adapters.base` module defines an abstract base class, `BaseAdapter`, that all language-specific adapters must inherit from. This ensures that each adapter implements a standardized set of methods for interacting with source code and a language model.
 
-## BaseAdapter Class
+**Key Classes:**
 
-The `BaseAdapter` class is an abstract base class (ABC) that defines the interface all language adapters must implement. It ensures consistency across different language implementations.
+*   **`BaseAdapter`**: This is an abstract base class (ABC) defining the interface for all documentation adapters. It cannot be instantiated directly. It enforces that any concrete adapter provides implementations for the `can_handle`, `parse`, `get_prompt`, `validate_content`, and `post_process` methods.
 
-**Attributes:**
+**Important Functions:**
 
-This class does not have any attributes. Its functionality is entirely defined by its methods.
+*   **`can_handle(file_path: Path) -> bool`**: This method determines if a specific adapter is capable of processing a given file. It takes the file path as input and returns `True` if the adapter supports the file type, and `False` otherwise. You should implement this to check file extensions or content types.
 
-**Methods:**
+*   **`parse(file_path: Path, content: str) -> List[str]`**: This method takes the file path and the raw content of the file as input. It is responsible for breaking down the content into smaller, manageable chunks suitable for processing by a language model. The method returns a list of strings, where each string represents a single chunk.
 
-*   `can_handle(file_path: Path) -> bool`: This abstract method determines whether the adapter can process a given file based on its path. You must implement this to specify which file types your adapter supports. It accepts a `Path` object representing the file's location and returns `True` if the adapter can handle the file, and `False` otherwise.
+*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This method generates the prompt that will be sent to the language model. It takes the file path and a single chunk of parsed content as input. The prompt should be crafted to instruct the language model to generate documentation for the given content. It returns the prompt string.
 
-*   `parse(file_path: Path, content: str) -> List[str]`: This abstract method parses the content of a source file and divides it into smaller chunks suitable for processing by the LLM. It takes the file path (`Path`) and the raw file content (`str`) as input. The method returns a list of strings, where each string represents a single chunk of content.
+*   **`validate_content(content: str) -> List[str]`**: This method validates the input code content for potential issues like syntax errors or style violations. It accepts the code content as a string and returns a list of error messages. If the content is valid, it returns an empty list.
 
-*   `get_prompt(file_path: Path, parsed_content: str) -> str`: This abstract method generates the prompt that will be sent to the LLM for documentation generation. It receives the file path (`Path`) and a single chunk of parsed content (`str`) as input. The method returns a string containing the prompt.
+*   **`post_process(file_path: Path, outputs: List[str]) -> str`**: This method combines the outputs generated by the language model for each chunk of code. It takes the file path and a list of output strings as input. The default implementation simply joins the outputs with double newlines (`\n\n`), but you can override this method to implement more sophisticated combination logic.
 
-*   `post_process(file_path: Path, outputs: List[str]) -> str`: This method combines the outputs generated by the LLM for each chunk of content into a single, final documentation string. It takes the file path (`Path`) and a list of LLM outputs (`List[str]`) as input. The default implementation simply joins the outputs with double newlines (`\n\n`). You can override this method in derived classes to implement custom post-processing logic.
+**Type Hints:**
 
-## Type Hints
+The code makes extensive use of type hints (e.g., `file_path: Path`, `content: str`, `-> bool`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. The `Path` type from the `pathlib` module is used to represent file paths in a platform-independent manner. `List[str]` indicates a list containing strings.
 
-The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> bool`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. The `Path` type from the `pathlib` module is used to represent file paths in a platform-independent manner. `List[str]` indicates a list containing strings.
+**Design Decisions and Patterns:**
 
-## Design Considerations
-
-The adapter pattern allows for easy addition of support for new languages without modifying the core documentation generation logic. The abstract methods in `BaseAdapter` enforce a consistent interface, ensuring that all adapters provide the necessary functionality. The separation of parsing, prompting, and post-processing into distinct methods promotes modularity and testability.
+*   **Abstract Base Class:** The use of an abstract base class enforces a consistent interface for all adapters, promoting code maintainability and extensibility.
+*   **Separation of Concerns:** Each adapter is responsible for handling a specific language or file type, keeping the code modular and organized.
+*   **Chunking:** The `parse` method breaks down large files into smaller chunks to avoid exceeding the language model's input length limitations.
+*   **Prompt Engineering:** The `get_prompt` method allows for customization of the prompt sent to the language model, enabling fine-tuning of the documentation generation process.

@@ -1,11 +1,10 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/internal/gha/gha.go
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/runtime/internal/gha/gha.go
-generated_at: 2026-02-01T19:40:41.266387
+generated_at: 2026-02-02T22:36:37.420154
 hash: eda50c569f48d9c3082b8b62388ee96fc7c75c3c418c698edbb6248843fc078d
 ---
 
@@ -15,97 +14,49 @@ This package provides a set of utilities for interacting with the GitHub Actions
 
 **Package Responsibilities:**
 
-The primary responsibility of this package is to simplify the process of reading inputs, setting outputs, and managing logging within a GitHub Actions workflow. It handles the specific environment variable conventions and output formatting required by the GitHub Actions platform.
+The primary responsibility of this package is to simplify the process of reading inputs, setting outputs, and managing logging within a GitHub Actions workflow. It handles the specific environment variable conventions and output formatting required by GitHub Actions.
 
 **Key Types and Interfaces:**
 
 This package does not define any explicit types or interfaces. It operates directly on strings and utilizes environment variables.
 
-**Important Functions:**
+**Important Functions and Their Behavior:**
 
 *   **`GetInput(name string) string`**: This function retrieves the value of an action input. It searches for the input value in the following order:
     1.  Environment variable named `INPUT_<NAME>` (where `<NAME>` is the input name in uppercase).
     2.  Environment variable named `GLASSOPS_<NAME>` (where `<NAME>` is the input name in uppercase).
     3.  If neither environment variable is found, it returns an empty string.
 
-    Example:
-    ```go
-    inputValue := gha.GetInput("myInput")
-    ```
+*   **`GetInputWithDefault(name, defaultValue string) string`**: This function attempts to retrieve an action input using `GetInput()`. If `GetInput()` returns an empty string, it returns the provided `defaultValue`.
 
-*   **`GetInputWithDefault(name, defaultValue string) string`**: This function retrieves an action input, similar to `GetInput`. If the input is not found (i.e., `GetInput` returns an empty string), it returns the provided `defaultValue`.
+*   **`SetOutput(name, value string)`**: This function sets an action output parameter. It first checks for the presence of the `GITHUB_OUTPUT` environment variable.
+    1.  If `GITHUB_OUTPUT` is set, it appends a line to the file specified by the variable in the format `name=value`. This is the preferred method for setting outputs in modern GitHub Actions.
+    2.  If `GITHUB_OUTPUT` is not set, it falls back to the older `::set-output` command format, printing to standard output.
 
-    Example:
-    ```go
-    inputValue := gha.GetInputWithDefault("myInput", "default value")
-    ```
+*   **`SetSecret(secret string)`**: This function masks a sensitive value in the GitHub Actions logs. It uses the `::add-mask::` command to hide the value.
 
-*   **`SetOutput(name, value string)`**: This function sets an action output. It attempts to write the output to the file specified by the `GITHUB_OUTPUT` environment variable. If `GITHUB_OUTPUT` is not set, it falls back to the older `::set-output` command format.
+*   **`SetFailed(message string)`**: This function marks the GitHub Action as failed and sets an error message. It uses the `::error::` command to report the error.
 
-    Example:
-    ```go
-    gha.SetOutput("myOutput", "output value")
-    ```
+*   **`Info(message string)`**: This function logs an informational message to the GitHub Actions log. It prints the message to standard output.
 
-*   **`SetSecret(secret string)`**: This function masks a given string in the GitHub Actions logs, preventing sensitive information from being displayed.
+*   **`Warning(message string)`**: This function logs a warning message to the GitHub Actions log. It uses the `::warning::` command to format the warning.
 
-    Example:
-    ```go
-    gha.SetSecret("mySecretValue")
-    ```
+*   **`Error(message string)`**: This function logs an error message to the GitHub Actions log. It uses the `::error::` command to format the error.
 
-*   **`SetFailed(message string)`**: This function marks the GitHub Action as failed and sets an error message. This will cause the workflow to terminate with a failure status.
+*   **`StartGroup(name string)`**: This function starts a new log group in the GitHub Actions log. It uses the `::group::` command to begin the group.
 
-    Example:
-    ```go
-    gha.SetFailed("An error occurred during processing.")
-    ```
-
-*   **`Info(message string)`**: Logs an informational message to the GitHub Actions log.
-
-    Example:
-    ```go
-    gha.Info("Starting the process...")
-    ```
-
-*   **`Warning(message string)`**: Logs a warning message to the GitHub Actions log.
-
-    Example:
-    ```go
-    gha.Warning("Low disk space detected.")
-    ```
-
-*   **`Error(message string)`**: Logs an error message to the GitHub Actions log. This does not automatically fail the action; `SetFailed` should be used for that purpose.
-
-    Example:
-    ```go
-    gha.Error("Failed to connect to the database.")
-    ```
-
-*   **`StartGroup(name string)`**: Starts a new log group with the given name. This helps organize the logs in the GitHub Actions UI.
-
-    Example:
-    ```go
-    gha.StartGroup("Database Connection")
-    ```
-
-*   **`EndGroup()`**: Ends the current log group.
-
-    Example:
-    ```go
-    gha.EndGroup()
-    ```
+*   **`EndGroup()`**: This function ends the current log group in the GitHub Actions log. It prints `::endgroup::` to standard output.
 
 **Error Handling:**
 
-The package primarily handles errors internally, particularly within `SetOutput` when attempting to open or write to the `GITHUB_OUTPUT` file.  If an error occurs during output file operations, it is logged, and the function falls back to the older output format.  Other functions do not explicitly return errors; instead, they rely on the standard GitHub Actions logging mechanisms to indicate success or failure.  `SetFailed` is the primary method for signaling a workflow failure.
+The package handles errors primarily through the `SetFailed` function.  Functions like `SetOutput` include basic error checking (specifically when opening the output file) but do not return errors directly. Instead, they rely on the `SetFailed` function to signal a failure to the GitHub Actions workflow.
 
 **Concurrency:**
 
-This package does not explicitly use goroutines or channels. Its functions are designed to be called sequentially within the context of a GitHub Actions workflow step.
+This package is not inherently concurrent. The functions are designed to be called sequentially within a single workflow step. There are no goroutines or channels used within the provided code.
 
 **Design Decisions:**
 
-*   **Input Prioritization:** The package prioritizes `INPUT_<NAME>` environment variables, aligning with the standard GitHub Actions input convention. The `GLASSOPS_<NAME>` prefix provides a mechanism for custom input sources if needed.
-*   **Output Flexibility:** The package supports both the modern `GITHUB_OUTPUT` file-based output mechanism and the older `::set-output` command, ensuring compatibility with different GitHub Actions runtime environments.
-*   **Logging Consistency:** The package uses the `::` notation for logging messages (warning, error, group) to ensure proper formatting and display within the GitHub Actions UI.
+*   **Environment Variable Preference:** The `GetInput` function prioritizes the `INPUT_<NAME>` environment variable convention, aligning with standard GitHub Actions practices. The `GLASSOPS_<NAME>` prefix provides a fallback for custom integrations.
+*   **Output Method Flexibility:** The `SetOutput` function supports both the modern file-based output mechanism (using `GITHUB_OUTPUT`) and the older `::set-output` command, ensuring compatibility with a wider range of GitHub Actions environments.
+*   **Logging Consistency:** The package provides a consistent set of logging functions (`Info`, `Warning`, `Error`) that leverage the GitHub Actions command format for structured logging.

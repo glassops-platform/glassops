@@ -1,39 +1,49 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/rag/__init__.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/knowledge/rag/__init__.py
-generated_at: 2026-02-01T19:35:44.345592
+generated_at: 2026-02-02T22:31:53.085825
 hash: dfb47fdaffdff34cc1b8b061b4662fcb1e7c7de005961dce082a670496c8b3a6
 ---
 
 ## Knowledge Retrieval Augmented Generation (RAG) Package Documentation
 
-This document describes the purpose and components of the `rag` package, designed for implementing Retrieval Augmented Generation workflows. This package focuses on providing a simple interface for querying a knowledge index to enhance generation processes.
+This document describes the `rag` package, a component designed for implementing Retrieval Augmented Generation workflows. It provides a simple interface for querying a knowledge index to enhance the responses of large language models.
 
 **Module Purpose:**
 
-The `rag` package serves as the entry point for knowledge retrieval operations. It abstracts the complexity of interacting with a knowledge index, allowing developers to easily incorporate retrieved information into their applications. The primary responsibility of this package is to expose a function for querying the index and obtaining relevant context.
+The primary responsibility of the `rag` package is to expose functionality for querying a pre-built knowledge index. This index contains information that can be retrieved and provided to a language model alongside a user’s prompt, improving the accuracy and relevance of the model’s output. We aim to provide a streamlined way to integrate external knowledge into generation processes.
 
 **Key Components:**
 
-*   **`query_index` Function:** This is the core function of the `rag` package. It accepts a query string as input and returns relevant information retrieved from the underlying knowledge index.
+The package currently consists of a single publicly exposed function:
 
-    *   **Signature:** `query_index(query: str) -> str`
-    *   **Parameters:**
-        *   `query` (str): The search query string. This is the information You want to retrieve from the knowledge index.
-    *   **Return Value:**
-        *   `str`: A string containing the retrieved context relevant to the input query. The format of this string is determined by the implementation within the `query_engine` module.
+*   `query_index`: This function is the core of the package. It takes a query string as input and returns relevant information retrieved from the knowledge index.
+
+**Function Details:**
+
+*   `query_index(query: str) -> str`:
+    This function accepts a string `query` representing the user’s information request. It searches the underlying knowledge index for content related to the query and returns a string containing the retrieved information. The returned string is intended to be appended to the user’s prompt before sending it to a language model.
 
 **Design Decisions and Patterns:**
 
-*   **Minimalist Interface:** The package intentionally exposes only the `query_index` function to provide a straightforward and easy-to-use interface. This simplifies integration into various applications.
-*   **Abstraction:** The internal details of the knowledge index and retrieval process are hidden behind the `query_index` function. This allows for flexibility in changing the underlying implementation without affecting client code.
-*   **Type Hints:** The use of type hints (`query: str -> str`) improves code readability and maintainability. They also enable static analysis tools to catch potential errors early in the development process.
-*   **`__all__` Variable:** The `__all__` variable explicitly defines the public interface of the package, controlling which names are imported when using `from rag import *`. This promotes clarity and prevents unintended exposure of internal components.
+The package adopts a minimalist approach, exposing only the essential functionality for querying the knowledge index. This design prioritizes simplicity and ease of integration. The `__all__` list explicitly defines the public interface, ensuring that only intended components are accessible to users.
 
-**Dependencies:**
+**Type Hints:**
 
-The `rag` package depends on the `query_engine` module within the same directory. This module contains the actual implementation of the knowledge index query logic.
+The use of type hints (e.g., `query: str`, `-> str`) enhances code readability and maintainability. They also enable static analysis tools to verify the correctness of the code and help prevent errors. We believe that clear type annotations are important for building robust and reliable software.
+
+**Usage:**
+
+You can import and use the `query_index` function as follows:
+
+```python
+from knowledge.rag import query_index
+
+relevant_info = query_index("What is the capital of France?")
+print(relevant_info)
+```
+
+This will retrieve information about the capital of France from the knowledge index and print it to the console. You would then combine this `relevant_info` with your prompt to a language model.

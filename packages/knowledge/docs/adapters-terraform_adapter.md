@@ -1,40 +1,40 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/generation/adapters/terraform_adapter.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
-source: packages/knowledge/generation/adapters/terraform_adapter.py
-generated_at: 2026-02-01T19:32:02.156233
-hash: 34f8eb184d2b7e76a39b0b848459e812a805111c250f893d6e922c6e463b029d
+source: packages/knowledge/adapters/terraform_adapter.py
+generated_at: 2026-02-02T22:26:07.124279
+hash: 6087c9054ce7b910210b33038fdf2cdbd5492fc22b54c1ea124f9d66d10ccaef
 ---
 
 ## Terraform Adapter Documentation
 
-This document details the Terraform Adapter, a component designed for generating documentation from Terraform configuration files. It is part of a larger system for knowledge generation from infrastructure code.
+This document details the Terraform Adapter, a component designed for generating documentation from Terraform configuration files. It is part of a larger system for knowledge management and documentation across various infrastructure-as-code formats.
 
 **Module Purpose and Responsibilities**
 
-The Terraform Adapter’s primary responsibility is to process Terraform files (.tf) and prepare their content for documentation generation by a language model. It handles file identification, content parsing into manageable chunks, and formatting prompts for the language model. This adapter ensures that large Terraform configurations are broken down into pieces suitable for processing, while preserving file context.
+The Terraform Adapter’s primary responsibility is to ingest Terraform files (.tf extension), split them into manageable chunks if necessary, and prepare them for processing by a language model. It also formats the input for the language model with a specific prompt designed to elicit detailed documentation. The adapter handles file-specific parsing and formatting, abstracting away the details of the Terraform language from the core documentation generation process.
 
 **Key Classes and Their Roles**
 
-*   **TerraformAdapter:** This class inherits from the `BaseAdapter` and implements the specific logic for handling Terraform files. It determines if a file is a Terraform file, parses its content, formats the content into chunks, and constructs a prompt for the language model.
+*   **TerraformAdapter:** This class inherits from the `BaseAdapter` class and implements the adapter-specific logic for Terraform files. It defines how Terraform files are identified, parsed, and formatted for documentation generation.
 
 **Important Functions and Their Behavior**
 
-*   **`can_handle(file_path: Path) -> bool`**: This function checks if the adapter can process a given file based on its extension. It returns `True` if the file path’s suffix is ".tf", indicating a Terraform file, and `False` otherwise.
-*   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and content of a Terraform file as input. It splits the content into chunks, ensuring each chunk does not exceed `TARGET_CHUNK_SIZE` (24000 characters). The function returns a list of strings, where each string represents a chunk of the Terraform configuration. If the entire file content is smaller than `TARGET_CHUNK_SIZE`, it returns a list containing a single string with the entire content.
-*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This private helper function formats a single chunk of Terraform configuration. It prepends the file path and an optional part number to the content, wraps the content in a code block using the HCL (HashiCorp Configuration Language) syntax, and returns the formatted string.
-*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs a prompt for the language model. The prompt instructs the model to act as an Infrastructure as Code expert and document the provided Terraform configuration. It specifies the aspects to focus on (resources, variables, outputs, dependencies, security) and includes strict formatting rules to ensure the output is valid Markdown without conversational text or prohibited terms.
+*   **`can_handle(file_path: Path) -> bool`**: This function determines if the adapter can process a given file based on its extension. It returns `True` if the file path’s suffix is ".tf", indicating a Terraform file, and `False` otherwise.
+*   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and content of a Terraform file as input. It splits the content into chunks if the file exceeds `TARGET_CHUNK_SIZE` (currently 24000 characters). Each chunk is then formatted using the `_format_chunk` method. The function returns a list of strings, where each string represents a chunk of the Terraform configuration. If the content is smaller than the target size, it returns a list containing a single formatted chunk.
+*   **`validate_content(content: str) -> List[str]`**: This function currently returns an empty list. It is intended for future implementation of content validation checks specific to Terraform files.
+*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This private helper function formats a chunk of Terraform configuration into a string suitable for input to the language model. It includes the file path and an optional part number if the file was split into multiple chunks. The content is wrapped in a code block using the HCL (HashiCorp Configuration Language) syntax highlighter.
+*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs the prompt that is sent to the language model. The prompt instructs the model to act as an Infrastructure as Code expert and document the provided Terraform configuration. It specifies the areas of focus for the documentation (resources, variables, outputs, dependencies, security) and includes strict rules for the model’s output, prohibiting conversational text, emojis, and specific words. It also explicitly forbids mentioning the project name.
 
 **Type Hints and Their Significance**
 
-The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`). These hints improve code readability and maintainability by clearly defining the expected data types for function arguments and return values. They also enable static analysis tools to catch potential type errors during development.
+The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`). These hints improve code readability and maintainability by clearly specifying the expected data types for function arguments and return values. They also enable static analysis tools to catch type-related errors during development.
 
-**Notable Patterns and Design Decisions**
+**Notable Patterns or Design Decisions**
 
-*   **Adapter Pattern:** The `TerraformAdapter` follows the Adapter pattern, inheriting from a `BaseAdapter` class. This allows for easy integration of different infrastructure-as-code formats into the knowledge generation system without modifying the core logic.
-*   **Chunking:** The `parse` function implements a chunking mechanism to handle large Terraform files. This is necessary because language models have input length limitations. By splitting the content into smaller chunks, we can process files of any size.
-*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering. The prompt is designed to elicit specific, well-formatted documentation from the language model, while also enforcing constraints on the output style and content.
-*   **HCL Code Blocks:** The use of “\`\`\`hcl” code blocks ensures that the Terraform configuration is displayed correctly in Markdown, with proper syntax highlighting.
+*   **Adapter Pattern:** The `TerraformAdapter` follows the adapter pattern, allowing the system to work with different infrastructure-as-code formats without modifying the core documentation generation logic.
+*   **Chunking:** The `parse` function implements a chunking mechanism to handle large Terraform files that might exceed the input limits of the language model. This ensures that even large configurations can be processed.
+*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering to guide the language model towards generating high-quality, focused documentation. The prompt includes specific instructions and constraints to ensure the desired output format and content.
+*   **HCL Highlighting:** The `_format_chunk` function uses HCL syntax highlighting to improve the readability of the Terraform code within the documentation.

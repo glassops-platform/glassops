@@ -1,11 +1,10 @@
 ---
 type: Documentation
 domain: runtime
-origin: packages/runtime/internal/integration/contract_test.go
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/runtime/internal/integration/contract_test.go
-generated_at: 2026-02-01T19:41:15.126602
+generated_at: 2026-02-02T22:37:09.655732
 hash: 7ab1e02da31199caf92781e9d2d113b04fe958b0db1d429763f36d052718bce2
 ---
 
@@ -19,30 +18,42 @@ The `integration` package contains tests that verify the interaction between the
 
 **Key Types and Structures:**
 
-The primary type involved is the `contract.Contract` structure (defined in the `github.com/glassops-platform/glassops/packages/runtime/internal/contract` package). This structure represents the core contract object, containing fields related to status, metadata, quality metrics, and audit information.  The tests also make use of custom test data structures, such as `TestData.CoverageData` and `TestData.TestResults`, to provide various input scenarios.
+The primary type involved is the `contract.Contract` structure (defined in the `github.com/glassops-platform/glassops/packages/runtime/internal/contract` package). This structure represents the core agreement or specification for a runtime operation.  Key fields within the `Contract` structure include:
+
+*   `SchemaVersion`: A string indicating the version of the contract schema.
+*   `Status`: A string representing the current status of the contract (e.g., "Succeeded", "Failed").
+*   `Meta`: A nested structure containing metadata about the contract, including the execution `Engine` and a `Timestamp`.
+*   `Quality`: A nested structure containing quality metrics, such as code `Coverage` and test `Results`.
+*   `Audit`: A nested structure containing audit information, such as the user who `TriggeredBy` the contract, the `OrgID`, `Repository`, and `Commit`.
 
 **Important Functions and Behavior:**
 
-*   **`contract.New()`**: This function creates a new `contract.Contract` instance with default values. The tests verify that these defaults are set correctly (schema version, status, engine, timestamp).
-*   **`contract.Validate()`**: This function validates the contract object, checking for invalid values in key fields. The tests extensively use this function with various input values to confirm that validation works as expected.  Specifically, it checks the validity of the `Status` and `Meta.Engine` fields, as well as the `Quality.Coverage.Actual` and `Quality.Coverage.Required` values.
-*   **`contract.ToJSON()`**: This function serializes the contract object into a JSON string. The tests verify that the serialization process does not result in errors and produces a non-empty JSON output.
+The tests focus on the following behaviors:
+
+*   **Contract Creation with Defaults:**  The `contract.New()` function is tested to ensure it creates a contract object with sensible default values for key fields like `SchemaVersion`, `Status`, and `Meta.Engine`.
+*   **Status Validation:** The `Validate()` method of the `Contract` structure is tested to verify that only valid status values are accepted.  Valid statuses include "Succeeded", "Failed", and "Blocked".  Empty strings and invalid statuses trigger an error.
+*   **Engine Type Validation:** The `Validate()` method is also tested to ensure that only supported engine types are accepted. Valid engines include "native", "hardis", and "custom". Empty strings and invalid engine types result in an error.
+*   **Coverage Bounds Validation:** The `Validate()` method checks that `Coverage.Actual` and `Coverage.Required` values are within acceptable bounds (non-negative and not exceeding 100). Values outside these bounds cause validation to fail.
+*   **JSON Serialization:** The `ToJSON()` method is tested to confirm that a contract object can be serialized into a valid JSON representation. The test verifies that the resulting JSON data is not empty.
+*   **Coverage Met Calculation:** The tests verify that the `Coverage.Met` field is correctly calculated based on whether `Coverage.Actual` is greater than or equal to `Coverage.Required`.
+*   **Test Data Integration:** Tests leverage predefined test data structures (`TestData`) to populate contract fields and validate the overall contract state.
 
 **Error Handling:**
 
-The `contract.Validate()` function returns an error when validation fails. The tests check for the presence of errors when invalid input is provided and verify that no errors are returned when valid input is used.  The tests use `t.Errorf` and `t.Fatalf` to report validation failures and serialization errors, respectively.
+The `Validate()` method is central to error handling. It returns an error when:
 
-**Test Cases and Scenarios:**
+*   The `Status` field contains an invalid value.
+*   The `Meta.Engine` field contains an invalid value.
+*   `Coverage.Actual` or `Coverage.Required` are outside the valid range (0-100).
 
-The integration tests cover the following scenarios:
+The tests assert that errors are returned when expected and that no errors are returned when validation should succeed.
 
-*   **Default Values:** Verifies that a newly created contract has the expected default values.
-*   **Status Validation:** Tests the validation of the `Status` field, ensuring that only allowed values are accepted. Invalid or empty statuses trigger an error.
-*   **Engine Validation:** Tests the validation of the `Meta.Engine` field, ensuring that only allowed engine types are accepted. Invalid or empty engine types trigger an error.
-*   **Coverage Bounds Validation:** Validates the `Quality.Coverage.Actual` and `Quality.Coverage.Required` values, ensuring they are within acceptable ranges (non-negative and not exceeding 100).
-*   **JSON Serialization:** Confirms that the contract object can be successfully serialized into a JSON string.
-*   **Valid Contract with Test Data:** Creates a contract using predefined test data and verifies that validation passes and coverage is met.
-*   **Failing Coverage Scenario:** Creates a contract with test data designed to result in failing coverage and verifies that the `Quality.Coverage.Met` field is correctly set to false.
+**Concurrency:**
+
+These integration tests do not explicitly test concurrent behavior. They focus on the functional correctness of the contract object and its validation logic in a single-threaded environment.
 
 **Design Decisions:**
 
-The tests employ a table-driven approach for validating status and engine types, making the tests more concise and easier to maintain.  The use of dedicated test data structures (`TestData`) promotes code reusability and improves test readability. The tests are skipped when running in short mode (`testing.Short()`) to reduce execution time during development.
+*   **Explicit Validation:** The `Validate()` method provides a clear and centralized point for enforcing contract constraints.
+*   **Default Values:** Providing default values through `contract.New()` simplifies contract creation and ensures a consistent starting point.
+*   **Test-Driven Approach:** The tests are structured to cover various scenarios, including valid and invalid inputs, to ensure robust validation logic.

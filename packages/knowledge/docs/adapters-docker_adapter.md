@@ -1,45 +1,40 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/generation/adapters/docker_adapter.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
-source: packages/knowledge/generation/adapters/docker_adapter.py
-generated_at: 2026-02-01T19:30:35.066302
-hash: baf88548739965112f653460a79caab499eac6130e9bdca0e9984c296e006cd4
+source: packages/knowledge/adapters/docker_adapter.py
+generated_at: 2026-02-02T22:24:37.719660
+hash: 450a92c0938c592f417b848dc416f40e0bbe77a6b57c3802f4f06b011caf1387
 ---
 
 ## Dockerfile Adapter Documentation
 
-This document details the functionality of the Dockerfile adapter, a component designed for automated documentation generation from Dockerfile content. It serves as a bridge between file system input and the core documentation process.
+This document details the functionality of the Dockerfile adapter, a component designed for automated documentation generation from Dockerfile content. It inherits from the `BaseAdapter` class and provides specific logic for handling Dockerfile files.
 
 **Module Purpose:**
 
-The primary responsibility of this module is to identify, parse, and prepare Dockerfile content for documentation. It extends a base adapter class to provide Dockerfile-specific handling. This adapter focuses on extracting content from Dockerfiles and formatting it into prompts suitable for a language model to generate documentation.
+The primary responsibility of this module is to identify, parse, and prepare Dockerfile content for documentation generation by a larger system. It handles the specific characteristics of Dockerfiles, such as their typical small size and unique syntax.
 
 **Key Classes:**
 
-*   **`DockerAdapter`**: This class inherits from `BaseAdapter` and implements the adapter pattern for Dockerfiles. It encapsulates the logic for determining if a file is a Dockerfile, parsing its content, formatting chunks, and constructing a prompt for documentation generation.
-
-    *   `TARGET_CHUNK_SIZE`: A constant set to 24000. While defined, it is currently unused as Dockerfiles are generally small and do not require chunking.
+*   **`DockerAdapter`**: This class is the core of the adapter. It extends `BaseAdapter` and implements the necessary methods to handle Dockerfile files.
+    *   `TARGET_CHUNK_SIZE`: A constant set to 24000. While defined, it is currently unused due to the typical small size of Dockerfiles. It is included for potential future use if larger Dockerfiles require chunking.
 
 **Important Functions:**
 
-*   **`can_handle(file_path: Path) -> bool`**: This function determines whether the adapter can process a given file based on its name. It returns `True` if the file is named "Dockerfile" or starts with "Dockerfile.", and `False` otherwise. The `file_path` argument is a `Path` object representing the file's location.
-
-*   **`parse(file_path: Path, content: str) -> List[str]`**: This function takes the file path and content of a Dockerfile as input. It currently bypasses chunking due to the typically small size of Dockerfiles and returns a list containing a single string representing the formatted Dockerfile content. The `file_path` argument is a `Path` object, and `content` is a string containing the Dockerfile's content.
-
-*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This protected function formats a chunk of Dockerfile content into a string suitable for inclusion in a prompt. It includes the file path and an optional part number if the content is chunked. The `file_path` argument is a `Path` object, `content` is the Dockerfile content string, and `part` is an optional integer indicating the chunk number.
-
-*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function constructs the prompt that will be sent to the language model. It includes instructions for the model to act as a DevOps expert and document the provided Dockerfile, focusing on the base image, stages, instructions, security, and build/run procedures. It also includes strict rules for the model's output, prohibiting conversational text, emojis, specific words, and mentions of the platform name. The `file_path` argument is a `Path` object, and `parsed_content` is the formatted Dockerfile content string.
+*   **`can_handle(file_path: Path) -> bool`**: This function determines if the adapter can process a given file. It returns `True` if the filename is exactly "Dockerfile" or starts with "Dockerfile.", and `False` otherwise. The `file_path` argument is a `Path` object representing the file's location.
+*   **`parse(file_path: Path, content: str) -> List[str]`**: This function parses the Dockerfile content. Given a `file_path` (a `Path` object) and the `content` of the file (a string), it formats the entire content into a single chunk and returns it as a list containing that single chunk.  Because Dockerfiles are generally small, no chunking is performed.
+*   **`validate_content(content: str) -> List[str]`**: This function currently performs no validation and always returns an empty list. It is included for potential future content validation logic. The `content` argument is the Dockerfile content as a string.
+*   **`_format_chunk(file_path: Path, content: str, part: int = None) -> str`**: This protected function formats a single chunk of Dockerfile content. It constructs a string that includes the filename (with a part number if applicable) and the content wrapped in a code block using the `dockerfile` language specifier. The `file_path` is a `Path` object, `content` is the chunk's content (string), and `part` is an optional integer indicating the chunk number.
+*   **`get_prompt(file_path: Path, parsed_content: str) -> str`**: This function generates a prompt to be used with a language model (like Gemma 12b IT) to document the Dockerfile. It constructs a detailed instruction set for the model, specifying the desired output format (Markdown), the information to extract (base image, stages, instructions, security, build/run instructions), and constraints (no conversational text, specific word restrictions, and exclusion of certain names). The `file_path` is a `Path` object, and `parsed_content` is the formatted Dockerfile content.
 
 **Type Hints:**
 
-The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> bool`) to improve code readability and maintainability. These hints specify the expected data types for function arguments and return values, enabling static analysis and reducing the risk of runtime errors.
+The code extensively uses type hints (e.g., `file_path: Path`, `content: str`, `-> List[str]`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development.
 
 **Design Decisions and Patterns:**
 
-*   **Adapter Pattern:** The `DockerAdapter` class implements the adapter pattern, allowing the system to work with Dockerfiles without needing to know the specifics of their format. This promotes loose coupling and extensibility.
-*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering to guide the language model towards generating high-quality, relevant documentation. The prompt includes specific instructions and constraints to ensure the desired output format and content.
-*   **Content Formatting:** The `_format_chunk` function ensures that the Dockerfile content is clearly presented within the prompt, using Markdown code blocks for readability.
-*   **Chunking Strategy:** The current implementation avoids chunking Dockerfiles, assuming they are small enough to be processed as a single unit. The `TARGET_CHUNK_SIZE` constant is defined for potential future use if larger Dockerfiles need to be handled.
+*   **Adapter Pattern:** The `DockerAdapter` follows the Adapter pattern, allowing the system to work with Dockerfiles in a standardized way without needing to know the specifics of the Dockerfile format.
+*   **Chunking Strategy:** The adapter currently avoids chunking Dockerfiles due to their typically small size. The `TARGET_CHUNK_SIZE` constant is retained for potential future expansion.
+*   **Prompt Engineering:** The `get_prompt` function demonstrates careful prompt engineering to guide the language model towards generating high-quality, focused documentation. The prompt includes explicit instructions on output format, content requirements, and constraints.

@@ -1,65 +1,59 @@
 ---
 type: Documentation
 domain: knowledge
-origin: packages/knowledge/generation/validator.py
-last_modified: 2026-02-01
+last_modified: 2026-02-02
 generated: true
 source: packages/knowledge/generation/validator.py
-generated_at: 2026-02-01T19:33:29.657446
-hash: 0a70725cba5c908b3ccac480b5dd6d38c7ae6d4d055a98e638804d8adecc87d9
+generated_at: 2026-02-02T22:29:43.482366
+hash: 211f4ed3b51a8bef6cf2581464bd112fdbefc42ec04a9dd621375a587353962e
 ---
 
-# Documentation Validator Document
+## Documentation Validator Module
 
-This document describes the purpose and functionality of the documentation validator module. This tool is designed to assess the quality of generated documentation, specifically identifying and flagging undesirable elements like conversational filler and prohibited terminology.
+This module provides functionality to validate generated documentation content for quality and syntax issues. It aims to ensure documentation is professional, concise, and free of common problems like conversational filler or banned terminology.
 
-## Module Purpose
+**Key Classes:**
 
-The `validator` module provides a mechanism to automatically check generated documentation content against a set of predefined quality criteria. It helps maintain a consistent and professional tone in documentation by detecting and reporting instances of unwanted phrases, words, and naming conventions.
+*   **Validator:** This class contains the core validation logic. It is designed as a collection of class methods, offering a centralized point for performing various checks on the documentation content.  It does not require instantiation.
 
-## Key Classes
+**Important Functions:**
 
-### `Validator` Class
+*   **`get_adapter_for_lang(cls, lang: str) -> Optional[BaseAdapter]`:** This class method acts as a factory, returning an appropriate adapter object based on the detected programming language of a code block. The `lang` parameter is a string representing the language (e.g., "python", "go"). It returns `None` if no adapter is found for the given language. Type hinting ensures the input is a string and the output is either a `BaseAdapter` object or `None`.
+*   **`extract_code_blocks(cls, content: str) -> List[tuple[str, str]]`:** This class method extracts code blocks from markdown content using regular expressions. It identifies blocks enclosed in triple backticks (```) and returns a list of tuples, where each tuple contains the language of the code block and the code itself. The `content` parameter is the markdown string to parse. The return value is a list of tuples, each containing a language string and a code string.
+*   **`validate(cls, content: str, file_path: str = "") -> dict`:** This is the primary validation function. It takes the documentation `content` as input, along with an optional `file_path` for context. It performs a series of checks, including:
+    *   Frontmatter presence
+    *   Detection of banned conversational phrases
+    *   Detection of banned words
+    *   Detection of prohibited terms
+    *   Delegation of code block validation to language-specific adapters.
+    It returns a dictionary containing three lists: `passes`, `warnings`, and `errors`. These lists store the results of each validation check.
+*   **`print_report(results: dict)`:** This static method takes the dictionary returned by the `validate` function and prints a formatted report to the console, clearly indicating any errors, warnings, or successful passes.
 
-The `Validator` class is the core component of this module. It encapsulates the validation logic and provides a `validate` method for performing the checks. It is designed as a class to allow for potential expansion with additional validation rules and configurations in the future.
+**Type Hints:**
 
-#### Responsibilities:
+The code extensively uses type hints (e.g., `lang: str`, `-> List[tuple[str, str]]`) to improve code readability and maintainability. These hints specify the expected data types for function parameters and return values, enabling static analysis and helping to prevent type-related errors.
 
-- Contains lists of banned phrases and words.
-- Implements the validation logic to identify these elements within the provided content.
-- Returns a list of error messages indicating any detected issues.
+**Notable Patterns and Design Decisions:**
 
-## Important Functions
+*   **Class Methods:** The validation logic is implemented using class methods, allowing access to class-level constants (like `BANNED_PHRASES` and `BANNED_WORDS`) without requiring an instance of the `Validator` class.
+*   **Adapter Pattern:** The use of adapters (e.g., `PythonAdapter`, `GoAdapter`) promotes loose coupling and allows for easy extension to support additional languages. Each adapter is responsible for validating code blocks in its specific language.
+*   **Regular Expressions:** Regular expressions are used for extracting code blocks from the markdown content.
+*   **Dictionary-Based Results:** The `validate` function returns a dictionary to provide a structured and comprehensive report of the validation results.
+*   **Banned Phrase/Word Lists:** The use of lists for banned phrases and words makes it easy to maintain and update the validation rules.
+*   **Static Method for Reporting:** The `print_report` method is static, meaning it doesn't require an instance of the class to be called, and is solely responsible for formatting and displaying the validation results.
 
-### `Validator.validate(content: str, file_path: str = "") -> List[str]`
+**Adapters:**
 
-This class method performs the actual validation of the documentation content.
+The module depends on several adapter classes (defined in `glassops.knowledge.adapters`) to handle language-specific validation:
 
-#### Parameters:
+*   `BaseAdapter`:  The base class for all adapters.
+*   `GoAdapter`: Validates Go code.
+*   `PythonAdapter`: Validates Python code.
+*   `LWCAdapter`: Validates HTML/XML content.
+*   `ApexAdapter`: Validates Apex code.
+*   `YAMLAdapter`: Validates YAML content.
+*   `JSONAdapter`: Validates JSON content.
+*   `DockerAdapter`: Validates Dockerfile content.
+*   `TerraformAdapter`: Validates Terraform code.
 
-- `content` (str): The string containing the generated documentation to be validated. This is a required parameter.
-- `file_path` (str, optional): The path to the file containing the documentation. This parameter is optional and is used for providing context in error messages, if needed. Defaults to an empty string.
-
-#### Return Value:
-
-- `List[str]`: A list of strings, where each string represents a validation error or warning message. If the content is valid, the list will be empty.
-
-#### Behavior:
-
-1. **Frontmatter Check:** Verifies that the content begins with a frontmatter block (`---`).  This is a common convention for documentation formats like Markdown.
-2. **Conversational Filler Check:** Iterates through a predefined list of `BANNED_PHRASES` and checks if any of these phrases are present in the lowercase version of the content.
-3. **Banned Word Check:** Iterates through a predefined list of `BANNED_WORDS` and checks if any of these words are present in the lowercase version of the content.
-4. **Term Exclusion Check:** Checks for the presence of the term "nobleforge" or "noble forge" (case-insensitive) within the content.
-5. **Error Reporting:**  For each detected issue, an informative error message is added to the `errors` list.
-6. **Return Value:** The function returns the `errors` list, providing a summary of any validation issues found.
-
-## Type Hints
-
-The code makes extensive use of type hints (e.g., `content: str`, `-> List[str]`). These hints improve code readability and allow for static analysis, helping to catch potential errors during development. They clearly define the expected data types for function parameters and return values.
-
-## Design Decisions
-
-- **Class-Based Structure:** The use of a class allows for easy extension of the validation rules in the future. New validation checks can be added as methods to the `Validator` class.
-- **Banned Lists:** The use of `BANNED_PHRASES` and `BANNED_WORDS` as class-level constants makes it easy to maintain and update the list of prohibited terms.
-- **Case-Insensitive Comparison:** Converting the content to lowercase before performing the checks ensures that the validation is not affected by capitalization.
-- **Clear Error Messages:** The error messages provide specific information about the detected issues, including the offending phrase or word.
+You can extend the functionality of this module by creating new adapters for additional languages or file types.
