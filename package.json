@@ -42,6 +42,7 @@
         "knowledge:pipeline": "python packages/knowledge/main.py",
         "knowledge:index": "npm run knowledge:pipeline -- --index",
         "knowledge:ask": "npm run knowledge:pipeline --",
+        "knowledge:validate": "python -m pytest packages/knowledge/tests",
         "precommit": "npm run docs:validate"
     },
     "devDependencies": {
