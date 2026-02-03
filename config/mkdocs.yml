@@ -162,69 +162,58 @@ nav:
                 - "Overview": packages/knowledge/README.md
                 - "Docs":
                       - "Init": packages/knowledge/docs/__init__.md
-                      - "Config": packages/knowledge/docs/config.md
-                      - "Drift": packages/knowledge/docs/drift-__init__.md
-                      - "Drift Detection": packages/knowledge/docs/drift-detect_drift.md
-                      - "Embeddings": packages/knowledge/docs/embeddings-__init__.md
-                      - "Gemini Embedding": packages/knowledge/docs/embeddings-gemini_embedding.md
-                      - "Gemma Embedding": packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md
-                      - "Router Embedding": packages/knowledge/docs/embeddings-router_embedding.md
-                      - "Ingestion": packages/knowledge/docs/ingestion-__init__.md
-                      - "Federated Loader": packages/knowledge/docs/ingestion-federated_loader.md
-                      - "Index Builder": packages/knowledge/docs/ingestion-index_builder.md
+                      - "Config": packages/knowledge/docs/config-config.md
+                      - "Generation": packages/knowledge/docs/generation-__init__.md
+                      - "Generator": packages/knowledge/docs/generation-generator.md
+                      - "Validator": packages/knowledge/docs/generation-validator.md
+                      - "Adapters":
+                            - "Base": packages/knowledge/docs/adapters-base.md
+                            - "Python": packages/knowledge/docs/adapters-python.md
+                            - "Typescript": packages/knowledge/docs/adapters-typescript.md
+                            - "Go": packages/knowledge/docs/adapters-go.md
+                            - "Apex": packages/knowledge/docs/adapters-apex_adapter.md
+                            - "LWC": packages/knowledge/docs/adapters-lwc_adapter.md
+                            - "JSON": packages/knowledge/docs/adapters-json_adapter.md
+                            - "YAML": packages/knowledge/docs/adapters-yaml_adapter.md
+                            - "Docker": packages/knowledge/docs/adapters-docker_adapter.md
+                            - "Terraform": packages/knowledge/docs/adapters-terraform_adapter.md
+                      - "Embeddings":
+                            - "Init": packages/knowledge/docs/embeddings-__init__.md
+                            - "Gemini": packages/knowledge/docs/embeddings-gemini_embedding.md
+                            - "Gemma": packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md
+                            - "Router": packages/knowledge/docs/embeddings-router_embedding.md
+                      - "Ingestion":
+                            - "Init": packages/knowledge/docs/ingestion-__init__.md
+                            - "Federated Loader": packages/knowledge/docs/ingestion-federated_loader.md
+                            - "Index Builder": packages/knowledge/docs/ingestion-index_builder.md
+                      - "RAG":
+                            - "Init": packages/knowledge/docs/rag-__init__.md
+                            - "Query Engine": packages/knowledge/docs/rag-query_engine.md
+                      - "LLM":
+                            - "Init": packages/knowledge/docs/llm-__init__.md
+                            - "Client": packages/knowledge/docs/llm-client.md
+                      - "Tests":
+                            - "Conftest": packages/knowledge/docs/tests-conftest.md
+                            - "Validator Test": packages/knowledge/docs/tests-test_validator.md
+                      - "Utils":
+                            - "Batch": packages/knowledge/docs/utils-batch.md
+                            - "File Hash": packages/knowledge/docs/utils-file_hash.md
                       - "Main": packages/knowledge/docs/main.md
-                      - "RAG": packages/knowledge/docs/rag-__init__.md
-                      - "Query Engine": packages/knowledge/docs/rag-query_engine.md
-                      - "Utils": packages/knowledge/docs/utils-__init__.md
-                      - "Batch Utils": packages/knowledge/docs/utils-batch.md
-                      - "File Hash": packages/knowledge/docs/utils-file_hash.md
-                      - "Generated Drift Report": packages/knowledge/docs/generated/drift_report.md
 
           - Adapters:
                 - "Adapter Development": packages/adapters/docs/adapter-development.md
                 - Native:
                       - "Overview": packages/adapters/native/README.md
-                      - "ADRs": packages/adapters/native/adr/README.md
-                      - "Package": packages/adapters/native/docs/package.md
+                      - "Main Command": packages/adapters/native/docs/cmd-main.md
                 - Hardis:
                       - "Overview": packages/adapters/hardis/README.md
-                      - "ADRs": packages/adapters/hardis/adr/README.md
-                      - "Package": packages/adapters/hardis/docs/package.md
                 - Scanner:
                       - "Overview": packages/adapters/scanner/README.md
-                      - "Docs": packages/adapters/scanner/docs/README.md
-                      - "Package": packages/adapters/scanner/docs/package.md
-                      - "ADRs": packages/adapters/scanner/docs/adr/README.md
                 - MegaLinter:
                       - "Overview": packages/adapters/megalinter/README.md
-                      - "Package": packages/adapters/megalinter/docs/package.md
 
           - Tools:
                 - ADR Enforcer:
                       - "Overview": packages/tools/adr-enforcer/README.md
                       - "Architecture": packages/tools/adr-enforcer/architecture.md
                       - "Docs": packages/tools/adr-enforcer/docs/README.md
-                      - "Package": packages/tools/adr-enforcer/docs/package.md
-                      - "ADRs": packages/tools/adr-enforcer/docs/adr/README.md
-                - Agent:
-                      - "Overview": packages/tools/agent/README.md
-                      - "Docs":
-                            - "Apex Adapter": packages/tools/agent/docs/adapters-apex-adapter.md
-                            - "Docker Adapter": packages/tools/agent/docs/adapters-docker-adapter.md
-                            - "Interface": packages/tools/agent/docs/adapters-interface.md
-                            - "JSON Adapter": packages/tools/agent/docs/adapters-json-adapter.md
-                            - "LWC Adapter": packages/tools/agent/docs/adapters-lwc-adapter.md
-                            - "MD Adapter": packages/tools/agent/docs/adapters-md-adapter.md
-                            - "Python Adapter": packages/tools/agent/docs/adapters-py-adapter.md
-                            - "Terraform Adapter": packages/tools/agent/docs/adapters-terraform-adapter.md
-                            - "TS Adapter": packages/tools/agent/docs/adapters-ts-adapter.md
-                            - "YML Adapter": packages/tools/agent/docs/adapters-yml-adapter.md
-                            - "ESLint Config": packages/tools/agent/docs/eslint.config.md
-                            - "Package": packages/tools/agent/docs/package.md
-                            - "Generator": packages/tools/agent/docs/src-generator.md
-                            - "Index": packages/tools/agent/docs/src-index.md
-                            - "LLM Client": packages/tools/agent/docs/src-llm-client.md
-                            - "Prompts": packages/tools/agent/docs/src-prompts.md
-                            - "Scanner": packages/tools/agent/docs/src-scanner.md
-                            - "Validator": packages/tools/agent/docs/src-validator.md
-                            - "TSConfig": packages/tools/agent/docs/tsconfig.md
