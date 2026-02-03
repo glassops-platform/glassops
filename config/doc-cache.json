@@ -4,615 +4,510 @@
     "generatedFiles": [
       "packages/adapters/native/docs/cmd-main.md"
     ],
-    "timestamp": "2026-02-01T19:25:11.289711"
+    "timestamp": "2026-02-02T22:22:02.601748"
   },
   "packages/adapters/native/Dockerfile": {
     "hash": "551d4cd83700be770a2e81d208944752fc3cb9bc93606dadbcfd16f84ec8655e",
     "generatedFiles": [
       "packages/adapters/native/docs/Dockerfile.md"
     ],
-    "timestamp": "2026-02-01T19:25:39.186195"
+    "timestamp": "2026-02-02T22:22:25.189489"
   },
   "packages/control-plane/cmd/resolver/main.go": {
     "hash": "e53a85af9c11df19f7caa52717a03e4fe1f512958c414471e02e77ad2ada38bc",
     "generatedFiles": [
       "packages/control-plane/docs/resolver-main.md"
     ],
-    "timestamp": "2026-02-01T19:25:56.157364"
+    "timestamp": "2026-02-02T22:22:46.228764"
   },
   "packages/control-plane/internal/contract/contract.go": {
     "hash": "f6b1fae98e3691bd1375c6e96ecbe12185ba2ce76954ca639a7efb13859d2c67",
     "generatedFiles": [
       "packages/control-plane/docs/contract-contract.md"
     ],
-    "timestamp": "2026-02-01T19:26:18.448790"
+    "timestamp": "2026-02-02T22:23:03.248288"
   },
   "packages/control-plane/internal/policy/policy.go": {
     "hash": "83153ee161935cb1582b33943db390eb171887a814847d212dc3e156bca88149",
     "generatedFiles": [
       "packages/control-plane/docs/policy-policy.md"
     ],
-    "timestamp": "2026-02-01T19:26:36.710513"
+    "timestamp": "2026-02-02T22:23:16.605860"
   },
   "packages/knowledge/__init__.py": {
     "hash": "a295383fffe5caa9562c06e539020acd2d587f6d580a11dfe83fe0084093e701",
     "generatedFiles": [
       "packages/knowledge/docs/__init__.md"
     ],
-    "timestamp": "2026-02-01T19:27:06.795533"
+    "timestamp": "2026-02-02T22:23:30.497710"
+  },
+  "packages/knowledge/adapters/__init__.py": {
+    "hash": "740ef35a544245639b934b1c3390a3673a1f66c6e9b876b1ed8854b5047abd96",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-__init__.md"
+    ],
+    "timestamp": "2026-02-02T22:23:43.848752"
+  },
+  "packages/knowledge/adapters/apex_adapter.py": {
+    "hash": "1e4f12673775d88fb271fa6ccba1b0fc773a901a080790eb1d40c2e1e8f9e4e5",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-apex_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:24:01.494678"
+  },
+  "packages/knowledge/adapters/base.py": {
+    "hash": "396af1f6b6335274e9b4fa47355eb740acb1cd8996e026329ad9cc0b80086af8",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-base.md"
+    ],
+    "timestamp": "2026-02-02T22:24:17.216084"
+  },
+  "packages/knowledge/adapters/docker_adapter.py": {
+    "hash": "450a92c0938c592f417b848dc416f40e0bbe77a6b57c3802f4f06b011caf1387",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-docker_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:24:37.722287"
+  },
+  "packages/knowledge/adapters/go.py": {
+    "hash": "620b071e516120f8ebbfd0bb801601cb11dd0cd5df9ce23957661d69db49c7d2",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-go.md"
+    ],
+    "timestamp": "2026-02-02T22:24:55.806932"
+  },
+  "packages/knowledge/adapters/json_adapter.py": {
+    "hash": "fc8972e787717de8b86255c2cce0b6cb93a5c35df2759316d3e75be142b6c9d3",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-json_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:25:13.540173"
+  },
+  "packages/knowledge/adapters/lwc_adapter.py": {
+    "hash": "7bf7cab97960f829b21a0a9e22be0b77440bf39e55ce6645db8c6cfe671017bc",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-lwc_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:25:32.812625"
+  },
+  "packages/knowledge/adapters/python.py": {
+    "hash": "ff0834066863d556c68cf4606cee7ffb1ea087d352c29c7cbbe82225e8b238bc",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-python.md"
+    ],
+    "timestamp": "2026-02-02T22:25:50.977782"
+  },
+  "packages/knowledge/adapters/terraform_adapter.py": {
+    "hash": "6087c9054ce7b910210b33038fdf2cdbd5492fc22b54c1ea124f9d66d10ccaef",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-terraform_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:26:07.127980"
+  },
+  "packages/knowledge/adapters/typescript.py": {
+    "hash": "9356d32a599402f09de7b513080f979bae64821623b24dc2e9f8614e4b63c7f6",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-typescript.md"
+    ],
+    "timestamp": "2026-02-02T22:26:24.095550"
+  },
+  "packages/knowledge/adapters/yaml_adapter.py": {
+    "hash": "9005d910fabe6895fe8632f553933a415eb60b5aecc0259ab4dcd86f82609b1b",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-yaml_adapter.md"
+    ],
+    "timestamp": "2026-02-02T22:26:43.860132"
   },
   "packages/knowledge/config/config.json": {
     "hash": "20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde",
     "generatedFiles": [
       "packages/knowledge/docs/config-config.md"
     ],
-    "timestamp": "2026-02-01T19:27:27.118616"
+    "timestamp": "2026-02-02T22:26:57.986573"
   },
   "packages/knowledge/config/prompts.yml": {
-    "hash": "fa0450b4b022cb08c826f4a7a5d3d82f9e04c2559269e31a838da7444eedfee5",
+    "hash": "c809ab9a381397a3b92f80840e9ea06a056a6aab7b4a737819df290867ee5e0e",
     "generatedFiles": [
       "packages/knowledge/docs/config-prompts.md"
     ],
-    "timestamp": "2026-02-01T19:27:45.711768"
+    "timestamp": "2026-02-02T22:27:13.878236"
   },
   "packages/knowledge/drift/__init__.py": {
     "hash": "2c54a27cc8645bdde6f6560c610cbf582b16a04f024688af37bedfe171f1350d",
     "generatedFiles": [
       "packages/knowledge/docs/drift-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:27:56.113726"
+    "timestamp": "2026-02-02T22:27:26.080567"
   },
   "packages/knowledge/drift/detect_drift.py": {
     "hash": "dee44b64dd3a391ae28d74379a8cb4f62cf1733a64945e310fcbe0a6ce6a6ac2",
     "generatedFiles": [
       "packages/knowledge/docs/drift-detect_drift.md"
     ],
-    "timestamp": "2026-02-01T19:28:19.480022"
+    "timestamp": "2026-02-02T22:27:47.773060"
   },
   "packages/knowledge/embeddings/__init__.py": {
     "hash": "8155797cfbbac00bb501a46542405e653e9cc589aede51dfac27cdb69312dafd",
     "generatedFiles": [
       "packages/knowledge/docs/embeddings-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:28:30.449382"
+    "timestamp": "2026-02-02T22:28:00.241061"
   },
   "packages/knowledge/embeddings/gemini_embedding.py": {
-    "hash": "a0b56efa7a899a2d9e217b1e561575b4fc5fa0176d7c2575ebbb8eacc83645a3",
+    "hash": "f4e72660eea1301307f4dc67667b1a3510684cdde0de250c21941755d2af5edd",
     "generatedFiles": [
       "packages/knowledge/docs/embeddings-gemini_embedding.md"
     ],
-    "timestamp": "2026-02-01T19:28:50.830210"
+    "timestamp": "2026-02-02T22:28:15.410390"
   },
   "packages/knowledge/embeddings/gemma_12b_it_embedding.py": {
-    "hash": "3e3940290334fd2df5c0c9bce7d51d3fc5c9c6889f7b792208e3d1fdeec0ea93",
+    "hash": "28c50564436702b39df30e24786c2fda737063ba87335759ecdce2c2052b5426",
     "generatedFiles": [
       "packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md"
     ],
-    "timestamp": "2026-02-01T19:29:03.561462"
+    "timestamp": "2026-02-02T22:28:32.769360"
   },
   "packages/knowledge/embeddings/router_embedding.py": {
     "hash": "49a09ab49ded32a47ef1514aba557a72be4f60b26c06cb948ff12be0d674bc98",
     "generatedFiles": [
       "packages/knowledge/docs/embeddings-router_embedding.md"
     ],
-    "timestamp": "2026-02-01T19:29:19.049750"
+    "timestamp": "2026-02-02T22:28:51.872088"
   },
   "packages/knowledge/generation/__init__.py": {
     "hash": "4fcff7f0617c5e673481acc25676d74c85ee65b956a863970113434be6a9fc6b",
     "generatedFiles": [
       "packages/knowledge/docs/generation-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:29:32.113834"
-  },
-  "packages/knowledge/generation/adapters/__init__.py": {
-    "hash": "740ef35a544245639b934b1c3390a3673a1f66c6e9b876b1ed8854b5047abd96",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-__init__.md"
-    ],
-    "timestamp": "2026-02-01T19:29:45.052785"
-  },
-  "packages/knowledge/generation/adapters/apex_adapter.py": {
-    "hash": "7fd9d575b3ebb4b889c9e55dcb24940b5cc37ec212bc40d9dbb3868136103744",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-apex_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:30:02.928281"
-  },
-  "packages/knowledge/generation/adapters/base.py": {
-    "hash": "08dc52069e4b5afdbe50fa7d005e2706291f518aebe606d8763794075205d917",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-base.md"
-    ],
-    "timestamp": "2026-02-01T19:30:17.224908"
-  },
-  "packages/knowledge/generation/adapters/docker_adapter.py": {
-    "hash": "baf88548739965112f653460a79caab499eac6130e9bdca0e9984c296e006cd4",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-docker_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:30:35.069349"
-  },
-  "packages/knowledge/generation/adapters/go.py": {
-    "hash": "e352c93ef3e7fa4196bbc8dcd488f396a6f7ff1fd9edb8a91019e9a4c7ea986b",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-go.md"
-    ],
-    "timestamp": "2026-02-01T19:30:52.050039"
-  },
-  "packages/knowledge/generation/adapters/json_adapter.py": {
-    "hash": "51047741270ca1d311ab2b2ad45b14dbe6f1ad33eb711851b4a87c690b2cea1d",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-json_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:31:09.138892"
-  },
-  "packages/knowledge/generation/adapters/lwc_adapter.py": {
-    "hash": "46fc5ec245213835235f1563576f82635e9c7c77480f8813a58f700dc8574dba",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-lwc_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:31:27.648761"
-  },
-  "packages/knowledge/generation/adapters/python.py": {
-    "hash": "01f09935871c40b71b24ec76a18a51e62995920a97c119c08c60e789e00bf4cd",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-python.md"
-    ],
-    "timestamp": "2026-02-01T19:31:45.084292"
-  },
-  "packages/knowledge/generation/adapters/terraform_adapter.py": {
-    "hash": "34f8eb184d2b7e76a39b0b848459e812a805111c250f893d6e922c6e463b029d",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-terraform_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:32:02.159315"
-  },
-  "packages/knowledge/generation/adapters/typescript.py": {
-    "hash": "38edc897ad829164a4fa8e31f1d033c31f53ae2e1924bbe7f308e5d525489af4",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-typescript.md"
-    ],
-    "timestamp": "2026-02-01T19:32:20.758513"
-  },
-  "packages/knowledge/generation/adapters/yaml_adapter.py": {
-    "hash": "02479b1d1aa043a20a103d0efcc3bdbdb68628a7e2e1134784aada793175c79b",
-    "generatedFiles": [
-      "packages/knowledge/docs/adapters-yaml_adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:32:41.664407"
+    "timestamp": "2026-02-02T22:29:05.199855"
   },
   "packages/knowledge/generation/generator.py": {
-    "hash": "0a0ea08d2da4d3e70cf37f855e65aeb860ba654725e4f99d4fd6d8b26f988e1d",
+    "hash": "b16880e486085186d40b3361661a0b86b2a34dce17d3973969563b0100ae2400",
     "generatedFiles": [
       "packages/knowledge/docs/generation-generator.md"
     ],
-    "timestamp": "2026-02-01T19:33:09.549810"
+    "timestamp": "2026-02-02T22:29:24.374123"
   },
   "packages/knowledge/generation/validator.py": {
-    "hash": "0a70725cba5c908b3ccac480b5dd6d38c7ae6d4d055a98e638804d8adecc87d9",
+    "hash": "211f4ed3b51a8bef6cf2581464bd112fdbefc42ec04a9dd621375a587353962e",
     "generatedFiles": [
       "packages/knowledge/docs/generation-validator.md"
     ],
-    "timestamp": "2026-02-01T19:33:29.660504"
+    "timestamp": "2026-02-02T22:29:43.493675"
   },
   "packages/knowledge/ingestion/__init__.py": {
     "hash": "d3a838faa30164960ef819c10bdc23ee47ace81b5ea0591d289302fd6619fd4b",
     "generatedFiles": [
       "packages/knowledge/docs/ingestion-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:33:42.007585"
+    "timestamp": "2026-02-02T22:29:56.937732"
   },
   "packages/knowledge/ingestion/federated_loader.py": {
-    "hash": "16479342d05b9369478aa6657719d0de08cf932c3abacb79e515d7220a5e4e89",
+    "hash": "f661f42a2a0ba297001606a606746e5498fb799fe7172ea92b496ebfd91fa0db",
     "generatedFiles": [
       "packages/knowledge/docs/ingestion-federated_loader.md"
     ],
-    "timestamp": "2026-02-01T19:34:04.700105"
+    "timestamp": "2026-02-02T22:30:16.920630"
   },
   "packages/knowledge/ingestion/index_builder.py": {
-    "hash": "9c54c23a508d4b3fccdf0915b486a5525e52745057e432f05a5f2dd21d3dbe91",
+    "hash": "cb8e1618acbacd4601a48d063e8a72c6243fb85b0172581dda2ab8353f46f698",
     "generatedFiles": [
       "packages/knowledge/docs/ingestion-index_builder.md"
     ],
-    "timestamp": "2026-02-01T19:34:25.055610"
+    "timestamp": "2026-02-02T22:30:34.512221"
   },
   "packages/knowledge/llm/__init__.py": {
     "hash": "887834a896d4bd8152aeba02b2a09a7ee65baa0e959e31b4cdec8af3f0f455f9",
     "generatedFiles": [
       "packages/knowledge/docs/llm-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:34:42.320048"
+    "timestamp": "2026-02-02T22:30:55.198678"
   },
   "packages/knowledge/llm/client.py": {
-    "hash": "5c3004e9f42636ddf1fc589893d5cbcf16779f191ba71625688658e4b79db9f5",
+    "hash": "473c09a4e3a5d67b47cc170370f8d926e5f2acdaf9cda945edbe96e7665bb578",
     "generatedFiles": [
       "packages/knowledge/docs/llm-client.md"
     ],
-    "timestamp": "2026-02-01T19:35:10.865059"
+    "timestamp": "2026-02-02T22:31:19.191077"
   },
   "packages/knowledge/main.py": {
-    "hash": "11c84f152af5919603a1faa11b95ec8eb3bfd840332ca9614c74bddd3bec3cf6",
+    "hash": "0fd894863622081aa14243c7e23901027617e12b3e94fd4789761d43f303802a",
     "generatedFiles": [
       "packages/knowledge/docs/main.md"
     ],
-    "timestamp": "2026-02-01T19:35:34.648423"
+    "timestamp": "2026-02-02T22:31:43.286382"
   },
   "packages/knowledge/rag/__init__.py": {
     "hash": "dfb47fdaffdff34cc1b8b061b4662fcb1e7c7de005961dce082a670496c8b3a6",
     "generatedFiles": [
       "packages/knowledge/docs/rag-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:35:44.348661"
+    "timestamp": "2026-02-02T22:31:53.088458"
   },
   "packages/knowledge/rag/query_engine.py": {
     "hash": "09603013c88193d7faf419e2b18b13bf32b3d9de8e28c293f2d3e97f0923446f",
     "generatedFiles": [
       "packages/knowledge/docs/rag-query_engine.md"
     ],
-    "timestamp": "2026-02-01T19:36:02.496498"
+    "timestamp": "2026-02-02T22:32:08.602575"
+  },
+  "packages/knowledge/tests/conftest.py": {
+    "hash": "2358863aef65addf30885e4d903ce9a3e6d96ef6a1798802a6d1b16148952ba3",
+    "generatedFiles": [
+      "packages/knowledge/docs/tests-conftest.md"
+    ],
+    "timestamp": "2026-02-02T22:32:19.585658"
+  },
+  "packages/knowledge/tests/test_validator.py": {
+    "hash": "7bca9ccdc760ee3264d389580b867a46ba11ab0ff95ae0b47105233dc7cf7c8c",
+    "generatedFiles": [
+      "packages/knowledge/docs/tests-test_validator.md"
+    ],
+    "timestamp": "2026-02-02T22:32:34.075162"
   },
   "packages/knowledge/utils/__init__.py": {
     "hash": "30f89e90ce9df55dbb41c92df0cc93232e1f030ed051112539e18b45539a8f28",
     "generatedFiles": [
       "packages/knowledge/docs/utils-__init__.md"
     ],
-    "timestamp": "2026-02-01T19:36:23.771555"
+    "timestamp": "2026-02-02T22:32:47.178552"
   },
   "packages/knowledge/utils/batch.py": {
     "hash": "4e0afdbee506b9f550be76fdc05df4a7ff64247f715056fae1452dc7d7ce6480",
     "generatedFiles": [
       "packages/knowledge/docs/utils-batch.md"
     ],
-    "timestamp": "2026-02-01T19:36:38.388074"
+    "timestamp": "2026-02-02T22:33:02.303236"
   },
   "packages/knowledge/utils/file_hash.py": {
     "hash": "4fd926d74783d2277cebbeeda96818a84db13cb59f5f9cf35460845c88574aab",
     "generatedFiles": [
       "packages/knowledge/docs/utils-file_hash.md"
     ],
-    "timestamp": "2026-02-01T19:36:51.882375"
+    "timestamp": "2026-02-02T22:33:12.964459"
   },
   "packages/platform/sfdx-project.json": {
     "hash": "06f30cefba9ff14ee0e89759a269061d3ef6688ba2cfef642e806bc82c07207d",
     "generatedFiles": [
       "packages/platform/docs/sfdx-project.md"
     ],
-    "timestamp": "2026-02-01T19:37:09.230837"
+    "timestamp": "2026-02-02T22:33:29.949723"
   },
   "packages/runtime/action.yml": {
     "hash": "ec91c30a592eb0967662ac9901db54840aebc296fa1897a08af5535daa8d354e",
     "generatedFiles": [
       "packages/runtime/docs/action.md"
     ],
-    "timestamp": "2026-02-01T19:37:36.718600"
+    "timestamp": "2026-02-02T22:33:51.943251"
   },
   "packages/runtime/cmd/glassops/main.go": {
     "hash": "ac422471f6c7e21810341ed39d4c4ff3918cb8385a5cfd46e01e56a27a48cb0e",
     "generatedFiles": [
       "packages/runtime/docs/glassops-main.md"
     ],
-    "timestamp": "2026-02-01T19:37:59.901110"
+    "timestamp": "2026-02-02T22:34:10.210852"
   },
   "packages/runtime/Dockerfile": {
     "hash": "335afd8b950d1cbbdaa8c07079af1c61cb68b2480aa25df0e978ec233dcde8fd",
     "generatedFiles": [
       "packages/runtime/docs/Dockerfile.md"
     ],
-    "timestamp": "2026-02-01T19:38:24.443193"
+    "timestamp": "2026-02-02T22:34:30.267982"
   },
   "packages/runtime/internal/analyzer/analyzer.go": {
     "hash": "c5b6ac129f4af1b79959556a81e3ca2f45ebf910e463ec949a678191d18f0eea",
     "generatedFiles": [
       "packages/runtime/docs/analyzer-analyzer.md"
     ],
-    "timestamp": "2026-02-01T19:38:40.795014"
+    "timestamp": "2026-02-02T22:34:49.930199"
   },
   "packages/runtime/internal/analyzer/analyzer_test.go": {
     "hash": "94b6446da9b30d2741a9ad1f66da7ffbd5e662cc94eed56a6853fc4cda874adf",
     "generatedFiles": [
       "packages/runtime/docs/analyzer-analyzer_test.md"
     ],
-    "timestamp": "2026-02-01T19:39:01.369264"
+    "timestamp": "2026-02-02T22:35:04.183456"
   },
   "packages/runtime/internal/contract/contract.go": {
     "hash": "617e74d7d32ea1207809060db3935c860af6d30ba7cba135faede149ae063c59",
     "generatedFiles": [
       "packages/runtime/docs/contract-contract.md"
     ],
-    "timestamp": "2026-02-01T19:39:18.202986"
+    "timestamp": "2026-02-02T22:35:24.365457"
   },
   "packages/runtime/internal/contract/contract_test.go": {
     "hash": "3a35b367629b06cac4dba35c15628d04648cf4fb51ce53f91f0bdbdf0ae3e0d1",
     "generatedFiles": [
       "packages/runtime/docs/contract-contract_test.md"
     ],
-    "timestamp": "2026-02-01T19:39:37.216365"
+    "timestamp": "2026-02-02T22:35:40.515954"
   },
   "packages/runtime/internal/errors/errors.go": {
     "hash": "8d74b0b3de8008cf135ed510e21fe41f8422da3ed98dbdf964fe62fb5608c129",
     "generatedFiles": [
       "packages/runtime/docs/errors-errors.md"
     ],
-    "timestamp": "2026-02-01T19:39:59.295933"
+    "timestamp": "2026-02-02T22:36:00.066945"
   },
   "packages/runtime/internal/errors/errors_test.go": {
     "hash": "42983b4d752082e092e6310fbded062202a1677bca7087b44c5f8dc4d436d12c",
     "generatedFiles": [
       "packages/runtime/docs/errors-errors_test.md"
     ],
-    "timestamp": "2026-02-01T19:40:19.416714"
+    "timestamp": "2026-02-02T22:36:18.148516"
   },
   "packages/runtime/internal/gha/gha.go": {
     "hash": "eda50c569f48d9c3082b8b62388ee96fc7c75c3c418c698edbb6248843fc078d",
     "generatedFiles": [
       "packages/runtime/docs/gha-gha.md"
     ],
-    "timestamp": "2026-02-01T19:40:41.272538"
+    "timestamp": "2026-02-02T22:36:37.425883"
   },
   "packages/runtime/internal/gha/gha_test.go": {
     "hash": "78792b077f78dcf3f17aa320e2dd3e7fb2cc6d08b94f25a00d6add71f4b7b6b3",
     "generatedFiles": [
       "packages/runtime/docs/gha-gha_test.md"
     ],
-    "timestamp": "2026-02-01T19:41:00.142397"
+    "timestamp": "2026-02-02T22:36:53.274396"
   },
   "packages/runtime/internal/integration/contract_test.go": {
     "hash": "7ab1e02da31199caf92781e9d2d113b04fe958b0db1d429763f36d052718bce2",
     "generatedFiles": [
       "packages/runtime/docs/integration-contract_test.md"
     ],
-    "timestamp": "2026-02-01T19:41:15.129679"
+    "timestamp": "2026-02-02T22:37:09.658438"
   },
   "packages/runtime/internal/integration/helpers.go": {
     "hash": "e52dc4d6d6a8ca54108f60c771cbec995f0fbcd31ed3a63fa63e608e54b9e2fc",
     "generatedFiles": [
       "packages/runtime/docs/integration-helpers.md"
     ],
-    "timestamp": "2026-02-01T19:41:32.239381"
+    "timestamp": "2026-02-02T22:37:31.116145"
   },
   "packages/runtime/internal/integration/identity_test.go": {
     "hash": "28902c7ad4f9dd34f617b2e42846dddebe74fdf681c48ea5294e97c9712c2337",
     "generatedFiles": [
       "packages/runtime/docs/integration-identity_test.md"
     ],
-    "timestamp": "2026-02-01T19:41:48.906559"
+    "timestamp": "2026-02-02T22:37:48.630379"
   },
   "packages/runtime/internal/integration/policy_test.go": {
     "hash": "043050be51f99529cb2e5a145137b1818e025062b4529569289a697c01e2321b",
     "generatedFiles": [
       "packages/runtime/docs/integration-policy_test.md"
     ],
-    "timestamp": "2026-02-01T19:42:05.997531"
+    "timestamp": "2026-02-02T22:38:03.831384"
   },
   "packages/runtime/internal/permit/permit.go": {
     "hash": "8393641c9390699777e2e1d098f63abef81af3599ccd95e0f1c87d8411460877",
     "generatedFiles": [
       "packages/runtime/docs/permit-permit.md"
     ],
-    "timestamp": "2026-02-01T19:42:24.155230"
+    "timestamp": "2026-02-02T22:38:18.540294"
   },
   "packages/runtime/internal/permit/permit_test.go": {
     "hash": "2e501bf163588d77f411b1ab391472d9d99a3eccb2aa8c342f9af5e83467be11",
     "generatedFiles": [
       "packages/runtime/docs/permit-permit_test.md"
     ],
-    "timestamp": "2026-02-01T19:42:45.597859"
+    "timestamp": "2026-02-02T22:38:32.002893"
   },
   "packages/runtime/internal/policy/policy.go": {
     "hash": "8a1a02f4d3862565e4162e9128051a7cf16adfedea8d446cdb6684bf679de150",
     "generatedFiles": [
       "packages/runtime/docs/policy-policy.md"
     ],
-    "timestamp": "2026-02-01T19:43:05.092326"
+    "timestamp": "2026-02-02T22:38:52.066533"
   },
   "packages/runtime/internal/policy/policy_test.go": {
     "hash": "441ac8ad7b79a0cf34d3855a487021291d095753f60c207942d2646ead09cd39",
     "generatedFiles": [
       "packages/runtime/docs/policy-policy_test.md"
     ],
-    "timestamp": "2026-02-01T19:43:22.845463"
+    "timestamp": "2026-02-02T22:39:08.447631"
   },
   "packages/runtime/internal/services/cli.go": {
     "hash": "b06ac076539a447e81b40957baed5cb78a537cc0c24942ef4492e9599d05cba4",
     "generatedFiles": [
       "packages/runtime/docs/services-cli.md"
     ],
-    "timestamp": "2026-02-01T19:43:42.731067"
+    "timestamp": "2026-02-02T22:39:24.677012"
   },
   "packages/runtime/internal/services/cli_test.go": {
     "hash": "e859613bf4847845a7c5c5270e1cc5b769285ed0a9b1906dafc105891475149e",
     "generatedFiles": [
       "packages/runtime/docs/services-cli_test.md"
     ],
-    "timestamp": "2026-02-01T19:43:55.687054"
+    "timestamp": "2026-02-02T22:39:35.642331"
   },
   "packages/runtime/internal/services/health.go": {
     "hash": "dc0d532648eaba96338eac5b57315c16984bf5a279ba8dc55a8413c0a9c7fb2d",
     "generatedFiles": [
       "packages/runtime/docs/services-health.md"
     ],
-    "timestamp": "2026-02-01T19:44:09.442541"
+    "timestamp": "2026-02-02T22:39:50.641758"
   },
   "packages/runtime/internal/services/health_test.go": {
     "hash": "49b8eabef40f08009acba945fd26f33d9fd1f2d88b5e5f0855f246cb469cc3cc",
     "generatedFiles": [
       "packages/runtime/docs/services-health_test.md"
     ],
-    "timestamp": "2026-02-01T19:44:20.830275"
+    "timestamp": "2026-02-02T22:40:01.253673"
   },
   "packages/runtime/internal/services/identity.go": {
     "hash": "3940eb183960a36e834ef630b97962783208d0a0acd53fd5522e36dcb1c8a15d",
     "generatedFiles": [
       "packages/runtime/docs/services-identity.md"
     ],
-    "timestamp": "2026-02-01T19:44:42.255728"
+    "timestamp": "2026-02-02T22:40:19.612908"
   },
   "packages/runtime/internal/services/identity_test.go": {
     "hash": "8f19a02999fcfa09373e2168840341eb01b08e156dbef416583afe719ba4b9d4",
     "generatedFiles": [
       "packages/runtime/docs/services-identity_test.md"
     ],
-    "timestamp": "2026-02-01T19:44:55.648004"
+    "timestamp": "2026-02-02T22:40:34.078416"
   },
   "packages/runtime/internal/services/retry.go": {
     "hash": "e1d1e95b765287a86618a65e5ff3ad75f02277e048316a35ff564620915da90a",
     "generatedFiles": [
       "packages/runtime/docs/services-retry.md"
     ],
-    "timestamp": "2026-02-01T19:45:15.938244"
+    "timestamp": "2026-02-02T22:40:52.906514"
   },
   "packages/runtime/internal/services/retry_test.go": {
     "hash": "2d86655c452a0aa5f827ababbf9109c72bed0754675afeb768cf51979e2c8637",
     "generatedFiles": [
       "packages/runtime/docs/services-retry_test.md"
     ],
-    "timestamp": "2026-02-01T19:45:31.168614"
+    "timestamp": "2026-02-02T22:41:10.952666"
   },
   "packages/runtime/internal/telemetry/telemetry.go": {
     "hash": "de6e42c3e0bcb05f5d41072920cb61dfd827fe759cc2b3874316d72a2191e789",
     "generatedFiles": [
       "packages/runtime/docs/telemetry-telemetry.md"
     ],
-    "timestamp": "2026-02-01T19:45:51.571126"
+    "timestamp": "2026-02-02T22:41:28.963383"
   },
   "packages/runtime/internal/telemetry/telemetry_test.go": {
     "hash": "32936707e300d67e620fffac350f9a49781e0acc63fd0680f537f440505e41a0",
     "generatedFiles": [
       "packages/runtime/docs/telemetry-telemetry_test.md"
     ],
-    "timestamp": "2026-02-01T19:46:10.656469"
+    "timestamp": "2026-02-02T22:41:47.309332"
   },
   "packages/runtime/internal/validator/validator.go": {
     "hash": "acfd2f4925dc27469ace03cf98b76bba53c90a78319da04a39b51c0c967a7414",
     "generatedFiles": [
       "packages/runtime/docs/validator-validator.md"
     ],
-    "timestamp": "2026-02-01T19:46:29.140955"
+    "timestamp": "2026-02-02T22:42:04.817775"
   },
   "packages/runtime/internal/validator/validator_test.go": {
     "hash": "2d3fbc62460b29e97405286f3e89757482cdbf7d7e0ec9dc5732fb9b6b97caa8",
     "generatedFiles": [
       "packages/runtime/docs/validator-validator_test.md"
     ],
-    "timestamp": "2026-02-01T19:46:40.110344"
-  },
-  "packages/tools/agent/eslint.config.mjs": {
-    "hash": "642d832bd1e30cccfe62dd437a93aa9a78a6f926e506cf45c4ea171fe501209c",
-    "generatedFiles": [
-      "packages/tools/agent/docs/eslint.config.md"
-    ],
-    "timestamp": "2026-02-01T19:46:50.931097"
-  },
-  "packages/tools/agent/src/adapters/apex-adapter.ts": {
-    "hash": "bf5aa959825ccecf68ff871bcacc77fb8428a3e5e8906ab4e51a0b6bce76c81d",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-apex-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:47:11.453882"
-  },
-  "packages/tools/agent/src/adapters/docker-adapter.ts": {
-    "hash": "098372ed82eb7d58e32e7edba32f2300351a37a4344df625a5893b16e48fc3bc",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-docker-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:47:30.687467"
-  },
-  "packages/tools/agent/src/adapters/interface.ts": {
-    "hash": "f2768e9d45e206d7f00f3b4c1b4f1de47b4278b6f233c741457ec05cefe83842",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-interface.md"
-    ],
-    "timestamp": "2026-02-01T19:47:48.525417"
-  },
-  "packages/tools/agent/src/adapters/json-adapter.ts": {
-    "hash": "fbdff4a5a66631702c17a404f4b360020230038017433e82b6b0aa0f16ab50d2",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-json-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:48:05.411750"
-  },
-  "packages/tools/agent/src/adapters/lwc-adapter.ts": {
-    "hash": "b49e1c6a1867343593bd52f58aca9365ea3ee9aa67113aa6132a5a858aa83fb5",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-lwc-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:48:19.524761"
-  },
-  "packages/tools/agent/src/adapters/md-adapter.ts": {
-    "hash": "c380558624685ccdabe95319d4d78e9d78ca966fb01ed996dd0900ed50cce976",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-md-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:48:38.342280"
-  },
-  "packages/tools/agent/src/adapters/py-adapter.ts": {
-    "hash": "8d2e85d94103c29d72984c3f34046684fc1ec3b7c96954d4cc1e5cd60a1b7e5f",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-py-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:49:02.507350"
-  },
-  "packages/tools/agent/src/adapters/terraform-adapter.ts": {
-    "hash": "7c28ae755942fb80ed2efcfecf4b5ac58629d14bc12bba1935b1c59f82527957",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-terraform-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:49:22.762502"
-  },
-  "packages/tools/agent/src/adapters/ts-adapter.ts": {
-    "hash": "677402b4dbd30061884f6e58be907cc88b88aa6ec9b6239b698cf907d2e33ab3",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-ts-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:49:37.190755"
-  },
-  "packages/tools/agent/src/adapters/yml-adapter.ts": {
-    "hash": "ca031af7b7ed139863454c2b9d49b1bdcbfe1037cfe30ed64c73e2f9d88dd15a",
-    "generatedFiles": [
-      "packages/tools/agent/docs/adapters-yml-adapter.md"
-    ],
-    "timestamp": "2026-02-01T19:49:53.765782"
-  },
-  "packages/tools/agent/src/generator.ts": {
-    "hash": "7c69d26ea41989b22a3650371168dda792888bcdf63bb35cc47921f990776a6d",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-generator.md"
-    ],
-    "timestamp": "2026-02-01T19:50:14.557777"
-  },
-  "packages/tools/agent/src/index.ts": {
-    "hash": "eab86e8c516702845a7338f7e46e27a9f0d332309fbcd22b01d200c37c38bae5",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-index.md"
-    ],
-    "timestamp": "2026-02-01T19:50:32.395544"
-  },
-  "packages/tools/agent/src/llm-client.ts": {
-    "hash": "6936f5e724e055e48121feb3598ccbec69a7f115857cf8236e6897d4bc162ef2",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-llm-client.md"
-    ],
-    "timestamp": "2026-02-01T19:50:49.452251"
-  },
-  "packages/tools/agent/src/prompts.yml": {
-    "hash": "f15f01e56e84a848ffe263878ad181c1ded7b012e586901035152f6acb5572e9",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-prompts.md"
-    ],
-    "timestamp": "2026-02-01T19:51:05.420278"
-  },
-  "packages/tools/agent/src/scanner.ts": {
-    "hash": "e72d6c8da430da632f90e9e248c9596fa06da0de3f12d3731f0267728bbf3356",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-scanner.md"
-    ],
-    "timestamp": "2026-02-01T19:51:21.450536"
-  },
-  "packages/tools/agent/src/validator.ts": {
-    "hash": "16ed4cfc2c65069c38113989639e5896ce05a75ddd3ff8f3a87cefccf6974f0b",
-    "generatedFiles": [
-      "packages/tools/agent/docs/src-validator.md"
-    ],
-    "timestamp": "2026-02-01T19:51:37.422712"
+    "timestamp": "2026-02-02T22:42:18.491797"
   }
 }
