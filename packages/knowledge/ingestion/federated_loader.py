@@ -3,7 +3,9 @@
 
 import hashlib
 import glob
+import glob
 import os
+import re
 from typing import List, Dict
 
 def hash_content(text: str) -> str:
@@ -51,13 +53,24 @@ def discover_and_chunk_docs(root_dir: str = ".") -> List[Dict]:
             if not content.strip():
                 continue
 
+            # Parse Frontmatter
+            metadata = {}
+            match = re.search(r"^---\n(.*?)\n---", content, re.DOTALL)
+            if match:
+                import yaml
+                try:
+                    metadata = yaml.safe_load(match.group(1))
+                    # Remove frontmatter from content for chunking
+                    content = content[match.end():].strip()
+                except yaml.YAMLError as e:
+                    print(f"[WARNING] Failed to parse frontmatter for {path}: {e}")
+
             # Smart Chunking Strategy:
             # 1. Split by Level 2 headers (##) to keep context grouped
             # 2. If no Level 2 headers, try Level 1 (#)
             # 3. Fallback to whole file
             
             # Simple splitter logic
-            import re
             
             # Helper to split text by regex pattern but keep the delimiter
             def split_by_header(text, pattern):
@@ -88,12 +101,17 @@ def discover_and_chunk_docs(root_dir: str = ".") -> List[Dict]:
                 # e.g. path/to/file.md#chunk-0
                 chunk_id = f"{path}#chunk-{i}"
                 
-                docs.append({
+                doc_record = {
                     "path": chunk_id, # Store this so we know where it came from
                     "source_file": path, # Keep original path metadata
                     "content": chunk_text,
                     "hash": hash_content(chunk_text)
-                })
+                }
+                
+                # Merge frontmatter metadata
+                doc_record.update(metadata)
+                
+                docs.append(doc_record)
 
         except Exception as e:
             print(f"Warning: Could not read {path}: {e}")
