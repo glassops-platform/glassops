@@ -60,13 +60,19 @@ func New() *Engine {
 		configPathInput = "config/devops-config.json"
 	}
 
-	workspace := os.Getenv("GITHUB_WORKSPACE")
-	if workspace == "" {
-		workspace = "."
+	var configPath string
+	if filepath.IsAbs(configPathInput) {
+		configPath = configPathInput
+	} else {
+		workspace := os.Getenv("GITHUB_WORKSPACE")
+		if workspace == "" {
+			workspace = "."
+		}
+		configPath = filepath.Join(workspace, configPathInput)
 	}
 
 	return &Engine{
-		configPath: filepath.Join(workspace, configPathInput),
+		configPath: configPath,
 	}
 }
 
