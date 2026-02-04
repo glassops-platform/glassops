@@ -1,6 +1,10 @@
 # GlassOps™
 
-[![Docs](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
+[![Runtime Build & Test](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml)
+[![Docs Generation & Sync](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml)
+[![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
+[![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment)
+[![Docs Bot](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml)
 
 > **Governance-first Salesforce DevOps.**
 >
