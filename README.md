@@ -74,9 +74,9 @@ GlassOps never parses raw CLI output. It only reads a **Deployment Contract**.
 
 GlassOps works with multiple execution tools via adapters:
 
-- **GlassOps Native** — raw `sf` CLI (maximum transparency)
-- **GlassOps Hardis** — wraps `sfdx-hardis` (maximum velocity)
-- **Bring Your Own** — implement the adapter interface
+- **GlassOps Native**. Raw `sf` CLI. Maximum transparency.
+- **GlassOps Hardis**. Wraps `sfdx-hardis`. Maximum velocity.
+- **Bring Your Own**. Implement the adapter interface.
 
 Switch engines without rewriting governance.
 
@@ -166,8 +166,8 @@ GlassOps is intentionally modular. You don't need to adopt the whole platform to
 
 ## License
 
-- **Code:** Apache 2.0 — See [LICENSE](LICENSE)
-- **Documentation:** Creative Commons Attribution 4.0 International — See [LICENSE-DOCS](docs/LICENSE)
+- **Code:** Apache 2.0. See [LICENSE](LICENSE)
+- **Documentation:** Creative Commons Attribution 4.0 International. See [LICENSE-DOCS](docs/LICENSE)
 
 ---
 
