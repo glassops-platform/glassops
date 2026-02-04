@@ -51,6 +51,7 @@ jobs:
                   push: false
                   load: true
                   tags: glassops/runtime:test
+                  provenance: false
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 
@@ -95,7 +96,7 @@ jobs:
               working-directory: ${{ env.RUNTIME_DIR }}
               env:
                   GITHUB_WORKSPACE: ${{ github.workspace }}
-                  GLASSOPS_CONFIG_PATH: config/devops-config.json
+                  GLASSOPS_CONFIG_PATH: ${{ github.workspace }}/config/devops-config.json
               run: go test ./... -v -coverprofile=coverage.out
 
             - name: Upload Coverage
