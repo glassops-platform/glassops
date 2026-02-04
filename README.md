@@ -1,12 +1,16 @@
 # GlassOps™
 
-[![Docs](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
+[![Runtime Build & Test](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml)
+[![Docs Generation & Sync](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml)
+[![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
+[![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment)
+[![Docs Bot](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml)
 
 > **Governance-first Salesforce DevOps.**
 >
 > GlassOps governs outcomes, not implementations.
 
-GlassOps is an **open governance protocol** for Salesforce CI/CD. It enforces architectural and quality standards _before_ deployments execute — without locking teams into a specific tool or vendor.
+GlassOps is an **open governance protocol** for Salesforce CI/CD. It enforces architectural and quality standards _before_ deployments execute. No tool or vendor lock-in.
 
 ---
 
@@ -70,9 +74,9 @@ GlassOps never parses raw CLI output. It only reads a **Deployment Contract**.
 
 GlassOps works with multiple execution tools via adapters:
 
-- **GlassOps Native** — raw `sf` CLI (maximum transparency)
-- **GlassOps Hardis** — wraps `sfdx-hardis` (maximum velocity)
-- **Bring Your Own** — implement the adapter interface
+- **GlassOps Native**. Raw `sf` CLI. Maximum transparency.
+- **GlassOps Hardis**. Wraps `sfdx-hardis`. Maximum velocity.
+- **Bring Your Own**. Implement the adapter interface.
 
 Switch engines without rewriting governance.
 
@@ -122,7 +126,7 @@ GlassOps is designed for teams that:
 - Prefer **transparent systems over black boxes**
 - Think in **systems and contracts**
 
-If that's not you — that's okay. GlassOps is opinionated by design.
+If that's not you, that's okay. GlassOps is opinionated by design.
 
 ---
 
@@ -162,8 +166,8 @@ GlassOps is intentionally modular. You don't need to adopt the whole platform to
 
 ## License
 
-- **Code:** Apache 2.0 — See [LICENSE](LICENSE)
-- **Documentation:** Creative Commons Attribution 4.0 International — See [LICENSE-DOCS](docs/LICENSE)
+- **Code:** Apache 2.0. See [LICENSE](LICENSE)
+- **Documentation:** Creative Commons Attribution 4.0 International. See [LICENSE-DOCS](docs/LICENSE)
 
 ---
 
