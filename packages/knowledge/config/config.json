@@ -1,0 +1,25 @@
+{
+  "embedding_models": {
+    "primary": "gemini-embedding-1.0",
+    "fallback": "gemma-3-12b-it"
+  },
+  "vector_store": {
+    "type": "chroma",
+    "persist_dir": "glassops-index"
+  },
+  "federated_doc_paths": [
+    "docs/",
+    "packages/**/adr",
+    "packages/**/docs"
+  ],
+  "retrieval_triggers": {
+      "audit": "packages/knowledge/docs/generated/drift_report.md",
+      "backup": "packages/knowledge/docs/generated/drift_report.md",
+      "legacy": "packages/knowledge/docs/generated/drift_report.md",
+      "overlap": "packages/knowledge/docs/generated/drift_report.md",
+      "drift": "packages/knowledge/docs/generated/drift_report.md"
+  },
+  "batch_size": 10,
+  "drift_threshold": 0.85,
+  "system_context": "\nYou are an expert for the GlassOps platform.\nRepository Context:\n- `docs/`: Contains the current, authoritative documentation.\n- `docs_backup/`: Contains legacy or backup documentation. Content here may be outdated or duplicated.\n- `packages/knowledge/docs/generated/drift_report.md`: A system-generated report comparing `docs/` vs `docs_backup/` to identify duplicates.\n\nIf the user asks about \"overlap\", \"backup\", \"legacy\", or \"drift\", REFER to the information found in `drift_report.md` if it appears in the context.\nIf the drift report shows files are \"identical\", explain that to the user.\n"
+}

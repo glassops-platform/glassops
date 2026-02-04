@@ -1,0 +1,6 @@
+chromadb
+google-genai
+google-generativeai
+python-dotenv
+pyyaml
+pathspec
