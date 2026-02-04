@@ -45,7 +45,7 @@ jobs:
                       type=ref,event=pr
 
             - name: Build Docker Image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                   context: ${{ env.RUNTIME_DIR }}
                   push: false
@@ -94,6 +94,7 @@ jobs:
             - name: Run Go Tests
               working-directory: ${{ env.RUNTIME_DIR }}
               env:
+                  GITHUB_WORKSPACE: ${{ github.workspace }}
                   GLASSOPS_CONFIG_PATH: config/devops-config.json
               run: go test ./... -v -coverprofile=coverage.out
 
