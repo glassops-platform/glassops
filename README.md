@@ -10,7 +10,7 @@
 >
 > GlassOps governs outcomes, not implementations.
 
-GlassOps is an **open governance protocol** for Salesforce CI/CD. It enforces architectural and quality standards _before_ deployments execute — without locking teams into a specific tool or vendor.
+GlassOps is an **open governance protocol** for Salesforce CI/CD. It enforces architectural and quality standards _before_ deployments execute. No tool or vendor lock-in.
 
 ---
 
@@ -126,7 +126,7 @@ GlassOps is designed for teams that:
 - Prefer **transparent systems over black boxes**
 - Think in **systems and contracts**
 
-If that's not you — that's okay. GlassOps is opinionated by design.
+If that's not you, that's okay. GlassOps is opinionated by design.
 
 ---
 
