@@ -1,0 +1,44 @@
+name: Test Runtime (Integration)
+
+on:
+    workflow_dispatch:
+
+jobs:
+    test-local-action:
+        runs-on: ubuntu-latest
+        name: Test Local Runtime Action
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Run GlassOps Runtime (Local)
+              id: glassops
+              uses: ./packages/runtime
+              with:
+                  client_id: 'test-client-id'
+                  jwt_key: ${{ secrets.GLASSOPS_JWT_KEY_TEST }} # Mock or Empty for Skip Auth
+                  username: 'test@example.com'
+                  instance_url: 'https://login.salesforce.com'
+                  skip_auth: 'true'
+                  enforce_policy: 'true'
+                  # Mock inputs from adapters
+                  test_results: '{"total": 100, "passed": 100, "failed": 0}'
+                  coverage_percentage: '85'
+
+            - name: Verify Permit Generation
+              run: |
+                  if [ ! -f ".glassops/glassops-permit.json" ]; then
+                    echo "::error::Permit file not found at .glassops/glassops-permit.json"
+                    exit 1
+                  fi
+                  echo "Permit generated successfully"
+                  cat .glassops/glassops-permit.json
+
+            - name: Verify Contract Generation
+              run: |
+                  if [ ! -f ".glassops/glassops-contract.json" ]; then
+                    echo "::error::Contract file not found at .glassops/glassops-contract.json"
+                    exit 1
+                  fi
+                  echo "Contract generated successfully"
+                  cat .glassops/glassops-contract.json
