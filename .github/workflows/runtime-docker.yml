@@ -80,11 +80,16 @@ jobs:
               uses: actions/setup-go@v5
               with:
                   go-version: '1.25'
-                  cache-dependency-path: ${{ env.RUNTIME_DIR }}/go.sum
+                  cache-dependency-path: packages/runtime/go.sum
 
             - name: Run Go Vet
               working-directory: ${{ env.RUNTIME_DIR }}
               run: go vet ./...
+
+            - name: Create Test Config (Suppress Warnings)
+              run: |
+                  mkdir -p ${{ env.RUNTIME_DIR }}/config
+                  echo '{"governance":{"enabled":false}}' > ${{ env.RUNTIME_DIR }}/config/devops-config.json
 
             - name: Run Go Tests
               working-directory: ${{ env.RUNTIME_DIR }}
@@ -114,7 +119,7 @@ jobs:
                   output: 'trivy-results.sarif'
 
             - name: Upload Trivy Results
-              uses: github/codeql-action/upload-sarif@v3
+              uses: github/codeql-action/upload-sarif@v4
               with:
                   sarif_file: 'trivy-results.sarif'
 
@@ -194,7 +199,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: runtime-artifacts
-                  path: .glassops/
+                  path: .glassops/**
                   if-no-files-found: warn
 
     # publish:
