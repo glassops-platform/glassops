@@ -392,11 +392,11 @@
     "timestamp": "2026-02-02T22:37:48.630379"
   },
   "packages/runtime/internal/integration/policy_test.go": {
-    "hash": "043050be51f99529cb2e5a145137b1818e025062b4529569289a697c01e2321b",
+    "hash": "69ef7cdaad7b2601051764a37468519a12593e49e8dfc03c57560a7ae26e3061",
     "generatedFiles": [
       "packages/runtime/docs/integration-policy_test.md"
     ],
-    "timestamp": "2026-02-02T22:38:03.831384"
+    "timestamp": "2026-02-04T01:34:10.397757"
   },
   "packages/runtime/internal/permit/permit.go": {
     "hash": "8b4453576fd65b807d23f9aeca69c49444e73fd7a13404e19a50f2462a67a2c9",
@@ -413,18 +413,18 @@
     "timestamp": "2026-02-03T18:07:55.941767"
   },
   "packages/runtime/internal/policy/policy.go": {
-    "hash": "69a9c9d14eede75a910ad11f6529908cd08c13edbcad87dc2c2c6e9e471235f9",
+    "hash": "a2e69545b8af26d59f81e3a5adc1a62a6ff960bac5a6ff82e4ee07b1cb798125",
     "generatedFiles": [
       "packages/runtime/docs/policy-policy.md"
     ],
-    "timestamp": "2026-02-03T18:08:18.212677"
+    "timestamp": "2026-02-04T01:34:35.646820"
   },
   "packages/runtime/internal/policy/policy_test.go": {
-    "hash": "441ac8ad7b79a0cf34d3855a487021291d095753f60c207942d2646ead09cd39",
+    "hash": "a9cb94ab2fcf9819bfc11e411ffa8cc68281199ffdbea91af1173cd121a7885c",
     "generatedFiles": [
       "packages/runtime/docs/policy-policy_test.md"
     ],
-    "timestamp": "2026-02-02T22:39:08.447631"
+    "timestamp": "2026-02-04T01:35:08.022053"
   },
   "packages/runtime/internal/services/cli.go": {
     "hash": "b06ac076539a447e81b40957baed5cb78a537cc0c24942ef4492e9599d05cba4",

@@ -1,66 +1,52 @@
 ---
 type: Documentation
 domain: runtime
-last_modified: 2026-02-03
+last_modified: 2026-02-04
 generated: true
 source: packages/runtime/internal/policy/policy.go
-generated_at: 2026-02-03T18:08:18.210143
-hash: 69a9c9d14eede75a910ad11f6529908cd08c13edbcad87dc2c2c6e9e471235f9
+generated_at: 2026-02-04T01:34:35.646538
+hash: a2e69545b8af26d59f81e3a5adc1a62a6ff960bac5a6ff82e4ee07b1cb798125
 ---
 
-## Policy Engine Documentation
+## Governance Policy Engine Documentation
 
-This document describes the Policy Engine package, responsible for governing runtime behavior based on a configurable policy. It provides mechanisms for controlling deployments, validating plugins, and enforcing static analysis standards.
+This document describes the governance policy engine, responsible for managing and enforcing organizational policies related to deployments and runtime environments.
 
-### Package Responsibilities
+**Package Purpose:**
 
-The `policy` package handles:
+The `policy` package provides the functionality to load, validate, and apply governance rules. It controls aspects like deployment freeze windows, plugin whitelisting, and runtime environment constraints. This package aims to provide a centralized and configurable system for maintaining operational safety and compliance.
 
-- Loading governance policies from a JSON configuration file.
-- Validating the configuration for correctness.
-- Enforcing freeze windows to block deployments during specified times.
-- Managing a whitelist of allowed plugins and their version constraints.
-- Providing configuration data for runtime environments, such as CLI and Node versions.
+**Key Types and Interfaces:**
 
-### Key Types
+*   **`Config`**: The top-level structure representing the entire governance configuration. It contains `GovernanceConfig` and `RuntimeConfig`.
+*   **`GovernanceConfig`**: Holds settings related to governance rules, including enabling/disabling governance, defining freeze windows, and managing a plugin whitelist.
+*   **`RuntimeConfig`**: Stores runtime environment settings such as CLI and Node.js versions.
+*   **`FreezeWindow`**: Defines a specific time window (day and time range) during which deployments are prohibited.
+*   **`AnalyzerConfig`**: Configures static analysis settings, including enabling/disabling the analyzer, setting a severity threshold, and specifying rulesets.
+*   **`Engine`**: The core type that manages policy loading and enforcement. It encapsulates the configuration path.
 
-- **`Config`**: The top-level structure representing the complete governance configuration. It contains `GovernanceConfig` and `RuntimeConfig`.
-- **`GovernanceConfig`**: Holds settings related to governance, including enabling/disabling governance, defining freeze windows, specifying a plugin whitelist, and configuring static analysis.
-- **`FreezeWindow`**: Defines a period when deployments are prohibited. It includes the `Day` of the week, `Start` time, and `End` time.
-- **`AnalyzerConfig`**: Configures static analysis behavior, including enabling/disabling the analyzer, setting a severity threshold, and specifying rulesets.
-- **`RuntimeConfig`**: Stores runtime environment settings like `CLIVersion` and `NodeVersion`.
-- **`Engine`**:  The core type that manages policy loading and enforcement. It holds the path to the configuration file.
+**Important Functions:**
 
-### Important Functions
+*   **`New()`**: Creates a new `Engine` instance. It determines the configuration file path, prioritizing the `GLASSOPS_CONFIG_PATH` environment variable, falling back to a default location (`config/devops-config.json`). If the `GITHUB_WORKSPACE` environment variable is set, the path is resolved relative to that workspace.
+*   **`Load()`**: Reads the governance configuration from the configured file path. If the file does not exist, it returns a default configuration with governance disabled and sets default runtime versions. It handles JSON unmarshaling errors and validates the configuration data, including freeze window times and days. Default values are applied if certain runtime settings are missing.
+*   **`CheckFreeze()`**: Validates whether the current time falls within any defined freeze windows. If a match is found, it returns an error indicating that deployments are blocked.
+*   **`ValidatePluginWhitelist()`**: Checks if a given plugin name is present in the configured whitelist. If the whitelist is empty, all plugins are allowed.
+*   **`GetPluginVersionConstraint()`**: Retrieves the version constraint associated with a whitelisted plugin. Returns an empty string if the plugin is not whitelisted or no version constraint is specified.
+*   **`extractPluginName()`**: Helper function to extract the plugin name from a string that may include a version.
+*   **`extractVersionConstraint()`**: Helper function to extract the version constraint from a string that may include a plugin name.
 
-- **`New()`**: Creates a new `Engine` instance. It determines the configuration file path from the `GLASSOPS_CONFIG_PATH` environment variable, defaulting to `config/devops-config.json`. If the `GITHUB_WORKSPACE` environment variable is set, the path is relative to that workspace; otherwise, it's relative to the current directory.
-- **`Load()`**: Reads the governance configuration from the configured file path. If the file does not exist, it loads a default, unsafe policy with governance disabled. It parses the JSON data into a `Config` struct, applies default values for missing runtime settings, validates freeze window formats, and returns the configuration. Errors during file reading or JSON parsing are returned.
-- **`CheckFreeze(config *Config)`**: Checks if the current time falls within any defined freeze window in the provided configuration. If a freeze window is active, it returns an error indicating that deployments are blocked.
-- **`ValidatePluginWhitelist(config *Config, pluginName string)`**: Determines if a given plugin is allowed based on the configured whitelist. If the whitelist is empty, all plugins are allowed. It compares the provided `pluginName` against the whitelisted entries.
-- **`GetPluginVersionConstraint(config *Config, pluginName string)`**: Retrieves the version constraint for a given plugin from the whitelist, if it exists.
-- **`extractPluginName(entry string)`**: Extracts the plugin name from a string that may include version information (e.g., "@scope/package@1.0.0" returns "@scope/package").
-- **`extractVersionConstraint(entry string)`**: Extracts the version constraint from a string that may include version information (e.g., "@scope/package@1.0.0" returns "1.0.0").
+**Error Handling:**
 
-### Error Handling
+The package employs standard Go error handling practices. Functions return an error value alongside their primary return value. Errors are often wrapped using `fmt.Errorf` to provide context and preserve the original error. Specific error conditions, such as file not found or invalid JSON, are handled gracefully, often with informative error messages.
 
-The package employs standard Go error handling practices. Functions return an error value when operations fail, such as:
+**Concurrency:**
 
-- File not found during configuration loading.
-- Errors reading the configuration file.
-- Invalid JSON format in the configuration file.
-- Invalid data within the configuration (e.g., incorrect freeze window format).
-- Deployment blocked due to an active freeze window.
+This package is not inherently concurrent. The `Load()` function performs file I/O, which could be made concurrent with goroutines if performance becomes a concern, but the current implementation is single-threaded.
 
-Errors are often wrapped using `fmt.Errorf` with `%w` to preserve the original error context.
+**Design Decisions:**
 
-### Concurrency
-
-This package does not explicitly use goroutines or channels. Configuration loading is a synchronous operation.
-
-### Design Decisions
-
-- **Configuration File Path:** The configuration file path is configurable via the `GLASSOPS_CONFIG_PATH` environment variable, providing flexibility in deployment environments.
-- **Default Configuration:** A default, unsafe configuration is loaded if the configuration file is missing, allowing the system to function (albeit without governance) in the absence of a policy.
-- **Plugin Whitelisting:** The plugin whitelist provides a mechanism for controlling which plugins are permitted, enhancing security and stability. Version constraints can be specified alongside plugin names.
-- **Freeze Windows:** Freeze windows offer a way to prevent deployments during critical periods, such as peak usage times or scheduled maintenance.
-- **Validation:** Input validation is performed on freeze window data to ensure correctness and prevent unexpected behavior.
+*   **Configuration File Path:** The package supports both absolute and relative configuration file paths. The use of environment variables (`GLASSOPS_CONFIG_PATH`, `GITHUB_WORKSPACE`) allows for flexibility in different deployment environments.
+*   **Default Configuration:** A default configuration is provided when the configuration file is missing, ensuring that the system can operate even without explicit configuration. Governance is disabled by default in this scenario.
+*   **Whitelist Behavior:** An empty plugin whitelist allows all plugins, providing a simple way to disable whitelisting.
+*   **Time Validation:** Freeze window times are validated to ensure they are in the correct format (HH:MM).
+*   **Plugin Name Extraction:** The `extractPluginName` and `extractVersionConstraint` functions provide a robust way to parse plugin names and version constraints from strings, accommodating both scoped and unscoped packages.
