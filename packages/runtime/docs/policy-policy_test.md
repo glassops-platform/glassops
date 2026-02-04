@@ -1,45 +1,52 @@
 ---
 type: Documentation
 domain: runtime
-last_modified: 2026-02-02
+last_modified: 2026-02-04
 generated: true
 source: packages/runtime/internal/policy/policy_test.go
-generated_at: 2026-02-02T22:39:08.444515
-hash: 441ac8ad7b79a0cf34d3855a487021291d095753f60c207942d2646ead09cd39
+generated_at: 2026-02-04T01:35:08.021799
+hash: a9cb94ab2fcf9819bfc11e411ffa8cc68281199ffdbea91af1173cd121a7885c
 ---
 
 ## Policy Package Documentation
 
-This package defines the policy engine responsible for governing runtime behavior. It manages configuration loading, freeze window enforcement, and plugin whitelisting. The primary goal is to provide a mechanism for controlling when and how actions can be performed within the runtime environment.
+This package defines the policy engine responsible for governing runtime behavior. It handles configuration loading, freeze window enforcement, and plugin whitelisting. The primary goal is to provide a mechanism for controlling when and how operations can be performed, and which tools are permitted.
 
 **Key Types and Interfaces**
 
-*   **Config:** This structure holds the entire configuration loaded from a file or defaults. It contains `Governance` and `Runtime` fields.
-*   **GovernanceConfig:**  Embedded within `Config`, this structure defines governance-related settings, including whether governance is enabled, a list of freeze windows, and a whitelist of allowed plugins.
-*   **FreezeWindow:** Represents a time window during which certain operations are prohibited. It includes the `Day` of the week and the `Start` and `End` times.
-*   **Engine:** The central component of the policy package. It provides methods for loading the configuration, checking for freeze windows, and validating plugin whitelists.
+*   **Config:** This structure holds the entire configuration loaded from a JSON file or environment variables. It contains two main fields:
+    *   `Governance`:  A `GovernanceConfig` struct that manages governance-related settings.
+    *   `Runtime`: A struct managing runtime-specific settings like CLI and Node versions.
+*   **GovernanceConfig:**  This structure encapsulates governance settings, including:
+    *   `Enabled`: A boolean indicating whether governance is active.
+    *   `FreezeWindows`: A slice of `FreezeWindow` structs defining periods when operations are prohibited.
+    *   `PluginWhitelist`: A slice of strings representing allowed plugin names.
+*   **FreezeWindow:** This structure defines a specific freeze period with:
+    *   `Day`: The day of the week the freeze window applies to (e.g., "Friday").
+    *   `Start`: The start time of the freeze window in HH:MM format (e.g., "17:00").
+    *   `End`: The end time of the freeze window in HH:MM format (e.g., "23:59").
+*   **Engine:** This type represents the policy engine itself. It provides methods for loading the configuration, checking for freeze windows, and validating plugins.
 
 **Important Functions**
 
-*   **New(): Engine:**  This function creates and returns a new instance of the `Engine`. It initializes the engine with default settings.
-*   **Load(): (Config, error):** This method loads the configuration. It first checks for the `GLASSOPS_CONFIG_PATH` environment variable. If the variable is set, it attempts to load the configuration from the specified file. If the file does not exist or is invalid, it returns a default configuration.
-*   **CheckFreeze(config *Config): error:** This function checks if the current time falls within a defined freeze window. It iterates through the `FreezeWindows` in the provided `Config` and returns an error if a match is found. If no freeze windows are defined or the current time is outside of any window, it returns nil.
-*   **ValidatePluginWhitelist(config *Config, plugin string): bool:** This function checks if a given plugin is allowed based on the `PluginWhitelist` in the `Config`. If the whitelist is empty, all plugins are allowed. Otherwise, it checks if the plugin name exists in the whitelist.
-*   **GetPluginVersionConstraint(config *Config, plugin string): string:** This function retrieves the version constraint for a given plugin from the `PluginWhitelist`. It parses the plugin string (e.g., "sfdx-hardis@^4.0.0") and returns the version constraint (e.g., "^4.0.0"). If the plugin is not found in the whitelist or no version is specified, it returns an empty string.
-*   **extractPluginName(plugin string): string:** This helper function extracts the plugin name from a string that may include a version constraint.
-*   **extractVersionConstraint(plugin string): string:** This helper function extracts the version constraint from a string that may include a plugin name.
+*   **New(): Engine:** This function creates and returns a new instance of the `Engine`.
+*   **Load(): (*Config, error):** This function loads the configuration. It first checks for the `GLASSOPS_CONFIG_PATH` environment variable. If set, it attempts to read the configuration from the specified file. If the environment variable is not set, it attempts to load a default configuration.  It returns a pointer to the `Config` struct and an error if loading fails.
+*   **CheckFreeze(*Config): error:** This function checks if the current time falls within a defined freeze window. It iterates through the `FreezeWindows` in the configuration and returns an error if a match is found. If no freeze windows are defined or the current time is outside of any window, it returns nil.
+*   **ValidatePluginWhitelist(*Config, string): bool:** This function checks if a given plugin name is present in the `PluginWhitelist`. It returns `true` if the plugin is whitelisted or if the whitelist is empty (allowing all plugins), and `false` otherwise.
+*   **GetPluginVersionConstraint(*Config, string): string:** This function retrieves the version constraint for a given plugin from the `PluginWhitelist`. It parses the plugin name and version (if present) and returns the version constraint string. If the plugin is not found in the whitelist or no version is specified, it returns an empty string.
+*   **extractPluginName(string): string:** This helper function extracts the plugin name from a string that may include a version constraint (e.g., "sfdx-hardis@^4.0.0").
+*   **extractVersionConstraint(string): string:** This helper function extracts the version constraint from a string that may include a plugin name (e.g., "sfdx-hardis@^4.0.0").
 
 **Error Handling**
 
-The `Load()` function returns an error if it fails to load the configuration file.  `CheckFreeze()` returns an error if the current time falls within a freeze window. Other functions return boolean values to indicate success or failure, with errors being returned in specific cases.
+The package uses standard Go error handling patterns. Functions return an error value as the second return parameter.  The caller is responsible for checking the error value and handling it appropriately.  Errors typically indicate file I/O problems during configuration loading or issues with the configuration data itself.
 
 **Concurrency**
 
-This package does not explicitly use goroutines or channels. It is designed to be used in a single-threaded manner within the runtime environment.
+This package does not explicitly use goroutines or channels. It is designed to be used in a single-threaded manner.
 
 **Design Decisions**
 
-*   **Configuration Loading:** The package prioritizes loading from a configuration file specified by the `GLASSOPS_CONFIG_PATH` environment variable. If the file is not found, it falls back to a default configuration.
-*   **Plugin Whitelisting:** The package uses a simple string-based whitelist for plugins. The `GetPluginVersionConstraint` function allows for specifying version constraints for whitelisted plugins.
-*   **Freeze Windows:** Freeze windows are defined by day of the week and time ranges, providing a flexible way to restrict operations during specific periods.
-*   **Testability:** The package is designed with testability in mind, with clear separation of concerns and well-defined interfaces. The tests cover various scenarios, including loading default configurations, loading valid configurations, checking freeze windows, and validating plugin whitelists.
+*   **Configuration Loading:** The package supports loading configuration from a JSON file specified by the `GLASSOPS_CONFIG_PATH` environment variable. This allows for flexible configuration management.  Default values are applied if the configuration file is empty or missing.
+*   **Plugin Whitelisting:** The plugin whitelisting mechanism allows for controlling which plugins are permitted to run. The version constraint parsing provides a way to enforce specific plugin versions.
+*   **Freeze Windows:** The freeze window functionality provides a way to prevent operations during specific times, such as during critical maintenance periods.

@@ -1,50 +1,50 @@
 ---
 type: Documentation
 domain: runtime
-last_modified: 2026-02-02
+last_modified: 2026-02-04
 generated: true
 source: packages/runtime/internal/integration/policy_test.go
-generated_at: 2026-02-02T22:38:03.828335
-hash: 043050be51f99529cb2e5a145137b1818e025062b4529569289a697c01e2321b
+generated_at: 2026-02-04T01:34:10.397400
+hash: 69ef7cdaad7b2601051764a37468519a12593e49e8dfc03c57560a7ae26e3061
 ---
 
 ## Policy Integration Test Documentation
 
-This document describes the integration tests for the policy engine. These tests verify the engine’s ability to load configurations, validate plugin whitelists, and handle various scenarios including missing or invalid configuration files.
+This document describes the integration tests for the policy engine. These tests verify the correct behavior of the policy loading, validation, and application processes.
 
-**Package Responsibility:**
+**Package Purpose:**
 
-The `integration` package contains tests that exercise the `policy` package by simulating real-world scenarios. These tests ensure the policy engine functions correctly when interacting with configuration data and external factors.
+The `integration` package contains tests that exercise the policy engine with realistic configurations and scenarios. These tests ensure that the policy engine interacts correctly with its configuration and provides expected results.
 
 **Key Types and Interfaces:**
 
-- `policy.Engine`: This type, defined in the `policy` package, is the core component responsible for loading and interpreting policy configurations. It provides methods for loading the configuration and validating plugins.
-- `testEnv`: (Defined within the tests) This is a helper type used to manage a temporary workspace for testing. It allows writing configuration files, setting environment variables, and cleaning up resources after each test.
-- `map[string]interface{}`: Used extensively to represent the configuration data. This allows for flexible configuration structures.
+- `policy.Engine`: This type (defined in the `policy` package) represents the core policy engine. It is responsible for loading, validating, and applying policies.  We interact with it through its methods to test the configuration process.
+- `map[string]interface{}`: This is used extensively to represent the configuration data. It allows for flexible configuration structures.
 
 **Important Functions and Behavior:**
 
-- `SetupTestWorkspace(config map[string]interface{})`: This function creates a temporary workspace for each test. It accepts an optional configuration map to pre-populate the workspace with a configuration file.
-- `env.Cleanup()`: This function, called with `defer`, cleans up the temporary workspace after each test, removing any created files or directories.
-- `engine.Load()`: This function loads the policy configuration. It attempts to read the configuration from the file specified by the `GLASSOPS_CONFIG_PATH` environment variable. If the file is missing, it loads a default configuration. It returns a configuration object and an error if loading fails.
-- `engine.ValidatePluginWhitelist(config, pluginName string) bool`: This function checks if a given plugin is allowed based on the configured whitelist. It returns `true` if the plugin is whitelisted, and `false` otherwise.
-- `engine.GetPluginVersionConstraint(config, pluginName string) string`: This function retrieves the version constraint for a given plugin from the configuration.
-- `env.WriteConfig(config map[string]interface{})`: Writes the provided configuration to a JSON file in the test workspace.
-- `env.SetEnvironment(env map[string]string)`: Sets environment variables for the test process.
+- `TestPolicyIntegration`: This is the main test function, containing several sub-tests (using `t.Run`). It sets up a test workspace, loads configurations, and asserts expected behavior.
+- `SetupTestWorkspace(testConfig map[string]interface{})`: This function creates a temporary workspace for testing. It takes a configuration map as input and sets up the environment accordingly. It also handles cleanup after the test.
+- `engine.Load()`: This method of the `policy.Engine` loads the configuration from the test workspace and populates the internal policy state. It returns a configuration object and an error if loading fails.
+- `engine.ValidatePluginWhitelist(config, pluginName string) bool`: This method checks if a given plugin name is present in the configured whitelist. It returns `true` if the plugin is allowed, and `false` otherwise.
+- `engine.GetPluginVersionConstraint(config, pluginName string) string`: This method retrieves the version constraint for a given plugin from the configuration.
+
+**Test Cases:**
+
+1. **Loads default config when file has empty values:** This test verifies that when the configuration file contains empty values, the policy engine applies default values. Specifically, it checks that `Governance.Enabled` is `false` when the `governance` section of the configuration is empty.
+
+2. **Loads valid governance config:** This test validates that the policy engine correctly loads a valid configuration with governance enabled, freeze windows defined, and a plugin whitelist. It asserts that the loaded configuration matches the expected values.
+
+3. **Validates plugin whitelist:** This test checks the functionality of the plugin whitelist validation. It verifies that whitelisted plugins are allowed, non-whitelisted plugins are blocked, and scoped plugins are handled correctly.
+
+4. **Extracts version constraints:** This test confirms that the policy engine can correctly extract version constraints for plugins from the configuration. It checks that the correct constraints are returned for both regular and scoped plugins.
+
+5. **Rejects invalid config:** This test ensures that the policy engine handles invalid configuration data gracefully. It writes an invalid configuration (specifically, an invalid day in a freeze window) and verifies that the `Load()` method returns an error.
 
 **Error Handling:**
 
-The tests extensively check for errors returned by the `policy` package functions.  `t.Fatalf` is used to immediately stop a test if a critical error occurs (e.g., failing to set up the workspace or load the configuration).  Tests also verify that expected errors are returned when invalid configurations are provided.
+The tests extensively check for errors returned by the `SetupTestWorkspace` and `engine.Load()` functions.  If an error is encountered, the test immediately fails using `t.Fatalf` or `t.Error`. This ensures that any issues during configuration loading or validation are detected and reported.
 
 **Concurrency:**
 
-This code does not exhibit any explicit concurrency patterns (goroutines, channels). The tests are designed to run sequentially.
-
-**Notable Design Decisions:**
-
-- **Workspace Isolation:** Each test operates within its own isolated workspace, ensuring that tests do not interfere with each other.
-- **Configuration Flexibility:** The use of `map[string]interface{}` for configuration allows for a flexible and extensible configuration schema.
-- **Default Configuration:** The policy engine provides a default configuration when no configuration file is found, ensuring that the system has a reasonable fallback behavior.
-- **Plugin Whitelisting:** The plugin whitelisting feature enhances security by restricting the use of potentially malicious or unapproved plugins.
-- **Version Constraints:** The ability to specify version constraints for plugins allows for fine-grained control over the allowed plugin versions.
-- **Test Driven Approach:** The tests cover scenarios for missing configurations, valid configurations, invalid configurations, and plugin validation, demonstrating a thorough testing strategy.
+This test suite does not currently employ goroutines or channels, as the tests are focused on synchronous configuration loading and validation.
