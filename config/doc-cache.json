@@ -301,11 +301,11 @@
     "timestamp": "2026-02-02T22:33:51.943251"
   },
   "packages/runtime/cmd/glassops/main.go": {
-    "hash": "ac422471f6c7e21810341ed39d4c4ff3918cb8385a5cfd46e01e56a27a48cb0e",
+    "hash": "3e5f202f397336cce0a0b3fd539acc45f5da69d512f51ba1bbe34c3703c1923a",
     "generatedFiles": [
       "packages/runtime/docs/glassops-main.md"
     ],
-    "timestamp": "2026-02-02T22:34:10.210852"
+    "timestamp": "2026-02-03T18:06:57.415160"
   },
   "packages/runtime/Dockerfile": {
     "hash": "335afd8b950d1cbbdaa8c07079af1c61cb68b2480aa25df0e978ec233dcde8fd",
@@ -329,11 +329,11 @@
     "timestamp": "2026-02-02T22:35:04.183456"
   },
   "packages/runtime/internal/contract/contract.go": {
-    "hash": "617e74d7d32ea1207809060db3935c860af6d30ba7cba135faede149ae063c59",
+    "hash": "78d28f45ec51c0421025bba3fa29a952f8c6ded5d1bb950ca12f5b04e6d69bdb",
     "generatedFiles": [
       "packages/runtime/docs/contract-contract.md"
     ],
-    "timestamp": "2026-02-02T22:35:24.365457"
+    "timestamp": "2026-02-03T18:07:17.616304"
   },
   "packages/runtime/internal/contract/contract_test.go": {
     "hash": "3a35b367629b06cac4dba35c15628d04648cf4fb51ce53f91f0bdbdf0ae3e0d1",
@@ -399,25 +399,25 @@
     "timestamp": "2026-02-02T22:38:03.831384"
   },
   "packages/runtime/internal/permit/permit.go": {
-    "hash": "8393641c9390699777e2e1d098f63abef81af3599ccd95e0f1c87d8411460877",
+    "hash": "8b4453576fd65b807d23f9aeca69c49444e73fd7a13404e19a50f2462a67a2c9",
     "generatedFiles": [
       "packages/runtime/docs/permit-permit.md"
     ],
-    "timestamp": "2026-02-02T22:38:18.540294"
+    "timestamp": "2026-02-03T18:07:38.319373"
   },
   "packages/runtime/internal/permit/permit_test.go": {
-    "hash": "2e501bf163588d77f411b1ab391472d9d99a3eccb2aa8c342f9af5e83467be11",
+    "hash": "494997cfde68a132050998b1f0d8b336c707ad583d1514100f4e39074c5794d4",
     "generatedFiles": [
       "packages/runtime/docs/permit-permit_test.md"
     ],
-    "timestamp": "2026-02-02T22:38:32.002893"
+    "timestamp": "2026-02-03T18:07:55.941767"
   },
   "packages/runtime/internal/policy/policy.go": {
-    "hash": "8a1a02f4d3862565e4162e9128051a7cf16adfedea8d446cdb6684bf679de150",
+    "hash": "69a9c9d14eede75a910ad11f6529908cd08c13edbcad87dc2c2c6e9e471235f9",
     "generatedFiles": [
       "packages/runtime/docs/policy-policy.md"
     ],
-    "timestamp": "2026-02-02T22:38:52.066533"
+    "timestamp": "2026-02-03T18:08:18.212677"
   },
   "packages/runtime/internal/policy/policy_test.go": {
     "hash": "441ac8ad7b79a0cf34d3855a487021291d095753f60c207942d2646ead09cd39",
@@ -455,11 +455,11 @@
     "timestamp": "2026-02-02T22:40:01.253673"
   },
   "packages/runtime/internal/services/identity.go": {
-    "hash": "3940eb183960a36e834ef630b97962783208d0a0acd53fd5522e36dcb1c8a15d",
+    "hash": "9863a8874eea37845219620cdfa638d85ffbc79826a153f9950a5013b8567655",
     "generatedFiles": [
       "packages/runtime/docs/services-identity.md"
     ],
-    "timestamp": "2026-02-02T22:40:19.612908"
+    "timestamp": "2026-02-03T18:08:40.581395"
   },
   "packages/runtime/internal/services/identity_test.go": {
     "hash": "8f19a02999fcfa09373e2168840341eb01b08e156dbef416583afe719ba4b9d4",
@@ -497,11 +497,11 @@
     "timestamp": "2026-02-02T22:41:47.309332"
   },
   "packages/runtime/internal/validator/validator.go": {
-    "hash": "acfd2f4925dc27469ace03cf98b76bba53c90a78319da04a39b51c0c967a7414",
+    "hash": "e3a5585f431e1c633476fa878dcdfd1d3e92ef8e4a937f56b71cbae11dae2c8e",
     "generatedFiles": [
       "packages/runtime/docs/validator-validator.md"
     ],
-    "timestamp": "2026-02-02T22:42:04.817775"
+    "timestamp": "2026-02-03T18:09:02.890791"
   },
   "packages/runtime/internal/validator/validator_test.go": {
     "hash": "2d3fbc62460b29e97405286f3e89757482cdbf7d7e0ec9dc5732fb9b6b97caa8",

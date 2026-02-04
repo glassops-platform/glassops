@@ -36,6 +36,16 @@ func run(ctx context.Context) error {
 	}
 
 	// 2. Input Validation & Sanitization
+	// 0. Bootstrap: Load secrets from file if specified (Local Debugging Helper)
+	if keyFile := gha.GetInput("jwt_key_file"); keyFile != "" {
+		gha.Info(fmt.Sprintf("[Bootstrap] Loading JWT key from file: %s", keyFile))
+		keyContent, err := os.ReadFile(keyFile)
+		if err != nil {
+			return fmt.Errorf("failed to load JWT key file: %w", err)
+		}
+		os.Setenv("INPUT_JWT_KEY", string(keyContent))
+	}
+
 	if err := validator.ValidateInputs(); err != nil {
 		return err
 	}
@@ -74,19 +84,29 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("policy evaluation failed: %w", err)
 	}
 
+	evaluation := permit.PolicyEvaluation{
+		Allowed:   true,
+		Evaluated: []string{"FreezeCheck"},
+	}
+
 	// BR-003: Static Analysis Invariants
 	codeAnalyzer := analyzer.New()
+	evaluation.Evaluated = append(evaluation.Evaluated, "StaticAnalysis")
 	if err := codeAnalyzer.RunIfEnabled(config); err != nil {
+		evaluation.Allowed = false
+		evaluation.Violations = append(evaluation.Violations, err.Error())
 		return err
 	}
 
 	if gha.GetInput("enforce_policy") == "true" {
 		if err := policyEngine.CheckFreeze(config); err != nil {
+			evaluation.Allowed = false
+			evaluation.Violations = append(evaluation.Violations, err.Error())
 			gha.SetOutput("is_locked", "true")
 			return fmt.Errorf("policy violation: %w", err)
 		}
 		gha.SetOutput("is_locked", "false")
-		gha.Info("[Policy] ✅ Policy check passed - no freeze windows active")
+		gha.Info("[Policy] Policy check passed - no freeze windows active")
 	} else {
 		gha.SetOutput("is_locked", "false")
 		gha.Warning("[Policy] Policy enforcement disabled")
@@ -95,9 +115,15 @@ func run(ctx context.Context) error {
 	// 2. Identity Phase
 	gha.Info("[Identity] Authenticating with Salesforce...")
 	var orgID string
+	actor := permit.Identity{
+		Subject:    os.Getenv("GITHUB_ACTOR"),
+		Provider:   "github",
+		ProviderID: fmt.Sprintf("github:%s", os.Getenv("GITHUB_ACTOR")),
+		Verified:   false,
+	}
 
 	if gha.GetInput("skip_auth") == "true" {
-		gha.Warning("[Identity] ⚠️ Skipping authentication as requested by configuration")
+		gha.Warning("[Identity] Skipping authentication as requested by configuration")
 		orgID = "00D00000000TEST" // Dummy Org ID for testing
 	} else {
 		identity := services.NewIdentityResolver()
@@ -111,19 +137,23 @@ func run(ctx context.Context) error {
 			return fmt.Errorf("Salesforce authentication failed: %w", err)
 		}
 		orgID = authenticatedOrgID
-		gha.Info(fmt.Sprintf("[Identity] ✅ Authenticated with org %s", orgID))
+		actor.Subject = gha.GetInput("username")
+		actor.Provider = "salesforce"
+		actor.ProviderID = fmt.Sprintf("sf:%s", orgID)
+		actor.Verified = true
+		gha.Info(fmt.Sprintf("[Identity] Authenticated with org %s", orgID))
 	}
 
 	// 3. Context Handoff (Permit Generation)
-	gha.Info("[Context] 🎫 Generating GlassOps Permit...")
-	permitPath, err := permit.Generate(runtimeID, orgID, config, instanceURL)
+	gha.Info("[Context] Generating GlassOps Permit...")
+	permitPath, err := permit.Generate(runtimeID, actor, evaluation, instanceURL)
 	if err != nil {
 		return err
 	}
-	gha.Info(fmt.Sprintf("[Context] ✅ Permit written to %s", permitPath))
+	gha.Info(fmt.Sprintf("[Context] Permit written to %s", permitPath))
 
 	// 4. Contract Validation Phase
-	gha.Info("[Contract] 📄 Generating Deployment Contract v1.0...")
+	gha.Info("[Contract] Generating Deployment Contract v1.0...")
 
 	contractPath, err := contract.Generate(orgID)
 	if err != nil {
@@ -131,12 +161,12 @@ func run(ctx context.Context) error {
 	}
 
 	gha.SetOutput("contract_path", contractPath)
-	gha.Info(fmt.Sprintf("[Contract] ✅ Contract written to %s", contractPath))
+	gha.Info(fmt.Sprintf("[Contract] Contract written to %s", contractPath))
 
 	// 5. Output Session State
 	gha.SetOutput("org_id", orgID)
 	gha.SetOutput("glassops_ready", "true")
-	gha.Info("✅ GlassOps Runtime is ready for governed execution.")
+	gha.Info("GlassOps Runtime is ready for governed execution.")
 
 	return nil
 }

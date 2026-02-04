@@ -21,9 +21,9 @@ type Config struct {
 
 // GovernanceConfig contains governance-specific settings.
 type GovernanceConfig struct {
-	Enabled         bool           `json:"enabled"`
-	FreezeWindows   []FreezeWindow `json:"freeze_windows,omitempty"`
-	PluginWhitelist []string       `json:"plugin_whitelist,omitempty"`
+	Enabled         bool            `json:"enabled"`
+	FreezeWindows   []FreezeWindow  `json:"freeze_windows,omitempty"`
+	PluginWhitelist []string        `json:"plugin_whitelist,omitempty"`
 	Analyzer        *AnalyzerConfig `json:"analyzer,omitempty"`
 }
 
@@ -60,20 +60,26 @@ func New() *Engine {
 		configPathInput = "config/devops-config.json"
 	}
 
-	workspace := os.Getenv("GITHUB_WORKSPACE")
-	if workspace == "" {
-		workspace = "."
+	var configPath string
+	if filepath.IsAbs(configPathInput) {
+		configPath = configPathInput
+	} else {
+		workspace := os.Getenv("GITHUB_WORKSPACE")
+		if workspace == "" {
+			workspace = "."
+		}
+		configPath = filepath.Join(workspace, configPathInput)
 	}
 
 	return &Engine{
-		configPath: filepath.Join(workspace, configPathInput),
+		configPath: configPath,
 	}
 }
 
 // Load reads and parses the governance configuration.
 func (e *Engine) Load() (*Config, error) {
 	if _, err := os.Stat(e.configPath); os.IsNotExist(err) {
-		gha.Warning("⚠️ No devops-config.json found. Using default unsafe policy.")
+		gha.Warning("No devops-config.json found. Using default unsafe policy.")
 		return &Config{
 			Governance: GovernanceConfig{Enabled: false},
 			Runtime: RuntimeConfig{
@@ -90,7 +96,7 @@ func (e *Engine) Load() (*Config, error) {
 
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("❌ Invalid Governance Policy: %w", err)
+		return nil, fmt.Errorf("Invalid Governance Policy: %w", err)
 	}
 
 	// Apply defaults
@@ -139,7 +145,7 @@ func (e *Engine) CheckFreeze(config *Config) error {
 		if window.Day == currentDay &&
 			currentTime >= window.Start &&
 			currentTime <= window.End {
-			return fmt.Errorf("❄️ FROZEN: Deployment blocked by governance window (%s %s-%s)",
+			return fmt.Errorf("FROZEN: Deployment blocked by governance window (%s %s-%s)",
 				window.Day, window.Start, window.End)
 		}
 	}

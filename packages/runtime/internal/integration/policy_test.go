@@ -11,17 +11,19 @@ func TestPolicyIntegration(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	t.Run("loads default config when file missing", func(t *testing.T) {
-		env, err := SetupTestWorkspace(nil)
+	t.Run("loads default config when file has empty values", func(t *testing.T) {
+		// Test that defaults are applied when config has empty values
+		testConfig := map[string]interface{}{
+			"governance": map[string]interface{}{},
+			"runtime":    map[string]interface{}{},
+		}
+
+		env, err := SetupTestWorkspace(testConfig)
 		if err != nil {
 			t.Fatalf("failed to setup workspace: %v", err)
 		}
 		defer env.Cleanup()
-
-		// Remove the config file to test default behavior
-		env.SetEnvironment(map[string]string{
-			"GLASSOPS_CONFIG_PATH": "nonexistent/config.json",
-		})
+		env.SetEnvironment(nil)
 
 		engine := policy.New()
 		config, err := engine.Load()
@@ -30,7 +32,7 @@ func TestPolicyIntegration(t *testing.T) {
 		}
 
 		if config.Governance.Enabled {
-			t.Error("expected governance to be disabled for missing config")
+			t.Error("expected governance to be disabled for empty config")
 		}
 	})
 

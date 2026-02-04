@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
-
-	"github.com/glassops-platform/glassops/packages/runtime/internal/policy"
 )
 
 func TestGenerate(t *testing.T) {
@@ -23,13 +21,21 @@ func TestGenerate(t *testing.T) {
 		os.Unsetenv("GITHUB_SHA")
 	}()
 
-	config := &policy.Config{}
+	actor := Identity{
+		Subject:    "test-actor",
+		Provider:   "github",
+		ProviderID: "github:test-actor",
+		Verified:   true,
+	}
+	evaluation := PolicyEvaluation{
+		Allowed:   true,
+		Evaluated: []string{"FreezeCheck"},
+	}
 	runtimeID := "test-runtime-id"
-	orgID := "test-org-id"
 	instanceURL := "https://test.salesforce.com"
 
 	// Execute
-	path, err := Generate(runtimeID, orgID, config, instanceURL)
+	path, err := Generate(runtimeID, actor, evaluation, instanceURL)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
@@ -50,14 +56,14 @@ func TestGenerate(t *testing.T) {
 		t.Errorf("Failed to unmarshal permit: %v", err)
 	}
 
-	if p.RuntimeID != runtimeID {
-		t.Errorf("RuntimeID = %s, want %s", p.RuntimeID, runtimeID)
+	if p.PermitID != runtimeID {
+		t.Errorf("PermitID = %s, want %s", p.PermitID, runtimeID)
 	}
-	if p.OrgID != orgID {
-		t.Errorf("OrgID = %s, want %s", p.OrgID, orgID)
+	if p.Actor.Subject != "test-actor" {
+		t.Errorf("Actor.Subject = %s, want test-actor", p.Actor.Subject)
 	}
-	if p.Context["actor"] != "test-actor" {
-		t.Errorf("Context.Actor = %s, want test-actor", p.Context["actor"])
+	if p.Policies.Allowed != true {
+		t.Errorf("Policies.Allowed = %v, want true", p.Policies.Allowed)
 	}
 	if p.Inputs["instance_url"] != instanceURL {
 		t.Errorf("Inputs.InstanceURL = %s, want %s", p.Inputs["instance_url"], instanceURL)

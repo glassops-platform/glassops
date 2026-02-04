@@ -45,8 +45,11 @@ func ValidateInputs() error {
 	// Validate JWT key format (skip if skip_auth is true)
 	jwtKey := gha.GetInput("jwt_key")
 	if gha.GetInput("skip_auth") != "true" {
-		if !strings.Contains(jwtKey, "BEGIN") || !strings.Contains(jwtKey, "END") {
-			return fmt.Errorf("invalid JWT key format - must contain BEGIN and END markers")
+		if !strings.Contains(jwtKey, "BEGIN") {
+			return fmt.Errorf("invalid JWT key: missing 'BEGIN' marker (received length: %d)", len(jwtKey))
+		}
+		if !strings.Contains(jwtKey, "END") {
+			return fmt.Errorf("invalid JWT key: missing 'END' marker (received length: %d)", len(jwtKey))
 		}
 	}
 	if jwtKey != "" {

@@ -31,12 +31,16 @@ func NewIdentityResolver() *IdentityResolver {
 
 // Authenticate performs JWT-based authentication with Salesforce.
 func (i *IdentityResolver) Authenticate(req AuthRequest) (string, error) {
-	gha.StartGroup("🔑 Authenticating Identity")
+	gha.StartGroup("Authenticating Identity")
 	defer gha.EndGroup()
+
+	// 1. Sanitize JWT Key (handle environment variable escaping)
+	// Replace literal "\n" with real newlines if they exist
+	jwtKey := strings.ReplaceAll(req.JWTKey, `\n`, "\n")
 
 	// Write JWT key to temp file with secure permissions
 	keyPath := filepath.Join(os.TempDir(), fmt.Sprintf("glassops-jwt-%d.key", time.Now().UnixNano()))
-	if err := os.WriteFile(keyPath, []byte(req.JWTKey), 0600); err != nil {
+	if err := os.WriteFile(keyPath, []byte(jwtKey), 0600); err != nil {
 		return "", fmt.Errorf("failed to write JWT key: %w", err)
 	}
 
@@ -68,17 +72,31 @@ func (i *IdentityResolver) Authenticate(req AuthRequest) (string, error) {
 	var lastErr error
 	for attempt := 0; attempt < 3; attempt++ {
 		cmd := exec.Command("sf", args...)
+
+		// Capture stderr for debugging
+		var stderr strings.Builder
+		cmd.Stderr = &stderr
+
 		var err error
 		output, err = cmd.Output()
 		if err == nil {
 			break
 		}
-		lastErr = err
+
+		lastErr = fmt.Errorf("%w (stderr: %s)", err, stderr.String())
+
+		// Don't retry if it's a configuration error (e.g. invalid grant)
+		if strings.Contains(stderr.String(), "error") || strings.Contains(stderr.String(), "invalid") {
+			break
+		}
+
 		time.Sleep(time.Duration(2000*(1<<attempt)) * time.Millisecond)
 	}
 
 	if lastErr != nil {
-		return "", fmt.Errorf("❌ Authentication Failed. Check Client ID and JWT Key")
+		// Log the detailed error from sf
+		gha.Error(fmt.Sprintf("Salesforce CLI Error: %v", lastErr))
+		return "", fmt.Errorf("authentication failed")
 	}
 
 	var result struct {
@@ -92,7 +110,7 @@ func (i *IdentityResolver) Authenticate(req AuthRequest) (string, error) {
 		return "", fmt.Errorf("failed to parse authentication response: %w", err)
 	}
 
-	gha.Info(fmt.Sprintf("✅ Authenticated as %s (%s)", req.Username, result.Result.OrgID))
+	gha.Info(fmt.Sprintf("Authenticated as %s (%s)", req.Username, result.Result.OrgID))
 	return result.Result.OrgID, nil
 }
 

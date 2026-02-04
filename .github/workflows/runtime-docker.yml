@@ -45,7 +45,7 @@ jobs:
                       type=ref,event=pr
 
             - name: Build Docker Image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                   context: ${{ env.RUNTIME_DIR }}
                   push: false
@@ -58,12 +58,15 @@ jobs:
               run: |
                   docker run --rm \
                     -e GITHUB_WORKSPACE=/workspace \
-                    -e GITHUB_ACTOR=test-user \
-                    -e GITHUB_REPOSITORY=test-org/test-repo \
-                    -e GLASSOPS_SKIP_AUTH=true \
-                    -e GLASSOPS_ENFORCE_POLICY=false \
+                    -e GITHUB_ACTOR=${{ github.actor }} \
+                    -e GITHUB_REPOSITORY=${{ github.repository }} \
+                    -e INPUT_JWT_KEY="${{ secrets.SF_JWT_KEY }}" \
+                    -e INPUT_CLIENT_ID="${{ secrets.SF_CLIENT_ID }}" \
+                    -e INPUT_USERNAME="${{ vars.SF_USERNAME }}" \
+                    -e GLASSOPS_SKIP_AUTH=false \
+                    -e GLASSOPS_ENFORCE_POLICY=true \
                     -v $(pwd):/workspace \
-                    glassops/runtime:test || echo "Container exited (expected without full config)"
+                    glassops/runtime:test
 
     test:
         name: Go Unit Tests & Linting
@@ -77,14 +80,22 @@ jobs:
               uses: actions/setup-go@v5
               with:
                   go-version: '1.25'
-                  cache-dependency-path: ${{ env.RUNTIME_DIR }}/go.sum
+                  cache-dependency-path: ${{ github.workspace }}/packages/runtime/go.sum
 
             - name: Run Go Vet
               working-directory: ${{ env.RUNTIME_DIR }}
               run: go vet ./...
 
+            - name: Create Test Config (Suppress Warnings)
+              run: |
+                  mkdir -p config
+                  echo '{"governance":{"enabled":false}}' > config/devops-config.json
+
             - name: Run Go Tests
               working-directory: ${{ env.RUNTIME_DIR }}
+              env:
+                  GITHUB_WORKSPACE: ${{ github.workspace }}
+                  GLASSOPS_CONFIG_PATH: config/devops-config.json
               run: go test ./... -v -coverprofile=coverage.out
 
             - name: Upload Coverage
@@ -103,7 +114,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Run Trivy Vulnerability Scanner
-              uses: aquasecurity/trivy-action@master
+              uses: aquasecurity/trivy-action@0.29.0
               with:
                   scan-type: 'fs'
                   scan-ref: ${{ env.RUNTIME_DIR }}
@@ -111,7 +122,7 @@ jobs:
                   output: 'trivy-results.sarif'
 
             - name: Upload Trivy Results
-              uses: github/codeql-action/upload-sarif@v3
+              uses: github/codeql-action/upload-sarif@v4
               with:
                   sarif_file: 'trivy-results.sarif'
 
@@ -119,6 +130,7 @@ jobs:
               uses: actions/setup-go@v5
               with:
                   go-version: '1.25'
+                  cache-dependency-path: ${{ github.workspace }}/packages/runtime/go.sum
 
             - name: Run Go Vulnerability Check
               working-directory: ${{ env.RUNTIME_DIR }}
@@ -151,29 +163,49 @@ jobs:
                   }
                   EOF
 
-            - name: Test Action (Skip Auth)
+            - name: Run Runtime Action (Authenticated)
               id: glassops
               uses: ./packages/runtime
               with:
-                  jwt_key: 'dummy-key-for-test'
-                  client_id: 'dummy-client'
-                  username: 'test@example.com'
-                  skip_auth: 'true'
-                  enforce_policy: 'false'
+                  jwt_key: ${{ secrets.SF_JWT_KEY }}
+                  client_id: ${{ secrets.SF_CLIENT_ID }}
+                  username: ${{ vars.SF_USERNAME }}
+                  skip_auth: 'false'
+                  enforce_policy: 'true'
 
             - name: Verify Outputs
               run: |
-                  echo "## 🧪 Integration Test Results" >> $GITHUB_STEP_SUMMARY
+                  echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
                   echo "| Output | Value |" >> $GITHUB_STEP_SUMMARY
                   echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
                   echo "| runtime_id | ${{ steps.glassops.outputs.runtime_id }} |" >> $GITHUB_STEP_SUMMARY
                   echo "| glassops_ready | ${{ steps.glassops.outputs.glassops_ready }} |" >> $GITHUB_STEP_SUMMARY
 
                   if [ "${{ steps.glassops.outputs.glassops_ready }}" != "true" ]; then
-                    echo "❌ GlassOps did not report ready state"
+                    echo "GlassOps did not report ready state"
                     exit 1
                   fi
-                  echo "✅ Integration test passed"
+
+                  # New: Verify V1 Artifact Generation
+                  if [ ! -f ".glassops/glassops-permit.json" ]; then
+                    echo "Missing Permit Artifact"
+                    exit 1
+                  fi
+                  if [ ! -f ".glassops/glassops-contract.json" ]; then
+                    echo "Missing Contract Artifact"
+                    exit 1
+                  fi
+
+                  echo "Integration test passed (Artifacts Verified)"
+
+            - name: Upload Runtime Artifacts
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: runtime-artifacts
+                  path: .glassops/
+                  include-hidden-files: true
+                  if-no-files-found: warn
 
     # publish:
     #     name: Publish Docker Image

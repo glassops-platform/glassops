@@ -1,52 +1,54 @@
 ---
 type: Documentation
 domain: runtime
-last_modified: 2026-02-02
+last_modified: 2026-02-03
 generated: true
 source: packages/runtime/internal/permit/permit_test.go
-generated_at: 2026-02-02T22:38:31.998460
-hash: 2e501bf163588d77f411b1ab391472d9d99a3eccb2aa8c342f9af5e83467be11
+generated_at: 2026-02-03T18:07:55.937582
+hash: 494997cfde68a132050998b1f0d8b336c707ad583d1514100f4e39074c5794d4
 ---
 
 ## Permit Package Documentation
 
-This package is responsible for generating permit files. These files contain runtime information, organizational details, and contextual data needed for secure operations. The primary function of this package is to create a JSON-formatted permit based on provided inputs and environment variables.
+This package is responsible for generating permit files. These files represent authorization decisions made at runtime, containing information about the actor requesting access, the policies evaluated, and relevant contextual inputs. The permits are designed to be used by downstream systems to enforce access control.
 
-**Key Types**
+**Key Types:**
 
-*   `Permit`: This is the central data structure. It’s a JSON-serializable type that holds the runtime ID, organization ID, a context map for environment-specific information, and an inputs map for configuration details.  The structure is defined elsewhere in the codebase and is not explicitly shown in this file.
+*   `Identity`: Represents the authenticated user or service account. It includes:
+    *   `Subject`: A human-readable identifier for the actor (e.g., username, service account name).
+    *   `Provider`: The authentication provider (e.g., "github").
+    *   `ProviderID`: A unique identifier assigned by the provider.
+    *   `Verified`: A boolean indicating if the identity has been verified.
+*   `PolicyEvaluation`: Represents the result of evaluating policies against an actor. It includes:
+    *   `Allowed`: A boolean indicating whether access is granted.
+    *   `Evaluated`: A slice of strings representing the names of the policies that were evaluated.
+*   `Permit`: Represents the generated permit file. It contains:
+    *   `PermitID`: A unique identifier for the permit, often corresponding to the runtime identifier.
+    *   `Actor`: The `Identity` of the actor the permit applies to.
+    *   `Policies`: The `PolicyEvaluation` result.
+    *   `Inputs`: A map of string keys to string values, holding contextual information relevant to the permit (e.g., instance URL).
 
-**Functions**
+**Important Functions:**
 
-*   `Generate(runtimeID string, orgID string, config *policy.Config, instanceURL string) (string, error)`: This function creates a permit file.
-    *   `runtimeID`: A string identifying the runtime environment.
-    *   `orgID`: A string identifying the organization.
-    *   `config`: A pointer to a `policy.Config` struct (defined in the `policy` package). This parameter is currently unused in the provided code.
-    *   `instanceURL`: A string representing the instance URL.
-    *   Return values:
-        *   A string representing the file path of the generated permit.
-        *   An error if the permit generation fails.
+*   `Generate(runtimeID string, actor Identity, evaluation PolicyEvaluation, instanceURL string) (string, error)`: This function generates a permit file.
+    *   It takes the runtime identifier, actor information, policy evaluation result, and instance URL as input.
+    *   It creates a `Permit` object populated with the provided data.
+    *   It serializes the `Permit` object to JSON.
+    *   It writes the JSON data to a file. The filename is derived from the `runtimeID`.
+    *   It returns the path to the generated permit file and an error if any occurred during the process.
 
-    The function leverages environment variables (`GITHUB_WORKSPACE`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_SHA`) to populate the permit's context. It constructs a `Permit` object, marshals it to JSON, and writes the JSON data to a file within the `GITHUB_WORKSPACE` directory.
+**Error Handling:**
 
-**Error Handling**
+The `Generate` function returns an error value. Common errors include:
 
-The `Generate` function returns an error value. The test case checks for errors during file creation, file reading, and JSON unmarshaling.  Specific errors handled include file not found errors when verifying the permit file's existence and errors during JSON parsing.
+*   Errors during JSON serialization.
+*   Errors during file creation or writing.
 
-**Testing**
+The test suite verifies that errors are handled correctly and that the expected files are created with the correct content.
 
-The `TestGenerate` function verifies the functionality of the `Generate` function. It performs the following checks:
+**Design Decisions:**
 
-1.  Sets up a temporary directory and environment variables to simulate a CI/CD environment.
-2.  Calls the `Generate` function with test data.
-3.  Confirms that the permit file is created at the expected path.
-4.  Reads the permit file content.
-5.  Unmarshals the JSON content into a `Permit` object.
-6.  Validates that the `RuntimeID`, `OrgID`, `Context["actor"]`, and `Inputs["instance_url"]` fields of the `Permit` object match the expected values.
-
-**Design Decisions**
-
-*   **Environment Variable Reliance:** The package depends on environment variables for contextual information. This design choice allows for flexibility and integration with CI/CD pipelines.
-*   **JSON Format:** The permit is serialized as JSON, which is a widely supported and human-readable format.
-*   **Temporary Directory:** The test case uses a temporary directory to avoid modifying the file system during testing.
-*   **Unused Config Parameter:** The `policy.Config` parameter is passed to the `Generate` function but is not currently used. This suggests potential future expansion of the function's capabilities.
+*   **JSON Format:** Permits are serialized to JSON for easy parsing and consumption by other systems.
+*   **File-Based Output:** Permits are written to files, providing a persistent record of authorization decisions. The file path is based on the `runtimeID` to ensure uniqueness.
+*   **Environment Variables:** The test suite uses environment variables (`GITHUB_WORKSPACE`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_SHA`) to simulate a typical runtime environment, such as a CI/CD pipeline. This allows for realistic testing of the permit generation process.
+*   **Testability:** The package is designed to be easily testable, with a comprehensive test suite that verifies the core functionality.

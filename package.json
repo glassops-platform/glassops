@@ -43,6 +43,8 @@
         "knowledge:index": "npm run knowledge:pipeline -- --index",
         "knowledge:ask": "npm run knowledge:pipeline --",
         "knowledge:validate": "python -m pytest packages/knowledge/tests",
+        "runtime:build": "shx mkdir -p dist && cd packages/runtime && go build -o ../../dist/glassops.exe ./cmd/glassops/main.go",
+        "runtime:test": "cd packages/runtime && go test -v ./...",
         "precommit": "npm run docs:validate"
     },
     "devDependencies": {
