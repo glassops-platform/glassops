@@ -15,7 +15,9 @@ Thumbs.db
 
 # Environment & Security
 .env
+*.crt
 *.key
+secrets/
 
 # Salesforce
 .sf/
