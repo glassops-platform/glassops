@@ -129,6 +129,7 @@ jobs:
               uses: actions/setup-go@v5
               with:
                   go-version: '1.25'
+                  cache-dependency-path: ${{ github.workspace }}/packages/runtime/go.sum
 
             - name: Run Go Vulnerability Check
               working-directory: ${{ env.RUNTIME_DIR }}
