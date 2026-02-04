@@ -153,7 +153,13 @@ func Generate(orgID string) (string, error) {
 	}
 
 	workspace := hasEnvOr("GITHUB_WORKSPACE", ".")
-	contractPath := filepath.Join(workspace, "glassops-contract.json")
+	// Ensure .glassops directory exists
+	glassopsDir := filepath.Join(workspace, ".glassops")
+	if err := os.MkdirAll(glassopsDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create .glassops directory: %w", err)
+	}
+
+	contractPath := filepath.Join(glassopsDir, "glassops-contract.json")
 
 	if err := os.WriteFile(contractPath, contractJSON, 0644); err != nil {
 		return "", err
