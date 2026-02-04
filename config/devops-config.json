@@ -62,7 +62,7 @@
 
         "uat": {
             "display_name": "UAT",
-            "branch_mapping": "release/**",
+            "branch_mapping": "uat/**",
             "deployment_policy": {
                 "test_level": "RunLocalTests",
                 "wait_time": "30",
@@ -80,7 +80,7 @@
 
         "int": {
             "display_name": "Integration",
-            "branch_mapping": "develop",
+            "branch_mapping": "int",
             "deployment_policy": {
                 "test_level": "RunLocalTests",
                 "wait_time": "30",
@@ -98,7 +98,7 @@
 
         "dev": {
             "display_name": "Development",
-            "branch_mapping": "feature/**",
+            "branch_mapping": "feat/**",
             "deployment_policy": {
                 "test_level": "NoTestRun",
                 "wait_time": "15",
