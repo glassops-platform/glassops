@@ -58,12 +58,15 @@ jobs:
               run: |
                   docker run --rm \
                     -e GITHUB_WORKSPACE=/workspace \
-                    -e GITHUB_ACTOR=test-user \
-                    -e GITHUB_REPOSITORY=test-org/test-repo \
-                    -e GLASSOPS_SKIP_AUTH=true \
-                    -e GLASSOPS_ENFORCE_POLICY=false \
+                    -e GITHUB_ACTOR=${{ github.actor }} \
+                    -e GITHUB_REPOSITORY=${{ github.repository }} \
+                    -e INPUT_JWT_KEY="${{ secrets.SF_JWT_KEY }}" \
+                    -e INPUT_CLIENT_ID="${{ secrets.SF_CLIENT_ID }}" \
+                    -e INPUT_USERNAME="${{ vars.SF_USERNAME }}" \
+                    -e GLASSOPS_SKIP_AUTH=false \
+                    -e GLASSOPS_ENFORCE_POLICY=true \
                     -v $(pwd):/workspace \
-                    glassops/runtime:test || echo "Container exited (expected without full config)"
+                    glassops/runtime:test
 
     test:
         name: Go Unit Tests & Linting
@@ -151,15 +154,15 @@ jobs:
                   }
                   EOF
 
-            - name: Test Action (Skip Auth)
+            - name: Run Runtime Action (Authenticated)
               id: glassops
               uses: ./packages/runtime
               with:
-                  jwt_key: 'dummy-key-for-test'
-                  client_id: 'dummy-client'
-                  username: 'test@example.com'
-                  skip_auth: 'true'
-                  enforce_policy: 'false'
+                  jwt_key: ${{ secrets.SF_JWT_KEY }}
+                  client_id: ${{ secrets.SF_CLIENT_ID }}
+                  username: ${{ vars.SF_USERNAME }}
+                  skip_auth: 'false'
+                  enforce_policy: 'true'
 
             - name: Verify Outputs
               run: |
@@ -185,6 +188,14 @@ jobs:
                   fi
 
                   echo "Integration test passed (Artifacts Verified)"
+
+            - name: Upload Runtime Artifacts
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: runtime-artifacts
+                  path: .glassops/
+                  if-no-files-found: warn
 
     # publish:
     #     name: Publish Docker Image
