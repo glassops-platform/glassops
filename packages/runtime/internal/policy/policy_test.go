@@ -8,10 +8,22 @@ import (
 )
 
 func TestLoadDefaultConfig(t *testing.T) {
-	// Setup: ensure no config file exists
-	originalPath := os.Getenv("GLASSOPS_CONFIG_PATH")
-	os.Setenv("GLASSOPS_CONFIG_PATH", "nonexistent/config.json")
-	defer os.Setenv("GLASSOPS_CONFIG_PATH", originalPath)
+	// Create temp config with minimal/empty values to test defaults are applied
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "devops-config.json")
+
+	// Empty config - should result in default values being applied
+	configContent := `{
+		"governance": {},
+		"runtime": {}
+	}`
+
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write test config: %v", err)
+	}
+
+	os.Setenv("GLASSOPS_CONFIG_PATH", configPath)
+	defer os.Unsetenv("GLASSOPS_CONFIG_PATH")
 
 	engine := New()
 	config, err := engine.Load()
