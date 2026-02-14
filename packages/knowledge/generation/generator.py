@@ -28,6 +28,9 @@ from knowledge.adapters import (
     TerraformAdapter,
     ApexAdapter,
     LWCAdapter,
+    XMLAdapter,
+    AuraAdapter,
+    VisualforceAdapter,
 )
 from knowledge.generation.validator import Validator
 
@@ -41,7 +44,7 @@ class Generator:
     IGNORED_DIRS = {
         "node_modules", "dist", "build", ".git", "__pycache__",
         "venv", ".venv", "site-packages", ".turbo", "coverage",
-        "glassops_site", "docs_staging"
+        "glassops_site", "docs_staging", ".sf", ".sfdx", ".vscode"
     }
 
     # Mapping from file extension to prompt key
@@ -59,6 +62,15 @@ class Generator:
         ".tf": "tf",
         ".cls": "apex",
         ".trigger": "apex",
+        ".xml": "xml",
+        ".cmp": "aura",
+        ".app": "aura",
+        ".evt": "aura",
+        ".intf": "aura",
+        ".tokens": "aura",
+        ".auradoc": "aura",
+        ".page": "visualforce",
+        ".component": "visualforce",
     }
 
     def __init__(self, root_dir: str, output_dir: Optional[str] = None):
@@ -82,6 +94,7 @@ class Generator:
         # Initialize all adapters (order matters - first match wins)
         self.adapters: List[BaseAdapter] = [
             LWCAdapter(),       # Must come before TypeScriptAdapter for lwc/ dirs
+            AuraAdapter(),      # Must come before XMLAdapter for aura/ dirs
             GoAdapter(),
             PythonAdapter(),
             TypeScriptAdapter(),
@@ -90,6 +103,8 @@ class Generator:
             DockerAdapter(),
             TerraformAdapter(),
             ApexAdapter(),
+            VisualforceAdapter(),
+            XMLAdapter(),       # Catch-all for remaining .xml files
         ]
 
     def _load_cache(self) -> None:
@@ -119,7 +134,6 @@ class Generator:
             if self.prompts_path.exists():
                 raw = yaml.safe_load(self.prompts_path.read_text(encoding="utf-8"))
                 self.prompts = raw.get("prompts", {})
-                self.prompts = raw.get("prompts", {})
                 print(f"[CONFIG] Loaded prompts from {self.prompts_path.name}")
             else:
                 print(f"[WARNING] Prompts file not found: {self.prompts_path}")
@@ -138,12 +152,32 @@ class Generator:
 
         # Determine prompt key
         suffix = file_path.suffix.lower()
-        
+        name = file_path.name.lower()
+
         # Special cases
         if file_path.name.startswith("Dockerfile"):
             prompt_key = "dockerfile"
         elif "lwc" in file_path.parts:
             prompt_key = "lwc"
+        # Salesforce Metadata Special Cases
+        elif name.endswith(".flow-meta.xml"):
+            prompt_key = "flow"
+        elif name.endswith(".object-meta.xml"):
+            prompt_key = "object"
+        elif name.endswith(".field-meta.xml"):
+            prompt_key = "field"
+        elif name.endswith(".os-meta.xml"):
+            prompt_key = "omniscript"
+        elif name.endswith(".rpt-meta.xml"):
+            prompt_key = "dataraptor"
+        elif name.endswith(".oip-meta.xml"):
+            prompt_key = "integration_procedure"
+        elif name.endswith(".ouc-meta.xml"):
+            prompt_key = "flexcard"
+        elif name.endswith(".profile-meta.xml"):
+            prompt_key = "profile"
+        elif name.endswith(".app-meta.xml"):
+            prompt_key = "application"
         else:
             prompt_key = self.EXTENSION_TO_PROMPT_KEY.get(suffix)
 
@@ -256,9 +290,39 @@ hash: {content_hash}
             # Mirror structure in output_dir
             output_path = self.output_dir / relative.with_suffix(".md")
         else:
-            # Find the package root (first dir under packages/)
             parts = relative.parts
-            if "packages" in parts:
+
+            # Handle force-app flattening
+            if "force-app" in parts:
+                try:
+                    # Look for standard Salesforce 'default' or 'main' directory
+                    base_indices = [i for i, p in enumerate(parts) if p in ["default", "main"]]
+
+                    if base_indices:
+                        idx = base_indices[-1]
+
+                        if len(parts) > idx + 1:
+                            component_type = parts[idx + 1]
+                            remaining = parts[idx + 2:]
+
+                            if not remaining:
+                                output_path = self.root_dir / "docs" / "reference" / component_type / "README.md"
+                            else:
+                                rel_path = Path(*remaining)
+                                output_path = self.root_dir / "docs" / "reference" / component_type / rel_path.with_suffix(".md")
+                        else:
+                            output_path = self.root_dir / "docs" / "reference" / relative.with_suffix(".md")
+                    else:
+                        idx = parts.index("force-app")
+                        rel_path = Path(*parts[idx + 1:])
+                        output_path = self.root_dir / "docs" / "reference" / rel_path.with_suffix(".md")
+
+                except Exception as e:
+                    print(f"[WARNING] Path flattening failed for {source_path}: {e}")
+                    output_path = self.root_dir / "docs" / relative.with_suffix(".md")
+
+            # Handle packages (existing logic)
+            elif "packages" in parts:
                 pkg_idx = parts.index("packages")
                 if len(parts) > pkg_idx + 1:
                     # Handle grouped packages (adapters, tools)
@@ -304,10 +368,15 @@ hash: {content_hash}
                 continue  # We'll handle exclusions separately
 
             full_pattern = str(self.root_dir / pattern)
-            for match in glob.glob(full_pattern, recursive=True):
+            matches = glob.glob(full_pattern, recursive=True)
+            pattern_count = 0
+            for match in matches:
                 path = Path(match)
                 if path.is_file() and not self._should_ignore(path):
                     matched_files.add(path)
+                    pattern_count += 1
+            if pattern_count == 0:
+                print(f"[SKIP] No files matched: {pattern}")
 
         # Apply exclusion patterns
         for pattern in patterns:
