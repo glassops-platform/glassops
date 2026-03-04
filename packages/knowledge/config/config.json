@@ -5,7 +5,7 @@
   },
   "vector_store": {
     "type": "chroma",
-    "persist_dir": "glassops-index"
+    "persist_dir": "glassops_index"
   },
   "federated_doc_paths": [
     "docs/",

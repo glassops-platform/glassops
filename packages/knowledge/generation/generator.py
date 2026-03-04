@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import pathspec
 import yaml
-from ..llm.client import LLMClient
+from knowledge.llm.client import LLMClient
 
 from knowledge.adapters import (
     BaseAdapter,
@@ -86,7 +86,9 @@ class Generator:
         self.output_dir = Path(output_dir).resolve() if output_dir else None
         self.llm = LLMClient()
         self.cache_path = self.root_dir / "config" / "doc-cache.json"
-        self.prompts_path = Path(__file__).parent.parent / "config" / "prompts.yml"
+
+        # We assume generator is running with root_dir set correctly
+        self.prompts_path = self.root_dir / "config" / "prompts.yml"
         self.cache: Dict[str, dict] = {}
         self.prompts: Dict[str, Any] = {}
         self.gitignore_spec = self._load_gitignore()
