@@ -3,6 +3,9 @@
 Thumbs.db
 *.swp
 *.swo
+Desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
 
 # IDEs
 .vscode/*
@@ -11,26 +14,63 @@ Thumbs.db
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea/
-.agent/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.nbproject/
+
+# Claude / AI
+.claude/
+.gemini/
 
 # Environment & Security
 .env
+.env.local
+.env.*.local
 *.crt
 *.key
 secrets/
+**/*.pem
 
 # Salesforce
 .sf/
 .sfdx/
+.localdevserver/
+deploy-options.json
 
 # Build & Dependencies
 node_modules/
 dist/
+build/
 .turbo/
 *.log
 .eslintcache
 .prettiercache
 venv/
+.venv/
+bin/
+obj/
+
+# Go
+packages/runtime/glassops
+packages/runtime/glassops.exe
+vendor/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+nosetests.xml
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Test Outputs
 test-results/
@@ -44,13 +84,6 @@ site/
 glassops_site/
 docs/generated/
 
-# Python
-__pycache__/
-*.pyc
-.venv/
-.pytest_cache/
-*.egg-info/
-
 # Node logs
 npm-debug.log*
 yarn-debug.log*
@@ -58,8 +91,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 # General Build
-dist/
-build/
 !packages/runtime/dist/
 
 # GlassOps Runtime Artifacts
