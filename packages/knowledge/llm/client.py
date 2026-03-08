@@ -14,7 +14,7 @@ from google.genai import types
 from dotenv import load_dotenv
 
 # Load .env from project root
-ROOT_DIR = Path(__file__).parent.parent.parent.parent
+ROOT_DIR = Path(__file__).parent.parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
 
@@ -33,8 +33,8 @@ class LLMClient:
             self.client = genai.Client(api_key=api_key)
         self.model = model
         self._request_history: list[dict] = []
-        self._rpm_limit = 28  # Safety buffer below 30
-        self._tpm_limit = 14000  # Safety buffer below 15000
+        self._rpm_limit = 24  # Buffer below 30 RPM (Gemma 3 27B limit)
+        self._tpm_limit = 12000  # Buffer below 15k TPM (Gemma 3 27B limit)
 
     def _estimate_tokens(self, text: str) -> int:
         """Rough token estimation (4 chars per token)."""
@@ -46,7 +46,7 @@ class LLMClient:
         Blocks if we're approaching the limit.
         """
         now = time.time()
-        window_size = 60  # 1 minute
+        window_size = 65  # 1 minute + buffer
 
         # Clean old entries
         self._request_history = [
@@ -60,7 +60,7 @@ class LLMClient:
             wait_time = (oldest["time"] + window_size) - now
             if wait_time > 0:
                 print(f"[THROTTLE] RPM Limit: Waiting {wait_time:.1f}s...")
-                time.sleep(wait_time)
+                time.sleep(wait_time + 1)
                 return self._throttle(estimated_tokens)  # Re-check
 
         # Check TPM
@@ -75,9 +75,13 @@ class LLMClient:
                     wait_time = (entry["time"] + window_size) - now
                     break
 
+            # If still not enough, wait for the oldest to expire
+            if wait_time <= 0 and self._request_history:
+                 wait_time = (self._request_history[0]["time"] + window_size) - now
+
             if wait_time > 0:
                 print(f"[THROTTLE] TPM Limit ({current_tokens}/{self._tpm_limit}): Waiting {wait_time:.1f}s...")
-                time.sleep(wait_time)
+                time.sleep(wait_time + 1)
                 return self._throttle(estimated_tokens)
 
         self._request_history.append({"time": time.time(), "tokens": estimated_tokens})
@@ -85,7 +89,7 @@ class LLMClient:
     def generate(
         self,
         prompt: str,
-        max_retries: int = 3,
+        max_retries: int = 5,
         temperature: float = 0.2,
         max_output_tokens: int = 8192,
     ) -> Optional[str]:
@@ -102,13 +106,13 @@ class LLMClient:
             The generated text, or None on failure.
         """
         estimated_tokens = self._estimate_tokens(prompt) + 100  # Buffer for output
-        
+
         if not self.client:
             return None
 
         self._throttle(estimated_tokens)
 
-        backoffs = [10, 30, 60]  # Retry delays in seconds
+        backoffs = [15, 30, 60, 120, 180]  # Retry delays in seconds
 
         for attempt in range(max_retries + 1):
             try:

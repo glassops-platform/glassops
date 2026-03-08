@@ -23,10 +23,20 @@ def query_index(query, n_results=5):
         return f"Error generating embedding: {e}"
 
     # 2. Query ChromaDB
-    persist_dir = os.path.join(os.getcwd(), "glassops_index")
+    # Read persist_dir from config
+    config_path = Path(__file__).parent.parent / "config" / "config.json"
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+            persist_dir_name = cfg.get("vector_store", {}).get("persist_dir", "glassops_index")
+    except Exception as e:
+        print(f"[WARNING] Failed to load config, using default: {e}")
+        persist_dir_name = "glassops_index"
+
+    persist_dir = os.path.join(os.getcwd(), persist_dir_name)
     if not os.path.exists(persist_dir):
         return "Error: Index not found. Please run with --index first."
-        
+
     client = chromadb.PersistentClient(path=persist_dir)
     collection = client.get_or_create_collection(name="glassops_knowledge")
     

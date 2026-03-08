@@ -3,13 +3,25 @@
 
 import chromadb
 from chromadb.config import Settings
+import json
 import os
+from pathlib import Path
 
 def build_or_update_index(embeddings):
     """
     embeddings: list of tuples (doc_dict, embedding_vector)
     """
-    persist_dir = os.path.join(os.getcwd(), "glassops_index")
+    # Read persist_dir from config
+    config_path = Path(__file__).parent.parent / "config" / "config.json"
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+            persist_dir_name = cfg.get("vector_store", {}).get("persist_dir", "glassops_index")
+    except Exception as e:
+        print(f"[WARNING] Failed to load config, using default: {e}")
+        persist_dir_name = "glassops_index"
+
+    persist_dir = os.path.join(os.getcwd(), persist_dir_name)
     
     # Initialize Chroma Client with persistence
     client = chromadb.PersistentClient(path=persist_dir)

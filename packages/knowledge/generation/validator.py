@@ -1,5 +1,4 @@
 import re
-import re
 from typing import List, Optional
 from pathlib import Path
 
@@ -12,7 +11,8 @@ from ..adapters import (
     YAMLAdapter,
     JSONAdapter,
     DockerAdapter,
-    TerraformAdapter
+    TerraformAdapter,
+    XMLAdapter,
 )
 
 

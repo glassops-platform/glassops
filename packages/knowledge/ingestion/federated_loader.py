@@ -3,9 +3,10 @@
 
 import hashlib
 import glob
-import glob
+import json
 import os
 import re
+from pathlib import Path
 from typing import List, Dict
 
 def hash_content(text: str) -> str:
@@ -16,13 +17,30 @@ def discover_and_chunk_docs(root_dir: str = ".") -> List[Dict]:
     Returns a list of dicts:
     { "path": <file_path>, "content": <chunked_content>, "hash": <sha256> }
     """
-    # Expanded patterns to catch more docs strings
-    patterns = [
-        "docs/**/*.md",
-        "packages/**/docs/**/*.md", 
-        "packages/**/adr/**/*.md",
-        "packages/**/README.md"
-    ]
+    # Load patterns from config
+    config_path = Path(root_dir) / "packages" / "knowledge" / "config" / "config.json"
+    base_paths = []
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+            base_paths = cfg.get("federated_doc_paths", [])
+            print(f"[CONFIG] Loaded {len(base_paths)} doc paths from config")
+    except Exception as e:
+        print(f"[WARNING] Failed to load config, using defaults: {e}")
+
+    # Fallback to hardcoded patterns if config is empty
+    if not base_paths:
+        base_paths = ["docs/", "packages/**/adr", "packages/**/docs"]
+
+    # Build full patterns by applying file extensions to base paths
+    patterns = []
+    for base_path in base_paths:
+        # Add pattern for all .md files in the path
+        patterns.append(f"{base_path}/**/*.md")
+        # Also catch README.md files specifically
+        if not base_path.endswith("/**"):
+            patterns.append(f"{base_path}/**/README.md")
     
     doc_paths = []
     for p in patterns:
