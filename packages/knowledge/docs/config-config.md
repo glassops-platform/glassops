@@ -1,72 +1,60 @@
 ---
 type: Documentation
 domain: knowledge
-last_modified: 2026-02-02
+last_modified: 2026-03-08
 generated: true
 source: packages/knowledge/config/config.json
-generated_at: 2026-02-02T22:26:57.983881
-hash: 20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde
+generated_at: 2026-03-08T22:44:43.964088
+hash: aaff9e175e11e0dded44338711bfcb4ee33643c9da856b153889339a4ccf21d3
 ---
 
 # Knowledge Configuration
 
-This document details the configuration options for the knowledge retrieval system. This system powers intelligent responses within the GlassOps platform by indexing documentation and providing relevant context to language models.
+This document details the configuration options for the knowledge retrieval system. This system powers intelligent responses by indexing documentation and related files, and providing relevant context to language models. We maintain this configuration to control the behavior of the knowledge base.
 
-## Overview
+## Embedding Models
 
-The configuration file defines how documentation is processed, stored, and retrieved. It specifies the embedding models used to create vector representations of the documentation, the vector database for storage, the source locations for documentation, and parameters controlling the retrieval process.
+This section defines the models used to create vector embeddings from text. These embeddings are used for semantic search.
 
-## Configuration Parameters
+*   **`primary`** (string, *required*): Specifies the primary embedding model. Currently set to `"gemini-embedding-1.0"`. This model is preferred for generating embeddings.
+*   **`fallback`** (string, *required*): Specifies a fallback embedding model. Currently set to `"gemma-3-12b-it"`. This model is used if the primary model is unavailable or encounters an error.
 
-### `embedding_models`
+## Vector Store
 
-This section configures the embedding models used to convert text into vector representations.
+This section configures the vector database used to store and retrieve embeddings.
 
-*   `primary` (string, required): Specifies the primary embedding model.  Currently set to `gemini-embedding-1.0`. This model is preferred for generating embeddings.
-*   `fallback` (string, required): Specifies a fallback embedding model. Currently set to `gemma-3-12b-it`. This model is used if the primary model is unavailable or encounters an error.
+*   **`type`** (string, *required*): Specifies the type of vector store. Currently set to `"chroma"`.
+*   **`persist_dir`** (string, *required*): Specifies the directory where the vector store will persist data. Currently set to `"glassops_index"`.
 
-### `vector_store`
+## Federated Document Paths
 
-This section configures the vector database used to store and retrieve document embeddings.
+This section defines the file paths to be included in the knowledge base. The system recursively searches these paths for documentation.
 
-*   `type` (string, required): Specifies the type of vector database. Currently set to `chroma`.
-*   `persist_dir` (string, required): Specifies the directory where the vector database will store its data. Currently set to `glassops-index`.  You should ensure this directory is writable.
+*   **`federated_doc_paths`** (array of strings, *required*): A list of glob patterns representing the paths to documentation.
+    *   `"docs/"`: Includes all files in the `docs/` directory.
+    *   `"packages/**/adr"`: Includes all files with the `.adr` extension within any `packages/` subdirectory.
+    *   `"packages/**/docs"`: Includes all files within `docs` directories inside any `packages/` subdirectory.
 
-### `federated_doc_paths`
+## Retrieval Triggers
 
-This is a list of file paths or glob patterns that define the locations of documentation to be indexed.
+This section maps specific query types to a designated document for providing context.
 
-*   `federated_doc_paths` (array of strings, required):  Each string represents a path or pattern.
-    *   `docs/`: Indexes the main documentation directory.
-    *   `packages/**/adr`: Indexes Architecture Decision Records (ADR) within any package.
-    *   `packages/**/docs`: Indexes documentation within any package.
+*   **`retrieval_triggers`** (object, *required*): A mapping of trigger keywords to a specific documentation file.
+    *   `"audit"` (string, *required*): Points to `"packages/knowledge/docs/generated/drift_report.md"`.
+    *   `"backup"` (string, *required*): Points to `"packages/knowledge/docs/generated/drift_report.md"`.
+    *   `"legacy"` (string, *required*): Points to `"packages/knowledge/docs/generated/drift_report.md"`.
+    *   `"overlap"` (string, *required*): Points to `"packages/knowledge/docs/generated/drift_report.md"`.
+    *   `"drift"` (string, *required*): Points to `"packages/knowledge/docs/generated/drift_report.md"`.
 
-### `retrieval_triggers`
+## Batch Processing and Drift Detection
 
-This section maps specific query types (triggers) to a specific documentation file.
+These settings control the batch size for processing documents and the threshold for drift detection.
 
-*   `audit` (string, required): Path to the drift report for "audit" related queries.
-*   `backup` (string, required): Path to the drift report for "backup" related queries.
-*   `legacy` (string, required): Path to the drift report for "legacy" related queries.
-*   `overlap` (string, required): Path to the drift report for "overlap" related queries.
-*   `drift` (string, required): Path to the drift report for "drift" related queries.
+*   **`batch_size`** (integer, *required*): Specifies the number of documents to process in each batch. Currently set to `10`.
+*   **`drift_threshold`** (number, *required*): Specifies the threshold for identifying significant changes (drift) between documentation versions. Currently set to `0.85`.
 
-All triggers currently point to `packages/knowledge/docs/generated/drift_report.md`.
+## System Context
 
-### `batch_size`
+This section defines the context provided to the language model to guide its responses.
 
-This parameter controls the number of documents processed in each batch during indexing.
-
-*   `batch_size` (integer, required):  Currently set to `10`.  Adjusting this value can impact indexing performance.
-
-### `drift_threshold`
-
-This parameter defines the threshold for determining significant drift between documentation versions.
-
-*   `drift_threshold` (float, required): Currently set to `0.85`. This value is used in the drift report generation process.
-
-### `system_context`
-
-This parameter provides the initial context given to the language model when answering questions.
-
-*   `system_context` (string, required): A multi-line string that sets the role of the language model and provides information about the documentation structure and how to handle specific query types (overlap, backup, legacy, drift).  It instructs the model to prioritize the `drift_report.md` file when relevant queries are detected.
+*   **`system_context`** (string, *required*): A multi-line string containing instructions and information about the documentation structure and how to handle specific query types. This context informs the language model about the purpose of the documentation and how to respond to user inquiries related to "overlap", "backup", "legacy", and "drift". It also instructs the model to refer to the `drift_report.md` file when appropriate.
