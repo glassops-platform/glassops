@@ -1,46 +1,53 @@
 ---
 type: Documentation
 domain: knowledge
-last_modified: 2026-02-02
+last_modified: 2026-03-08
 generated: true
 source: packages/knowledge/rag/query_engine.py
-generated_at: 2026-02-02T22:32:08.596349
-hash: 09603013c88193d7faf419e2b18b13bf32b3d9de8e28c293f2d3e97f0923446f
+generated_at: 2026-03-08T22:47:03.423576
+hash: ef028d8bb839e7f41f8cf7bbea87e5828cd2f691b3362054c7a99ea20c94e0b0
 ---
 
 ## GlassOps Knowledge Query Engine Documentation
 
-This module provides a Retrieval-Augmented Generation (RAG) system for querying a knowledge base. It combines information retrieval from a vector database (ChromaDB) with a large language model (Gemini) to provide informed answers to user questions.
+This module provides a Retrieval-Augmented Generation (RAG) system for querying a knowledge base. It combines information retrieval from a vector database with a large language model to provide informed answers to user questions.
 
 **Module Responsibilities:**
 
-The primary function of this module is to accept a user query, retrieve relevant documents from a knowledge base, and generate a concise answer using a language model. It also incorporates a mechanism for injecting content from specific files based on keywords found in the query.
+The primary responsibility of this module is to accept a user query, retrieve relevant information from a knowledge base, and generate a concise and informative answer using a language model. It handles embedding the query, querying a vector database (ChromaDB), constructing a context from the retrieved results, and prompting a language model (Gemini) to generate the final answer.
 
-**Key Classes and Their Roles:**
+**Key Classes & Roles:**
 
-This module primarily utilizes external libraries (chromadb, google.genai) and does not define custom classes. ChromaDB’s `PersistentClient` and `Collection` are used for vector storage and retrieval.
+*   **`chromadb.PersistentClient`**:  This class from the ChromaDB library manages the connection to the vector database. It allows for storing and retrieving vector embeddings and associated documents.
+*   **`chromadb.Collection`**: Represents a collection within ChromaDB, used to organize and query the knowledge base.
+*   **`google.genai.Client`**: This class from the Google Gemini API provides access to the language model for generating responses.
 
-**Important Functions and Their Behavior:**
+**Important Functions & Behavior:**
 
-*   **`query_index(query: str, n_results: int = 5) -> str`**: This is the main function of the module. It takes a user `query` (string) and an optional `n_results` parameter (integer, default is 5) specifying the number of relevant documents to retrieve. It returns a string containing the generated answer, or an error message if something goes wrong.
+*   **`query_index(query: str, n_results: int = 5) -> str`**: This is the main function of the module.
+    *   **Input:**
+        *   `query`: The user's question as a string.
+        *   `n_results`: The number of relevant documents to retrieve from the vector database (defaults to 5).
+    *   **Process:**
+        1.  **Embedding:** Converts the input `query` into a vector embedding using the `get_embeddings_for_docs` function.
+        2.  **ChromaDB Query:** Queries the ChromaDB vector database using the query embedding to find the most similar documents. The database location is determined by a configuration file, defaulting to "glassops\_index".
+        3.  **Context Construction:** Extracts the relevant text (`documents`) and identifiers (`ids`) from the ChromaDB query results.
+        4.  **Trigger-Based File Injection:** Checks for keywords in the query against a configuration file. If a keyword is found, the corresponding file content is prepended to the context, providing additional information.
+        5.  **Gemini Prompting:** Constructs a prompt for the Gemini language model, including system context (defined in a configuration file or a default value), the retrieved context, and the user's query.
+        6.  **Response Generation:** Sends the prompt to the Gemini model and returns the generated response along with the sources of the information.
+    *   **Output:** A string containing the generated answer, or an error message if any step fails.
 
-    1.  **Embedding Generation:** The function first generates an embedding vector for the input `query` using the `get_embeddings_for_docs` function. This embedding represents the semantic meaning of the query.
-    2.  **ChromaDB Query:** It then queries a ChromaDB collection named "glassops\_knowledge" using the generated query embedding. The `n_results` parameter controls the number of documents retrieved.
-    3.  **Context Construction:** The retrieved documents and their corresponding IDs are used to construct a context string.
-    4.  **Trigger-Based File Injection:** The function checks for predefined keywords in the query. If a keyword is found, it attempts to inject the content of a corresponding file (specified in a `config.json` file) into the context. This allows for dynamic inclusion of up-to-date information.
-    5.  **Answer Generation:** Finally, it uses the Gemini language model to generate an answer based on the constructed context and the original query. The function includes a system prompt to guide the model's behavior.
-    6.  **Error Handling:** The function includes robust error handling to catch potential issues during embedding generation, ChromaDB querying, file injection, and answer generation. It returns informative error messages to the user.
+*   **`get_embeddings_for_docs(docs: list[dict]) -> list[list[float]]`**: (This function is imported from another module.) This function is responsible for generating vector embeddings for a list of documents. It is used to convert the user query into a vector representation that can be compared to the embeddings stored in ChromaDB.
 
-**Type Hints and Their Significance:**
+**Type Hints:**
 
-The code uses type hints (e.g., `query: str`, `n_results: int`) to improve code readability and maintainability. These hints specify the expected data types for function parameters and return values, allowing for static analysis and early detection of potential errors.
+The code uses type hints (e.g., `query: str`, `n_results: int`) to improve code readability and maintainability. These hints specify the expected data types for function arguments and return values, allowing for static analysis and error detection.
 
-**Notable Patterns and Design Decisions:**
+**Notable Patterns & Design Decisions:**
 
-*   **RAG Architecture:** The module implements a standard RAG architecture, combining information retrieval with language model generation.
-*   **Configuration-Based Behavior:** The system's behavior is partially configurable through a `config.json` file, allowing for customization of the system prompt and trigger-based file injection.
-*   **Error Handling:** Comprehensive error handling is implemented throughout the function to provide informative error messages and prevent unexpected crashes.
-*   **Modular Design:** The use of external libraries (chromadb, google.genai) promotes modularity and allows for easy replacement of components.
-*   **Context Injection:** The trigger-based file injection mechanism provides a way to dynamically update the knowledge base with information from external sources.
-*   **Environment Variables:** The API key for the Gemini model is loaded from an environment variable (`GOOGLE_API_KEY`), enhancing security and flexibility.
-*   **Debugging:** Print statements are included for debugging purposes, providing insights into the query process and file injection events.
+*   **Configuration Management:** The module relies on a `config.json` file to manage settings such as the vector database location, system context for the language model, and trigger keywords for file injection. This allows for easy customization without modifying the code.
+*   **Error Handling:** The code includes `try...except` blocks to handle potential errors during embedding generation, database access, file loading, and language model interaction. This ensures that the system can gracefully handle unexpected situations.
+*   **Trigger Mechanism:** The trigger mechanism allows for injecting specific files into the context based on keywords in the user's query. This is useful for providing additional information relevant to specific topics.
+*   **Modular Design:** The use of imported functions (e.g., `get_embeddings_for_docs`) promotes modularity and code reuse.
+*   **Contextual Prompting:** The prompt sent to the Gemini model includes a system context to guide the model's behavior and ensure that the generated answers are relevant and accurate.
+*   **Source Attribution:** The generated response includes a list of sources, allowing users to verify the information and understand where it came from.

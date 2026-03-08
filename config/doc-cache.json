@@ -42,18 +42,18 @@
     "timestamp": "2026-02-02T22:23:30.497710"
   },
   "packages/knowledge/adapters/__init__.py": {
-    "hash": "740ef35a544245639b934b1c3390a3673a1f66c6e9b876b1ed8854b5047abd96",
+    "hash": "df91b6fb03c2c9d3ee948fcbdabac885e8b5f69aa60e736b0298ee36c637a194",
     "generatedFiles": [
       "packages/knowledge/docs/adapters-__init__.md"
     ],
-    "timestamp": "2026-02-02T22:23:43.848752"
+    "timestamp": "2026-03-08T22:42:59.324928"
   },
   "packages/knowledge/adapters/apex_adapter.py": {
-    "hash": "1e4f12673775d88fb271fa6ccba1b0fc773a901a080790eb1d40c2e1e8f9e4e5",
+    "hash": "b8cae6f14bd4a3c54afb37fe610ff7087405547feb09f526e9cf469d79e95f3c",
     "generatedFiles": [
       "packages/knowledge/docs/adapters-apex_adapter.md"
     ],
-    "timestamp": "2026-02-02T22:24:01.494678"
+    "timestamp": "2026-03-08T22:43:17.418235"
   },
   "packages/knowledge/adapters/base.py": {
     "hash": "396af1f6b6335274e9b4fa47355eb740acb1cd8996e026329ad9cc0b80086af8",
@@ -84,11 +84,11 @@
     "timestamp": "2026-02-02T22:25:13.540173"
   },
   "packages/knowledge/adapters/lwc_adapter.py": {
-    "hash": "7bf7cab97960f829b21a0a9e22be0b77440bf39e55ce6645db8c6cfe671017bc",
+    "hash": "04247cda5ca4104b2431873f70c612870b867f22ea078bf07ef7d7d4ec96f329",
     "generatedFiles": [
       "packages/knowledge/docs/adapters-lwc_adapter.md"
     ],
-    "timestamp": "2026-02-02T22:25:32.812625"
+    "timestamp": "2026-03-08T22:43:53.867829"
   },
   "packages/knowledge/adapters/python.py": {
     "hash": "ff0834066863d556c68cf4606cee7ffb1ea087d352c29c7cbbe82225e8b238bc",
@@ -119,18 +119,18 @@
     "timestamp": "2026-02-02T22:26:43.860132"
   },
   "packages/knowledge/config/config.json": {
-    "hash": "20fe2a53c1392c0cfc0142b90c8d3cc228fc21039203bc303e72df5b61d28dde",
+    "hash": "aaff9e175e11e0dded44338711bfcb4ee33643c9da856b153889339a4ccf21d3",
     "generatedFiles": [
       "packages/knowledge/docs/config-config.md"
     ],
-    "timestamp": "2026-02-02T22:26:57.986573"
+    "timestamp": "2026-03-08T22:44:43.964338"
   },
   "packages/knowledge/config/prompts.yml": {
-    "hash": "c809ab9a381397a3b92f80840e9ea06a056a6aab7b4a737819df290867ee5e0e",
+    "hash": "592636b8dd0caae33b20d2c8b81cf201f64a132bee8eba86a55956a6a780fee7",
     "generatedFiles": [
       "packages/knowledge/docs/config-prompts.md"
     ],
-    "timestamp": "2026-02-02T22:27:13.878236"
+    "timestamp": "2026-03-08T22:45:05.045387"
   },
   "packages/knowledge/drift/__init__.py": {
     "hash": "2c54a27cc8645bdde6f6560c610cbf582b16a04f024688af37bedfe171f1350d",
@@ -182,18 +182,18 @@
     "timestamp": "2026-02-02T22:29:05.199855"
   },
   "packages/knowledge/generation/generator.py": {
-    "hash": "b16880e486085186d40b3361661a0b86b2a34dce17d3973969563b0100ae2400",
+    "hash": "3a02c18a88a12dcccc247d767be3d3b7055af4141d711105a84d9d63deb7cf95",
     "generatedFiles": [
       "packages/knowledge/docs/generation-generator.md"
     ],
-    "timestamp": "2026-02-02T22:29:24.374123"
+    "timestamp": "2026-03-08T22:45:35.834094"
   },
   "packages/knowledge/generation/validator.py": {
-    "hash": "211f4ed3b51a8bef6cf2581464bd112fdbefc42ec04a9dd621375a587353962e",
+    "hash": "753cecf576fa02e8dbb106251a2fbba39f348caba02e1caf5a89e791178db609",
     "generatedFiles": [
       "packages/knowledge/docs/generation-validator.md"
     ],
-    "timestamp": "2026-02-02T22:29:43.493675"
+    "timestamp": "2026-03-08T22:45:49.620524"
   },
   "packages/knowledge/ingestion/__init__.py": {
     "hash": "d3a838faa30164960ef819c10bdc23ee47ace81b5ea0591d289302fd6619fd4b",
@@ -203,18 +203,18 @@
     "timestamp": "2026-02-02T22:29:56.937732"
   },
   "packages/knowledge/ingestion/federated_loader.py": {
-    "hash": "f661f42a2a0ba297001606a606746e5498fb799fe7172ea92b496ebfd91fa0db",
+    "hash": "8b0b50384046ebd768e0990496f28defad52e6b03065a5b40665b233716b9a97",
     "generatedFiles": [
       "packages/knowledge/docs/ingestion-federated_loader.md"
     ],
-    "timestamp": "2026-02-02T22:30:16.920630"
+    "timestamp": "2026-03-08T22:46:07.650438"
   },
   "packages/knowledge/ingestion/index_builder.py": {
-    "hash": "cb8e1618acbacd4601a48d063e8a72c6243fb85b0172581dda2ab8353f46f698",
+    "hash": "6b7ca399ed8c26d9ffe78d8581ced02e9dd2abff833b53086e4c79306f0385ac",
     "generatedFiles": [
       "packages/knowledge/docs/ingestion-index_builder.md"
     ],
-    "timestamp": "2026-02-02T22:30:34.512221"
+    "timestamp": "2026-03-08T22:46:23.356866"
   },
   "packages/knowledge/llm/__init__.py": {
     "hash": "887834a896d4bd8152aeba02b2a09a7ee65baa0e959e31b4cdec8af3f0f455f9",
@@ -224,11 +224,11 @@
     "timestamp": "2026-02-02T22:30:55.198678"
   },
   "packages/knowledge/llm/client.py": {
-    "hash": "473c09a4e3a5d67b47cc170370f8d926e5f2acdaf9cda945edbe96e7665bb578",
+    "hash": "d799a10e04493879c0725b4dc786ed6e3f1c675bc48b65a246d1e6c6c59cba7a",
     "generatedFiles": [
       "packages/knowledge/docs/llm-client.md"
     ],
-    "timestamp": "2026-02-02T22:31:19.191077"
+    "timestamp": "2026-03-08T22:46:45.809642"
   },
   "packages/knowledge/main.py": {
     "hash": "0fd894863622081aa14243c7e23901027617e12b3e94fd4789761d43f303802a",
@@ -245,11 +245,11 @@
     "timestamp": "2026-02-02T22:31:53.088458"
   },
   "packages/knowledge/rag/query_engine.py": {
-    "hash": "09603013c88193d7faf419e2b18b13bf32b3d9de8e28c293f2d3e97f0923446f",
+    "hash": "ef028d8bb839e7f41f8cf7bbea87e5828cd2f691b3362054c7a99ea20c94e0b0",
     "generatedFiles": [
       "packages/knowledge/docs/rag-query_engine.md"
     ],
-    "timestamp": "2026-02-02T22:32:08.602575"
+    "timestamp": "2026-03-08T22:47:03.423838"
   },
   "packages/knowledge/tests/conftest.py": {
     "hash": "2358863aef65addf30885e4d903ce9a3e6d96ef6a1798802a6d1b16148952ba3",
@@ -509,5 +509,26 @@
       "packages/runtime/docs/validator-validator_test.md"
     ],
     "timestamp": "2026-02-02T22:42:18.491797"
+  },
+  "packages/knowledge/adapters/aura_adapter.py": {
+    "hash": "f011e08e06a7d2c2089e634069420ef0a9dd2c3782facf02ebc9883499314f95",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-aura_adapter.md"
+    ],
+    "timestamp": "2026-03-08T22:43:35.030225"
+  },
+  "packages/knowledge/adapters/visualforce_adapter.py": {
+    "hash": "7df3c8c5de52169bec47f05b03c391549baa9f5c88ec931a0c9dfd9f9b36fe4b",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-visualforce_adapter.md"
+    ],
+    "timestamp": "2026-03-08T22:44:07.408819"
+  },
+  "packages/knowledge/adapters/xml_adapter.py": {
+    "hash": "f7310346307e43baf778b3b664a28bdd5bc1ef1c917b73d59766f9058d8ed518",
+    "generatedFiles": [
+      "packages/knowledge/docs/adapters-xml_adapter.md"
+    ],
+    "timestamp": "2026-03-08T22:44:27.888058"
   }
 }

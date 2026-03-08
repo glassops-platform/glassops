@@ -1,86 +1,58 @@
 ---
 type: Documentation
 domain: knowledge
-last_modified: 2026-02-02
+last_modified: 2026-03-08
 generated: true
 source: packages/knowledge/llm/client.py
-generated_at: 2026-02-02T22:31:19.187907
-hash: 473c09a4e3a5d67b47cc170370f8d926e5f2acdaf9cda945edbe96e7665bb578
+generated_at: 2026-03-08T22:46:45.809337
+hash: d799a10e04493879c0725b4dc786ed6e3f1c675bc48b65a246d1e6c6c59cba7a
 ---
 
-## GlassOps Knowledge Pipeline: LLM Client Documentation
+## GlassOps Knowledge Pipeline - LLM Client Documentation
 
-This document details the functionality of the LLM Client module, designed to provide a consistent interface for interacting with large language models (LLMs), specifically Google’s Generative AI models. It handles API communication, implements retry mechanisms for resilience, and incorporates rate limiting to ensure responsible usage.
+This document details the purpose, functionality, and design of the LLM Client module, a component responsible for interacting with the Google Generative AI models. It provides a reusable interface for generating text from prompts, incorporating error handling and rate limit management.
 
-### Module Responsibilities
+**Module Purpose and Responsibilities:**
 
-The primary responsibility of this module is to abstract the complexities of interacting with the Google Generative AI API. It provides a simple `generate` function for obtaining text completions from a given prompt, while managing potential issues like temporary API errors and rate limits.  The module is designed to be reusable across different components of the GlassOps Knowledge Pipeline.
+The LLM Client module centralizes the interaction with the Google Generative AI API. It handles:
 
-### Key Classes
+*   API Authentication: Securely manages the API key for accessing the LLM.
+*   Prompt Submission: Sends text prompts to the specified LLM model.
+*   Response Handling: Processes the LLM’s text responses.
+*   Error Management: Implements retry logic for transient errors like rate limits and server unavailability.
+*   Rate Limiting: Enforces rate limits to prevent exceeding the API’s usage quotas, ensuring stable operation.
+*   Request History: Maintains a record of recent requests for accurate rate limit calculations.
 
-#### `LLMClient`
+**Key Classes and Roles:**
 
-This class encapsulates the logic for interacting with the LLM.
+*   **`LLMClient`**: This is the core class of the module. It encapsulates the LLM interaction logic.
+    *   `__init__(self, model: str = "gemma-3-27b-it")`: Initializes the client. It loads the Google API key from environment variables. If the key is missing, the client disables itself. It also sets the default model to "gemma-3-27b-it".  The `model` parameter allows you to specify a different model.
+    *   `_estimate_tokens(self, text: str) -> int`: Provides a rough estimate of the number of tokens in a given text string. This is used for rate limiting.
+    *   `_throttle(self, estimated_tokens: int) -> None`: Implements the rate limiting logic. It checks if the current request would exceed the defined RPM (requests per minute) and TPM (tokens per minute) limits. If a limit is approaching, it pauses execution until the rate limit window allows another request.
+    *   `generate(self, prompt: str, max_retries: int = 5, temperature: float = 0.2, max_output_tokens: int = 8192) -> Optional[str]`:  The primary method for generating text. It sends a prompt to the LLM, handles potential errors through retries, and returns the generated text. It also incorporates rate limiting before sending the request.
 
-*   **Purpose:**  Provides a centralized point for making requests to the LLM, handling retries, and enforcing rate limits.
-*   **Initialization (`__init__`)**:
-    *   `model: str = "gemma-3-27b-it"`: Specifies the LLM model to use. Defaults to "gemma-3-27b-it".
-    *   Loads the Google API key from the environment (using a `.env` file in the project root). If the key is not found, the client is disabled.
-    *   Initializes the `genai.Client` object if the API key is valid.
-    *   Initializes internal data structures for request history (`_request_history`), RPM limit (`_rpm_limit`), and TPM limit (`_tpm_limit`).
-*   **Attributes:**
-    *   `client`: An instance of `genai.Client` if the API key is valid, otherwise `None`.
-    *   `model`: The name of the LLM model being used.
-    *   `_request_history`: A list of dictionaries storing the timestamp and token count of recent requests, used for rate limiting.
-    *   `_rpm_limit`: The maximum number of requests per minute allowed (set to 28 as a safety buffer).
-    *   `_tpm_limit`: The maximum number of tokens processed per minute allowed (set to 14000 as a safety buffer).
+**Important Functions and Their Behavior:**
 
-### Important Functions
+*   **`generate(prompt, max_retries, temperature, max_output_tokens)`**: This function is the main entry point for interacting with the LLM.
+    *   `prompt` (str): The input text that will be sent to the LLM.
+    *   `max_retries` (int, default=5): Specifies the maximum number of times to retry the request if a transient error occurs.
+    *   `temperature` (float, default=0.2): Controls the randomness of the generated text. Lower values produce more predictable output.
+    *   `max_output_tokens` (int, default=8192): Sets the maximum number of tokens the LLM can generate in its response.
+    *   Returns: The generated text as a string, or `None` if the request fails after multiple retries.
 
-#### `_estimate_tokens(text: str) -> int`
+*   **`_throttle(estimated_tokens)`**: This private function manages the rate limits. It maintains a history of recent requests and their token usage. Before making a new request, it checks if the request would exceed the configured RPM and TPM limits. If so, it pauses execution until the rate limit window allows another request.
 
-*   **Purpose:** Provides a rough estimate of the number of tokens in a given text string.
-*   **Arguments:**
-    *   `text: str`: The input text string.
-*   **Return Value:** An integer representing the estimated token count.  The estimation is based on a simple rule of 4 characters per token.
+**Type Hints and Their Significance:**
 
-#### `_throttle(estimated_tokens: int) -> None`
+The code extensively uses type hints (e.g., `str`, `int`, `Optional[str]`). These hints improve code readability and maintainability. They allow static analysis tools to detect potential type errors, reducing the risk of runtime issues.  The `Optional[str]` return type in the `generate` function indicates that the function may return a string or `None` if the generation fails.
 
-*   **Purpose:** Implements rate limiting to prevent exceeding the API's RPM and TPM limits.
-*   **Arguments:**
-    *   `estimated_tokens: int`: The estimated number of tokens for the upcoming request.
-*   **Behavior:**
-    *   Maintains a history of recent requests and their token counts.
-    *   Checks if the current request would exceed the RPM or TPM limits.
-    *   If a limit is approaching, it pauses execution using `time.sleep()` until sufficient headroom is available.
-    *   Updates the request history with the current request's information.
+**Notable Patterns and Design Decisions:**
 
-#### `generate(prompt: str, max_retries: int = 3, temperature: float = 0.2, max_output_tokens: int = 8192) -> Optional[str]`
-
-*   **Purpose:** Generates text content from a given prompt using the configured LLM.
-*   **Arguments:**
-    *   `prompt: str`: The input prompt for the LLM.
-    *   `max_retries: int = 3`: The maximum number of times to retry the request if a transient error occurs.
-    *   `temperature: float = 0.2`: Controls the randomness of the generated text (lower values are more deterministic).
-    *   `max_output_tokens: int = 8192`: The maximum number of tokens to generate in the response.
-*   **Return Value:**
-    *   `str`: The generated text content if the request is successful.
-    *   `None`: If the request fails after multiple retries or if the API key is not configured.
-*   **Behavior:**
-    *   Estimates the token count of the prompt and output.
-    *   Calls the `_throttle` function to ensure rate limits are respected.
-    *   Implements a retry loop with exponential backoff for transient errors (429, 503, or "overloaded").
-    *   Sends the prompt to the LLM using `self.client.models.generate_content()`.
-    *   Handles potential exceptions during the API call and logs errors.
-    *   Returns the generated text if successful, or `None` if all retries fail.
-
-### Type Hints
-
-The code extensively uses type hints (e.g., `str`, `int`, `Optional[str]`) to improve code readability and maintainability. These hints clarify the expected data types for function arguments and return values, aiding in static analysis and error detection.
-
-### Design Decisions
-
-*   **Rate Limiting:** The implementation of rate limiting is a key design decision to ensure responsible API usage and prevent errors caused by exceeding API limits.
-*   **Retry Logic:** The inclusion of retry logic with exponential backoff enhances the robustness of the client by automatically handling transient errors.
-*   **Configuration via Environment Variables:**  Loading the API key from an environment variable promotes security and allows for easy configuration without modifying the code.
-*   **Token Estimation:** The simple token estimation method provides a reasonable approximation for rate limiting purposes.
+*   **Retry Logic:** The `generate` function implements a retry mechanism with exponential backoff to handle transient errors. This improves the robustness of the client.
+*   **Rate Limiting:** The `_throttle` function proactively manages rate limits to prevent API errors and ensure fair usage.
+*   **Configuration via Environment Variables:** The API key is loaded from an environment variable (`GOOGLE_API_KEY`), promoting secure configuration and separation of concerns.
+*   **Modular Design:** The `LLMClient` class encapsulates all LLM interaction logic, making it reusable and testable.
+*   **Token Estimation:** The `_estimate_tokens` function provides a basic token estimation to assist with rate limiting.
+*   **Error Handling:** The code includes specific checks for retryable errors (429, 503) and provides informative error messages.
+*   **Request History:** The `_request_history` list is used to track recent requests for accurate rate limit calculations.
+*   **Defensive Programming:** The code checks for a missing API key and disables the client if it's not found, preventing unexpected errors.
