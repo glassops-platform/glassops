@@ -215,5 +215,4 @@ nav:
           - Tools:
                 - ADR Enforcer:
                       - "Overview": packages/tools/adr-enforcer/README.md
-                      - "Architecture": packages/tools/adr-enforcer/architecture.md
                       - "Docs": packages/tools/adr-enforcer/docs/README.md
