@@ -9,7 +9,7 @@
 
 ---
 
-**Abstract**
+## Abstract
 
 Enterprise software delivery now spans source control, CI/CD, static analysis, ticketing, deployment systems, and AI coding tools. Each system emits its own logs, models identity differently, and stores evidence in isolation. The result is fragmented governance: policies are difficult to enforce consistently, audit trails are difficult to reconstruct, and AI-assisted development is often only partially visible.
 
