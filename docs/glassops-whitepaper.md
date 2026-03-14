@@ -4,17 +4,18 @@
 
 **External Edition | March 2026**
 
-> **Note:** This paper describes the current architectural direction of GlassSpec and the current platform design of GlassOps. Both are in active development.
+> [!NOTE]
+> This paper describes the current architectural direction of GlassSpec and the current platform design of GlassOps. Both are in active development.
 
 ---
 
-> **Abstract**
->
-> Enterprise software delivery now spans source control, CI/CD, static analysis, ticketing, deployment systems, and AI coding tools. Each system emits its own logs, models identity differently, and stores evidence in isolation. The result is fragmented governance: policies are difficult to enforce consistently, audit trails are difficult to reconstruct, and AI-assisted development is often only partially visible.
->
-> **GlassOps addresses this by treating governance as a protocol layer rather than a per-tool feature.** Built on GlassSpec, a canonical event model for development governance, GlassOps normalizes development activity into correlation-rich, policy-evaluable events that can be routed to policy engines, audit stores, and existing enterprise systems.
->
-> GlassSpec defines the protocol. GlassOps operationalizes it as a platform for policy enforcement, identity correlation, and continuous audit evidence across heterogeneous toolchains.
+**Abstract**
+
+Enterprise software delivery now spans source control, CI/CD, static analysis, ticketing, deployment systems, and AI coding tools. Each system emits its own logs, models identity differently, and stores evidence in isolation. The result is fragmented governance: policies are difficult to enforce consistently, audit trails are difficult to reconstruct, and AI-assisted development is often only partially visible.
+
+**GlassOps addresses this by treating governance as a protocol layer rather than a per-tool feature.** Built on GlassSpec, a canonical event model for development governance, GlassOps normalizes development activity into correlation-rich, policy-evaluable events that can be routed to policy engines, audit stores, and existing enterprise systems.
+
+GlassSpec defines the protocol. GlassOps operationalizes it as a platform for policy enforcement, identity correlation, and continuous audit evidence across heterogeneous toolchains.
 
 ---
 
@@ -38,7 +39,8 @@ Each tool has its own event format, actor model, and audit record. Security and 
 
 This is not primarily a policy-writing problem. It is a systems-integration problem.
 
-> **Core issue:** There is no shared governance substrate across the software delivery toolchain. Every tool speaks a different governance dialect.
+> [!IMPORTANT]
+> There is no shared governance substrate across the software delivery toolchain. Every tool speaks a different governance dialect.
 
 ### The Integration Economics
 
@@ -202,6 +204,7 @@ Enterprises already have SIEM, observability, and analytics infrastructure. Thos
 - **Observability platforms** model operational behavior well, but not governance concepts such as policy decisions, actor attribution, or durable control evidence.
 - **General analytics platforms** can store and query events, but they do not provide a canonical governance model by themselves.
 
+> [!NOTE]
 > **The semantic gap:** Operational telemetry answers what the system did. Governance records answer who did what, under what policy, with what outcome, and where the evidence lives.
 
 GlassOps sits upstream of those systems by producing normalized governance events they can consume.
@@ -288,7 +291,8 @@ GlassOps addresses this by making governance a protocol concern. GlassSpec provi
 
 **The protocol architecture is substrate-agnostic.** While this paper focuses on software delivery toolchains, GlassSpec is designed as a canonical governance event model that can extend to adjacent domains over time. The same pattern of canonical events, identity correlation, and policy evaluation may apply to other enterprise control planes, but those expansions are outside the scope of this paper.
 
-> **Core thesis:** Governance that remains tool-bound will continue to fragment at the rate of the toolchain. A protocol layer makes auditability, policy enforcement, and cross-system correlation properties of the delivery process itself.
+> [!IMPORTANT]
+> Governance that remains tool-bound will continue to fragment at the rate of the toolchain. A protocol layer makes auditability, policy enforcement, and cross-system correlation properties of the delivery process itself.
 
 ---
 
