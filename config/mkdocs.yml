@@ -72,6 +72,7 @@ nav:
 
     - Foundation:
           - "Vision": docs/vision.md
+          - "Whitepaper": docs/whitepaper.md
           - "Documentation Map": docs/doc-map.md
           - "The 8/10 Constraint": docs/adr/009-8-10-vs-10-10-bridge-strategy.md
           - "Compliance":
