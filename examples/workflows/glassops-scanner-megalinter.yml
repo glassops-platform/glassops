@@ -1,0 +1,57 @@
+name: GlassOps Scanner - MegaLinter
+
+on:
+    workflow_dispatch:
+    pull_request:
+        branches: [main, develop]
+
+jobs:
+    scan:
+        name: Phase 1.5 - Architectural Validity
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+            security-events: write # Required for uploading SARIF
+
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4.1.1
+              with:
+                  fetch-depth: 0
+
+            # 1. Run MegaLinter (The "Scanner")
+            - name: MegaLinter - Salesforce Flavor
+              id: ml
+              uses: oxsecurity/megalinter/flavors/salesforce@v7
+              env:
+                  # Limit scan to delta if possible, or scan full repo
+                  VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'workflow_dispatch' }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  # Standardize output
+                  ENABLE_LINTERS: APACHE_GROOVY,JSON,JAVASCRIPT,MARKDOWN,SALESFORCE_SFDX
+                  SARIF_REPORTER: true
+                  OUTPUT_DETAILS: always
+                  OUTPUT_FORMAT: sarif
+
+            # 2. GlassOps Adapter Logic (Conceptual)
+            # This step reads the SARIF and updates the Deployment Contract
+            - name: GlassOps - Normalize Static Analysis
+              if: always() # Run even if linter finds errors
+              run: |
+                  echo "Processing SARIF report..."
+                  # In a real adapter, this would be: 
+                  # uses: glassops-platform/glassops-megalinter-adapter@v1
+                  # with:
+                  #   sarif-file: megalinter-reports/megalinter-report.sarif
+
+                  # For now, we simulate the contract update:
+                  mkdir -p .glassops
+                  echo '{ "quality": { "staticAnalysis": { "tool": "MegaLinter", "met": ${{ steps.ml.outputs.success == "true" }} } } }' > .glassops/deployment-contract.json
+
+            # 3. Upload Results to GitHub Security Tab
+            - name: Upload SARIF to GitHub
+              if: always()
+              uses: github/codeql-action/upload-sarif@v3
+              with:
+                  sarif_file: megalinter-reports/megalinter-report.sarif
