@@ -114,6 +114,7 @@ This project is an **architectural reference implementation**, not a commercial 
 - **One-page overview:** [`overview.md`](docs/architecture/overview.md)
 - **Vision & philosophy:** [`vision.md`](docs/vision.md)
 - **Full architecture spec:** [`architecture.md`](docs/architecture/overview.md)
+- **White paper:** [`whitepaper.md`](docs/whitepaper.md)
 
 ---
 
