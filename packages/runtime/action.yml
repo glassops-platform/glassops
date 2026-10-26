@@ -38,10 +38,6 @@ inputs:
         default: '80'
         required: false
 
-    plugins:
-        description: "Comma-separated list of Salesforce CLI plugins to install (e.g., 'sfdx-hardis,@salesforce/plugin-deploy-retrieve')"
-        required: false
-
     skip_auth:
         description: 'If true, skips Salesforce authentication (useful for CI/governance testing)'
         default: 'false'
@@ -56,6 +52,8 @@ outputs:
         description: 'True if the environment is currently frozen by policy'
     contract_path:
         description: 'Path to the generated deployment contract JSON file'
+    glassops_ready:
+        description: 'True when the runtime has completed bootstrap and the environment is ready'
 
 runs:
     using: 'docker'
