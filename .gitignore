@@ -92,9 +92,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# General Build
-!packages/runtime/dist/
-
 # GlassOps Runtime Artifacts
 .glassops/*.json
 !.glassops/policy.team.json
