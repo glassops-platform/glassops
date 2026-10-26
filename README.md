@@ -27,24 +27,13 @@ The runtime does not deploy anything. Your workflow runs the deploy after the ru
 
 ---
 
-## Direction
-
-The design ideas the rebuild builds on:
-
-- Policy is decided before a deployment runs, not after.
-- The execution tool and the policy decision stay separate.
-- Every run leaves a machine-readable record.
-
-The ADRs in [`docs/adr`](docs/adr/README.md) record earlier design decisions. Several of them describe packages that were removed from this repository, and each ADR carries a status line. The [white paper](docs/whitepaper.md) describes direction, not current functionality.
-
----
-
 ## Learn More
 
 - **Architecture overview:** [`overview.md`](docs/architecture/overview.md)
 - **Vision:** [`vision.md`](docs/vision.md)
 - **Runtime reference:** [`platform-reference.md`](docs/reference/platform-reference.md)
-- **White paper (direction only):** [`whitepaper.md`](docs/whitepaper.md)
+- **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
+- **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
 
 ---
 

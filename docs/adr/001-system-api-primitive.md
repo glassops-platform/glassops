@@ -6,7 +6,7 @@
 
 ---
 
-> **Note:** Superseded by the Go runtime in `packages/runtime`, which does apply policy and is not a thin primitive. The `@v4`, `glassops-runtime` repository and `action-*` names below were never built.
+> **Note:** Superseded. The runtime in `packages/runtime` does not follow this design. The `glassops-platform/glassops-runtime` repository holds an earlier TypeScript runtime and is no longer developed. No `@v4` tag or `action-*` release exists.
 
 ## Context
 

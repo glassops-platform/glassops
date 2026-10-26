@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-In GitHub Actions pipelines, caching dependencies (like `node_modules` or `~/.local/share/sfdx`) is a common pattern to improve performance. The legacy TypeScript runtime (since removed) attempted to use `@actions/cache` for this purpose.
+In GitHub Actions pipelines, caching dependencies (like `node_modules` or `~/.local/share/sfdx`) is a common pattern to improve performance. The legacy TypeScript runtime (no longer in this repository) attempted to use `@actions/cache` for this purpose.
 
 However, the GlassOps Runtime executes as a **Docker Container Action**. This introduces significant challenges for traditional file-based caching:
 

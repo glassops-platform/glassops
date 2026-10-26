@@ -6,7 +6,7 @@
 
 ---
 
-> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) were removed from this repository and do not exist. The decision text is kept as history.
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) are not part of this repository. The decision text is kept as history.
 
 ## Context
 

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-The runtime is a Go rewrite of an earlier TypeScript action that has been removed. No version has been released or tagged, so there are no release notes yet.
+The runtime is a Go rewrite of an earlier TypeScript action that is no longer in this repository. No version has been released or tagged, so there are no release notes yet.
 
 Current state:
 
