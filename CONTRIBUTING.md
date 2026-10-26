@@ -32,7 +32,7 @@ The project is being rebuilt as a CI-agnostic command line tool. Open an issue b
 
 1. **Fork** the repo and create your branch from `main`.
 2. **Clean Room Standard:** Ensure your contribution is independent of any proprietary or work-related logic.
-3. **Test:** Run `go test ./...` in `packages/runtime`.
+3. **Test:** Run `go test ./...` at the repository root for the CLI, and in `packages/runtime` for the runtime.
 4. **Lint:** Ensure the CI build passes and follow the project's Go coding standards.
 5. **Issue:** Submit your Pull Request!
 
