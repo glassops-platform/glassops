@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-In GitHub Actions pipelines, caching dependencies (like `node_modules` or `~/.local/share/sfdx`) is a common pattern to improve performance. The legacy TypeScript runtime (`runtime-ts`) attempted to use `@actions/cache` for this purpose.
+In GitHub Actions pipelines, caching dependencies (like `node_modules` or `~/.local/share/sfdx`) is a common pattern to improve performance. The legacy TypeScript runtime (no longer in this repository) attempted to use `@actions/cache` for this purpose.
 
 However, the GlassOps Runtime executes as a **Docker Container Action**. This introduces significant challenges for traditional file-based caching:
 
@@ -23,7 +23,7 @@ Instead, we will rely on **Immutable Docker Images** as the primary caching mech
 ### Rationale
 
 1.  **Immutability & Determinism**: The `Dockerfile` already pre-installs the Salesforce CLI and necessary tools. By baking dependencies into the image, we ensure that every run uses the exact same version of tools, eliminating "it works on my machine" issues caused by drift in cached plugins.
-2.  **Simplicity**: Implementing a custom cache client in Go that talks to the undocumented GitHub Actions Cache API—while managing token passing—adds significant complexity to the codebase for marginal gain.
+2.  **Simplicity**: Implementing a custom cache client in Go that talks to the undocumented GitHub Actions Cache API, while managing token passing, adds significant complexity to the codebase for marginal gain.
 3.  **Correctness**: If a user needs specific plugins, they should be using a specific version of the GlassOps Runtime image (or a derivative image) that has those plugins installed, rather than relying on runtime installation and caching.
 
 ## Consequences
@@ -34,6 +34,6 @@ Instead, we will rely on **Immutable Docker Images** as the primary caching mech
 
 ## Alternatives
 
-- **Use @actions/cache**: Attempted in `runtime-ts` but failed reliably in Docker contexts.
+- **Use @actions/cache**: Attempted in the legacy TypeScript runtime but failed reliably in Docker contexts.
 - **Pass Secrets**: We could pass `ACTIONS_RUNTIME_TOKEN` to the container, but this increases the security surface area.
 - **Volume Mounting**: We could mount a host directory for caching, but this requires user configuration and breaks the "zero-config" goal.

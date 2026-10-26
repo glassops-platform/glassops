@@ -24,6 +24,8 @@ ehthumbs.db
 
 # Claude / AI
 .claude/
+CLAUDE.md
+CLAUDE.local.md
 .gemini/
 
 # Environment & Security
@@ -89,9 +91,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# General Build
-!packages/runtime/dist/
 
 # GlassOps Runtime Artifacts
 .glassops/*.json

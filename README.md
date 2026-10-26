@@ -1,166 +1,62 @@
 # GlassOps™
 
 [![Runtime Build & Test](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml)
-[![Docs Generation & Sync](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs.yml)
 [![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml)
 [![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment)
-[![Docs Bot](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml/badge.svg)](https://github.com/glassops-platform/glassops/actions/workflows/docs-bot.yml)
 
 > **Governance-first Salesforce DevOps.**
->
-> GlassOps governs outcomes, not implementations.
 
-GlassOps is an **open governance protocol** for Salesforce CI/CD. It enforces architectural and quality standards _before_ deployments execute. No tool or vendor lock-in.
+## Status
 
----
-
-## What Problem Does GlassOps Solve?
-
-Most Salesforce DevOps tools force a tradeoff:
-
-- **Fast but opaque** (black-box platforms)
-- **Transparent but chaotic** (raw CLI scripts)
-
-GlassOps removes the tradeoff.
-
-It separates:
-
-- **Governance** (Policy, Standards, Audit)  
-  from
-- **Execution** (CLI tools, workflows, automation)
-
-You choose _how_ you deploy.  
-GlassOps decides _whether you should_.
+GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. This repository is mid-rebuild and nothing here is released. What exists today is the GitHub Action runtime in `packages/runtime`, written in Go. It is early work, not a finished product.
 
 ---
 
-## The Mental Model
+## What Exists Today
 
-```
-Intent → Policy → Simulation → Contract → Enforcement → Execution
-```
+The runtime in [`packages/runtime`](packages/runtime/README.md) runs as a Docker container action. In order, it:
 
-- **Intent:** A deployment is requested
-- **Policy:** Quality & architectural standards are resolved
-- **Simulation:** A dry run validates the change
-- **Contract:** Results are normalized into a governance record
-- **Enforcement:** Policy decides pass/fail
-- **Execution:** Deployment only proceeds if governance passes
+1. Loads `devops-config.json` and checks configured freeze windows.
+2. Optionally runs static analysis through the Salesforce CLI.
+3. Authenticates to a Salesforce org with the JWT flow.
+4. Writes a permit file and a deployment contract file under `.glassops/`.
 
-GlassOps never parses raw CLI output. It only reads a **Deployment Contract**.
+The permit and the contract are plain JSON files. They are not signed and they do not yet carry a trustworthy record of what ran. Treat them as a design sketch of the final output, not as an audit record.
 
----
-
-## What GlassOps Is (and Is Not)
-
-### GlassOps _is_:
-
-- A **governance control plane**
-- A **portable policy layer (OPA)**
-- A **protocol** that execution tools must follow
-- A **Container-First architecture** (Executed via GitHub Actions or K8s)
-- An **audit and compliance amplifier**
-
-### GlassOps is _not_:
-
-- A CI/CD pipeline engine
-- A replacement for sfdx-hardis, Gearset, or Copado
-- A proprietary black box
-- A commercial SaaS product
-
----
-
-## Execution Engines (Adapters)
-
-GlassOps works with multiple execution tools via adapters:
-
-- **GlassOps Native**. Raw `sf` CLI. Maximum transparency.
-- **GlassOps Hardis**. Wraps `sfdx-hardis`. Maximum velocity.
-- **Bring Your Own**. Implement the adapter interface.
-
-Switch engines without rewriting governance.
-
----
-
-## Adoption Levels
-
-- **Level 1:** Safe execution (adapters only)
-- **Level 2:** Governance protocol (policy + contracts)
-- **Level 3:** Optional Salesforce UI (Reference Console)
-
-You can stop at any level and still get value.
-
----
-
-## Project Status
-
-- **In active development**
-- **Seeking testers and collaborators**
-
-### Implementation Status
-
-| Component            | Status         | Description                                                |
-| :------------------- | :------------- | :--------------------------------------------------------- |
-| **GlassOps Runtime** | In Development | Unified governance primitive (`glassops/runtime:latest`).  |
-| **Native Adapter**   | In Development | Standard Salesforce CLI execution (bundled in Runtime v1). |
-| **Policy Engine**    | In Development | OPA-based policy resolution API.                           |
-
-This project is an **architectural reference implementation**, not a commercial product.
+The runtime does not deploy anything. Your workflow runs the deploy after the runtime step finishes.
 
 ---
 
 ## Learn More
 
-- **One-page overview:** [`overview.md`](docs/architecture/overview.md)
-- **Vision & philosophy:** [`vision.md`](docs/vision.md)
-- **Full architecture spec:** [`architecture.md`](docs/architecture/overview.md)
-- **White paper:** [`whitepaper.md`](docs/whitepaper.md)
+- **Architecture overview:** [`overview.md`](docs/architecture/overview.md)
+- **Vision:** [`vision.md`](docs/vision.md)
+- **Runtime reference:** [`platform-reference.md`](docs/reference/platform-reference.md)
+- **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
+- **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
 
 ---
 
 ## Who This Is For
 
-GlassOps is designed for teams that:
+Teams that:
 
 - Already use (or want to use) **GitHub Actions**
 - Care about **auditability and compliance**
 - Prefer **transparent systems over black boxes**
-- Think in **systems and contracts**
-
-If that's not you, that's okay. GlassOps is opinionated by design.
 
 ---
 
 ## Quick Start
 
-```yaml
-# .github/workflows/deploy.yml
-jobs:
-    deploy:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: GlassOps Runtime
-              uses: glassops-platform/glassops/packages/runtime@v1
-              with:
-                  client_id: ${{ secrets.SF_CLIENT_ID }}
-                  jwt_key: ${{ secrets.SF_JWT_KEY }}
-                  username: ${{ vars.SF_USERNAME }}
-```
-
-See [doc-map.md](docs/doc-map.md) for available guides.
+**Not yet released.** No tag or release exists, so there is no pinned version to reference. To try the runtime today, build it from a checkout of this repository. See [`packages/runtime/README.md`](packages/runtime/README.md) for local development and for the inputs and outputs. The example workflow is in [`examples/workflows/glassops-deploy.yml`](examples/workflows/glassops-deploy.yml).
 
 ---
 
 ## Contributing
 
-GlassOps is intentionally modular. You don't need to adopt the whole platform to contribute.
-
-- Build an adapter for your favorite tool
-- Improve policy resolution logic
-- Add audit visualizations
 - Report bugs or suggest features
+- Improve the Go runtime in `packages/runtime`
 - See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
 
 ---
@@ -168,13 +64,12 @@ GlassOps is intentionally modular. You don't need to adopt the whole platform to
 ## License
 
 - **Code:** Apache 2.0. See [LICENSE](LICENSE)
-- **Documentation:** Creative Commons Attribution 4.0 International. See [LICENSE-DOCS](docs/LICENSE)
+- **Documentation:** Creative Commons Attribution 4.0 International. See [docs/LICENSE](docs/LICENSE)
 
 ---
 
 ## Contact
 
-- **Discussions:** [GitHub Discussions](https://github.com/glassops-platform/glassops/discussions)
 - **Issues:** [GitHub Issues](https://github.com/glassops-platform/glassops/issues)
 - **Author:** Ryan Bumstead ([@rdbumstead](https://github.com/rdbumstead))
 - **Maintainer:** Ryan Bumstead ([@rdbumstead](https://github.com/rdbumstead))

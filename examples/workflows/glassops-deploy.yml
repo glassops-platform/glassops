@@ -18,14 +18,13 @@ jobs:
       
       - name: Setup GlassOps Runtime
         id: glassops
-        uses: ./  # For local testing, replace with glassops/runtime@v1 in production
+        uses: ./packages/runtime  # No release exists yet, so use the action from a checkout of this repository
         with:
           jwt_key: ${{ secrets.SALESFORCE_JWT_KEY }}
           client_id: ${{ secrets.SALESFORCE_CLIENT_ID }}
           username: ${{ secrets.SALESFORCE_USERNAME }}
           instance_url: ${{ secrets.SALESFORCE_INSTANCE_URL || 'https://login.salesforce.com' }}
           enforce_policy: 'true'
-          plugins: 'sfdx-hardis,@salesforce/plugin-deploy-retrieve'
           coverage_required: '80'
       
       - name: Verify Runtime Status
@@ -35,11 +34,12 @@ jobs:
           echo "Is Locked: ${{ steps.glassops.outputs.is_locked }}"
           echo "Contract Path: ${{ steps.glassops.outputs.contract_path }}"
       
-      - name: Deploy to Salesforce
+      # The runtime authenticates inside its own container, so this runner has no
+      # Salesforce session. A deploy step needs its own authentication and is not
+      # provided here. Gate it on the runtime output like this:
+      - name: Governance gate passed
         if: steps.glassops.outputs.glassops_ready == 'true'
-        run: |
-          echo "Deploying with governed runtime..."
-          sf project deploy start --target-org default
+        run: echo "Runtime reported ready. Add your own authenticated deploy step here."
       
       - name: Upload Deployment Contract
         if: always()
@@ -62,11 +62,11 @@ jobs:
       
       - name: Generate Governance Report
         run: |
-          echo "## 📊 GlassOps Governance Report" >> $GITHUB_STEP_SUMMARY
+          echo "## GlassOps Governance Report" >> $GITHUB_STEP_SUMMARY
           cat glassops-contract.json | jq -r '
             "### Deployment Status: \(.status)",
             "",
-            "**Runtime ID**: `\(.audit.repository)`",
+            "**Repository**: `\(.audit.repository)`",
             "**Org ID**: `\(.audit.orgId)`",
             "**Triggered By**: @\(.audit.triggeredBy)",
             "**Commit**: `\(.audit.commit)`",
@@ -74,5 +74,5 @@ jobs:
             "### Quality Metrics",
             "- **Coverage**: \(.quality.coverage.actual)% (Required: \(.quality.coverage.required)%)",
             "- **Tests**: \(.quality.tests.passed)/\(.quality.tests.total) passed",
-            "- **Coverage Met**: \(if .quality.coverage.met then "✅" else "❌" end)"
+            "- **Coverage Met**: \(if .quality.coverage.met then "yes" else "no" end)"
           ' >> $GITHUB_STEP_SUMMARY

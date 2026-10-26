@@ -1,7 +1,7 @@
 # ADR-004: Schema Contract over YAML Parsing
 
 **Date:** 2026-01-19
-**Status:** Accepted
+**Status:** Deferred
 **Deciders:** Ryan Bumstead
 
 ---

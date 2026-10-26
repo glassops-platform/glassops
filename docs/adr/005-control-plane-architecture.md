@@ -1,10 +1,12 @@
 # ADR-005: Control Plane Architecture & Reference Console
 
 **Date:** 2026-01-19
-**Status:** Accepted
+**Status:** Deferred
 **Deciders:** Ryan Bumstead
 
 ---
+
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) are not part of this repository. The decision text is kept as history.
 
 ## Overview
 

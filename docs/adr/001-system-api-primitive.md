@@ -1,10 +1,12 @@
 # ADR-001: glassops-runtime as System API Primitive
 
 **Date:** 2026-01-19
-**Status:** Accepted
+**Status:** Superseded
 **Deciders:** Ryan Bumstead
 
 ---
+
+> **Note:** Superseded. The runtime in `packages/runtime` does not follow this design. The `glassops-platform/glassops-runtime` repository holds an earlier TypeScript runtime and is no longer developed. No `@v4` tag or `action-*` release exists.
 
 ## Context
 

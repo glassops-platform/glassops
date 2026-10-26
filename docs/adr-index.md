@@ -50,96 +50,6 @@ Architecture Decision Records (ADRs) capture important architectural decisions a
 
 ---
 
-### 3. GlassOps Control Plane (`glassops-control-plane/docs/adr/`)
-
-**Control plane and operator architecture decisions**
-
-| ADR                                                                     | Title                       | Status   | Date       |
-| ----------------------------------------------------------------------- | --------------------------- | -------- | ---------- |
-| [001](../packages/control-plane/adr/001-kubernetes-operator-pattern.md) | Kubernetes Operator Pattern | Accepted | 2026-01-24 |
-
----
-
-### 4. GlassSpec Protocol (`glassspec/docs/adr/`)
-
-**Protocol specification and standard decisions**
-
-| ADR                                                            | Title                  | Status   | Date       |
-| -------------------------------------------------------------- | ---------------------- | -------- | ---------- |
-| [001](../packages/glassspec/adr/001-layered-contract-model.md) | Layered Contract Model | Accepted | 2026-01-24 |
-
----
-
-### 5. GlassOps Native Adapter (`packages/adapters/native/docs/adr/`)
-
-**Native Salesforce adapter decisions**
-
-| ADR | Title         | Status | Date |
-| --- | ------------- | ------ | ---- |
-| -   | _No ADRs yet_ | -      | -    |
-
-**Proposed ADRs:**
-
-- sf CLI vs @salesforce/core Integration
-- JWT Key Management Strategy
-- SARIF Mapping from Deployment Results
-- Coverage Calculation Methodology
-
----
-
-### 6. GlassOps SFDX-Hardis Adapter (`packages/adapters/hardis/docs/adr/`)
-
-**SFDX-Hardis quality gate adapter decisions**
-
-| ADR | Title         | Status | Date |
-| --- | ------------- | ------ | ---- |
-| -   | _No ADRs yet_ | -      | -    |
-
-**Proposed ADRs:**
-
-- Hardis Quality Gates to SARIF Mapping
-- Branch Protection Enforcement Strategy
-- Integration with Native Adapter Results
-
----
-
-### 7. GlassOps Scanner Adapter (`packages/adapters/scanner/docs/adr/`)
-
-**Static analysis and code scanner adapter decisions**
-
-| ADR | Title         | Status | Date |
-| --- | ------------- | ------ | ---- |
-| -   | _No ADRs yet_ | -      | -    |
-
-**Proposed ADRs:**
-
-- MegaLinter vs Individual Linters
-- SARIF Aggregation from Multiple Scanners
-- Scanner Priority and Weighting
-- Baseline/Suppression Strategy
-
----
-
-### 8. GlassOps ADR Enforcement Adapter (`packages/tools/adr-enforcer/docs/adr/`)
-
-**ADR governance and compliance adapter decisions (Meta-Adapter)**
-
-| ADR | Title         | Status | Date |
-| --- | ------------- | ------ | ---- |
-| -   | _No ADRs yet_ | -      | -    |
-
-**Proposed ADRs:**
-
-- ADR Detection Strategy
-- Decision Drift Detection
-- Enforcement Mode (Block vs Warn)
-- ADR Coverage Metrics
-- Meta-Governance (Self-Enforcement)
-
-**Special Note:** This is a **meta-adapter** that governs the governance process itself. It enforces ADR compliance and detects when architectural decisions are missing or violated.
-
----
-
 ## ADR Lifecycle
 
 ```
@@ -159,8 +69,6 @@ Proposed → Accepted → Deprecated → Superseded
 
 - **Platform-wide** → `glassops/docs/adr/`
 - **Runtime-specific** → `glassops-runtime/docs/adr/`
-- **Control plane** → `glassops-control-plane/docs/adr/`
-- **Protocol changes** → `glassspec/docs/adr/`
 
 ### 2. Use the Template
 

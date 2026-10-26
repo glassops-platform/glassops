@@ -1,3 +1,5 @@
+# Conceptual sketch only. No GlassOps scanner adapter exists. The contract step below
+# writes a placeholder file that nothing in this repository reads.
 name: GlassOps Scanner - MegaLinter
 
 on:
@@ -7,7 +9,7 @@ on:
 
 jobs:
     scan:
-        name: Phase 1.5 - Architectural Validity
+        name: Static analysis
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -34,18 +36,13 @@ jobs:
                   OUTPUT_DETAILS: always
                   OUTPUT_FORMAT: sarif
 
-            # 2. GlassOps Adapter Logic (Conceptual)
+            # 2. Placeholder contract step (conceptual)
             # This step reads the SARIF and updates the Deployment Contract
             - name: GlassOps - Normalize Static Analysis
               if: always() # Run even if linter finds errors
               run: |
                   echo "Processing SARIF report..."
-                  # In a real adapter, this would be: 
-                  # uses: glassops-platform/glassops-megalinter-adapter@v1
-                  # with:
-                  #   sarif-file: megalinter-reports/megalinter-report.sarif
-
-                  # For now, we simulate the contract update:
+                  # This only simulates a contract update:
                   mkdir -p .glassops
                   echo '{ "quality": { "staticAnalysis": { "tool": "MegaLinter", "met": ${{ steps.ml.outputs.success == "true" }} } } }' > .glassops/deployment-contract.json
 
