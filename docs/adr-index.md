@@ -50,26 +50,6 @@ Architecture Decision Records (ADRs) capture important architectural decisions a
 
 ---
 
-### 3. GlassOps Control Plane (`glassops-control-plane/docs/adr/`)
-
-**Control plane and operator architecture decisions**
-
-| ADR                                                                     | Title                       | Status   | Date       |
-| ----------------------------------------------------------------------- | --------------------------- | -------- | ---------- |
-| [001](../packages/control-plane/adr/001-kubernetes-operator-pattern.md) | Kubernetes Operator Pattern | Accepted | 2026-01-24 |
-
----
-
-### 4. GlassSpec Protocol (`glassspec/docs/adr/`)
-
-**Protocol specification and standard decisions**
-
-| ADR                                                            | Title                  | Status   | Date       |
-| -------------------------------------------------------------- | ---------------------- | -------- | ---------- |
-| [001](../packages/glassspec/adr/001-layered-contract-model.md) | Layered Contract Model | Accepted | 2026-01-24 |
-
----
-
 ## ADR Lifecycle
 
 ```
