@@ -30,7 +30,6 @@
         "@secretlint/secretlint-rule-pattern": "^11.2.5",
         "@secretlint/secretlint-rule-preset-recommend": "^11.2.5",
         "husky": "^9.1.7",
-        "lint-staged": "^16.1.2",
         "prettier": "^3.5.3",
         "prettier-plugin-apex": "^2.2.6",
         "secretlint": "^6.2.4",
