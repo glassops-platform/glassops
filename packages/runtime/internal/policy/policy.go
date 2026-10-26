@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/glassops-platform/glassops/packages/runtime/internal/gha"
@@ -151,71 +150,4 @@ func (e *Engine) CheckFreeze(config *Config) error {
 	}
 
 	return nil
-}
-
-// ValidatePluginWhitelist checks if a plugin is allowed by the whitelist.
-func (e *Engine) ValidatePluginWhitelist(config *Config, pluginName string) bool {
-	if len(config.Governance.PluginWhitelist) == 0 {
-		return true // No whitelist = allow all
-	}
-
-	for _, whitelisted := range config.Governance.PluginWhitelist {
-		extracted := extractPluginName(whitelisted)
-		if pluginName == extracted {
-			return true
-		}
-	}
-	return false
-}
-
-// GetPluginVersionConstraint returns the version constraint for a whitelisted plugin.
-func (e *Engine) GetPluginVersionConstraint(config *Config, pluginName string) string {
-	if len(config.Governance.PluginWhitelist) == 0 {
-		return ""
-	}
-
-	for _, whitelisted := range config.Governance.PluginWhitelist {
-		extracted := extractPluginName(whitelisted)
-		if pluginName == extracted {
-			return extractVersionConstraint(whitelisted)
-		}
-	}
-	return ""
-}
-
-// extractPluginName extracts the package name from a potentially versioned string.
-// Examples: "@scope/package@1.0.0" -> "@scope/package", "package@1.0.0" -> "package"
-func extractPluginName(entry string) string {
-	if strings.HasPrefix(entry, "@") {
-		// Scoped package
-		lastAt := strings.LastIndex(entry, "@")
-		if lastAt > 0 {
-			return entry[:lastAt]
-		}
-		return entry
-	}
-
-	// Regular package
-	atIdx := strings.Index(entry, "@")
-	if atIdx > 0 {
-		return entry[:atIdx]
-	}
-	return entry
-}
-
-// extractVersionConstraint extracts the version from a potentially versioned string.
-func extractVersionConstraint(entry string) string {
-	if strings.HasPrefix(entry, "@") {
-		lastAt := strings.LastIndex(entry, "@")
-		if lastAt > 0 {
-			return entry[lastAt+1:]
-		}
-		return ""
-	}
-
-	atIdx := strings.Index(entry, "@")
-	if atIdx > 0 {
-		return entry[atIdx+1:]
-	}
-	return ""
 }
