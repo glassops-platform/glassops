@@ -1,0 +1,88 @@
+name: CLI Build & Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: CLI Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l cmd internal schemas)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race -count=1 ./...
+
+  image:
+    name: CLI Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:test
+          build-args: VERSION=ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the image
+        run: |
+          docker run --rm glassops:test --version
+
+          # A minimal Salesforce project in a git repository with full history.
+          mkdir fixture && cd fixture
+          git init -q
+          echo '{"packageDirectories":[{"path":"force-app","default":true}],"sourceApiVersion":"62.0"}' > sfdx-project.json
+          git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm fixture
+          cd ..
+
+          docker run --rm -v "$PWD/fixture:/work" -w /work glassops:test init --ci local
+          docker run --rm -v "$PWD/fixture:/work" -w /work glassops:test doctor --ci local
+
+  release-check:
+    name: CLI Release Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build every release binary without publishing
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --snapshot --clean

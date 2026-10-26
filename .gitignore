@@ -94,6 +94,7 @@ pnpm-debug.log*
 
 # GlassOps Runtime Artifacts
 .glassops/*.json
+.glassops/results/
 !.glassops/policy.team.json
 glassops_index/
 
