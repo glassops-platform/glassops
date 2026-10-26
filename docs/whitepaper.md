@@ -5,7 +5,7 @@
 **External Edition | March 2026**
 
 > [!NOTE]
-> This paper describes the current architectural direction of GlassSpec and the current platform design of GlassOps. Both are in active development.
+> Describes direction, not current functionality.
 
 ---
 
@@ -296,4 +296,4 @@ GlassOps addresses this by making governance a protocol concern. GlassSpec provi
 
 ---
 
-_© 2026 GlassOps — Ryan Bumstead — External White Paper_
+_© 2026 GlassOps, Ryan Bumstead, External White Paper_

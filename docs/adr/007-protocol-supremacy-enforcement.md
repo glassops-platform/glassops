@@ -6,6 +6,8 @@
 
 ---
 
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) are not part of this repository. The decision text is kept as history.
+
 ## Context
 
 The core value proposition of GlassOps is the **Layered Contract Model**, where governance decisions are made against standard, interoperable schemas (SARIF, CloudEvents).
@@ -159,15 +161,11 @@ jq -e '.runs[0].invocations[0].executionSuccessful' .glassops/glassops-contract.
 ## References
 
 - [OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)
-- [GlassOps Protocol](../../packages/glassspec/README.md)
-- [Adapter Interface](../../packages/glassspec/README.md)
-- [Adapter Development Guide](../../packages/adapters/docs/adapter-development.md)
 
 ---
 
 **Author:** Ryan Bumstead  
-**Implemented:** 2026-01-24  
-**Status:** Active
+**Status:** Accepted. The `glassspec` and adapter packages it governs were removed from this repository.
 
 ## Alternatives
 

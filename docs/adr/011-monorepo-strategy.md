@@ -6,6 +6,8 @@
 
 ---
 
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) are not part of this repository. The decision text is kept as history.
+
 ## Context
 
 GlassOps is a "Protocol Ecosystem" consisting of:

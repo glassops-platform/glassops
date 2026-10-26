@@ -365,8 +365,7 @@ Enterprise (10/10)
 ---
 
 **Author:** Ryan Bumstead  
-**Implemented:** 2026-01-24  
-**Status:** Active - Defines long-term strategy
+**Status:** Accepted. A direction record, not an implementation record.
 
 ## Alternatives
 

@@ -18,17 +18,11 @@ By submitting a Pull Request, you represent and warrant that:
 
 ### The GlassOps Protocol
 
-GlassOps is a **governance-first protocol**. We prioritize architectural health and "One Trigger Per Object" discipline over raw deployment speed.
+GlassOps is **governance-first**. We prioritize architectural health and "One Trigger Per Object" discipline over raw deployment speed.
 
-### Adoption Metrics
+### Direction
 
-Before proposing a major change, consider if it aligns with our target maturity levels:
-
-| Maturity Level | Component           | Who it's for                                  |
-| :------------- | :------------------ | :-------------------------------------------- |
-| **Day 0**      | **Native Adapter**  | Teams wanting safe, transparent execution.    |
-| **Day 30**     | **Scanner Adapter** | Teams ready to enforce architectural hygiene. |
-| **Day 90**     | **Hardis Adapter**  | Teams ready for high-velocity automation.     |
+The project is being rebuilt as a CI-agnostic command line tool. Open an issue before starting a large change so it can be checked against that direction.
 
 ---
 
@@ -38,8 +32,8 @@ Before proposing a major change, consider if it aligns with our target maturity 
 
 1. **Fork** the repo and create your branch from `main`.
 2. **Clean Room Standard:** Ensure your contribution is independent of any proprietary or work-related logic.
-3. **Test:** Verify your changes against the **Deployment Contract v1.0** schema.
-4. **Lint:** Ensure the CI build passes and follow the project's TypeScript standards.
+3. **Test:** Run `go test ./...` in `packages/runtime`.
+4. **Lint:** Ensure the CI build passes and follow the project's Go standards (`go vet` and `go test` must pass).
 5. **Issue:** Submit your Pull Request!
 
 ### Report Bugs

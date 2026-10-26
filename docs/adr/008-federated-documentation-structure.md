@@ -6,11 +6,13 @@
 
 ---
 
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) are not part of this repository. The decision text is kept as history.
+
 ## Context
 
 As GlassOps evolves from a conceptual framework to a deployable platform, the documentation architecture must scale to support three distinct audiences: **Architects** (evaluating the protocol), **Implementers** (building adapters), and **Operators** (running the control plane).
 
-A flat structure creates friction for these users, mixing high-level philosophy with low-level implementation details. To support the "Protocol Ecosystem" vision, the documentation structure must mirror the separation of concerns found in the code itself—creating clear, navigable paths for each stakeholder while maintaining a single source of truth for core principles.
+A flat structure creates friction for these users, mixing high-level philosophy with low-level implementation details. To support the "Protocol Ecosystem" vision, the documentation structure must mirror the separation of concerns found in the code itself,creating clear, navigable paths for each stakeholder while maintaining a single source of truth for core principles.
 
 ---
 
@@ -257,7 +259,6 @@ For teams with existing documentation:
 ## References
 
 - [Divio Documentation System](https://documentation.divio.com/) - Inspiration for four-quadrant structure
-- [GlassOps Protocol](../../packages/glassspec/README.md)
 
 ---
 

@@ -1,75 +1,40 @@
 # Platform Reference & API
 
-> **The Normative Specification for GlassOps Components.**
+> **Reference for the one component that exists today: the runtime.**
 
-This document defines the inputs, outputs, and interfaces for the core system. For architecture, see [overview.md](../architecture/overview.md).
+This document lists the inputs and outputs of the runtime action. The contract, policy and adapter ideas from earlier drafts are not implemented and are not specified here. For architecture, see [overview.md](../architecture/overview.md).
 
 ---
 
-## 1. Runtime Primitive (`@glassops-platform/runtime`)
+## 1. Runtime (`packages/runtime`)
 
 **Location:** `packages/runtime`
-**Purpose:** Bootstraps the secure environment.
+**Purpose:** Checks policy, authenticates to Salesforce, and writes a permit and a contract file.
 
 ### Inputs
 
 | Input          | Required | Description                   |
 | -------------- | -------- | ----------------------------- |
-| `jwt_key`      | **Yes**  | PEM Encrypted Private Key     |
+| `jwt_key`      | **Yes**  | PEM-encoded private key       |
 | `client_id`    | **Yes**  | Connected App Consumer Key    |
 | `username`     | **Yes**  | Target Username               |
 | `instance_url` | No       | Default: login.salesforce.com |
+| `enforce_policy` | No     | Default `true`. Checks freeze windows |
+| `test_results` | No       | JSON string of test results   |
+| `coverage_percentage` | No | Code coverage, 0 to 100      |
+| `coverage_required` | No  | Default `80`                  |
+| `skip_auth`    | No       | Default `false`. Skips Salesforce auth |
 
 ### Outputs
 
-| Output          | Description                   |
-| --------------- | ----------------------------- |
-| `org_id`        | 18-char Organization ID       |
-| `is_production` | Boolean flag for safety gates |
-| `session_id`    | (Masked) Access Token         |
+| Output           | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `runtime_id`     | Unique ID for this run                       |
+| `org_id`         | Authenticated Organization ID                |
+| `is_locked`      | `true` if a freeze window is active          |
+| `contract_path`  | Path to the generated contract JSON file     |
+| `glassops_ready` | `true` when the runtime finished successfully |
+
+The runtime does not output a session ID or a production flag. Authentication happens inside the action container, so no credential is handed to later steps.
 
 ---
-
-## 2. Deployment Contract Schema
-
-**Authority:** `packages/glassspec/README.md`
-
-Every adapter MUST emit a contract matching this schema (simplified):
-
-```json
-{
-    "schemaVersion": "1.0",
-    "meta": { "adapter": "native", "timestamp": "..." },
-    "status": "Succeeded",
-    "policy": {
-        "effective": { "minCoverage": 75 },
-        "met": true
-    },
-    "results": [{ "ruleId": "COVERAGE", "level": "error", "message": "72% < 75%" }]
-}
-```
-
----
-
-## 3. Policy Resolution API
-
-**Location:** `packages/control-plane`
-
-### Resolution Logic
-
-```javascript
-EffectivePolicy = MAX(GitHub_Env_Var(Floor), Repo_Config_File(Team), Salesforce_CMDT(Organization));
-```
-
-**Invariant:** No source can lower the GitHub Floor.
-
----
-
-## 4. Adapter Interface
-
-To be a compliant adapter, a container must:
-
-1. Accept `--policy-in` (JSON path).
-2. Emit `--contract-out` (JSON path).
-3. Exit `0` for success, `1` for crash (System Error).
-4. Exit `0` for Policy Failure (Logic Error) but mark Contract status as `Failed`.
