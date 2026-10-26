@@ -1,0 +1,22 @@
+name: glassops
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  doctor:
+    name: glassops doctor
+    runs-on: ubuntu-latest
+    container: ghcr.io/glassops-platform/glassops:v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history, so change sets between commits are complete.
+          fetch-depth: 0
+      - name: Check the project is ready for glassops
+        run: glassops doctor
