@@ -152,6 +152,32 @@
     ],
     "links": []
   },
+  "examples/README.md": {
+    "anchors": [
+      "glassops-examples",
+      "current-examples"
+    ],
+    "links": [
+      {
+        "original": "[Deployment Workflow](workflows/glassops-deploy.yml)",
+        "text": "Deployment Workflow",
+        "url": "workflows/glassops-deploy.yml",
+        "lineNo": 7
+      },
+      {
+        "original": "[Configuration Template](config/devops-config.json)",
+        "text": "Configuration Template",
+        "url": "config/devops-config.json",
+        "lineNo": 8
+      },
+      {
+        "original": "[MegaLinter sketch](workflows/glassops-scanner-megalinter.yml)",
+        "text": "MegaLinter sketch",
+        "url": "workflows/glassops-scanner-megalinter.yml",
+        "lineNo": 9
+      }
+    ]
+  },
   ".github/pull_request_template.md": {
     "anchors": [
       "description",
@@ -368,17 +394,6 @@
       }
     ]
   },
-  "docs/scripts-build-docs.md": {
-    "anchors": [
-      "documentation-build-process-build-docspy",
-      "overview",
-      "core-functionality",
-      "dependencies",
-      "error-handling",
-      "output"
-    ],
-    "links": []
-  },
   "docs/doc-map.md": {
     "anchors": [
       "documentation-map",
@@ -478,37 +493,7 @@
     ],
     "links": []
   },
-  "examples/README.md": {
-    "anchors": [
-      "glassops-examples",
-      "current-examples"
-    ],
-    "links": [
-      {
-        "original": "[Deployment Workflow](workflows/glassops-deploy.yml)",
-        "text": "Deployment Workflow",
-        "url": "workflows/glassops-deploy.yml",
-        "lineNo": 7
-      },
-      {
-        "original": "[Configuration Template](config/devops-config.json)",
-        "text": "Configuration Template",
-        "url": "config/devops-config.json",
-        "lineNo": 8
-      },
-      {
-        "original": "[MegaLinter sketch](workflows/glassops-scanner-megalinter.yml)",
-        "text": "MegaLinter sketch",
-        "url": "workflows/glassops-scanner-megalinter.yml",
-        "lineNo": 9
-      }
-    ]
-  },
   ".github/ISSUE_TEMPLATE/bug_report.md": {
-    "anchors": [],
-    "links": []
-  },
-  ".github/ISSUE_TEMPLATE/documentation_improvement.md": {
     "anchors": [],
     "links": []
   },
@@ -516,14 +501,22 @@
     "anchors": [],
     "links": []
   },
-  "docs/adr/002-github-execution-authority.md": {
+  ".github/ISSUE_TEMPLATE/documentation_improvement.md": {
+    "anchors": [],
+    "links": []
+  },
+  "docs/architecture/overview.md": {
     "anchors": [
-      "adr-002-github-as-execution-authority",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
+      "glassops-architecture-design",
+      "1-high-level-architecture",
+      "the-control-loop",
+      "component-breakdown",
+      "2-governance-flow-the-pipeline",
+      "3-security-model",
+      "confused-deputy-protection",
+      "secrets-management",
+      "4-failure-modes-recovery",
+      "5-directory-structure"
     ],
     "links": []
   },
@@ -539,9 +532,9 @@
     ],
     "links": []
   },
-  "docs/adr/003-additive-governance.md": {
+  "docs/adr/004-schema-contract-config.md": {
     "anchors": [
-      "adr-003-additive-governance-model",
+      "adr-004-schema-contract-over-yaml-parsing",
       "context",
       "decision",
       "consequences",
@@ -556,17 +549,6 @@
       "overview",
       "components",
       "data-flow",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/004-schema-contract-config.md": {
-    "anchors": [
-      "adr-004-schema-contract-over-yaml-parsing",
       "context",
       "decision",
       "consequences",
@@ -655,6 +637,17 @@
         "lineNo": 367
       }
     ]
+  },
+  "docs/adr/002-github-execution-authority.md": {
+    "anchors": [
+      "adr-002-github-as-execution-authority",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
   },
   "docs/adr/007-protocol-supremacy-enforcement.md": {
     "anchors": [
@@ -793,6 +786,17 @@
       }
     ]
   },
+  "docs/adr/003-additive-governance.md": {
+    "anchors": [
+      "adr-003-additive-governance-model",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
   "docs/adr/008-federated-documentation-structure.md": {
     "anchors": [
       "adr-008-federated-documentation-structure",
@@ -846,78 +850,6 @@
         "text": "Divio Documentation System",
         "url": "https://documentation.divio.com/",
         "lineNo": 261
-      }
-    ]
-  },
-  "docs/adr/010-identity-contract.md": {
-    "anchors": [
-      "adr-010-identity-contract",
-      "context",
-      "the-identity-gap",
-      "real-world-scenario",
-      "decision",
-      "core-principle",
-      "identity-contract-schema",
-      "minimal-contract",
-      "full-contract-with-authorization",
-      "implementation-strategy",
-      "phase-1-identity-detection-current",
-      "phase-2-identity-resolution-bridge",
-      "phase-3-identity-authorization-future",
-      "sarif-integration",
-      "where-identity-goes",
-      "audit-trail-benefits",
-      "before-identity-contract",
-      "after-identity-contract",
-      "cross-substrate-correlation",
-      "example-override-request-flow",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "privacy-security-considerations",
-      "personal-data-in-sarif",
-      "alternatives-considered",
-      "alternative-1-no-identity-contract",
-      "alternative-2-provider-specific-identity-only",
-      "alternative-3-external-identity-provider-oauth2",
-      "alternative-4-sign-sarif-contracts-with-private-keys",
-      "migration-path",
-      "existing-contracts-without-identity",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "ADR-007: Protocol Supremacy Enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 475
-      },
-      {
-        "original": "[ADR-009: The 8/10 vs 10/10 Bridge Strategy](009-8-10-vs-10-10-bridge-strategy.md)",
-        "text": "ADR-009: The 8/10 vs 10/10 Bridge Strategy",
-        "url": "009-8-10-vs-10-10-bridge-strategy.md",
-        "lineNo": 476
-      },
-      {
-        "original": "[OASIS SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/)",
-        "text": "OASIS SARIF 2.1.0",
-        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/",
-        "lineNo": 483
-      },
-      {
-        "original": "[OAuth 2.0 RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749)",
-        "text": "OAuth 2.0 RFC 6749",
-        "url": "https://datatracker.ietf.org/doc/html/rfc6749",
-        "lineNo": 484
-      },
-      {
-        "original": "[NIST SP 800-63B: Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)",
-        "text": "NIST SP 800-63B: Digital Identity Guidelines",
-        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
-        "lineNo": 485
       }
     ]
   },
@@ -1009,20 +941,77 @@
       }
     ]
   },
-  "docs/architecture/overview.md": {
+  "docs/adr/010-identity-contract.md": {
     "anchors": [
-      "glassops-architecture-design",
-      "1-high-level-architecture",
-      "the-control-loop",
-      "component-breakdown",
-      "2-governance-flow-the-pipeline",
-      "3-security-model",
-      "confused-deputy-protection",
-      "secrets-management",
-      "4-failure-modes-recovery",
-      "5-directory-structure"
+      "adr-010-identity-contract",
+      "context",
+      "the-identity-gap",
+      "real-world-scenario",
+      "decision",
+      "core-principle",
+      "identity-contract-schema",
+      "minimal-contract",
+      "full-contract-with-authorization",
+      "implementation-strategy",
+      "phase-1-identity-detection-current",
+      "phase-2-identity-resolution-bridge",
+      "phase-3-identity-authorization-future",
+      "sarif-integration",
+      "where-identity-goes",
+      "audit-trail-benefits",
+      "before-identity-contract",
+      "after-identity-contract",
+      "cross-substrate-correlation",
+      "example-override-request-flow",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "privacy-security-considerations",
+      "personal-data-in-sarif",
+      "alternatives-considered",
+      "alternative-1-no-identity-contract",
+      "alternative-2-provider-specific-identity-only",
+      "alternative-3-external-identity-provider-oauth2",
+      "alternative-4-sign-sarif-contracts-with-private-keys",
+      "migration-path",
+      "existing-contracts-without-identity",
+      "related-adrs",
+      "references",
+      "alternatives"
     ],
-    "links": []
+    "links": [
+      {
+        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "ADR-007: Protocol Supremacy Enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 475
+      },
+      {
+        "original": "[ADR-009: The 8/10 vs 10/10 Bridge Strategy](009-8-10-vs-10-10-bridge-strategy.md)",
+        "text": "ADR-009: The 8/10 vs 10/10 Bridge Strategy",
+        "url": "009-8-10-vs-10-10-bridge-strategy.md",
+        "lineNo": 476
+      },
+      {
+        "original": "[OASIS SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/)",
+        "text": "OASIS SARIF 2.1.0",
+        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/",
+        "lineNo": 483
+      },
+      {
+        "original": "[OAuth 2.0 RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749)",
+        "text": "OAuth 2.0 RFC 6749",
+        "url": "https://datatracker.ietf.org/doc/html/rfc6749",
+        "lineNo": 484
+      },
+      {
+        "original": "[NIST SP 800-63B: Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)",
+        "text": "NIST SP 800-63B: Digital Identity Guidelines",
+        "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
+        "lineNo": 485
+      }
+    ]
   },
   "docs/reference/platform-reference.md": {
     "anchors": [
@@ -1081,6 +1070,27 @@
       }
     ]
   },
+  "packages/runtime/SECURITY.md": {
+    "anchors": [
+      "security-policy",
+      "supported-versions",
+      "reporting-a-vulnerability",
+      "how-to-report",
+      "what-to-expect",
+      "scope",
+      "out-of-scope",
+      "security-best-practices",
+      "acknowledgments"
+    ],
+    "links": [
+      {
+        "original": "[GitHub private vulnerability reporting](https://github.com/glassops-platform/glassops/security/advisories/new)",
+        "text": "GitHub private vulnerability reporting",
+        "url": "https://github.com/glassops-platform/glassops/security/advisories/new",
+        "lineNo": 14
+      }
+    ]
+  },
   "packages/runtime/README.md": {
     "anchors": [
       "glassops-runtime",
@@ -1093,20 +1103,6 @@
       "prerequisites",
       "helper-scripts-root",
       "debugging-in-vs-code"
-    ],
-    "links": []
-  },
-  "packages/runtime/SECURITY.md": {
-    "anchors": [
-      "security-policy",
-      "supported-versions",
-      "reporting-a-vulnerability",
-      "how-to-report",
-      "what-to-expect",
-      "scope",
-      "out-of-scope",
-      "security-best-practices",
-      "acknowledgments"
     ],
     "links": []
   },

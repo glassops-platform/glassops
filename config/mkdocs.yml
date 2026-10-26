@@ -98,7 +98,6 @@ nav:
                 - "Protocol Supremacy Enforcement": docs/adr/007-protocol-supremacy-enforcement.md
                 - "Federated Documentation Structure": docs/adr/008-federated-documentation-structure.md
                 - "Monorepo Strategy": docs/adr/011-monorepo-strategy.md
-          - "Build Scripts": docs/scripts-build-docs.md
 
     - Reference:
           - "Platform Reference": docs/reference/platform-reference.md
