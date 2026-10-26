@@ -23,7 +23,8 @@
         "docs:regen": "node scripts/verify-docs.js generate && node scripts/verify-docs.js",
         "runtime:build": "shx mkdir -p dist && cd packages/runtime && go build -o ../../dist/glassops.exe ./cmd/glassops/main.go",
         "runtime:test": "cd packages/runtime && go test -v ./...",
-        "precommit": "npm run docs:validate"
+        "precommit": "npm run docs:validate",
+        "prepare": "husky"
     },
     "devDependencies": {
         "@prettier/plugin-xml": "^3.4.1",
