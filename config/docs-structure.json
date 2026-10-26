@@ -539,9 +539,9 @@
     ],
     "links": []
   },
-  "docs/adr/004-schema-contract-config.md": {
+  "docs/adr/003-additive-governance.md": {
     "anchors": [
-      "adr-004-schema-contract-over-yaml-parsing",
+      "adr-003-additive-governance-model",
       "context",
       "decision",
       "consequences",
@@ -564,9 +564,9 @@
     ],
     "links": []
   },
-  "docs/adr/003-additive-governance.md": {
+  "docs/adr/004-schema-contract-config.md": {
     "anchors": [
-      "adr-003-additive-governance-model",
+      "adr-004-schema-contract-over-yaml-parsing",
       "context",
       "decision",
       "consequences",
@@ -1040,21 +1040,6 @@
       }
     ]
   },
-  "packages/knowledge/README.md": {
-    "anchors": [
-      "glassops-knowledge-package",
-      "structure",
-      "usage",
-      "1-setup",
-      "2-run-the-pipeline",
-      "using-npm-script-easiest",
-      "3-query-the-knowledge-base",
-      "direct-python-command-recommended",
-      "npm-alternative-may-require-extra-escaping-on-windows",
-      "4-force-re-indexing"
-    ],
-    "links": []
-  },
   "packages/runtime/CHANGELOG.md": {
     "anchors": [
       "changelog",
@@ -1096,15 +1081,6 @@
       }
     ]
   },
-  "packages/runtime/TRADEMARK.md": {
-    "anchors": [
-      "glassops-trademark-policy",
-      "permitted-uses",
-      "restricted-uses",
-      "commercial-licensing"
-    ],
-    "links": []
-  },
   "packages/runtime/README.md": {
     "anchors": [
       "glassops-runtime",
@@ -1134,270 +1110,12 @@
     ],
     "links": []
   },
-  "packages/knowledge/docs/adapters-apex_adapter.md": {
+  "packages/runtime/TRADEMARK.md": {
     "anchors": [
-      "salesforce-apex-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-docker_adapter.md": {
-    "anchors": [
-      "dockerfile-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-aura_adapter.md": {
-    "anchors": [
-      "aura-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-go.md": {
-    "anchors": [
-      "go-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-lwc_adapter.md": {
-    "anchors": [
-      "lightning-web-component-lwc-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-json_adapter.md": {
-    "anchors": [
-      "json-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-base.md": {
-    "anchors": [
-      "knowledge-adapter-base-class-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-python.md": {
-    "anchors": [
-      "python-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-terraform_adapter.md": {
-    "anchors": [
-      "terraform-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-typescript.md": {
-    "anchors": [
-      "typescript-adapter-documentation",
-      "typescriptadapter-class",
-      "type-hints",
-      "design-decisions"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-visualforce_adapter.md": {
-    "anchors": [
-      "visualforce-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-xml_adapter.md": {
-    "anchors": [
-      "xml-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-yaml_adapter.md": {
-    "anchors": [
-      "yaml-adapter-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/adapters-__init__.md": {
-    "anchors": [
-      "knowledge-adapter-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/config-prompts.md": {
-    "anchors": [
-      "prompts-configuration-documentation",
-      "structure",
-      "_shared_rules",
-      "adapter-specific-configurations",
-      "adapter-details"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/config-config.md": {
-    "anchors": [
-      "knowledge-configuration",
-      "embedding-models",
-      "vector-store",
-      "federated-document-paths",
-      "retrieval-triggers",
-      "batch-processing-and-drift-detection",
-      "system-context"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/drift-detect_drift.md": {
-    "anchors": [
-      "knowledge-drift-detection-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-gemini_embedding.md": {
-    "anchors": [
-      "geminiembedding-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/drift-__init__.md": {
-    "anchors": [
-      "knowledge-drift-detection-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-gemma_12b_it_embedding.md": {
-    "anchors": [
-      "gemma-12b-it-embedding-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-router_embedding.md": {
-    "anchors": [
-      "router-embedding-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/embeddings-__init__.md": {
-    "anchors": [
-      "knowledge-embeddings-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-generator.md": {
-    "anchors": [
-      "documentation-generator-design-document",
-      "module-purpose-and-responsibilities",
-      "key-classes-and-their-roles",
-      "important-functions-and-their-behavior",
-      "type-hints-and-their-significance",
-      "notable-patterns-and-design-decisions"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-federated_loader.md": {
-    "anchors": [
-      "federated-document-loader-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-validator.md": {
-    "anchors": [
-      "documentation-validator-module"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/generation-__init__.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-generation-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-index_builder.md": {
-    "anchors": [
-      "knowledge-ingestion-index-builder-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/ingestion-__init__.md": {
-    "anchors": [
-      "knowledge-ingestion-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/llm-client.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline---llm-client-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/llm-__init__.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-llm-module-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/main.md": {
-    "anchors": [
-      "glassops-knowledge-pipeline-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/rag-__init__.md": {
-    "anchors": [
-      "knowledge-retrieval-augmented-generation-rag-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/rag-query_engine.md": {
-    "anchors": [
-      "glassops-knowledge-query-engine-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/tests-conftest.md": {
-    "anchors": [
-      "knowledge-package-test-configuration"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/tests-test_validator.md": {
-    "anchors": [
-      "knowledge-validator-documentation",
-      "module-responsibilities",
-      "key-classes",
-      "important-functions",
-      "design-patterns-and-decisions",
-      "test-cases-overview"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-batch.md": {
-    "anchors": [
-      "knowledge-package-batching-utility-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-file_hash.md": {
-    "anchors": [
-      "file-hash-utility-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/utils-__init__.md": {
-    "anchors": [
-      "knowledge-package-utilities-documentation"
-    ],
-    "links": []
-  },
-  "packages/knowledge/docs/__init__.md": {
-    "anchors": [
-      "knowledge-package-documentation"
-    ],
-    "links": []
-  },
-  "packages/runtime/.github/pull_request_template.md": {
-    "anchors": [
-      "description",
-      "type-of-change",
-      "testing",
-      "checklist",
-      "related-issues"
+      "glassops-trademark-policy",
+      "permitted-uses",
+      "restricted-uses",
+      "commercial-licensing"
     ],
     "links": []
   },
@@ -1409,6 +1127,16 @@
       "rationale",
       "consequences",
       "alternatives"
+    ],
+    "links": []
+  },
+  "packages/runtime/.github/pull_request_template.md": {
+    "anchors": [
+      "description",
+      "type-of-change",
+      "testing",
+      "checklist",
+      "related-issues"
     ],
     "links": []
   },
@@ -1473,13 +1201,5 @@
         "lineNo": 49
       }
     ]
-  },
-  "packages/knowledge/docs/generated/drift_report.md": {
-    "anchors": [
-      "knowledge-base-health-report",
-      "conflicting-duplicate-documentation-detected",
-      "drift-status"
-    ],
-    "links": []
   }
 }
