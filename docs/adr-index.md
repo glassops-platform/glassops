@@ -69,8 +69,6 @@ Proposed → Accepted → Deprecated → Superseded
 
 - **Platform-wide** → `glassops/docs/adr/`
 - **Runtime-specific** → `glassops-runtime/docs/adr/`
-- **Control plane** → `glassops-control-plane/docs/adr/`
-- **Protocol changes** → `glassspec/docs/adr/`
 
 ### 2. Use the Template
 
