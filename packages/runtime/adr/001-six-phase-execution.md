@@ -1,6 +1,6 @@
 # ADR 001: 6-Phase Runtime Execution Model
 
-**Status:** Accepted  
+**Status:** Superseded. The runtime does not implement this model. It runs policy, identity, permit and contract steps in order, with no cache, bootstrap or adapter phase.  
 **Date:** 2026-01-24  
 **Context:** GlassOps Runtime Architecture
 

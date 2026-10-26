@@ -1,20 +1,12 @@
 {
-    "environments": {
-        "main": {
-            "name": "production",
-            "org_alias": "prod",
-            "instance_url": "https://login.salesforce.com"
-        },
-        "develop": {
-            "name": "integration",
-            "org_alias": "int",
-            "instance_url": "https://test.salesforce.com"
-        }
-    },
     "governance": {
-        "engine": "native",
-        "quality": {
-            "minCoverage": 75
+        "enabled": true,
+        "freeze_windows": [{ "day": "Friday", "start": "12:00", "end": "23:59" }],
+        "analyzer": {
+            "enabled": false,
+            "severity_threshold": 3,
+            "rulesets": [],
+            "opinionated": false
         }
     }
 }

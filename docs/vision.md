@@ -1,9 +1,8 @@
-# GlassOps Vision: Universal Governance Protocol
+# GlassOps Vision
 
 > **"GlassOps governs outcomes, not implementations."**
 
-**Version:** 2.0
-**Status:** Strategic Authority
+**Status:** Direction. Most of what follows is not built yet. The only code in this repository is the Go runtime in `packages/runtime`.
 
 ---
 
@@ -29,17 +28,15 @@ Organizations use dozens of tools (SonarQube, Terraform, Salesforce), but they d
 
 ## 3. The Solution: Governance as a Protocol
 
-GlassOps is not a product; it is a **Universal Governance Protocol**.
+GlassOps is being rebuilt as a CI-agnostic command line tool for Salesforce delivery. The aim is to decouple **Policy** from **Execution**.
 
-It decouples **Policy** (The Brain) from **Execution** (The Muscle).
-
-- **Policy** is defined once (Github, Config, CMDT).
-- **Execution** is delegated to pluggable Adapters.
-- **Audit** is normalized into a standard Deployment Contract.
+- **Policy** is defined once, in configuration kept with the code.
+- **Execution** is delegated to the tools you already use.
+- **Audit** is normalized into a standard record of each run.
 
 ### The Layered Contract Model
 
-We use the right standard for each signal:
+The intended standard for each signal:
 
 | Layer             | Standard          | Purpose                             |
 | ----------------- | ----------------- | ----------------------------------- |
@@ -58,13 +55,13 @@ GlassOps exists to enforce **Architectural Invariants** (e.g., "One Trigger Per 
 
 ## 5. Strategy: The 8/10 Vision
 
-We are mostly focused on the **8/10 Vision** (Months 0-18):
+The focus is the **8/10 Vision**:
 
-- **Scope:** Salesforce-first.
-- **Authority:** GitHub Actions.
-- **Goal:** Prove the protocol works in production.
+- **Scope:** Salesforce first. Other providers may follow later.
+- **Runs anywhere CI runs:** GitHub Actions today, other CI systems later.
+- **Goal:** Prove the approach works in production.
 
-We effectively ignore the "10/10 Vision" (K8s Controller, Multi-Cloud) until the 8/10 goal is met. This constraint is deliberate.
+The "10/10 Vision" (Kubernetes controller, multi-cloud) is set aside until the 8/10 goal is met. This constraint is deliberate.
 
 ---
 

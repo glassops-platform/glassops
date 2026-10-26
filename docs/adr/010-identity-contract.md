@@ -1,6 +1,6 @@
 # ADR 010: Identity Contract
 
-**Status:** Accepted  
+**Status:** Proposed  
 **Date:** 2026-01-24  
 **Deciders:** Ryan Bumstead
 
@@ -474,7 +474,7 @@ async function backfillIdentity(contract) {
 
 - [ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)
 - [ADR-009: The 8/10 vs 10/10 Bridge Strategy](009-8-10-vs-10-10-bridge-strategy.md) ← Identified identity gap
-- [GlassSpec ADR-001: Layered Contract Model](../../packages/glassspec/adr/001-layered-contract-model.md)
+- GlassSpec ADR-001: Layered Contract Model (the `glassspec` package was removed from this repository)
 
 ---
 
@@ -487,8 +487,7 @@ async function backfillIdentity(contract) {
 ---
 
 **Author:** Ryan Bumstead  
-**Implemented:** 2026-01-24  
-**Status:** Active - Identity field required in all new contracts
+**Status:** Proposed. Not implemented. The runtime permit carries a simple, unsigned identity record only.
 
 ## Alternatives
 

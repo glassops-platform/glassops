@@ -2,10 +2,7 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x     | :white_check_mark: |
-| < 1.0   | :x:                |
+No version has been released. Only the current `main` branch is maintained.
 
 ## Reporting a Vulnerability
 
@@ -14,7 +11,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 ### How to Report
 
 1. **Do NOT** open a public GitHub issue for security vulnerabilities
-2. Email security concerns to the repository maintainer
+2. Contact the repository maintainer privately through the contact details on the maintainer's GitHub profile
 3. Include a detailed description of the vulnerability
 4. Provide steps to reproduce if possible
 
@@ -29,9 +26,9 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 This security policy applies to:
 
-- The `glassops-runtime` GitHub Action
-- Related configuration schemas and contracts
-- CI/CD workflow templates
+- The GitHub Action in `packages/runtime`
+- Related configuration and contract files
+- Example workflow templates in `examples/`
 
 ### Out of Scope
 
@@ -46,7 +43,7 @@ When using GlassOps Runtime:
 1. **Secrets Management**: Always use GitHub Secrets for sensitive values (`jwt_key`, `client_id`)
 2. **Least Privilege**: Use dedicated External Client Apps with minimal permissions
 3. **Audit Logs**: Store deployment contracts for compliance audit trails
-4. **Version Pinning**: Pin to specific versions in production workflows
+4. **Version Pinning**: Pin to a full commit SHA, since no release tags exist yet
 
 ## Acknowledgments
 

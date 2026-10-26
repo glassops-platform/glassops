@@ -1,10 +1,12 @@
 # ADR-001: glassops-runtime as System API Primitive
 
 **Date:** 2026-01-19
-**Status:** Accepted
+**Status:** Superseded
 **Deciders:** Ryan Bumstead
 
 ---
+
+> **Note:** Superseded by the Go runtime in `packages/runtime`, which does apply policy and is not a thin primitive. The `@v4`, `glassops-runtime` repository and `action-*` names below were never built.
 
 ## Context
 

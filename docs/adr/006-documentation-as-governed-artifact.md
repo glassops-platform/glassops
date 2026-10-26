@@ -1,10 +1,12 @@
 # ADR 006: Documentation as a Governed Artifact
 
-**Status:** Proposed  
+**Status:** Proposed. The knowledge package named below moved out of this repository.  
 **Date:** 2026-01-24  
 **Deciders:** Ryan Bumstead
 
 ---
+
+> **Note:** The packages this record refers to (`glassspec`, `control-plane`, `adapters`, and the Reference Console) were removed from this repository and do not exist. The decision text is kept as history.
 
 ## Context
 
@@ -23,7 +25,7 @@ We're not asking: "Should GlassOps generate documentation?"
 
 We're asking: **"Should documentation be a governed, enforceable, first-class signal in GlassOps?"**
 
-Once you see it that way, GlassOps Knowledge + MkDocs aren't tooling choices — they're reference implementations of a capability.
+Once you see it that way, GlassOps Knowledge + MkDocs aren't tooling choices, they're reference implementations of a capability.
 
 ---
 
@@ -187,7 +189,7 @@ MkDocs becomes **dynamic by governance state:**
 
 **Together they form: The reference pipeline for governable documentation.**
 
-You're not locking users in — you're showing them what "good" looks like.
+You're not locking users in. You're showing them what "good" looks like.
 
 ---
 
@@ -363,7 +365,6 @@ documentation:
 - [OASIS SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/)
 - [RepoAgent Documentation](https://github.com/OpenBMB/RepoAgent)
 - [MkDocs](https://www.mkdocs.org/)
-- [GlassOps Protocol](../../packages/glassspec/README.md)
 
 ---
 
