@@ -10,7 +10,7 @@ COPY schemas ./schemas
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /out/glassops ./cmd/glassops
 
-FROM alpine:3.22
+FROM alpine:3.24
 # Alpine 3.22 ships Node 22, which the current Salesforce CLI requires.
 RUN apk add --no-cache nodejs npm git coreutils ca-certificates \
     && git config --system --add safe.directory '*'
