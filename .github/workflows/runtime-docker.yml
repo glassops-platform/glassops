@@ -19,6 +19,9 @@ permissions:
 
 env:
     RUNTIME_DIR: packages/runtime
+    # Dependabot and fork pull requests get no repository secrets, so the steps
+    # that log in to Salesforce only run when the key is present.
+    HAS_SF_SECRETS: ${{ secrets.SF_JWT_KEY != '' }}
 
 jobs:
     build:
@@ -54,7 +57,12 @@ jobs:
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 
+            - name: Note Skipped Smoke Test
+              if: env.HAS_SF_SECRETS != 'true'
+              run: echo "::notice::Salesforce secrets are not available to this run, so the container smoke test was skipped."
+
             - name: Run Container Smoke Test
+              if: env.HAS_SF_SECRETS == 'true'
               run: |
                   docker run --rm \
                     -e GITHUB_WORKSPACE=/workspace \
@@ -163,8 +171,13 @@ jobs:
                   }
                   EOF
 
+            - name: Note Skipped Integration Test
+              if: env.HAS_SF_SECRETS != 'true'
+              run: echo "::notice::Salesforce secrets are not available to this run, so the integration test was skipped."
+
             - name: Run Runtime Action (Authenticated)
               id: glassops
+              if: env.HAS_SF_SECRETS == 'true'
               uses: ./packages/runtime
               with:
                   jwt_key: ${{ secrets.SF_JWT_KEY }}
@@ -174,6 +187,7 @@ jobs:
                   enforce_policy: 'true'
 
             - name: Verify Outputs
+              if: env.HAS_SF_SECRETS == 'true'
               run: |
                   echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
                   echo "| Output | Value |" >> $GITHUB_STEP_SUMMARY
