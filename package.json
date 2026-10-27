@@ -4,7 +4,7 @@
     "private": true,
     "description": "Governance-first Salesforce DevOps",
     "engines": {
-        "node": ">=20.0.0"
+        "node": ">=22.0.0"
     },
     "packageManager": "npm@11.2.0",
     "repository": {
@@ -28,12 +28,12 @@
     },
     "devDependencies": {
         "@prettier/plugin-xml": "^3.4.1",
-        "@secretlint/secretlint-rule-pattern": "^11.2.5",
-        "@secretlint/secretlint-rule-preset-recommend": "^11.2.5",
+        "@secretlint/secretlint-rule-pattern": "^13.1.0",
+        "@secretlint/secretlint-rule-preset-recommend": "^13.1.0",
         "husky": "^9.1.7",
         "prettier": "^3.5.3",
         "prettier-plugin-apex": "^2.2.6",
-        "secretlint": "^6.2.4",
+        "secretlint": "^13.1.0",
         "shx": "^0.3.4"
     },
     "author": "Ryan Bumstead",
