@@ -75,7 +75,7 @@ We provide first-class support for local debugging and testing.
 
 ### Prerequisites
 
-- Go 1.25 (see `go.mod`)
+- Go 1.27.3 (see `go.mod`)
 - Salesforce CLI (`sf`)
 
 ### Helper Scripts (Root)

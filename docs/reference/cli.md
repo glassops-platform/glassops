@@ -111,7 +111,7 @@ policy:
 
 ## Install
 
-There is no release yet. To try it, build from a checkout with Go 1.25 or later:
+There is no release yet. To try it, build from a checkout with Go 1.27.3 or later:
 
 ```bash
 go build -o glassops ./cmd/glassops

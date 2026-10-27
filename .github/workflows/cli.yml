@@ -36,6 +36,11 @@ jobs:
       - name: Test
         run: go test -race -count=1 ./...
 
+      - name: Vulnerability check
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
   image:
     name: CLI Image
     runs-on: ubuntu-latest
