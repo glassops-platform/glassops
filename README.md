@@ -8,11 +8,22 @@
 
 ## Status
 
-GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. This repository is mid-rebuild and nothing here is released. What exists today is the GitHub Action runtime in `packages/runtime`, written in Go. It is early work, not a finished product.
+GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. This repository is mid-rebuild and nothing here is released. What exists today is the first part of the new `glassops` CLI and the older GitHub Action runtime in `packages/runtime`, both written in Go. It is early work, not a finished product.
 
 ---
 
 ## What Exists Today
+
+### The `glassops` CLI
+
+The new CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). So far it has two commands:
+
+- `glassops init` detects a Salesforce project and the CI system, then writes `glassops.yaml` and a CI file.
+- `glassops doctor` checks the config against its schema, the tools (`git`, `sf`, `sfdx-git-delta`), the git checkout and the environment variables the config names.
+
+Every command writes a result file to `.glassops/results/` and exits 0 on pass, 1 on a failed check and 2 on a tool error. See the [CLI reference](docs/reference/cli.md).
+
+### The runtime
 
 The runtime in [`packages/runtime`](packages/runtime/README.md) runs as a Docker container action. In order, it:
 
@@ -31,6 +42,7 @@ The runtime does not deploy anything. Your workflow runs the deploy after the ru
 
 - **Architecture overview:** [`overview.md`](docs/architecture/overview.md)
 - **Vision:** [`vision.md`](docs/vision.md)
+- **CLI reference:** [`cli.md`](docs/reference/cli.md)
 - **Runtime reference:** [`platform-reference.md`](docs/reference/platform-reference.md)
 - **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
 - **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line

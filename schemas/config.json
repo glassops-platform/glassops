@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glassops-platform/glassops/schemas/config.json",
+  "title": "glassops.yaml",
+  "description": "Configuration for the glassops CLI. Every field is optional except version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "provider": { "enum": ["salesforce"] },
+    "targets": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/target" }
+    },
+    "policy": { "$ref": "#/$defs/policy" },
+    "salesforce": { "$ref": "#/$defs/salesforce" },
+    "pipelines": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "$ref": "#/$defs/step" }
+      }
+    }
+  },
+  "$defs": {
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "envRef": { "type": "string", "pattern": "^\\$[A-Z_][A-Z0-9_]*$" },
+    "orgId": { "type": "string", "pattern": "^00D[a-zA-Z0-9]{12}([a-zA-Z0-9]{3})?$" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }] },
+        "tier": { "$ref": "#/$defs/name" },
+        "branch": { "type": "string", "minLength": 1 },
+        "auth": { "$ref": "#/$defs/auth" }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": { "enum": ["jwt", "sfdx-url", "access-token"] }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "method": { "const": "jwt" },
+            "username": { "$ref": "#/$defs/envOrText" },
+            "client_id": { "$ref": "#/$defs/envRef" },
+            "key": { "$ref": "#/$defs/envRef" },
+            "instance_url": { "type": "string", "format": "uri" }
+          },
+          "required": ["username", "client_id", "key"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "method": { "const": "sfdx-url" },
+            "url": { "$ref": "#/$defs/envRef" }
+          },
+          "required": ["url"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "method": { "const": "access-token" },
+            "token": { "$ref": "#/$defs/envRef" },
+            "instance_url": { "type": "string", "format": "uri" }
+          },
+          "required": ["token", "instance_url"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "envOrText": { "type": "string", "minLength": 1 },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "windows": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/window" } }
+        },
+        "blackouts": { "type": "array", "items": { "$ref": "#/$defs/blackout" } },
+        "rules": { "$ref": "#/$defs/rules" },
+        "actors": { "type": "string", "minLength": 1 }
+      }
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["days", "from", "to", "tz"],
+      "properties": {
+        "days": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] }
+        },
+        "from": { "$ref": "#/$defs/clock" },
+        "to": { "$ref": "#/$defs/clock" },
+        "tz": { "type": "string", "minLength": 1 }
+      }
+    },
+    "clock": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "blackout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "$ref": "#/$defs/date" },
+        "to": { "$ref": "#/$defs/date" },
+        "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+        "reason": { "type": "string" }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coverage_min": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "analyzer_max_severity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "separation_of_duties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } } }
+        },
+        "destructive_needs_label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label"],
+          "properties": {
+            "label": { "type": "string", "minLength": 1 },
+            "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } }
+          }
+        }
+      }
+    },
+    "salesforce": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine": { "enum": ["native"] },
+        "api_version": {
+          "anyOf": [{ "const": "auto" }, { "type": "string", "pattern": "^[0-9]{2,3}\\.0$" }]
+        },
+        "test_level": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": ["NoTestRun", "RunSpecifiedTests", "RunLocalTests", "RunAllTestsInOrg"]
+          }
+        },
+        "delta": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "from": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "step": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["step"],
+          "properties": {
+            "step": { "type": "string", "minLength": 1 },
+            "when": { "enum": ["success", "failure", "always"] }
+          }
+        }
+      ]
+    }
+  }
+}

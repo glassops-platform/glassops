@@ -6,10 +6,10 @@ on:
         paths:
             - 'packages/runtime/**'
             - '.github/workflows/runtime-*.yml'
+    # No path filter on pull requests: the Go test job is a required check, and a
+    # required check that never runs would block every unrelated pull request.
     pull_request:
         branches: [main]
-        paths:
-            - 'packages/runtime/**'
     workflow_dispatch:
 
 permissions:
@@ -79,7 +79,7 @@ jobs:
             - name: Setup Go
               uses: actions/setup-go@v5
               with:
-                  go-version: '1.25'
+                  go-version-file: packages/runtime/go.mod
                   cache-dependency-path: ${{ github.workspace }}/packages/runtime/go.sum
 
             - name: Run Go Vet
@@ -114,7 +114,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Run Trivy Vulnerability Scanner
-              uses: aquasecurity/trivy-action@0.29.0
+              uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
               with:
                   scan-type: 'fs'
                   scan-ref: ${{ env.RUNTIME_DIR }}
@@ -129,7 +129,7 @@ jobs:
             - name: Setup Go for Security Scan
               uses: actions/setup-go@v5
               with:
-                  go-version: '1.25'
+                  go-version-file: packages/runtime/go.mod
                   cache-dependency-path: ${{ github.workspace }}/packages/runtime/go.sum
 
             - name: Run Go Vulnerability Check
