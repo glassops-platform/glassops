@@ -14,7 +14,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /glassops ./cmd/glassops
 
 # Runtime stage
-FROM alpine:3.22
+FROM alpine:3.24
 
 # Install Node.js, npm, and coreutils (for GNU env -S support required by SF CLI)
 RUN apk add --no-cache nodejs npm git coreutils
