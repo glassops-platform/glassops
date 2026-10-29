@@ -1,0 +1,8 @@
+{
+  "status": 1,
+  "result": {
+    "output-dir": ".glassops/plan",
+    "error": "--from is not a valid sha pointer: 'nosuchref' (If in CI/CD context, check the fetch depth is properly set)"
+  },
+  "warnings": []
+}

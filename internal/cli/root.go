@@ -1,9 +1,13 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -48,8 +52,19 @@ func NewRootCommand(app *App) *cobra.Command {
 	pf.StringVar(&g.resultsDir, "results-dir", "", "where results are written (default <dir>/.glassops/results)")
 	pf.StringVar(&g.ciName, "ci", "auto", "CI system: auto, github or local")
 
-	root.AddCommand(newDoctorCommand(app, g), newInitCommand(app, g))
+	root.AddCommand(
+		newDoctorCommand(app, g),
+		newInitCommand(app, g),
+		newDescribeCommand(app, g),
+		newPlanCommand(app, g),
+		newValidateCommand(app, g),
+	)
 	return root
+}
+
+// notImplemented is the error a command returns before its phase lands.
+func notImplemented(name string) error {
+	return &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("%s is not implemented yet", name)}
 }
 
 // detectCI resolves the CI layer for a command.
@@ -57,11 +72,20 @@ func (app *App) detectCI(g *globals) (ci.CI, error) {
 	return ci.Detect(g.ciName, app.Getenv, app.Stdout, g.dir)
 }
 
-// Execute runs the command tree with args and returns the process exit code.
+// Execute runs the command tree with args and returns the process exit code. The first
+// interrupt or SIGTERM cancels the command's context instead of killing the process, so
+// sessions are closed and their temp dirs removed on the way out.
 func Execute(app *App, args []string) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return ExecuteContext(ctx, app, args)
+}
+
+// ExecuteContext is Execute with a caller-supplied context, for tests.
+func ExecuteContext(ctx context.Context, app *App, args []string) int {
 	root := NewRootCommand(app)
 	root.SetArgs(args)
-	err := root.Execute()
+	err := root.ExecuteContext(ctx)
 	if err == nil {
 		return exitcode.OK
 	}

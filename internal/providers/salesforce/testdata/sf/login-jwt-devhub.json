@@ -1,0 +1,23 @@
+{
+  "status": 0,
+  "result": {
+    "accessToken": "REDACTED",
+    "orgId": "00D000000000001AAA",
+    "loginUrl": "https://example.my.salesforce.com/",
+    "privateKey": "/tmp/glassops-session/jwt.key",
+    "clientId": "EXAMPLE_CLIENT_ID",
+    "instanceUrl": "https://example.my.salesforce.com",
+    "isDevHub": true,
+    "username": "user@example.com",
+    "instanceApiVersion": "68.0",
+    "instanceApiVersionLastRetrieved": "10/28/2026, 9:41:13 PM",
+    "name": "Example Company",
+    "instanceName": "XX000",
+    "namespacePrefix": null,
+    "isSandbox": false,
+    "isScratch": false,
+    "trailExpirationDate": null,
+    "orgEdition": "Developer Edition"
+  },
+  "warnings": []
+}

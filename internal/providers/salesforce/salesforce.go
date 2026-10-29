@@ -1,4 +1,7 @@
-// Package salesforce is the Salesforce provider. Phase 1 covers detection and tool checks.
+// Package salesforce is the Salesforce provider. It drives the sf CLI and sfdx-git-delta.
+//
+// Every org call runs in a session: a private temp dir that holds the key file and an
+// isolated sf state, so a login never reaches the user's own sf store. See session.go.
 package salesforce
 
 import (
@@ -16,25 +19,73 @@ import (
 // ProjectFile marks a Salesforce DX project.
 const ProjectFile = "sfdx-project.json"
 
-// Runner runs a command and returns its stdout. Tests replace it.
+// Runner runs a command and returns its stdout. Tool checks use it. Tests replace it.
 type Runner func(name string, args ...string) ([]byte, error)
 
 // Provider is the Salesforce provider.
 type Provider struct {
 	run Runner
+	// exec runs sf and git for sessions, plans and validates. See sf.go.
+	exec Exec
+	// lookupEnv resolves the $VAR references in a target's auth.
+	lookupEnv func(string) (string, bool)
+	// tempDir is where session dirs are created. Empty means the OS temp dir.
+	tempDir string
 }
 
 // New returns the provider using the real command runner.
 func New() *Provider {
-	return &Provider{run: func(name string, args ...string) ([]byte, error) {
-		return exec.Command(name, args...).Output()
-	}}
+	return &Provider{
+		run: func(name string, args ...string) ([]byte, error) {
+			return exec.Command(name, args...).Output()
+		},
+		exec:      osExec,
+		lookupEnv: os.LookupEnv,
+	}
 }
 
 // NewWithRunner returns the provider with a custom runner, for tests.
-func NewWithRunner(r Runner) *Provider { return &Provider{run: r} }
+func NewWithRunner(r Runner) *Provider {
+	p := New()
+	p.run = r
+	return p
+}
+
+// Options replaces the provider's process environment, for tests. Zero fields keep the
+// real behaviour.
+type Options struct {
+	Run       Runner
+	Exec      Exec
+	LookupEnv func(string) (string, bool)
+	TempDir   string
+}
+
+// NewWithOptions returns the provider with the given replacements, for tests.
+func NewWithOptions(o Options) *Provider {
+	p := New()
+	if o.Run != nil {
+		p.run = o.Run
+	}
+	if o.Exec != nil {
+		p.exec = o.Exec
+	}
+	if o.LookupEnv != nil {
+		p.lookupEnv = o.LookupEnv
+	}
+	p.tempDir = o.TempDir
+	return p
+}
 
 func (p *Provider) Name() string { return "salesforce" }
+
+// CanonicalID compares Salesforce Ids by their first 15 characters, case-sensitively. The
+// 18-character form only adds a case checksum.
+func (p *Provider) CanonicalID(id string) string {
+	if len(id) > 15 {
+		return id[:15]
+	}
+	return id
+}
 
 func (p *Provider) Detect(dir string) (bool, error) {
 	_, err := os.Stat(filepath.Join(dir, ProjectFile))

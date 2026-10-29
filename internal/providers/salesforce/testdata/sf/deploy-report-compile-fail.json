@@ -1,0 +1,105 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": true,
+    "completedDate": "2026-10-29T01:45:48.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-10-29T01:45:47.000Z",
+    "details": {
+      "componentFailures": [
+        {
+          "changed": false,
+          "columnNumber": 16,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-10-29T01:45:47.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "lineNumber": 6,
+          "problem": "Variable does not exist: undefinedVariable",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 16,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-10-29T01:45:48.000Z",
+          "deleted": false,
+          "fileName": "classes/GreeterTest.cls",
+          "fullName": "GreeterTest",
+          "lineNumber": 6,
+          "problem": "Dependent class is invalid and needs recompilation:\n Class Greeter : Variable does not exist: undefinedVariable",
+          "problemType": "Error",
+          "success": false
+        }
+      ],
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-10-29T01:45:48.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      }
+    },
+    "done": true,
+    "id": "0Af000000000002AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-10-29T01:45:48.000Z",
+    "numberComponentErrors": 2,
+    "numberComponentsDeployed": 0,
+    "numberComponentsTotal": 2,
+    "numberFiles": "6",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-10-29T01:45:47.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": "968",
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/work\\force-app\\main\\default\\classes\\Greeter.cls",
+        "lineNumber": 6,
+        "columnNumber": 16,
+        "error": "Variable does not exist: undefinedVariable (6:16)"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/work\\force-app\\main\\default\\classes\\GreeterTest.cls",
+        "lineNumber": 6,
+        "columnNumber": 16,
+        "error": "Dependent class is invalid and needs recompilation:\n Class Greeter : Variable does not exist: undefinedVariable (6:16)"
+      }
+    ]
+  },
+  "warnings": []
+}

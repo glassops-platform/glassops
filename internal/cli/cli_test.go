@@ -268,3 +268,38 @@ func TestGitHubOutputs(t *testing.T) {
 		t.Fatalf("summary = %q", sum)
 	}
 }
+
+func TestTargetExpandsIDFromEnv(t *testing.T) {
+	h := newHarness(t)
+	cfg := &config.Config{Targets: map[string]config.Target{
+		"devhub": {ID: "$SF_DEVHUB_ORG_ID", Tier: "devhub"},
+		"prod":   {ID: "00D000000000001AAA", Tier: "prod"},
+	}}
+	if _, err := h.app.target(cfg, "devhub"); err == nil || !strings.Contains(err.Error(), "not set") {
+		t.Fatalf("unset var: %v", err)
+	}
+	h.env["SF_DEVHUB_ORG_ID"] = "00D000000000002AAA"
+	got, err := h.app.target(cfg, "devhub")
+	if err != nil || got.ID != "00D000000000002AAA" || got.Name != "devhub" || got.Tier != "devhub" {
+		t.Fatalf("got %+v, %v", got, err)
+	}
+	if got, _ := h.app.target(cfg, "prod"); got.ID != "00D000000000001AAA" {
+		t.Fatalf("literal id: %+v", got)
+	}
+	if _, err := h.app.target(cfg, "uat"); !errors.Is(err, ErrTargetNotConfigured) {
+		t.Fatalf("missing target: %v", err)
+	}
+}
+
+func TestPhase2CommandsAreRegistered(t *testing.T) {
+	root := NewRootCommand(newHarness(t).app)
+	for _, name := range []string{"describe", "plan", "validate"} {
+		if c, _, err := root.Find([]string{name}); err != nil || c.Name() != name {
+			t.Fatalf("%s not registered: %v", name, err)
+		}
+	}
+	doctor, _, _ := root.Find([]string{"doctor"})
+	if doctor.Flags().Lookup("auth") == nil || doctor.Flags().Lookup("target") == nil {
+		t.Fatal("doctor is missing --auth or --target")
+	}
+}

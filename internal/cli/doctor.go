@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,8 +15,14 @@ import (
 	"github.com/glassops-platform/glassops/internal/providers"
 )
 
+type doctorOptions struct {
+	auth   bool
+	target string
+}
+
 func newDoctorCommand(app *App, g *globals) *cobra.Command {
-	return &cobra.Command{
+	o := &doctorOptions{}
+	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Check config, tools, the git checkout and required environment variables",
 		Long: "doctor checks that this project is ready for glassops:\n" +
@@ -23,15 +30,20 @@ func newDoctorCommand(app *App, g *globals) *cobra.Command {
 			"  - the provider and the tools it needs, with their versions\n" +
 			"  - that the checkout is not shallow, which silently empties a delta\n" +
 			"  - that every $VAR the config refers to is set (presence only, never values)\n" +
+			"With --auth it also logs in to each target (or only --target) and runs the org Id\n" +
+			"and tier guard. Without --auth it never logs in.\n" +
 			"It exits 1 when any check fails.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return app.doctor(g)
+			return app.doctor(cmd.Context(), g, o)
 		},
 	}
+	cmd.Flags().BoolVar(&o.auth, "auth", false, "also log in to targets and run the org Id and tier guard")
+	cmd.Flags().StringVar(&o.target, "target", "", "with --auth, check only this target")
+	return cmd
 }
 
-func (app *App) doctor(g *globals) error {
+func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error {
 	c, err := app.detectCI(g)
 	if err != nil {
 		return &exitcode.ExitError{Code: exitcode.Error, Err: err}
@@ -127,7 +139,17 @@ func (app *App) doctor(g *globals) error {
 		}
 	}
 
+	// 7. Logins and the guard, only when asked.
+	if o.auth {
+		app.doctorAuth(ctx, res, cfg, p, o.target)
+	}
+
 	return app.finish(res, c, g)
+}
+
+// doctorAuth adds one check per target it logs in to. Phase 2 workstream 2 implements it.
+func (app *App) doctorAuth(ctx context.Context, res *run.Result, cfg *config.Config, p providers.Provider, only string) {
+	res.AddCheck("auth", run.StatusError, "doctor --auth is not implemented yet")
 }
 
 func (app *App) gitVersion(dir string) (string, error) {
