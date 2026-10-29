@@ -38,7 +38,7 @@ Runs these checks and fails if any of them fails:
 
 ### `glassops doctor --auth`
 
-Adds a login to each target in the config, or only the one named by `--target`, and runs the [guard](#the-guard) on it. Without `--auth`, `doctor` never logs in. The environment check covers every `$VAR` the config names, so set them all before you run `doctor`.
+Adds a login to each target in the config, or only the one named by `--target`, and runs the [guard](#the-guard) on it. Without `--auth`, `doctor` never logs in. The environment check covers every `$VAR` the config names. With `--auth --target`, it covers only that target's variables, so a target that does not exist yet, such as a scratch org that a later step creates, does not fail the check.
 
 | Flag | Meaning |
 |---|---|
@@ -55,7 +55,7 @@ Logs in to one target, runs the guard, and writes what the target reports about 
 
 ### `glassops plan`
 
-Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. A shallow clone is an error, never an empty plan.
+Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -63,7 +63,7 @@ Works out the change set between two git refs. It writes the provider's manifest
 | `--to` | `auto` | Head git ref, or `auto` (`HEAD`) |
 | `--target` | | Target the plan is for, used by `--from auto` |
 
-With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch.
+With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
 
 ### `glassops validate`
 
@@ -76,6 +76,8 @@ Logs in to the target, runs the guard, and runs a check-only validate of the cha
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--check-only` | `true` | Always true. `false` is refused |
 
+A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login.
+
 ---
 
 ## Authentication
@@ -84,7 +86,7 @@ Each target names its login under `auth`. There are three methods, and every sec
 
 | Method | Fields | Notes |
 |---|---|---|
-| `jwt` | `username`, `client_id`, `key`, optional `instance_url` | `key` is a `$VAR` that holds the private key as PEM text, not a file path |
+| `jwt` | `username`, `client_id`, `key`, optional `instance_url` | `key` is a `$VAR` that holds the private key as PEM text. A value that is not PEM text is read as the path of a key file |
 | `sfdx-url` | `url` | `url` is a `$VAR` that holds a `force://` auth URL |
 | `access-token` | `token`, `instance_url` | `token` is a `$VAR` that holds an access token |
 
@@ -102,7 +104,7 @@ targets:
 
 ### Isolated Salesforce CLI state
 
-Every command that talks to an org runs the Salesforce CLI with its own temporary home directory (`HOME` and `USERPROFILE`). It never reads or writes the Salesforce CLI logins you have on your machine. The temporary directory, and any key file written into it, is removed when the command ends.
+Every command that talks to an org runs the Salesforce CLI with its own temporary home directory (`HOME` and `USERPROFILE`). It never reads or writes the Salesforce CLI logins you have on your machine. The temporary directory, and any key file written into it, is removed when the command ends, including when it is stopped with Ctrl+C or SIGTERM. Logins are retried only on network and server errors, never on a bad key, an unknown user or an expired token.
 
 ### The guard
 
@@ -120,7 +122,7 @@ Results, step outputs, CI annotations and error messages never contain the org's
 
 ### Validate is check-only
 
-`validate` is check-only by construction. It always passes the check-only option to the deploy, and `--check-only=false` is refused. After the run it reads the full result with `sf project deploy report` and exits 2 if the target reports anything other than a check-only run. Check-only validates never target a Dev Hub. Use a scratch org or a sandbox.
+`validate` is check-only by construction. It only ever runs `sf project deploy validate`, never a deploy, and `--check-only=false` is refused. After the run it reads the full result with `sf project deploy report` and exits 2 if the target reports anything other than a check-only run. Keep a Dev Hub for managing scratch orgs, and validate against a scratch org or a sandbox.
 
 ---
 
