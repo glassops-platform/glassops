@@ -1,0 +1,11 @@
+{
+  "name": "JwtGrantError",
+  "message": "We encountered a JSON web token error, which is likely not an issue with Salesforce CLI. Here’s the error: JwtAuthError::Error authenticating with JWT.\nErrors encountered:\nExternal client app is not installed in this org\nExternal client app is not installed in this org\nExternal client app is not installed in this org",
+  "exitCode": 1,
+  "context": "LoginJwt",
+  "cause": "SfError [JwtAuthError]: Error authenticating with JWT.\nErrors encountered:\nExternal client app is not installed in this org\nExternal client app is not installed in this org\nExternal client app is not installed in this org",
+  "warnings": [],
+  "code": "JwtGrantError",
+  "status": 1,
+  "commandName": "LoginJwt"
+}

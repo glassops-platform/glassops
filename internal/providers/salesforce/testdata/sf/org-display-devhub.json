@@ -1,0 +1,14 @@
+{
+  "status": 0,
+  "result": {
+    "id": "00D000000000001AAA",
+    "apiVersion": "68.0",
+    "accessToken": "REDACTED",
+    "instanceUrl": "https://example.my.salesforce.com",
+    "username": "user@example.com",
+    "clientId": "EXAMPLE_CLIENT_ID",
+    "connectedStatus": "Connected",
+    "alias": "hub"
+  },
+  "warnings": []
+}

@@ -70,7 +70,7 @@ jobs:
                     -e GITHUB_REPOSITORY=${{ github.repository }} \
                     -e INPUT_JWT_KEY="${{ secrets.SF_JWT_KEY }}" \
                     -e INPUT_CLIENT_ID="${{ secrets.SF_CLIENT_ID }}" \
-                    -e INPUT_USERNAME="${{ vars.SF_USERNAME }}" \
+                    -e INPUT_USERNAME="${{ secrets.SF_USERNAME }}" \
                     -e GLASSOPS_SKIP_AUTH=false \
                     -e GLASSOPS_ENFORCE_POLICY=true \
                     -v $(pwd):/workspace \
@@ -182,7 +182,7 @@ jobs:
               with:
                   jwt_key: ${{ secrets.SF_JWT_KEY }}
                   client_id: ${{ secrets.SF_CLIENT_ID }}
-                  username: ${{ vars.SF_USERNAME }}
+                  username: ${{ secrets.SF_USERNAME }}
                   skip_auth: 'false'
                   enforce_policy: 'true'
 

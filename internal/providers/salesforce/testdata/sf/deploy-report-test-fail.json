@@ -1,0 +1,142 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": true,
+    "completedDate": "2026-10-29T01:45:53.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-10-29T01:45:53.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-10-29T01:45:53.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "id": "01p000000000003AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-10-29T01:45:53.000Z",
+          "deleted": false,
+          "fileName": "classes/GreeterTest.cls",
+          "fullName": "GreeterTest",
+          "id": "01p000000000004AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-10-29T01:45:53.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "codeCoverage": [
+          {
+            "id": "01p000000000003AAA",
+            "locationsCovered": [
+              {
+                "column": "0",
+                "line": "2",
+                "numExecutions": "0",
+                "time": "-1.0"
+              },
+              {
+                "column": "0",
+                "line": "3",
+                "numExecutions": "0",
+                "time": "-1.0"
+              }
+            ],
+            "name": "Greeter",
+            "namespace": null,
+            "numLocations": 2,
+            "numLocationsNotCovered": 0,
+            "type": "Class",
+            "dmlInfo": [],
+            "locationsNotCovered": [],
+            "methodInfo": [],
+            "soqlInfo": [],
+            "soslInfo": []
+          }
+        ],
+        "failures": [
+          {
+            "id": "01p000000000004AAA",
+            "message": "System.AssertException: Assertion Failed: Expected: Goodbye, Ada, Actual: Hello, Ada",
+            "methodName": "greetsByName",
+            "name": "GreeterTest",
+            "namespace": null,
+            "packageName": "GreeterTest",
+            "stackTrace": "Class.GreeterTest.greetsByName: line 5, column 1",
+            "time": 20,
+            "type": "Class"
+          }
+        ],
+        "numFailures": 1,
+        "numTestsRun": 1,
+        "totalTime": 32,
+        "codeCoverageWarnings": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000003AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-10-29T01:45:53.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 2,
+    "numberComponentsTotal": 2,
+    "numberFiles": "6",
+    "numberTestErrors": 1,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 1,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-10-29T01:45:53.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": "893",
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\Greeter.cls"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\Greeter.cls-meta.xml"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\GreeterTest.cls"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\GreeterTest.cls-meta.xml"
+      }
+    ]
+  },
+  "warnings": []
+}

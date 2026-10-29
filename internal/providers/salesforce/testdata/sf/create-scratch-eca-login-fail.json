@@ -1,0 +1,11 @@
+{
+  "name": "JwtAuthError",
+  "message": "Error authenticating with JWT.\nErrors encountered:\nExternal client app is not installed in this org\nExternal client app is not installed in this org\nExternal client app is not installed in this org\nExternal client app is not installed in this org\nExternal client app is not installed in this org",
+  "exitCode": 1,
+  "context": "OrgCreateScratch",
+  "cause": "undefined",
+  "warnings": [],
+  "code": "JwtAuthError",
+  "status": 1,
+  "commandName": "OrgCreateScratch"
+}

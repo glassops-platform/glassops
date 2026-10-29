@@ -1,0 +1,14 @@
+{
+  "name": "FailedValidationError",
+  "message": "Failed to validate the deployment (0Af000000000002AAA). Due To:\nError in Greeter - Variable does not exist: undefinedVariable (6:16)\r\nError in GreeterTest - Dependent class is invalid and needs recompilation:\n Class Greeter : Variable does not exist: undefinedVariable (6:16)\r\n\r\n2 component error(s)",
+  "exitCode": 1,
+  "context": "DeployMetadataValidate",
+  "data": {
+    "deployId": "0Af000000000002AAA"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "FailedValidationError",
+  "status": 1,
+  "commandName": "DeployMetadataValidate"
+}

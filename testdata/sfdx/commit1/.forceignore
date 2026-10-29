@@ -1,0 +1,8 @@
+# Files sf and sgd leave out of every deploy and every delta.
+package.xml
+
+**/jsconfig.json
+**/.eslintrc.json
+**/__tests__/**
+
+node_modules/

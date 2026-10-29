@@ -1,0 +1,22 @@
+{
+  "status": 0,
+  "result": {
+    "accessToken": "REDACTED",
+    "instanceUrl": "https://example.my.salesforce.com",
+    "loginUrl": "https://example.my.salesforce.com",
+    "username": "user@example.com",
+    "orgId": "00D000000000002AAA",
+    "isDevHub": false,
+    "instanceApiVersion": "68.0",
+    "instanceApiVersionLastRetrieved": "10/28/2026, 9:44:45 PM",
+    "name": "Example Company",
+    "instanceName": "XX000",
+    "namespacePrefix": null,
+    "isSandbox": false,
+    "isScratch": true,
+    "trailExpirationDate": "2026-10-31T01:43:32.000+0000",
+    "orgEdition": "Developer Edition",
+    "clientId": "PlatformCLI"
+  },
+  "warnings": []
+}

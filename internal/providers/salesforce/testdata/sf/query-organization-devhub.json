@@ -1,0 +1,21 @@
+{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "Organization",
+          "url": "/services/data/v68.0/sobjects/Organization/00D000000000001AAA"
+        },
+        "Id": "00D000000000001AAA",
+        "IsSandbox": false,
+        "OrganizationType": "Developer Edition",
+        "InstanceName": "XX000",
+        "TrialExpirationDate": null
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

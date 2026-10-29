@@ -1,0 +1,11 @@
+{
+  "name": "AuthCodeUsernameRetrievalError",
+  "message": "Could not retrieve the username after successful auth code exchange.\n\nDue to: Bad_Id",
+  "exitCode": 1,
+  "context": "LoginAccessToken",
+  "cause": "undefined",
+  "warnings": [],
+  "code": "AuthCodeUsernameRetrievalError",
+  "status": 1,
+  "commandName": "LoginAccessToken"
+}

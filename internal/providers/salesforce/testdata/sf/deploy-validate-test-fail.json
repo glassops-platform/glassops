@@ -1,0 +1,14 @@
+{
+  "name": "FailedValidationError",
+  "message": "Failed to validate the deployment (0Af000000000003AAA). Due To:\nGreeterTest.greetsByName - System.AssertException: Assertion Failed: Expected: Goodbye, Ada, Actual: Hello, Ada",
+  "exitCode": 1,
+  "context": "DeployMetadataValidate",
+  "data": {
+    "deployId": "0Af000000000003AAA"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "FailedValidationError",
+  "status": 1,
+  "commandName": "DeployMetadataValidate"
+}

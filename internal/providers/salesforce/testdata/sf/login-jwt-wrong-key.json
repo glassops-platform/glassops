@@ -1,0 +1,11 @@
+{
+  "name": "JwtGrantError",
+  "message": "We encountered a JSON web token error, which is likely not an issue with Salesforce CLI. Here’s the error: JwtAuthError::Error authenticating with JWT.\nErrors encountered:\ninvalid client credentials\ninvalid client credentials\ninvalid client credentials",
+  "exitCode": 1,
+  "context": "LoginJwt",
+  "cause": "SfError [JwtAuthError]: Error authenticating with JWT.\nErrors encountered:\ninvalid client credentials\ninvalid client credentials\ninvalid client credentials",
+  "warnings": [],
+  "code": "JwtGrantError",
+  "status": 1,
+  "commandName": "LoginJwt"
+}

@@ -19,6 +19,7 @@ type Context struct {
 	Event    string // push, pull_request, ... or "local"
 	Actor    string
 	PRNumber string
+	BaseRef  string // pull request base branch, empty outside a pull request
 	RunID    string
 }
 

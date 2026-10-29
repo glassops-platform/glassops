@@ -1,0 +1,14 @@
+{
+  "name": "RefreshTokenAuthError",
+  "message": "Error authenticating with the refresh token due to: expired access/refresh token",
+  "exitCode": 1,
+  "actions": [
+    "The stored refresh token is no longer valid (it may have expired, been revoked, or been rotated). Re-authenticate to the org, then try again."
+  ],
+  "context": "LoginSfdxUrl",
+  "cause": "invalid_grant: expired access/refresh token",
+  "warnings": [],
+  "code": "RefreshTokenAuthError",
+  "status": 1,
+  "commandName": "LoginSfdxUrl"
+}
