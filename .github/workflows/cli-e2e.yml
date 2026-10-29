@@ -100,7 +100,8 @@ jobs:
       - name: Check the delta holds one destructive change
         if: env.HAS_SF_SECRETS == 'true'
         run: |
-          cp "$RUNNER_TEMP/repo/.glassops/plan.json" "$RUNNER_TEMP/repo/.glassops/plan-delta.json"
+          # The container runs as root and owns .glassops/, so the copy goes next to it.
+          cp "$RUNNER_TEMP/repo/.glassops/plan.json" "$RUNNER_TEMP/plan-delta.json"
           node -e '
             const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
             const n = (p.destructive || []).length;
@@ -110,7 +111,7 @@ jobs:
               process.exit(1);
             }
             console.log("delta plan holds one destructive change");
-          ' "$RUNNER_TEMP/repo/.glassops/plan-delta.json"
+          ' "$RUNNER_TEMP/plan-delta.json"
 
       # A check-only validate never deploys commit 1, so the delta's destructive change would
       # name a field the scratch org never had. The validate runs the full source instead.
@@ -157,5 +158,5 @@ jobs:
           path: |
             ${{ runner.temp }}/repo/.glassops/results/
             ${{ runner.temp }}/repo/.glassops/plan.json
-            ${{ runner.temp }}/repo/.glassops/plan-delta.json
+            ${{ runner.temp }}/plan-delta.json
           if-no-files-found: warn
