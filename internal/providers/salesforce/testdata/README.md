@@ -15,6 +15,11 @@ and scrub it the same way.
 | `login-jwt-devhub.json` | `sf org login jwt` into the Dev Hub |
 | `login-access-token-scratch.json` | `sf org login access-token` into the scratch org |
 | `login-sfdx-url-scratch.json` | `sf org login sfdx-url` into the scratch org |
+| `login-jwt-unknown-user.json` | `sf org login jwt` for a username that does not exist. sf reports "External client app is not installed in this org" |
+| `login-jwt-wrong-key.json` | `sf org login jwt` signed by a key the app does not know: "invalid client credentials" |
+| `login-jwt-bad-client-id.json` | `sf org login jwt` with a client id that is not an app in the org: "client identifier invalid" |
+| `login-access-token-invalid.json` | `sf org login access-token` with a well-formed token that is not valid |
+| `login-sfdx-url-invalid.json` | `sf org login sfdx-url` with a refresh token that is not valid. `cause` holds `invalid_grant` |
 | `org-display-devhub.json`, `org-display-scratch.json` | `sf org display`. `accessToken` is redacted by `sf` itself, even with `--verbose` |
 | `query-organization-devhub.json`, `query-organization-scratch.json` | `sf data query` of `SELECT Id, IsSandbox, OrganizationType, InstanceName, TrialExpirationDate FROM Organization` |
 | `deploy-validate-pass.json` | `sf project deploy validate` that passed |
@@ -38,3 +43,7 @@ and itself.
 - The login output carries the org's company name in `name`. It must never reach a result or a
   log.
 - The login output spells one key `trailExpirationDate`.
+- sf retries a JWT login itself. The failure message repeats the same error three to five
+  times, one line per attempt.
+- Every JWT failure has the name `JwtGrantError` and the same first line. The cause is only in
+  the later lines of `message` and in `cause`.

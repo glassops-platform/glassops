@@ -1,0 +1,11 @@
+{
+  "name": "JwtGrantError",
+  "message": "We encountered a JSON web token error, which is likely not an issue with Salesforce CLI. Here’s the error: JwtAuthError::Error authenticating with JWT.\nErrors encountered:\nclient identifier invalid\nclient identifier invalid\nclient identifier invalid",
+  "exitCode": 1,
+  "context": "LoginJwt",
+  "cause": "SfError [JwtAuthError]: Error authenticating with JWT.\nErrors encountered:\nclient identifier invalid\nclient identifier invalid\nclient identifier invalid",
+  "warnings": [],
+  "code": "JwtGrantError",
+  "status": 1,
+  "commandName": "LoginJwt"
+}
