@@ -2,8 +2,15 @@ package cli
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"github.com/glassops-platform/glassops/internal/core/exitcode"
+	"github.com/glassops-platform/glassops/internal/core/run"
+	"github.com/glassops-platform/glassops/internal/providers"
 )
 
 type validateOptions struct {
@@ -37,7 +44,112 @@ func newValidateCommand(app *App, g *globals) *cobra.Command {
 	return cmd
 }
 
-// validate is implemented by Phase 2 workstream 4.
+// validate runs a check-only validate of the change set against the target, or against the
+// fallback when the target is not configured or cannot be logged in to.
 func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) error {
-	return notImplemented("validate")
+	if !o.checkOnly {
+		return &exitcode.ExitError{Code: exitcode.Error, Err: errors.New("validate never deploys, so --check-only=false is refused")}
+	}
+	c, err := app.detectCI(g)
+	if err != nil {
+		return &exitcode.ExitError{Code: exitcode.Error, Err: err}
+	}
+	proj, err := app.loadProject(g)
+	if err != nil {
+		return err
+	}
+	res := run.New("validate", app.Now)
+	res.Provider = proj.provider.Name()
+	res.Facts["validate.fallback_used"] = false
+
+	planPath := o.planPath
+	if planPath == "" {
+		planPath = filepath.Join(g.dir, ".glassops", "plan.json")
+	}
+	cs, err := providers.ReadChangeSet(planPath)
+	if err != nil {
+		res.AddCheck("plan", run.StatusError, err.Error())
+		return app.finish(res, c, g)
+	}
+	if cs.Empty {
+		res.Status = run.StatusEmpty
+		res.AddCheck("plan", run.StatusSkipped, "the change set is empty, nothing to validate")
+		return app.finish(res, c, g)
+	}
+
+	sess, used, fallbackUsed, err := app.validateConnect(ctx, proj, o)
+	if err != nil {
+		res.AddCheck("target", run.StatusError, err.Error())
+		return app.finish(res, c, g)
+	}
+	defer sess.Close()
+	res.Target = used.Name
+	res.Facts["validate.fallback_used"] = fallbackUsed
+
+	out, err := proj.provider.Validate(ctx, sess, cs, providers.ValidateOptions{
+		Dir:       g.dir,
+		TestLevel: testLevelFor(proj.cfg.Salesforce.TestLevel, used.Tier),
+	})
+	if err != nil {
+		res.AddCheck("validate", run.StatusError, err.Error())
+		return app.finish(res, c, g)
+	}
+	for k, v := range out.Facts {
+		res.Facts[k] = v
+	}
+	if out.Passed {
+		res.AddCheck("validate", run.StatusPass, "check-only validate passed")
+	}
+	for i, p := range out.Problems {
+		res.AddCheck(fmt.Sprintf("problem.%d", i+1), run.StatusFail, p)
+	}
+	if !out.Passed {
+		res.Degrade(run.StatusFail)
+	}
+	return app.finish(res, c, g)
+}
+
+// validateConnect resolves the target and logs in. A target that is not configured, or a
+// login that fails, falls back to --fallback-target when one is set. A guard mismatch or any
+// other failure never does.
+func (app *App) validateConnect(ctx context.Context, proj *project, o *validateOptions) (providers.Session, providers.Target, bool, error) {
+	fallback := func(reason error) (providers.Session, providers.Target, bool, error) {
+		if o.fallbackTarget == "" {
+			return nil, providers.Target{}, false, reason
+		}
+		ft, err := app.target(proj.cfg, o.fallbackTarget)
+		if err != nil {
+			return nil, providers.Target{}, false, fmt.Errorf("fallback target: %w", err)
+		}
+		s, _, err := app.connect(ctx, proj.provider, ft)
+		if err != nil {
+			return nil, ft, true, fmt.Errorf("fallback target: %w", err)
+		}
+		return s, ft, true, nil
+	}
+
+	t, err := app.target(proj.cfg, o.target)
+	if errors.Is(err, ErrTargetNotConfigured) {
+		return fallback(err)
+	}
+	if err != nil {
+		return nil, t, false, err
+	}
+	s, _, err := app.connect(ctx, proj.provider, t)
+	if errors.Is(err, ErrLogin) && ctx.Err() == nil {
+		return fallback(err)
+	}
+	if err != nil {
+		return nil, t, false, err
+	}
+	return s, t, false, nil
+}
+
+// testLevelFor picks the test level for a tier: the tier's own entry, else "default", else
+// empty, which leaves sf on its own default.
+func testLevelFor(levels map[string]string, tier string) string {
+	if l := levels[tier]; l != "" {
+		return l
+	}
+	return levels["default"]
 }
