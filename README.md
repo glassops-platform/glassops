@@ -16,10 +16,11 @@ GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI
 
 ### The `glassops` CLI
 
-The new CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). So far it has two commands:
+The new CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). So far it has these commands:
 
 - `glassops init` detects a Salesforce project and the CI system, then writes `glassops.yaml` and a CI file.
 - `glassops doctor` checks the config against its schema, the tools (`git`, `sf`, `sfdx-git-delta`), the git checkout and the environment variables the config names.
+- `glassops describe`, `glassops plan` and `glassops validate` log in to a target with an org Id and tier guard, work out a change set between two git refs, and run a check-only validate. `doctor --auth` checks the logins.
 
 Every command writes a result file to `.glassops/results/` and exits 0 on pass, 1 on a failed check and 2 on a tool error. See the [CLI reference](docs/reference/cli.md).
 
