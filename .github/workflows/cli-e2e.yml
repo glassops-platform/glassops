@@ -22,8 +22,8 @@ env:
   HAS_SF_SECRETS: ${{ secrets.SF_JWT_KEY != '' }}
   SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
   SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
-  SF_USERNAME: ${{ vars.SF_USERNAME }}
-  SF_DEVHUB_ORG_ID: ${{ vars.SF_DEVHUB_ORG_ID }}
+  SF_USERNAME: ${{ secrets.SF_USERNAME }}
+  SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
 
 jobs:
   e2e:
