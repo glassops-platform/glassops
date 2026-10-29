@@ -124,7 +124,7 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	// 6. Environment variables named in the config. Presence only, never values.
 	if cfg != nil {
 		var missing []string
-		refs := config.EnvRefs(cfg)
+		refs := envRefsFor(cfg, o)
 		for _, name := range refs {
 			if v, ok := app.LookupEnv(name); !ok || v == "" {
 				missing = append(missing, name)
@@ -245,4 +245,28 @@ func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 		return &exitcode.ExitError{Code: code}
 	}
 	return nil
+}
+
+// envRefsFor lists the $VARs the env check covers. With --auth and --target T it covers only
+// target T and anything outside targets, so a target that does not exist yet (such as a
+// scratch org about to be created) does not fail the check. Otherwise it covers every ref.
+func envRefsFor(cfg *config.Config, o *doctorOptions) []string {
+	t, ok := cfg.Targets[o.target]
+	if !o.auth || o.target == "" || !ok {
+		return config.EnvRefs(cfg)
+	}
+	only := *cfg
+	only.Targets = map[string]config.Target{o.target: t}
+	outside := *cfg
+	outside.Targets = nil
+	set := map[string]bool{}
+	for _, r := range append(config.EnvRefs(&only), config.EnvRefs(&outside)...) {
+		set[r] = true
+	}
+	out := make([]string, 0, len(set))
+	for r := range set {
+		out = append(out, r)
+	}
+	sort.Strings(out)
+	return out
 }

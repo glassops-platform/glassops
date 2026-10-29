@@ -192,3 +192,41 @@ func TestDoctorAuthUnsetIDVariable(t *testing.T) {
 		t.Fatalf("auth.hub = %q", got)
 	}
 }
+
+func TestDoctorEnvCheckScopedToAuthTarget(t *testing.T) {
+	setup := func() (*harness, *fakeProvider) {
+		h := newHarness(t)
+		f := &fakeProvider{auth: okAuth, describe: reportsAs(providers.KindProduction)}
+		useFake(t, h, f)
+		delete(h.env, "SF_SCRATCH_URL") // the scratch target does not exist yet
+		return h, f
+	}
+
+	// --auth --target devhub ignores the unset scratch variable.
+	h, _ := setup()
+	if code := h.exec("doctor", "--auth", "--target", "devhub"); code != exitcode.OK {
+		t.Fatalf("scoped exit %d, output:\n%s", code, h.out)
+	}
+	if got := checkStatus(h.result(t, "doctor"), "env"); got != run.StatusPass {
+		t.Fatalf("scoped env = %q", got)
+	}
+
+	// Without --target, every target counts.
+	h, _ = setup()
+	if code := h.exec("doctor", "--auth"); code != exitcode.Fail && code != exitcode.Error {
+		t.Fatalf("unscoped exit %d", code)
+	}
+	r := h.result(t, "doctor")
+	if checkStatus(r, "env") != run.StatusFail || !strings.Contains(detail(r, "env"), "SF_SCRATCH_URL") {
+		t.Fatalf("unscoped env: %+v", r.Checks)
+	}
+
+	// Without --auth, --target changes nothing.
+	h, _ = setup()
+	if code := h.exec("doctor", "--target", "devhub"); code != exitcode.Fail {
+		t.Fatalf("no-auth exit %d", code)
+	}
+	if got := checkStatus(h.result(t, "doctor"), "env"); got != run.StatusFail {
+		t.Fatalf("no-auth env = %q", got)
+	}
+}
