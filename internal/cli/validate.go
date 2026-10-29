@@ -88,7 +88,7 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 
 	out, err := proj.provider.Validate(ctx, sess, cs, providers.ValidateOptions{
 		Dir:       g.dir,
-		TestLevel: proj.cfg.Salesforce.TestLevel[used.Tier],
+		TestLevel: testLevelFor(proj.cfg.Salesforce.TestLevel, used.Tier),
 	})
 	if err != nil {
 		res.AddCheck("validate", run.StatusError, err.Error())
