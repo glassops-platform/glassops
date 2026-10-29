@@ -92,6 +92,9 @@ func TestDescribeStopsWithExitTwo(t *testing.T) {
 			if r.Status != run.StatusError || len(r.Errors) != 1 || !strings.Contains(r.Errors[0], tc.wantErr) {
 				t.Fatalf("result: %+v", r)
 			}
+			if !strings.Contains(h.out.String(), tc.wantErr) {
+				t.Fatalf("the reason must be printed, output:\n%s", h.out)
+			}
 			if !f.allClosed() {
 				t.Fatal("a session was left open")
 			}

@@ -223,6 +223,13 @@ func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 			c.Annotate(ci.Errors, fmt.Sprintf("%s %s: %s", res.Step, ch.Name, ch.Detail))
 		}
 	}
+	// Errors that are not tied to a check, such as a guard mismatch, are shown too, so a CI
+	// log says why the step stopped.
+	for _, e := range res.Errors {
+		fmt.Fprintf(app.Stdout, "%-8s %-22s %s\n", run.StatusError, "error", e)
+		fmt.Fprintf(&md, "| error | %s | %s |\n", run.StatusError, strings.ReplaceAll(e, "|", "\\|"))
+		c.Annotate(ci.Errors, fmt.Sprintf("%s: %s", res.Step, e))
+	}
 
 	path, err := res.Write(g.results(), app.Now)
 	if err != nil {
