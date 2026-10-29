@@ -12,8 +12,52 @@ OUTDIR=${1:?usage: scratch-delete.sh OUTDIR}
 
 ORG_ID=""
 if [ -f "$OUTDIR/org-id" ]; then
-  ORG_ID=$(tr -d ' \r\n' < "$OUTDIR/org-id")
+  ORG_ID=$(tr -d ' 
+' < "$OUTDIR/org-id")
 fi
+INFO_ID=""
+if [ -z "$ORG_ID" ] && [ -f "$OUTDIR/scratch-info-id" ]; then
+  INFO_ID=$(tr -d ' 
+' < "$OUTDIR/scratch-info-id")
+  case "$INFO_ID" in
+    ""|*[!A-Za-z0-9]*) echo "scratch-delete: scratch-info-id is empty or has unexpected characters, refusing" >&2; exit 1 ;;
+  esac
+  case "${#INFO_ID}" in
+    15|18) ;;
+    *) echo "scratch-delete: scratch-info-id is not 15 or 18 characters, refusing" >&2; exit 1 ;;
+  esac
+fi
+if [ -z "$ORG_ID" ] && [ -z "$INFO_ID" ]; then
+  echo "scratch-delete: org-id is empty and there is no scratch-info-id, refusing" >&2
+  exit 1
+fi
+
+HOME=$(mktemp -d)
+export HOME
+chmod 700 "$HOME"
+trap 'rm -rf "$HOME"' EXIT INT TERM
+
+printf '%s
+' "$SF_JWT_KEY" > "$HOME/jwt.key"
+if ! sf org login jwt --username "$SF_USERNAME" --client-id "$SF_CLIENT_ID"   --jwt-key-file "$HOME/jwt.key" --instance-url https://login.salesforce.com   --alias hub --json > "$HOME/login.json" 2>/dev/null; then
+  echo "scratch-delete: the Dev Hub login failed" >&2
+  exit 1
+fi
+
+# The run may have been cancelled while scratch-create.sh was still polling. The signup can
+# still turn Active afterwards, so ask the ScratchOrgInfo record which org it produced.
+if [ -z "$ORG_ID" ]; then
+  if ! sf data query --query "SELECT ScratchOrg, Status FROM ScratchOrgInfo WHERE Id = '$INFO_ID'"     --target-org hub --json > "$HOME/info.json" 2>/dev/null; then
+    echo "scratch-delete: the ScratchOrgInfo query failed" >&2
+    exit 1
+  fi
+  ORG_ID=$(node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));const r=(j.result&&j.result.records||[])[0]||{};process.stdout.write(String(r.ScratchOrg||""))' "$HOME/info.json")
+  if [ -z "$ORG_ID" ]; then
+    echo "scratch-delete: notice, the signup never produced an org, nothing to delete"
+    exit 0
+  fi
+fi
+
 case "$ORG_ID" in
   00D*) ;;
   *) echo "scratch-delete: org-id is empty or does not start with 00D, refusing" >&2; exit 1 ;;
@@ -26,19 +70,6 @@ case "$ORG_ID" in
   *[!A-Za-z0-9]*) echo "scratch-delete: org-id has unexpected characters, refusing" >&2; exit 1 ;;
 esac
 SHORT=$(printf '%s' "$ORG_ID" | cut -c1-15)
-
-HOME=$(mktemp -d)
-export HOME
-chmod 700 "$HOME"
-trap 'rm -rf "$HOME"' EXIT INT TERM
-
-printf '%s\n' "$SF_JWT_KEY" > "$HOME/jwt.key"
-if ! sf org login jwt --username "$SF_USERNAME" --client-id "$SF_CLIENT_ID" \
-  --jwt-key-file "$HOME/jwt.key" --instance-url https://login.salesforce.com \
-  --alias hub --json > "$HOME/login.json" 2>/dev/null; then
-  echo "scratch-delete: the Dev Hub login failed" >&2
-  exit 1
-fi
 
 if ! sf data query --query "SELECT Id FROM ActiveScratchOrg WHERE ScratchOrg = '$SHORT'" \
   --target-org hub --json > "$HOME/query.json" 2>/dev/null; then

@@ -132,11 +132,11 @@ jobs:
         id: scratch
         if: always() && env.HAS_SF_SECRETS == 'true'
         run: |
-          if [ -s "$RUNNER_TEMP/scratch/org-id" ]; then
+          if [ -s "$RUNNER_TEMP/scratch/org-id" ] || [ -s "$RUNNER_TEMP/scratch/scratch-info-id" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No scratch org Id was recorded, so there is nothing to delete."
+            echo "::notice::No scratch org or signup was recorded, so there is nothing to delete."
           fi
 
       - name: Delete the scratch org
