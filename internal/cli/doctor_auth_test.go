@@ -22,8 +22,11 @@ func detail(r run.Result, name string) string {
 func TestDoctorWithoutAuthNeverAuthenticates(t *testing.T) {
 	h := newHarness(t)
 	f := &fakeProvider{
-		auth:     func(providers.Target) error { t.Error("Authenticate was called without --auth"); return nil },
-		describe: func(providers.Target) (providers.TargetInfo, error) { t.Error("Describe was called without --auth"); return providers.TargetInfo{}, nil },
+		auth: func(providers.Target) error { t.Error("Authenticate was called without --auth"); return nil },
+		describe: func(providers.Target) (providers.TargetInfo, error) {
+			t.Error("Describe was called without --auth")
+			return providers.TargetInfo{}, nil
+		},
 	}
 	useFake(t, h, f)
 	if code := h.exec("doctor"); code != exitcode.OK {
