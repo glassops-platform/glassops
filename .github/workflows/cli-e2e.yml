@@ -5,9 +5,7 @@ name: CLI End-to-End
 on:
   workflow_dispatch:
   push:
-    # TEMPORARY: the feature branch entry lets this workflow run before it reaches main.
-    # Remove it before merging.
-    branches: [main, feat/phase2-salesforce-read]
+    branches: [main]
 
 permissions:
   contents: read
