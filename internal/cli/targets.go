@@ -49,7 +49,7 @@ func (app *App) loadProject(g *globals) (*project, error) {
 
 // target resolves the named target from the config. A $VAR Id is expanded from the
 // environment, and an unset variable is an error, so the guard never compares against "".
-// A missing target wraps ErrTargetNotConfigured.
+// A missing target, or one whose Id variable is unset, wraps ErrTargetNotConfigured.
 func (app *App) target(cfg *config.Config, name string) (providers.Target, error) {
 	t, ok := cfg.Targets[name]
 	if !ok {
@@ -59,7 +59,9 @@ func (app *App) target(cfg *config.Config, name string) (providers.Target, error
 	if m := envRef.FindStringSubmatch(id); m != nil {
 		v, ok := app.LookupEnv(m[1])
 		if !ok || v == "" {
-			return providers.Target{}, fmt.Errorf("target %s: id is %s, which is not set", name, id)
+			// An unset Id means the target does not exist yet, for example a scratch org
+			// that was never created, so it counts as not configured.
+			return providers.Target{}, fmt.Errorf("%w: target %s: id is %s, which is not set", ErrTargetNotConfigured, name, id)
 		}
 		id = v
 	}

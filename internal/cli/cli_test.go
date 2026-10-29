@@ -303,3 +303,11 @@ func TestPhase2CommandsAreRegistered(t *testing.T) {
 		t.Fatal("doctor is missing --auth or --target")
 	}
 }
+
+func TestTargetWithUnsetIDIsNotConfigured(t *testing.T) {
+	h := newHarness(t)
+	cfg := &config.Config{Targets: map[string]config.Target{"ephemeral": {ID: "$SF_EPHEMERAL_ORG_ID", Tier: "ephemeral"}}}
+	if _, err := h.app.target(cfg, "ephemeral"); !errors.Is(err, ErrTargetNotConfigured) {
+		t.Fatalf("unset id var should count as not configured: %v", err)
+	}
+}
