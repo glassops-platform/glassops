@@ -102,3 +102,17 @@ func TestLocalWritesToTerminal(t *testing.T) {
 		t.Fatalf("unexpected context: %+v", c)
 	}
 }
+
+func TestGitHubBaseRef(t *testing.T) {
+	pr := newGitHub(mapEnv(map[string]string{"GITHUB_BASE_REF": "main", "GITHUB_EVENT_NAME": "pull_request"}), &bytes.Buffer{})
+	if got := pr.Context().BaseRef; got != "main" {
+		t.Fatalf("pull request BaseRef = %q, want main", got)
+	}
+	push := newGitHub(mapEnv(map[string]string{"GITHUB_REF": "refs/heads/main"}), &bytes.Buffer{})
+	if got := push.Context().BaseRef; got != "" {
+		t.Fatalf("push BaseRef = %q, want empty", got)
+	}
+	if got := newLocal(&bytes.Buffer{}, t.TempDir()).Context().BaseRef; got != "" {
+		t.Fatalf("local BaseRef = %q, want empty", got)
+	}
+}
