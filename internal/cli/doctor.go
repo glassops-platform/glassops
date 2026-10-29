@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -123,7 +124,7 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	// 6. Environment variables named in the config. Presence only, never values.
 	if cfg != nil {
 		var missing []string
-		refs := config.EnvRefs(cfg)
+		refs := envRefsFor(cfg, o)
 		for _, name := range refs {
 			if v, ok := app.LookupEnv(name); !ok || v == "" {
 				missing = append(missing, name)
@@ -147,9 +148,45 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	return app.finish(res, c, g)
 }
 
-// doctorAuth adds one check per target it logs in to. Phase 2 workstream 2 implements it.
+// doctorAuth adds one check per target it logs in to, named auth.<target>. A login failure or
+// a guard mismatch is an error, which exits 2. Every session is closed.
 func (app *App) doctorAuth(ctx context.Context, res *run.Result, cfg *config.Config, p providers.Provider, only string) {
-	res.AddCheck("auth", run.StatusError, "doctor --auth is not implemented yet")
+	if cfg == nil || p == nil {
+		res.AddCheck("auth", run.StatusSkipped, "no usable config and provider, so there is nothing to log in to")
+		return
+	}
+	var names []string
+	if only != "" {
+		if _, ok := cfg.Targets[only]; !ok {
+			res.AddCheck("auth."+only, run.StatusError, fmt.Errorf("%w: %s", ErrTargetNotConfigured, only).Error())
+			return
+		}
+		names = []string{only}
+	} else {
+		for name := range cfg.Targets {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+	}
+	if len(names) == 0 {
+		res.AddCheck("auth", run.StatusSkipped, "the config names no targets")
+		return
+	}
+	for _, name := range names {
+		check := "auth." + name
+		t, err := app.target(cfg, name)
+		if err != nil {
+			res.AddCheck(check, run.StatusError, err.Error())
+			continue
+		}
+		s, info, err := app.connect(ctx, p, t)
+		if err != nil {
+			res.AddCheck(check, run.StatusError, err.Error())
+			continue
+		}
+		_ = s.Close()
+		res.AddCheck(check, run.StatusPass, string(info.Kind)+" "+info.ID)
+	}
 }
 
 func (app *App) gitVersion(dir string) (string, error) {
@@ -208,4 +245,28 @@ func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 		return &exitcode.ExitError{Code: code}
 	}
 	return nil
+}
+
+// envRefsFor lists the $VARs the env check covers. With --auth and --target T it covers only
+// target T and anything outside targets, so a target that does not exist yet (such as a
+// scratch org about to be created) does not fail the check. Otherwise it covers every ref.
+func envRefsFor(cfg *config.Config, o *doctorOptions) []string {
+	t, ok := cfg.Targets[o.target]
+	if !o.auth || o.target == "" || !ok {
+		return config.EnvRefs(cfg)
+	}
+	only := *cfg
+	only.Targets = map[string]config.Target{o.target: t}
+	outside := *cfg
+	outside.Targets = nil
+	set := map[string]bool{}
+	for _, r := range append(config.EnvRefs(&only), config.EnvRefs(&outside)...) {
+		set[r] = true
+	}
+	out := make([]string, 0, len(set))
+	for r := range set {
+		out = append(out, r)
+	}
+	sort.Strings(out)
+	return out
 }
