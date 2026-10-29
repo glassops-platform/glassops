@@ -20,6 +20,8 @@ type session struct {
 	home string
 	// alias is the --target-org value for every sf call in this session.
 	alias string
+	// stop detaches the context cleanup that Authenticate registered. It may be nil.
+	stop func() bool
 
 	closeOnce sync.Once
 	closeErr  error
@@ -30,6 +32,9 @@ func (s *session) Target() providers.Target { return s.target }
 // Close removes the session dir. It is safe to call more than once.
 func (s *session) Close() error {
 	s.closeOnce.Do(func() {
+		if s.stop != nil {
+			s.stop()
+		}
 		if s.home != "" {
 			s.closeErr = os.RemoveAll(s.home)
 		}
