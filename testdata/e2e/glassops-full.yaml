@@ -1,0 +1,16 @@
+version: 1
+provider: salesforce
+targets:
+  devhub:
+    id: $SF_DEVHUB_ORG_ID
+    tier: devhub
+    auth: { method: jwt, username: $SF_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+  ephemeral:
+    id: $SF_EPHEMERAL_ORG_ID
+    tier: ephemeral
+    auth: { method: sfdx-url, url: $SF_EPHEMERAL_AUTH_URL }
+salesforce:
+  test_level:
+    ephemeral: RunLocalTests
+  delta:
+    enabled: false
