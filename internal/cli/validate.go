@@ -144,3 +144,12 @@ func (app *App) validateConnect(ctx context.Context, proj *project, o *validateO
 	}
 	return s, t, false, nil
 }
+
+// testLevelFor picks the test level for a tier: the tier's own entry, else "default", else
+// empty, which leaves sf on its own default.
+func testLevelFor(levels map[string]string, tier string) string {
+	if l := levels[tier]; l != "" {
+		return l
+	}
+	return levels["default"]
+}

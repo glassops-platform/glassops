@@ -327,3 +327,46 @@ func TestValidateGuardMismatchNeverFallsBack(t *testing.T) {
 		t.Fatalf("result %+v closed %v", r, fp.allClosed())
 	}
 }
+
+func TestValidateTestLevelPrecedence(t *testing.T) {
+	cfg := func(levels string) string {
+		return strings.Split(validateConfig, "salesforce:")[0] + "salesforce:\n  test_level: " + levels + "\n"
+	}
+	cases := []struct {
+		name     string
+		levels   string
+		args     []string
+		failAuth string
+		want     string
+	}{
+		{"tier wins over default", "{ default: RunLocalTests, qa: RunAllTestsInOrg }", []string{"--target", "qa"}, "", "RunAllTestsInOrg"},
+		{"default when tier has no entry", "{ default: RunLocalTests, ephemeral: NoTestRun }", []string{"--target", "qa"}, "", "RunLocalTests"},
+		{"empty when neither is set", "{ ephemeral: NoTestRun }", []string{"--target", "qa"}, "", ""},
+		{"after fallback, tier of fallback wins", "{ default: RunLocalTests, ephemeral: NoTestRun }",
+			[]string{"--target", "qa", "--fallback-target", "scratch"}, "qa", "NoTestRun"},
+		{"after fallback, default applies", "{ default: RunLocalTests, qa: RunAllTestsInOrg }",
+			[]string{"--target", "qa", "--fallback-target", "scratch"}, "qa", "RunLocalTests"},
+		{"after fallback, empty when neither", "{ qa: RunAllTestsInOrg }",
+			[]string{"--target", "qa", "--fallback-target", "scratch"}, "qa", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, fp := validateHarness(t)
+			h.write(t, "glassops.yaml", cfg(tc.levels))
+			fp.auth = func(tg providers.Target) error {
+				if tg.Name == tc.failAuth {
+					return errors.New("invalid_grant")
+				}
+				return nil
+			}
+			got := "unset"
+			fp.validateFn = func(_ providers.Target, _ providers.ChangeSet, o providers.ValidateOptions) (providers.ValidateResult, error) {
+				got = o.TestLevel
+				return passingResult(), nil
+			}
+			if code := h.exec(append([]string{"validate"}, tc.args...)...); code != exitcode.OK || got != tc.want {
+				t.Fatalf("exit %d, level %q, want %q. output:\n%s", code, got, tc.want, h.out)
+			}
+		})
+	}
+}
