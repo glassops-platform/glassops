@@ -251,3 +251,28 @@ func TestFailedCreateFallsBackLikeAnUnsetTarget(t *testing.T) {
 		t.Fatalf("result %+v", r)
 	}
 }
+
+func TestRememberProjectDirAndTargetSource(t *testing.T) {
+	h, _, _ := envTargetHarness(t)
+	if err := writeEnvState(envFileFor(h, "ephemeral"), EnvState{Schema: EnvSchema, Target: "ephemeral", DevHub: "devhub",
+		ID: "00D000000000002AAA", AuthFile: synthAuthFile(t), Ready: true}); err != nil {
+		t.Fatal(err)
+	}
+	// A config loaded without loadProject, as gate does, reads the config until it is registered.
+	proj, err := h.app.loadProject(&globals{dir: h.dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	other := *proj.cfg
+	if _, err := h.app.target(&other, "ephemeral"); !errors.Is(err, ErrTargetNotConfigured) {
+		t.Fatalf("unregistered config: %v", err)
+	}
+	rememberProjectDir(&other, h.dir)
+	tg, err := h.app.target(&other, "ephemeral")
+	if err != nil || targetSource(tg) != "env" || tg.ID != "00D000000000002AAA" {
+		t.Fatalf("registered config: %+v %v", tg, err)
+	}
+	if qa, _ := h.app.target(&other, "qa"); targetSource(qa) != "config" {
+		t.Fatalf("qa source %s", targetSource(qa))
+	}
+}

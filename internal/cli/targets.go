@@ -50,13 +50,29 @@ func (app *App) loadProject(g *globals) (*project, error) {
 	if p == nil {
 		return nil, &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("unknown provider %q", cfg.Provider)}
 	}
-	projectDirs.Store(cfg, g.dir)
+	rememberProjectDir(cfg, g.dir)
 	return &project{cfg: cfg, provider: p}, nil
 }
 
 // projectDirs maps each config loadProject returned to its project dir, so target can find
 // an environment's env.json without every caller passing the dir along.
 var projectDirs sync.Map
+
+// rememberProjectDir records dir as the project dir of cfg. A command that loads its config
+// with config.Load instead of loadProject calls it, so target reads env.json for that config
+// too. Without it, target uses the config as written.
+func rememberProjectDir(cfg *config.Config, dir string) {
+	projectDirs.Store(cfg, dir)
+}
+
+// targetSource is the value of the target.source fact: "env" for a target resolved from an
+// environment's env.json, else "config".
+func targetSource(t providers.Target) string {
+	if t.AuthFile != "" {
+		return "env"
+	}
+	return "config"
+}
 
 // target resolves the named target from the config. A $VAR Id is expanded from the
 // environment, and an unset variable is an error, so the guard never compares against "".
