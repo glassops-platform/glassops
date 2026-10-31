@@ -317,7 +317,6 @@ func TestPhase3CommandsAreStubs(t *testing.T) {
 		args  []string
 		flags []string
 	}{
-		{[]string{"gate", "--target", "prod"}, []string{"target", "plan", "permit", "no-connect"}},
 		{[]string{"deploy", "--target", "prod"}, []string{"target", "plan", "permit", "wait", "resume"}},
 	}
 	for _, tc := range cases {
