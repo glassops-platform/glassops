@@ -396,7 +396,8 @@ func Default(provider string) *Config {
 
 // DefaultPipelines are the pr and deploy pipelines a project gets when its config names
 // none. pr checks a pull request against a scratch org and always deletes the org again.
-// deploy plans against what prod last received, validates, gates and deploys.
+// deploy plans against what prod last received, validates, gates and deploys. Both always
+// report, so a failed run still leaves a summary and SARIF.
 func DefaultPipelines() map[string][]Step {
 	return map[string][]Step{
 		"pr": {
@@ -406,7 +407,7 @@ func DefaultPipelines() map[string][]Step {
 			{Run: "env create"},
 			{Run: "validate --target ephemeral --fallback-target prod"},
 			{Run: "test --target ephemeral"},
-			{Run: "report"},
+			{Run: "report", When: "always"},
 			{Run: "env delete", When: "always"},
 		},
 		"deploy": {
@@ -414,7 +415,7 @@ func DefaultPipelines() map[string][]Step {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
-			{Run: "report"},
+			{Run: "report", When: "always"},
 		},
 	}
 }

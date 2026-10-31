@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,10 +38,12 @@ func newRunCommand(app *App, g *globals) *cobra.Command {
 			"nothing before failed, failure runs only when something did, always runs anyway.\n" +
 			"After plan writes an empty plan, later steps run only with when always. An exec\n" +
 			"step runs its run command with sh -c in the project dir, with " + ResultsDirEnv + "\n" +
-			"set, and writes exec.<n>.json. Every step gets this run's --dir, --config,\n" +
-			"--results-dir and --ci. The exit code is the worst of all steps. A cancel stops\n" +
-			"the current step and still runs the when always steps. With --dry-run it prints\n" +
-			"the steps without running them.",
+			"set, and writes exec.<n>.json. A zero exit passes and any other exit fails. Every\n" +
+			"step gets this run's --dir, --config, --results-dir and --ci. Before the first\n" +
+			"step, glassops results from an earlier run are removed from the results dir, and\n" +
+			"other files there are kept. The exit code is the worst of all steps. A cancel\n" +
+			"stops the current step and still runs the when always steps. With --dry-run it\n" +
+			"prints the steps without running them or removing anything.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.runPipeline(cmd.Context(), g, o, args[0])
@@ -109,6 +112,14 @@ func (app *App) runPipeline(ctx context.Context, g *globals, o *runOptions, name
 	res.Provider = proj.provider.Name()
 	res.Facts["run.pipeline"] = name
 
+	// Results from an earlier run would read as evidence of this one, for example to a
+	// report step, so they go before the first step runs.
+	removed, err := removeStaleResults(g.results())
+	if err != nil {
+		return &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("remove stale results: %w", err)}
+	}
+	res.Facts["run.stale_removed"] = removed
+
 	total := len(steps)
 	r := &pipeline.Runner{
 		Command: app.Execute,
@@ -152,6 +163,48 @@ func (app *App) runPipeline(ctx context.Context, g *globals, o *runOptions, name
 	return app.finish(res, c, g)
 }
 
+// removeStaleResults removes the glassops results an earlier run left in dir: run.json and
+// every *.json file whose schema is the result schema. It does not recurse and leaves every
+// other file, such as SARIF or JUnit, alone. A missing dir removes nothing. It returns how
+// many files it removed.
+func removeStaleResults(dir string) (int, error) {
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	removed := 0
+	for _, e := range entries {
+		name := e.Name()
+		if !e.Type().IsRegular() || !strings.HasSuffix(name, ".json") {
+			continue
+		}
+		path := filepath.Join(dir, name)
+		if name != "run.json" && !isResultFile(path) {
+			continue
+		}
+		if err := os.Remove(path); err != nil {
+			return removed, err
+		}
+		removed++
+	}
+	return removed, nil
+}
+
+// isResultFile reports whether path holds JSON whose schema is the result schema.
+func isResultFile(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	var head struct {
+		Schema string `json:"schema"`
+	}
+	return json.Unmarshal(data, &head) == nil && head.Schema == run.Schema
+}
+
 // args are the global flags in the form every step receives, so each one reads the same
 // project and writes to the same results dir as the run. The = form keeps an empty value
 // as one argument.
@@ -181,6 +234,8 @@ func (app *App) execStep(ctx context.Context, g *globals, c ci.CI, s pipeline.St
 		res.AddCheck("command", run.StatusError, fmt.Sprintf("%s: results dir: %v", s.Exec, err))
 		return app.finishCode(res, c, g), path
 	}
+	// The exec step sees the process environment, not app.Getenv, because App has no way
+	// to list the environment. Tests replace shellRunner instead.
 	env := append(os.Environ(), ResultsDirEnv+"="+results)
 	code, err := shellRunner(ctx, g.dir, env, s.Exec, app.Stdout, app.Stderr)
 	if err != nil {
@@ -210,16 +265,14 @@ func (app *App) finishCode(res *run.Result, c ci.CI, g *globals) int {
 	return exitcode.Error
 }
 
-// execStatus reads an exec command's exit status the way glassops reads its own: 0 pass,
-// 1 fail, anything else an error.
+// execStatus reads an exec command's exit status the way check reads a script's: 0 pass,
+// any other exit a fail. A command that could not start, was killed by a signal or was
+// cancelled never gets here, it is an error.
 func execStatus(code int) run.Status {
-	switch code {
-	case 0:
+	if code == 0 {
 		return run.StatusPass
-	case 1:
-		return run.StatusFail
 	}
-	return run.StatusError
+	return run.StatusFail
 }
 
 func exitStatus(code int) run.Status {

@@ -361,9 +361,85 @@ func TestShellRunnerWithSh(t *testing.T) {
 }
 
 func TestExecStatus(t *testing.T) {
-	for code, want := range map[int]run.Status{0: run.StatusPass, 1: run.StatusFail, 2: run.StatusError, 127: run.StatusError} {
+	for code, want := range map[int]run.Status{0: run.StatusPass, 1: run.StatusFail, 2: run.StatusFail, 127: run.StatusFail} {
 		if got := execStatus(code); got != want {
 			t.Errorf("execStatus(%d) = %s, want %s", code, got, want)
 		}
+	}
+}
+
+func TestExecNonZeroExitIsFailAndStartErrorIsError(t *testing.T) {
+	var calls []shellCall
+	fakeShell(t, map[string]int{"exit3": 3}, &calls, nil)
+	saved := shellRunner
+	shellRunner = func(ctx context.Context, dir string, env []string, command string, stdout, stderr io.Writer) (int, error) {
+		if command == "missing" {
+			return -1, errors.New("exec: \"sh\": executable file not found")
+		}
+		return saved(ctx, dir, env, command, stdout, stderr)
+	}
+	h, _, cfgPath := runHarness(t, providers.ChangeSet{Manifest: "package.xml"},
+		"  pr:\n    - step: exec\n      run: exit3\n    - step: exec\n      run: missing\n      when: always\n")
+
+	code := h.exec("run", "pr", "--config", cfgPath)
+	if code != exitcode.Error {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if r := h.result(t, "exec.1"); r.Status != run.StatusFail {
+		t.Fatalf("exit 3 gave %s, want fail", r.Status)
+	}
+	if r := h.result(t, "exec.2"); r.Status != run.StatusError {
+		t.Fatalf("a command that could not start gave %s, want error", r.Status)
+	}
+	recs := runSteps(t, h.result(t, "run"))
+	if *recs[0].ExitCode != exitcode.Fail || *recs[1].ExitCode != exitcode.Error {
+		t.Fatalf("records %+v", recs)
+	}
+}
+
+func TestRunRemovesOnlyStaleResults(t *testing.T) {
+	h, _, cfgPath := runHarness(t, providers.ChangeSet{Manifest: "package.xml"}, "  pr:\n    - help\n")
+	dir := filepath.Join(".glassops", "results")
+	stale := `{"schema": "glassops.result/v1", "step": "deploy", "status": "pass"}`
+	h.write(t, filepath.Join(dir, "run.json"), "not even json")
+	h.write(t, filepath.Join(dir, "deploy.json"), stale)
+	h.write(t, filepath.Join(dir, "exec.9.json"), stale)
+	keep := map[string]string{
+		"analyze.sarif":                   `{"version": "2.1.0", "runs": []}`,
+		"sarif.json":                      `{"$schema": "https://json.schemastore.org/sarif-2.1.0.json", "version": "2.1.0"}`,
+		"other.json":                      `{"schema": "something.else/v1"}`,
+		"broken.json":                     `{"schema": "glassops.result/v1"`,
+		"notes.txt":                       `{"schema": "glassops.result/v1"}`,
+		filepath.Join("nested", "x.json"): stale,
+	}
+	for rel, content := range keep {
+		h.write(t, filepath.Join(dir, rel), content)
+	}
+
+	// A dry run removes nothing.
+	if code := h.exec("run", "pr", "--config", cfgPath, "--dry-run"); code != exitcode.OK {
+		t.Fatalf("dry run exit %d", code)
+	}
+	if _, err := os.Stat(filepath.Join(h.dir, dir, "deploy.json")); err != nil {
+		t.Fatalf("dry run removed a result: %v", err)
+	}
+
+	if code := h.exec("run", "pr", "--config", cfgPath); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	for _, gone := range []string{"deploy.json", "exec.9.json"} {
+		if _, err := os.Stat(filepath.Join(h.dir, dir, gone)); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("stale %s survived: %v", gone, err)
+		}
+	}
+	for rel, content := range keep {
+		data, err := os.ReadFile(filepath.Join(h.dir, dir, rel))
+		if err != nil || string(data) != content {
+			t.Fatalf("%s was touched: %v", rel, err)
+		}
+	}
+	r := h.result(t, "run")
+	if r.Facts["run.stale_removed"] != float64(3) {
+		t.Fatalf("run.stale_removed = %v, want 3", r.Facts["run.stale_removed"])
 	}
 }

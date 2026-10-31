@@ -359,7 +359,7 @@ func TestDefaultPipelines(t *testing.T) {
 			{Run: "env create"},
 			{Run: "validate --target ephemeral --fallback-target prod"},
 			{Run: "test --target ephemeral"},
-			{Run: "report"},
+			{Run: "report", When: "always"},
 			{Run: "env delete", When: "always"},
 		},
 		"deploy": {
@@ -367,7 +367,7 @@ func TestDefaultPipelines(t *testing.T) {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
-			{Run: "report"},
+			{Run: "report", When: "always"},
 		},
 	}
 	got := DefaultPipelines()
