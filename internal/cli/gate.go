@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -27,9 +26,6 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
-
-// minPermitKeyBytes is the shortest HMAC key gate accepts, after base64 decoding.
-const minPermitKeyBytes = 32
 
 // sodRule is the rule whose result fills the PERMIT's separation_of_duties block.
 const sodRule = "separation_of_duties"
@@ -154,11 +150,15 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	}
 	if cs.SHA256 == "" {
 		gr.evidenceFail("plan", "the change set has no plan_sha256, so the PERMIT cannot be bound to it")
+	} else if err := providers.CheckDigest(g.dir, cs); err != nil {
+		// The PERMIT names the plan by its hash, so plan files edited after plan must never be
+		// signed for.
+		gr.evidenceFail("plan.digest", err.Error())
 	}
 
 	// Earlier results go in first, so the facts gate owns (target, change, ci) always win.
-	validated := gr.resultFacts(g, t)
-	gr.changeFacts(cs)
+	validated, bound := gr.resultFacts(g, t, cs)
+	gr.doc.Merge("", facts.FromChangeSet(cs).Facts)
 	tgt, guardCheck, connected := gr.targetFacts(ctx, t, o.noConnect)
 	// Design 7a: an ephemeral target gets an automatic PERMIT with only the org Id guard
 	// applied. It is issued only when the guard really ran and saw a scratch target.
@@ -173,7 +173,8 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	}
 
 	now := app.Now().UTC()
-	checks := []policy.Result{guardCheck}
+	// validation.bound only says whether deploy may quick deploy. It never denies.
+	checks := []policy.Result{guardCheck, bound}
 	allow := guardCheck.Outcome != policy.Fail
 	if ephemeral {
 		checks = append(checks, policy.Result{
@@ -246,19 +247,16 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	return app.finish(res, c, g)
 }
 
-// permitSigner decodes the standard base64 key from GLASSOPS_PERMIT_KEY and returns the
-// signer for it. No error includes the value.
+// permitSigner reads the key from GLASSOPS_PERMIT_KEY with permit.ParseKey, so gate accepts
+// exactly the keys permit verify accepts, and returns the signer for it. No error includes the
+// value.
 func permitSigner(value string) (permit.Signer, error) {
-	value = strings.TrimSpace(value)
-	if value == "" {
+	if strings.TrimSpace(value) == "" {
 		return nil, fmt.Errorf("%s is not set, so no PERMIT can be signed", permit.KeyEnv)
 	}
-	key, err := base64.StdEncoding.DecodeString(value)
+	key, err := permit.ParseKey(value)
 	if err != nil {
-		return nil, fmt.Errorf("%s is not valid standard base64", permit.KeyEnv)
-	}
-	if len(key) < minPermitKeyBytes {
-		return nil, fmt.Errorf("%s decodes to %d bytes, and at least %d are needed", permit.KeyEnv, len(key), minPermitKeyBytes)
+		return nil, fmt.Errorf("%s: %w", permit.KeyEnv, err)
 	}
 	return gateSigner(key), nil
 }
@@ -273,43 +271,59 @@ func newPermitID() string {
 }
 
 // resultFacts merges the facts from results/plan.json and results/validate.json when they
-// exist, and returns the validation the PERMIT binds to: a passed check-only validate of this
-// same target. A result that exists but cannot be read is an evidence failure.
-func (r *gateRun) resultFacts(g *globals, t providers.Target) *permit.Validation {
+// exist. It returns the validation the PERMIT binds to, or nil, and the validation.bound check
+// that says which and why. A result that exists but cannot be read is an evidence failure.
+func (r *gateRun) resultFacts(g *globals, t providers.Target, cs providers.ChangeSet) (*permit.Validation, policy.Result) {
+	bound := policy.Result{Rule: "validation.bound", Outcome: policy.Skipped, Detail: "no validate result, so deploy runs a full deploy"}
 	var validated *permit.Validation
 	for _, step := range []string{"plan", "validate"} {
 		rr, ok, err := readResult(filepath.Join(g.results(), step+".json"))
 		if err != nil {
 			r.evidenceFail("results."+step, err.Error())
+			if step == "validate" {
+				bound.Detail = "the validate result cannot be read, so deploy runs a full deploy"
+			}
 			continue
 		}
 		if !ok {
 			continue
 		}
-		// The same as facts.FromResult, which copies r.Facts.
-		r.doc.Merge("", rr.Facts)
+		r.doc.Merge("", facts.FromResult(rr).Facts)
 		if step == "validate" {
-			validated = r.validation(rr, t)
+			validated, bound = r.validation(rr, t, cs)
 		}
 	}
-	return validated
+	return validated, bound
 }
 
-// validation returns the validation a validate result proves for target t, or nil.
-func (r *gateRun) validation(rr run.Result, t providers.Target) *permit.Validation {
+// validation returns the validation a validate result proves for target t and plan cs, or nil
+// with the reason. It binds only a passed check-only validate of the same target and the same
+// plan, at the test level validate recorded.
+func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.ChangeSet) (*permit.Validation, policy.Result) {
+	skip := func(why string) (*permit.Validation, policy.Result) {
+		return nil, policy.Result{Rule: "validation.bound", Outcome: policy.Skipped, Detail: why + ", so deploy runs a full deploy"}
+	}
 	prefix := r.proj.provider.Name() + "."
 	id, _ := rr.Facts[prefix+"deploy_id"].(string)
 	checkOnly, _ := rr.Facts[prefix+"check_only"].(bool)
-	if rr.Status != run.StatusPass || rr.Target != t.Name || id == "" || !checkOnly {
-		return nil
+	planHash, _ := rr.Facts["validate.plan_sha256"].(string)
+	level, _ := rr.Facts["validate.test_level"].(string)
+	switch {
+	case rr.Status != run.StatusPass:
+		return skip(fmt.Sprintf("the validate result is %s, not pass", rr.Status))
+	case rr.Target != t.Name:
+		return skip(fmt.Sprintf("the validate result is for target %q, not %q", rr.Target, t.Name))
+	case !checkOnly:
+		return skip("the validate result is not a check-only run")
+	case id == "":
+		return skip("the validate result has no deploy Id")
+	case planHash == "":
+		return skip("the validate result does not record which plan it validated")
+	case planHash != cs.SHA256:
+		return skip("the validate result is for a different plan")
 	}
-	return &permit.Validation{
-		DeployID: id,
-		// validate does not record its test level, so this is the level validate picks for
-		// the tier from the same config.
-		TestLevel: testLevelFor(r.cfg.Salesforce.TestLevel, t.Tier),
-		Passed:    true,
-	}
+	return &permit.Validation{DeployID: id, TestLevel: level, Passed: true},
+		policy.Result{Rule: "validation.bound", Outcome: policy.Pass, Detail: "check-only validation " + id + " of this plan is bound for a quick deploy"}
 }
 
 // readResult reads a result envelope. A missing file is not an error.
@@ -329,21 +343,6 @@ func readResult(path string) (run.Result, bool, error) {
 		return rr, false, fmt.Errorf("%s: schema is %q, want %q", path, rr.Schema, run.Schema)
 	}
 	return rr, true, nil
-}
-
-// changeFacts sets the change.* facts and copies the provider's plan facts, the same as
-// facts.FromChangeSet.
-func (r *gateRun) changeFacts(cs providers.ChangeSet) {
-	r.doc.Merge("", cs.Facts)
-	r.doc.Set(facts.ChangePlanSHA256, cs.SHA256)
-	r.doc.Set(facts.ChangeEmpty, cs.Empty)
-	// The provider counts destructive members. Without that count, the number of destructive
-	// manifests is a lower bound that is still above zero whenever any exist.
-	count := len(cs.Destructive)
-	if n, ok := r.doc.Int(r.proj.provider.Name() + ".destructive_count"); ok {
-		count = n
-	}
-	r.doc.Set(facts.ChangeDestructiveCount, count)
 }
 
 // targetFacts sets the target.* facts. Unless noConnect is set it logs in and runs the guard,
@@ -412,14 +411,38 @@ func (r *gateRun) ciFacts(ctx context.Context, c ci.Context, useAPI bool) {
 	approvals := append([]facts.Approval(nil), c.Approvals...)
 	approvalsKnown := len(c.Approvals) > 0
 
+	var api *ci.GitHubAPI
 	if useAPI && c.Token != "" && c.Repo != "" {
-		api := ci.NewGitHubAPI(r.app.Getenv("GITHUB_API_URL"), c.Token, nil)
-		if c.SHA != "" {
+		api = ci.NewGitHubAPI(r.app.Getenv("GITHUB_API_URL"), c.Token, nil)
+	}
+	if api != nil {
+		switch {
+		case prNumber != "":
+			// A pull request event: GITHUB_SHA is the test merge commit, so read the pull
+			// request itself.
+			n, err := strconv.Atoi(prNumber)
+			if err != nil {
+				r.evidenceFail("ci.pull_request", fmt.Sprintf("pull request number %q is not a number", prNumber))
+				break
+			}
+			a, l, err := api.Pull(ctx, c.Repo, n)
+			if err != nil {
+				r.evidenceFail("ci.pull_request", err.Error())
+				break
+			}
+			if author == "" {
+				author = a
+			}
+			if !labelsKnown {
+				labels, labelsKnown = l, true
+			}
+		case c.SHA != "":
+			// A push: find the pull request the commit was merged from.
 			n, a, l, err := api.PullForCommit(ctx, c.Repo, c.SHA)
 			switch {
 			case err != nil:
 				r.evidenceFail("ci.pull_request", err.Error())
-			case n != 0 && (prNumber == "" || prNumber == strconv.Itoa(n)):
+			case n != 0:
 				prNumber = strconv.Itoa(n)
 				if author == "" {
 					author = a
@@ -444,15 +467,24 @@ func (r *gateRun) ciFacts(ctx context.Context, c ci.Context, useAPI bool) {
 	set(facts.CIPRAuthor, author)
 	if labelsKnown {
 		r.doc.Set(facts.CILabels, labels)
-		// The configured approval label on the pull request is label approval evidence. These
-		// endpoints do not say who added it, so the approver stays empty and the separation of
-		// duties rule decides what that means.
+		// The configured approval label on the pull request is label approval evidence. The
+		// approver is whoever added the label, read from the issue events. Without the API it
+		// stays empty, and the separation of duties rule fails it.
 		if sod := r.cfg.Policy.Rules.SeparationOfDuties; sod != nil && sod.Approval != nil && sod.Approval.Label != "" {
 			for _, l := range labels {
-				if l == sod.Approval.Label {
-					approvals = append(approvals, facts.Approval{Mechanism: "label", Label: l})
-					approvalsKnown = true
+				if l != sod.Approval.Label {
+					continue
 				}
+				ap := facts.Approval{Mechanism: "label", Label: l}
+				if n, err := strconv.Atoi(prNumber); api != nil && err == nil {
+					login, err := api.LabelAdder(ctx, c.Repo, n, l)
+					if err != nil {
+						r.evidenceFail("ci.label_approver", err.Error())
+					}
+					ap.Approver = login
+				}
+				approvals = append(approvals, ap)
+				approvalsKnown = true
 			}
 		}
 	}
