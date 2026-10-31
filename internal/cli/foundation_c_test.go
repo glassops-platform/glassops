@@ -82,7 +82,17 @@ func TestGateWithoutRegoIsUnchanged(t *testing.T) {
 	}
 }
 
-func TestGateSigstoreIsNotImplemented(t *testing.T) {
+// noCosign makes this process a GitHub Actions job with id-token: write but no cosign on
+// PATH. The sigstore signer reads the process environment, not the harness's.
+func noCosign(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "true")
+	t.Setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "https://example.invalid/token")
+	t.Setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "syntheticRequestToken")
+	t.Setenv("PATH", t.TempDir())
+}
+
+func TestGateSigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
 	h, _ := gateHarness(t, sigstoreConfig)
 	delete(h.env, "GLASSOPS_PERMIT_KEY")
@@ -92,17 +102,18 @@ func TestGateSigstoreIsNotImplemented(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(h.dir, ".glassops", "permit.json")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("a PERMIT was written: %v", err)
 	}
-	if d := detailOf(h.result(t, "gate"), "permit.key"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "gate"), "permit.key"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("permit.key detail = %q", d)
 	}
 }
 
-func TestDeploySigstoreIsNotImplemented(t *testing.T) {
+func TestDeploySigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	h, fp := gateHarness(t, sigstoreConfig)
 	if code := Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"}); code != exitcode.Error {
 		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
 	}
-	if d := detailOf(h.result(t, "deploy"), "permit"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "deploy"), "permit"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("permit detail = %q", d)
 	}
 	if fp.deployCalls != 0 || len(fp.sessions) != 0 {
@@ -110,12 +121,13 @@ func TestDeploySigstoreIsNotImplemented(t *testing.T) {
 	}
 }
 
-func TestPermitVerifySigstoreIsNotImplemented(t *testing.T) {
+func TestPermitVerifySigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	h, _ := gateHarness(t, sigstoreConfig)
 	if code := Execute(h.app, []string{"permit", "verify", "--target", "prod", "--dir", h.dir, "--ci", "github"}); code != exitcode.Error {
 		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
 	}
-	if d := detailOf(h.result(t, "permit-verify"), "key"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "permit-verify"), "key"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("key detail = %q", d)
 	}
 }

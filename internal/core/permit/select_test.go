@@ -60,14 +60,16 @@ func TestSignerAndVerifierForHMAC(t *testing.T) {
 	}
 }
 
-func TestSigstoreIsNotImplemented(t *testing.T) {
+func TestSigstoreIsSelected(t *testing.T) {
 	cfg := &config.Config{Policy: config.Policy{Permit: config.PermitSigning{Signing: "sigstore", Identity: "i", Issuer: "o"}}}
 	readKey := Keys{HMACKey: func() ([]byte, error) { t.Fatal("sigstore read the HMAC key"); return nil, nil }}
-	if _, err := SignerFor(cfg, readKey); err == nil || !strings.Contains(err.Error(), "not implemented") {
+	t.Setenv("GITHUB_ACTIONS", "")
+	if _, err := SignerFor(cfg, readKey); !errors.Is(err, ErrSigstoreNotGitHub) {
 		t.Fatalf("SignerFor: %v", err)
 	}
-	if _, err := VerifierFor(cfg, readKey); err == nil {
-		t.Fatal("VerifierFor accepted sigstore")
+	t.Setenv("GITLAB_CI", "true")
+	if _, err := VerifierFor(cfg, readKey); !errors.Is(err, ErrSigstoreNotGitHub) {
+		t.Fatalf("VerifierFor: %v", err)
 	}
 	bad := &config.Config{Policy: config.Policy{Permit: config.PermitSigning{Signing: "gpg"}}}
 	if _, err := SignerFor(bad, readKey); err == nil || !strings.Contains(err.Error(), "unknown signing method") {
