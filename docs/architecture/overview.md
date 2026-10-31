@@ -1,12 +1,12 @@
 # GlassOps Architecture & Design
 
-> **Target design.** Only the runtime in `packages/runtime` exists today. The rest of this page describes intent, not working code.
+> **Target design.** Only part of the `glassops` CLI exists today. The rest of this page describes intent, not working code. The GitHub Action runtime that this page once described was replaced by the CLI.
 
 ---
 
 ## 1. High-Level Architecture
 
-GlassOps is designed container-first. CI (GitHub Actions today) holds secrets and starts the run, and the runtime container decides whether the run may proceed.
+GlassOps is designed container-first. CI (GitHub Actions today) holds secrets and starts the run, and the `glassops` container decides whether the run may proceed.
 
 ### The Control Loop
 
@@ -21,7 +21,7 @@ graph LR
 ### Component Breakdown
 
 1.  **CI (GitHub Actions)**: Owns secrets and starts the run.
-2.  **Runtime** (`packages/runtime`, exists): Reads policy, checks freeze windows, authenticates, and writes a permit and a contract.
+2.  **`glassops` CLI** (partly built): Plans the change set, evaluates policy, signs a PERMIT, and deploys only under a valid PERMIT. See the [CLI reference](../reference/cli.md).
 3.  **Deployment step** (not built): Executes the deploy and normalizes its output.
 4.  **Record format** (not built): The message format (SARIF/OTel) exchanged between components.
 
@@ -29,21 +29,21 @@ graph LR
 
 ## 2. Governance Flow (The Pipeline)
 
-The target flow is four phases. The runtime implements only parts of phases 1 and 2.
+The target flow is four phases. The CLI implements parts of phases 1 to 4.
 
 1.  **Phase 1: Policy Resolution**
-    - Today the runtime reads `devops-config.json` only.
+    - Today the policy comes from `glassops.yaml` only.
     - Target: merge `GitHub Vars` (Floor) + `devops-config.json` (Team) + `Salesforce CMDT` (Additive) into one `Effective Policy`.
 
 2.  **Phase 2: Architectural Validity**
-    - Today the runtime can call the Salesforce CLI code analyzer when enabled in config.
+    - Today `gate` evaluates the v1 rules over the plan, the CI context and earlier results. See [PERMIT and rules](../reference/permit-and-rules.md).
     - Target: enforce **Hard Invariants** (e.g., No RunAllTests in Prod).
 
 3.  **Phase 3: Simulation (The Dry Run)**
-    - Not built. Target: run a check-only deploy and generate a **Draft Contract**.
+    - Partly built. `validate` runs a check-only deploy. Target: also generate a **Draft Contract**.
 
 4.  **Phase 4: Execution Gate**
-    - Not built. Target: compare the **Draft Contract** with the **Effective Policy**, then deploy or block.
+    - Partly built. `gate` signs a PERMIT and `deploy` refuses to run without a valid one. Target: compare the **Draft Contract** with the **Effective Policy**.
 
 ---
 
@@ -74,4 +74,4 @@ The target flow is four phases. The runtime implements only parts of phases 1 an
 
 ## 5. Directory Structure
 
-- `packages/runtime`: The runtime. This is the only package with working code.
+- `cmd/glassops` and `internal/`: The `glassops` CLI. This is the only code with working behaviour.

@@ -15,3 +15,4 @@ changes its output, capture it again.
 | `issue-labels.json` | `GET /repos/{owner}/{repo}/issues/{number}/labels` | a pull request with no labels, an empty array |
 | `deployments.json` | `GET /repos/{owner}/{repo}/deployments` | a deployment to the `glassops-deploy` environment |
 | `run-approvals.json` | `GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals` | an approved environment review: state, approver login, comment and the environments it covered. Readable by a job's `GITHUB_TOKEN` with `actions: read` |
+| `issue-events-labelled.json` | `GET /repos/{owner}/{repo}/issues/{number}/events` | `labeled` events, each with `label.name` and the `actor` who added it |

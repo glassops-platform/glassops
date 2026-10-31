@@ -32,7 +32,6 @@
       "status",
       "what-exists-today",
       "the-glassops-cli",
-      "the-runtime",
       "learn-more",
       "who-this-is-for",
       "quick-start",
@@ -42,118 +41,118 @@
     ],
     "links": [
       {
-        "original": "[![Runtime Build & Test](https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml/badge.svg)",
-        "text": "![Runtime Build & Test",
-        "url": "https://github.com/glassops-platform/glassops/actions/workflows/runtime-docker.yml/badge.svg",
-        "lineNo": 3
-      },
-      {
         "original": "[![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)",
         "text": "![Docs Governance & Build",
         "url": "https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg",
-        "lineNo": 4
+        "lineNo": 3
       },
       {
         "original": "[![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)",
         "text": "![Pages Deployment",
         "url": "https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg",
-        "lineNo": 5
+        "lineNo": 4
       },
       {
         "original": "[CLI reference](docs/reference/cli.md)",
         "text": "CLI reference",
         "url": "docs/reference/cli.md",
-        "lineNo": 24
+        "lineNo": 18
       },
       {
-        "original": "[`packages/runtime`](packages/runtime/README.md)",
-        "text": "`packages/runtime`",
-        "url": "packages/runtime/README.md",
-        "lineNo": 28
+        "original": "[PERMIT and rules](docs/reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "docs/reference/permit-and-rules.md",
+        "lineNo": 18
+      },
+      {
+        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
+        "text": "GitHub deploy guide",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 18
       },
       {
         "original": "[`overview.md`](docs/architecture/overview.md)",
         "text": "`overview.md`",
         "url": "docs/architecture/overview.md",
-        "lineNo": 43
+        "lineNo": 24
       },
       {
         "original": "[`vision.md`](docs/vision.md)",
         "text": "`vision.md`",
         "url": "docs/vision.md",
-        "lineNo": 44
+        "lineNo": 25
       },
       {
         "original": "[`cli.md`](docs/reference/cli.md)",
         "text": "`cli.md`",
         "url": "docs/reference/cli.md",
-        "lineNo": 45
+        "lineNo": 26
       },
       {
-        "original": "[`platform-reference.md`](docs/reference/platform-reference.md)",
-        "text": "`platform-reference.md`",
-        "url": "docs/reference/platform-reference.md",
-        "lineNo": 46
+        "original": "[`permit-and-rules.md`](docs/reference/permit-and-rules.md)",
+        "text": "`permit-and-rules.md`",
+        "url": "docs/reference/permit-and-rules.md",
+        "lineNo": 27
+      },
+      {
+        "original": "[`deploy-with-github.md`](docs/guides/deploy-with-github.md)",
+        "text": "`deploy-with-github.md`",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 28
       },
       {
         "original": "[`whitepaper.md`](docs/whitepaper.md)",
         "text": "`whitepaper.md`",
         "url": "docs/whitepaper.md",
-        "lineNo": 47
+        "lineNo": 29
       },
       {
         "original": "[earlier design decisions](docs/adr/README.md)",
         "text": "earlier design decisions",
         "url": "docs/adr/README.md",
-        "lineNo": 48
-      },
-      {
-        "original": "[`packages/runtime/README.md`](packages/runtime/README.md)",
-        "text": "`packages/runtime/README.md`",
-        "url": "packages/runtime/README.md",
-        "lineNo": 64
+        "lineNo": 30
       },
       {
         "original": "[`examples/workflows/glassops-deploy.yml`](examples/workflows/glassops-deploy.yml)",
         "text": "`examples/workflows/glassops-deploy.yml`",
         "url": "examples/workflows/glassops-deploy.yml",
-        "lineNo": 64
+        "lineNo": 46
       },
       {
         "original": "[`CONTRIBUTING.md`](CONTRIBUTING.md)",
         "text": "`CONTRIBUTING.md`",
         "url": "CONTRIBUTING.md",
-        "lineNo": 72
+        "lineNo": 54
       },
       {
         "original": "[LICENSE](LICENSE)",
         "text": "LICENSE",
         "url": "LICENSE",
-        "lineNo": 78
+        "lineNo": 60
       },
       {
         "original": "[docs/LICENSE](docs/LICENSE)",
         "text": "docs/LICENSE",
         "url": "docs/LICENSE",
-        "lineNo": 79
+        "lineNo": 61
       },
       {
         "original": "[GitHub Issues](https://github.com/glassops-platform/glassops/issues)",
         "text": "GitHub Issues",
         "url": "https://github.com/glassops-platform/glassops/issues",
-        "lineNo": 85
+        "lineNo": 67
       },
       {
         "original": "[@rdbumstead](https://github.com/rdbumstead)",
         "text": "@rdbumstead",
         "url": "https://github.com/rdbumstead",
-        "lineNo": 86
+        "lineNo": 68
       },
       {
         "original": "[@rdbumstead](https://github.com/rdbumstead)",
         "text": "@rdbumstead",
         "url": "https://github.com/rdbumstead",
-        "lineNo": 87
+        "lineNo": 69
       }
     ]
   },
@@ -197,7 +196,7 @@
       "what-are-adrs",
       "adr-locations-by-project",
       "1-glassops-core-docsadr",
-      "2-glassops-runtime-glassops-runtimedocsadr",
+      "2-runtime",
       "adr-lifecycle",
       "creating-a-new-adr",
       "1-choose-the-right-location",
@@ -291,120 +290,159 @@
         "lineNo": 38
       },
       {
-        "original": "[001](../packages/runtime/adr/001-six-phase-execution.md)",
-        "text": "001",
-        "url": "../packages/runtime/adr/001-six-phase-execution.md",
-        "lineNo": 48
-      },
-      {
-        "original": "[002](../packages/runtime/adr/002-docker-caching-strategy.md)",
-        "text": "002",
-        "url": "../packages/runtime/adr/002-docker-caching-strategy.md",
-        "lineNo": 49
-      },
-      {
         "original": "[ADR-002: GitHub Execution Authority](adr/002-github-execution-authority.md)",
         "text": "ADR-002: GitHub Execution Authority",
         "url": "adr/002-github-execution-authority.md",
-        "lineNo": 138
+        "lineNo": 132
       },
       {
         "original": "[ADR-003: Additive Governance](adr/003-additive-governance.md)",
         "text": "ADR-003: Additive Governance",
         "url": "adr/003-additive-governance.md",
-        "lineNo": 139
+        "lineNo": 133
       },
       {
         "original": "[ADR-007: Protocol Supremacy Enforcement](adr/007-protocol-supremacy-enforcement.md)",
         "text": "ADR-007: Protocol Supremacy Enforcement",
         "url": "adr/007-protocol-supremacy-enforcement.md",
-        "lineNo": 140
+        "lineNo": 134
       },
       {
         "original": "[ADR-008: Federated Documentation Structure](adr/008-federated-documentation-structure.md)",
         "text": "ADR-008: Federated Documentation Structure",
         "url": "adr/008-federated-documentation-structure.md",
-        "lineNo": 144
+        "lineNo": 138
       },
       {
         "original": "[ADR-011: Monorepo Strategy](adr/011-monorepo-strategy.md)",
         "text": "ADR-011: Monorepo Strategy",
         "url": "adr/011-monorepo-strategy.md",
-        "lineNo": 145
+        "lineNo": 139
       },
       {
         "original": "[ADR-009: The 8/10 vs 10/10 Bridge Strategy](adr/009-8-10-vs-10-10-bridge-strategy.md)",
         "text": "ADR-009: The 8/10 vs 10/10 Bridge Strategy",
         "url": "adr/009-8-10-vs-10-10-bridge-strategy.md",
-        "lineNo": 146
+        "lineNo": 140
       },
       {
         "original": "[ADR-004: Schema Contract Config](adr/004-schema-contract-config.md)",
         "text": "ADR-004: Schema Contract Config",
         "url": "adr/004-schema-contract-config.md",
-        "lineNo": 150
+        "lineNo": 144
       },
       {
         "original": "[ADR-006: Documentation as Governed Artifact](adr/006-documentation-as-governed-artifact.md)",
         "text": "ADR-006: Documentation as Governed Artifact",
         "url": "adr/006-documentation-as-governed-artifact.md",
-        "lineNo": 151
+        "lineNo": 145
       },
       {
         "original": "[ADR-010: Identity Contract](adr/010-identity-contract.md)",
         "text": "ADR-010: Identity Contract",
         "url": "adr/010-identity-contract.md",
-        "lineNo": 152
+        "lineNo": 146
       },
       {
         "original": "[docs/adr/](adr/README.md)",
         "text": "docs/adr/",
         "url": "adr/README.md",
-        "lineNo": 184
+        "lineNo": 178
       },
       {
         "original": "[CONTRIBUTING.md](../CONTRIBUTING.md)",
         "text": "CONTRIBUTING.md",
         "url": "../CONTRIBUTING.md",
-        "lineNo": 185
+        "lineNo": 179
       },
       {
         "original": "[GitHub Discussions](https://github.com/glassops-platform/glassops/discussions)",
         "text": "GitHub Discussions",
         "url": "https://github.com/glassops-platform/glassops/discussions",
-        "lineNo": 186
+        "lineNo": 180
       },
       {
         "original": "[@rdbumstead](https://github.com/rdbumstead)",
         "text": "@rdbumstead",
         "url": "https://github.com/rdbumstead",
-        "lineNo": 191
+        "lineNo": 185
       }
     ]
   },
-  "examples/README.md": {
+  "docs/doc-map.md": {
     "anchors": [
-      "glassops-examples",
-      "current-examples"
+      "documentation-map",
+      "-discovery-central",
+      "-implementation-federated",
+      "-quick-links"
     ],
     "links": [
       {
-        "original": "[Deployment Workflow](workflows/glassops-deploy.yml)",
-        "text": "Deployment Workflow",
-        "url": "workflows/glassops-deploy.yml",
-        "lineNo": 7
+        "original": "[Vision](vision.md)",
+        "text": "Vision",
+        "url": "vision.md",
+        "lineNo": 13
       },
       {
-        "original": "[Configuration Template](config/devops-config.json)",
-        "text": "Configuration Template",
-        "url": "config/devops-config.json",
-        "lineNo": 8
+        "original": "[Architecture](architecture/overview.md)",
+        "text": "Architecture",
+        "url": "architecture/overview.md",
+        "lineNo": 14
       },
       {
-        "original": "[MegaLinter sketch](workflows/glassops-scanner-megalinter.yml)",
-        "text": "MegaLinter sketch",
-        "url": "workflows/glassops-scanner-megalinter.yml",
-        "lineNo": 9
+        "original": "[Platform Reference](reference/platform-reference.md)",
+        "text": "Platform Reference",
+        "url": "reference/platform-reference.md",
+        "lineNo": 15
+      },
+      {
+        "original": "[`cli.md`](reference/cli.md)",
+        "text": "`cli.md`",
+        "url": "reference/cli.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`permit-and-rules.md`](reference/permit-and-rules.md)",
+        "text": "`permit-and-rules.md`",
+        "url": "reference/permit-and-rules.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
+        "text": "GitHub Repo",
+        "url": "https://github.com/glassops-platform/glassops",
+        "lineNo": 29
+      },
+      {
+        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
+        "text": "Discussions",
+        "url": "https://github.com/glassops-platform/glassops/discussions",
+        "lineNo": 30
+      }
+    ]
+  },
+  "docs/vision.md": {
+    "anchors": [
+      "glassops-vision",
+      "1-the-core-question",
+      "2-the-problem-governance-fragmentation",
+      "3-the-solution-governance-as-a-protocol",
+      "the-layered-contract-model",
+      "4-the-origin-story",
+      "5-strategy-the-810-vision"
+    ],
+    "links": [
+      {
+        "original": "[CLI reference](reference/cli.md)",
+        "text": "CLI reference",
+        "url": "reference/cli.md",
+        "lineNo": 5
+      },
+      {
+        "original": "[Architecture](architecture/overview.md)",
+        "text": "Architecture",
+        "url": "architecture/overview.md",
+        "lineNo": 70
       }
     ]
   },
@@ -436,74 +474,29 @@
     ],
     "links": []
   },
-  "docs/doc-map.md": {
+  "examples/README.md": {
     "anchors": [
-      "documentation-map",
-      "-discovery-central",
-      "-implementation-federated",
-      "-quick-links"
+      "glassops-examples",
+      "current-examples"
     ],
     "links": [
       {
-        "original": "[Vision](vision.md)",
-        "text": "Vision",
-        "url": "vision.md",
-        "lineNo": 13
+        "original": "[Deployment Workflow](workflows/glassops-deploy.yml)",
+        "text": "Deployment Workflow",
+        "url": "workflows/glassops-deploy.yml",
+        "lineNo": 7
       },
       {
-        "original": "[Architecture](architecture/overview.md)",
-        "text": "Architecture",
-        "url": "architecture/overview.md",
-        "lineNo": 14
+        "original": "[GitHub deploy guide](../docs/guides/deploy-with-github.md)",
+        "text": "GitHub deploy guide",
+        "url": "../docs/guides/deploy-with-github.md",
+        "lineNo": 7
       },
       {
-        "original": "[Platform Reference](reference/platform-reference.md)",
-        "text": "Platform Reference",
-        "url": "reference/platform-reference.md",
-        "lineNo": 15
-      },
-      {
-        "original": "[`packages/runtime/README.md`](../packages/runtime/README.md)",
-        "text": "`packages/runtime/README.md`",
-        "url": "../packages/runtime/README.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[`/adr`](../packages/runtime/adr/README.md)",
-        "text": "`/adr`",
-        "url": "../packages/runtime/adr/README.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
-        "text": "GitHub Repo",
-        "url": "https://github.com/glassops-platform/glassops",
-        "lineNo": 29
-      },
-      {
-        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
-        "text": "Discussions",
-        "url": "https://github.com/glassops-platform/glassops/discussions",
-        "lineNo": 30
-      }
-    ]
-  },
-  "docs/vision.md": {
-    "anchors": [
-      "glassops-vision",
-      "1-the-core-question",
-      "2-the-problem-governance-fragmentation",
-      "3-the-solution-governance-as-a-protocol",
-      "the-layered-contract-model",
-      "4-the-origin-story",
-      "5-strategy-the-810-vision"
-    ],
-    "links": [
-      {
-        "original": "[Architecture](architecture/overview.md)",
-        "text": "Architecture",
-        "url": "architecture/overview.md",
-        "lineNo": 70
+        "original": "[MegaLinter sketch](workflows/glassops-scanner-megalinter.yml)",
+        "text": "MegaLinter sketch",
+        "url": "workflows/glassops-scanner-megalinter.yml",
+        "lineNo": 8
       }
     ]
   },
@@ -511,13 +504,114 @@
     "anchors": [],
     "links": []
   },
+  ".github/ISSUE_TEMPLATE/feature_request.md": {
+    "anchors": [],
+    "links": []
+  },
   ".github/ISSUE_TEMPLATE/documentation_improvement.md": {
     "anchors": [],
     "links": []
   },
-  ".github/ISSUE_TEMPLATE/feature_request.md": {
-    "anchors": [],
+  "docs/adr/001-system-api-primitive.md": {
+    "anchors": [
+      "adr-001-glassops-runtime-as-system-api-primitive",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "future-evolution-v4-roadmap",
+      "alternatives"
+    ],
     "links": []
+  },
+  "docs/adr/003-additive-governance.md": {
+    "anchors": [
+      "adr-003-additive-governance-model",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/002-github-execution-authority.md": {
+    "anchors": [
+      "adr-002-github-as-execution-authority",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/005-control-plane-architecture.md": {
+    "anchors": [
+      "adr-005-control-plane-architecture-reference-console",
+      "overview",
+      "components",
+      "data-flow",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/007-protocol-supremacy-enforcement.md": {
+    "anchors": [
+      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
+      "context",
+      "the-strategic-gap",
+      "decision",
+      "protocol-supremacy-hierarchy",
+      "rationale",
+      "why-this-matters",
+      "why-custom-schemas-are-dangerous",
+      "implementation",
+      "changes-made-to-adapter-developmentmd",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "validation",
+      "how-to-verify-compliance",
+      "validate-sarif-schema",
+      "validate-structure",
+      "future-considerations",
+      "potential-next-steps",
+      "related-adrs",
+      "references",
+      "alternatives"
+    ],
+    "links": [
+      {
+        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
+        "text": "ADR-001: System API Primitive",
+        "url": "001-system-api-primitive.md",
+        "lineNo": 155
+      },
+      {
+        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
+        "text": "ADR-004: Schema Contract Config",
+        "url": "004-schema-contract-config.md",
+        "lineNo": 156
+      },
+      {
+        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
+        "text": "ADR-006: Documentation as Governed Artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 157
+      },
+      {
+        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
+        "text": "OASIS SARIF 2.1.0 Specification",
+        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
+        "lineNo": 163
+      }
+    ]
   },
   "docs/adr/006-documentation-as-governed-artifact.md": {
     "anchors": [
@@ -597,262 +691,6 @@
         "text": "MkDocs",
         "url": "https://www.mkdocs.org/",
         "lineNo": 367
-      }
-    ]
-  },
-  "docs/adr/003-additive-governance.md": {
-    "anchors": [
-      "adr-003-additive-governance-model",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/001-system-api-primitive.md": {
-    "anchors": [
-      "adr-001-glassops-runtime-as-system-api-primitive",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "future-evolution-v4-roadmap",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/005-control-plane-architecture.md": {
-    "anchors": [
-      "adr-005-control-plane-architecture-reference-console",
-      "overview",
-      "components",
-      "data-flow",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/004-schema-contract-config.md": {
-    "anchors": [
-      "adr-004-schema-contract-over-yaml-parsing",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/002-github-execution-authority.md": {
-    "anchors": [
-      "adr-002-github-as-execution-authority",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/008-federated-documentation-structure.md": {
-    "anchors": [
-      "adr-008-federated-documentation-structure",
-      "context",
-      "decision",
-      "7-tier-hierarchy",
-      "rationale",
-      "why-federated-structure",
-      "why-federated",
-      "implementation",
-      "phase-1-core-restructure-completed",
-      "phase-2-large-file-splitting-future",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "design-principles",
-      "1-clear-ownership",
-      "2-no-duplication",
-      "3-protocol-supremacy",
-      "4-audience-first",
-      "alternatives-considered",
-      "alternative-1-keep-flat-structure",
-      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
-      "alternative-3-single-mega-document",
-      "alternative-4-wiki-style-with-heavy-cross-linking",
-      "validation-checklist",
-      "migration-path",
-      "future-enhancements",
-      "potential-additions",
-      "automation-opportunities",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
-        "text": "ADR-006: Documentation as Governed Artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 254
-      },
-      {
-        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "ADR-007: Protocol Supremacy Enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 255
-      },
-      {
-        "original": "[Divio Documentation System](https://documentation.divio.com/)",
-        "text": "Divio Documentation System",
-        "url": "https://documentation.divio.com/",
-        "lineNo": 261
-      }
-    ]
-  },
-  "docs/adr/007-protocol-supremacy-enforcement.md": {
-    "anchors": [
-      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
-      "context",
-      "the-strategic-gap",
-      "decision",
-      "protocol-supremacy-hierarchy",
-      "rationale",
-      "why-this-matters",
-      "why-custom-schemas-are-dangerous",
-      "implementation",
-      "changes-made-to-adapter-developmentmd",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "validation",
-      "how-to-verify-compliance",
-      "validate-sarif-schema",
-      "validate-structure",
-      "future-considerations",
-      "potential-next-steps",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
-        "text": "ADR-001: System API Primitive",
-        "url": "001-system-api-primitive.md",
-        "lineNo": 155
-      },
-      {
-        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
-        "text": "ADR-004: Schema Contract Config",
-        "url": "004-schema-contract-config.md",
-        "lineNo": 156
-      },
-      {
-        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
-        "text": "ADR-006: Documentation as Governed Artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 157
-      },
-      {
-        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
-        "text": "OASIS SARIF 2.1.0 Specification",
-        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
-        "lineNo": 163
-      }
-    ]
-  },
-  "docs/adr/011-monorepo-strategy.md": {
-    "anchors": [
-      "adr-011-monorepo-strategy-for-protocol-ecosystem",
-      "context",
-      "the-problem-with-polyrepos-separate-repos",
-      "decision",
-      "the-structure",
-      "the-publisher-pattern-for-distribution",
-      "rationale",
-      "strategic-extensibility",
-      "consequences",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/README.md": {
-    "anchors": [
-      "platform-adrs"
-    ],
-    "links": [
-      {
-        "original": "[001-system-api-primitive](001-system-api-primitive.md)",
-        "text": "001-system-api-primitive",
-        "url": "001-system-api-primitive.md",
-        "lineNo": 5
-      },
-      {
-        "original": "[002-github-execution-authority](002-github-execution-authority.md)",
-        "text": "002-github-execution-authority",
-        "url": "002-github-execution-authority.md",
-        "lineNo": 6
-      },
-      {
-        "original": "[003-additive-governance](003-additive-governance.md)",
-        "text": "003-additive-governance",
-        "url": "003-additive-governance.md",
-        "lineNo": 7
-      },
-      {
-        "original": "[004-schema-contract-config](004-schema-contract-config.md)",
-        "text": "004-schema-contract-config",
-        "url": "004-schema-contract-config.md",
-        "lineNo": 8
-      },
-      {
-        "original": "[005-control-plane-architecture](005-control-plane-architecture.md)",
-        "text": "005-control-plane-architecture",
-        "url": "005-control-plane-architecture.md",
-        "lineNo": 9
-      },
-      {
-        "original": "[006-documentation-as-governed-artifact](006-documentation-as-governed-artifact.md)",
-        "text": "006-documentation-as-governed-artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 10
-      },
-      {
-        "original": "[007-protocol-supremacy-enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "007-protocol-supremacy-enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 11
-      },
-      {
-        "original": "[008-federated-documentation-structure](008-federated-documentation-structure.md)",
-        "text": "008-federated-documentation-structure",
-        "url": "008-federated-documentation-structure.md",
-        "lineNo": 12
-      },
-      {
-        "original": "[009-8-10-vs-10-10-bridge-strategy](009-8-10-vs-10-10-bridge-strategy.md)",
-        "text": "009-8-10-vs-10-10-bridge-strategy",
-        "url": "009-8-10-vs-10-10-bridge-strategy.md",
-        "lineNo": 13
-      },
-      {
-        "original": "[010-identity-contract](010-identity-contract.md)",
-        "text": "010-identity-contract",
-        "url": "010-identity-contract.md",
-        "lineNo": 14
-      },
-      {
-        "original": "[011-monorepo-strategy](011-monorepo-strategy.md)",
-        "text": "011-monorepo-strategy",
-        "url": "011-monorepo-strategy.md",
-        "lineNo": 15
       }
     ]
   },
@@ -940,33 +778,6 @@
       }
     ]
   },
-  "docs/reference/cli.md": {
-    "anchors": [
-      "cli-reference",
-      "commands",
-      "glassops-init",
-      "glassops-doctor",
-      "global-flags",
-      "exit-codes",
-      "results",
-      "configuration",
-      "install"
-    ],
-    "links": [
-      {
-        "original": "[`schemas/result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/result.json)",
-        "text": "`schemas/result.json`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/result.json",
-        "lineNo": 61
-      },
-      {
-        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
-        "text": "`schemas/config.json`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
-        "lineNo": 86
-      }
-    ]
-  },
   "docs/adr/010-identity-contract.md": {
     "anchors": [
       "adr-010-identity-contract",
@@ -1039,6 +850,90 @@
       }
     ]
   },
+  "docs/adr/README.md": {
+    "anchors": [
+      "platform-adrs"
+    ],
+    "links": [
+      {
+        "original": "[001-system-api-primitive](001-system-api-primitive.md)",
+        "text": "001-system-api-primitive",
+        "url": "001-system-api-primitive.md",
+        "lineNo": 5
+      },
+      {
+        "original": "[002-github-execution-authority](002-github-execution-authority.md)",
+        "text": "002-github-execution-authority",
+        "url": "002-github-execution-authority.md",
+        "lineNo": 6
+      },
+      {
+        "original": "[003-additive-governance](003-additive-governance.md)",
+        "text": "003-additive-governance",
+        "url": "003-additive-governance.md",
+        "lineNo": 7
+      },
+      {
+        "original": "[004-schema-contract-config](004-schema-contract-config.md)",
+        "text": "004-schema-contract-config",
+        "url": "004-schema-contract-config.md",
+        "lineNo": 8
+      },
+      {
+        "original": "[005-control-plane-architecture](005-control-plane-architecture.md)",
+        "text": "005-control-plane-architecture",
+        "url": "005-control-plane-architecture.md",
+        "lineNo": 9
+      },
+      {
+        "original": "[006-documentation-as-governed-artifact](006-documentation-as-governed-artifact.md)",
+        "text": "006-documentation-as-governed-artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 10
+      },
+      {
+        "original": "[007-protocol-supremacy-enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "007-protocol-supremacy-enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 11
+      },
+      {
+        "original": "[008-federated-documentation-structure](008-federated-documentation-structure.md)",
+        "text": "008-federated-documentation-structure",
+        "url": "008-federated-documentation-structure.md",
+        "lineNo": 12
+      },
+      {
+        "original": "[009-8-10-vs-10-10-bridge-strategy](009-8-10-vs-10-10-bridge-strategy.md)",
+        "text": "009-8-10-vs-10-10-bridge-strategy",
+        "url": "009-8-10-vs-10-10-bridge-strategy.md",
+        "lineNo": 13
+      },
+      {
+        "original": "[010-identity-contract](010-identity-contract.md)",
+        "text": "010-identity-contract",
+        "url": "010-identity-contract.md",
+        "lineNo": 14
+      },
+      {
+        "original": "[011-monorepo-strategy](011-monorepo-strategy.md)",
+        "text": "011-monorepo-strategy",
+        "url": "011-monorepo-strategy.md",
+        "lineNo": 15
+      }
+    ]
+  },
+  "docs/adr/004-schema-contract-config.md": {
+    "anchors": [
+      "adr-004-schema-contract-over-yaml-parsing",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
   "docs/architecture/overview.md": {
     "anchors": [
       "glassops-architecture-design",
@@ -1052,16 +947,187 @@
       "4-failure-modes-recovery",
       "5-directory-structure"
     ],
-    "links": []
+    "links": [
+      {
+        "original": "[CLI reference](../reference/cli.md)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md",
+        "lineNo": 24
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md",
+        "lineNo": 39
+      }
+    ]
+  },
+  "docs/guides/deploy-with-github.md": {
+    "anchors": [
+      "deploy-with-github",
+      "prerequisites",
+      "installation",
+      "usage",
+      "how-the-steps-fit-together",
+      "notes"
+    ],
+    "links": [
+      {
+        "original": "[end-to-end workflow](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
+        "text": "end-to-end workflow",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
+        "lineNo": 5
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md",
+        "lineNo": 5
+      },
+      {
+        "original": "[CLI reference](../reference/cli.md#authentication)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md#authentication",
+        "lineNo": 11
+      },
+      {
+        "original": "[`examples/workflows/glassops-deploy.yml`](https://github.com/glassops-platform/glassops/blob/main/examples/workflows/glassops-deploy.yml)",
+        "text": "`examples/workflows/glassops-deploy.yml`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/examples/workflows/glassops-deploy.yml",
+        "lineNo": 34
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md#separation_of_duties)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md#separation_of_duties",
+        "lineNo": 129
+      }
+    ]
+  },
+  "docs/reference/cli.md": {
+    "anchors": [
+      "cli-reference",
+      "commands",
+      "glassops-init",
+      "glassops-doctor",
+      "glassops-doctor---auth",
+      "glassops-describe",
+      "glassops-plan",
+      "glassops-validate",
+      "glassops-gate",
+      "glassops-permit-verify",
+      "glassops-deploy",
+      "glassops-report",
+      "authentication",
+      "isolated-salesforce-cli-state",
+      "the-guard",
+      "what-is-never-logged",
+      "validate-is-check-only",
+      "global-flags",
+      "exit-codes",
+      "results",
+      "configuration",
+      "end-to-end-check",
+      "install"
+    ],
+    "links": [
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md#the-signing-key)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md#the-signing-key",
+        "lineNo": 42
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 46
+      },
+      {
+        "original": "[Validate is check-only](#validate-is-check-only)",
+        "text": "Validate is check-only",
+        "url": "#validate-is-check-only",
+        "lineNo": 77
+      },
+      {
+        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
+        "text": "validation binding",
+        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
+        "lineNo": 86
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 90
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md",
+        "lineNo": 90
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md#what-permit-verify-and-deploy-check",
+        "lineNo": 111
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 131
+      },
+      {
+        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
+        "text": "validation binding",
+        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
+        "lineNo": 131
+      },
+      {
+        "original": "[`schemas/result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/result.json)",
+        "text": "`schemas/result.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/result.json",
+        "lineNo": 233
+      },
+      {
+        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
+        "text": "`schemas/config.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
+        "lineNo": 258
+      },
+      {
+        "original": "[`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
+        "text": "`cli-e2e.yml`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
+        "lineNo": 286
+      },
+      {
+        "original": "[`scripts/e2e`](https://github.com/glassops-platform/glassops/tree/main/scripts/e2e)",
+        "text": "`scripts/e2e`",
+        "url": "https://github.com/glassops-platform/glassops/tree/main/scripts/e2e",
+        "lineNo": 286
+      }
+    ]
   },
   "docs/reference/platform-reference.md": {
     "anchors": [
-      "platform-reference-api",
-      "1-runtime-packagesruntime",
-      "inputs",
-      "outputs"
+      "platform-reference"
     ],
     "links": [
+      {
+        "original": "[CLI reference](cli.md)",
+        "text": "CLI reference",
+        "url": "cli.md",
+        "lineNo": 5
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md",
+        "lineNo": 5
+      },
       {
         "original": "[overview.md](../architecture/overview.md)",
         "text": "overview.md",
@@ -1070,173 +1136,154 @@
       }
     ]
   },
-  "packages/runtime/CHANGELOG.md": {
+  "docs/reference/permit-and-rules.md": {
     "anchors": [
-      "changelog",
-      "unreleased"
+      "permit-and-rules",
+      "what-a-permit-is",
+      "the-signing-key",
+      "what-gate-does",
+      "fail-closed",
+      "the-ephemeral-automatic-permit",
+      "what-permit-verify-and-deploy-check",
+      "validation-binding-and-quick-deploy",
+      "the-v1-rules",
+      "windowtier",
+      "blackout",
+      "coverage_min",
+      "destructive_needs_label",
+      "separation_of_duties",
+      "analyzer_max_severity",
+      "configuration-example",
+      "evidence-gate-reads-from-github"
     ],
     "links": [
       {
-        "original": "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)",
-        "text": "Keep a Changelog",
-        "url": "https://keepachangelog.com/en/1.0.0/",
+        "original": "[CLI reference](cli.md)",
+        "text": "CLI reference",
+        "url": "cli.md",
         "lineNo": 5
-      }
-    ]
-  },
-  "packages/runtime/CONTRIBUTING.md": {
-    "anchors": [
-      "contributing-to-glassops-runtime",
-      "-legal-notice-personal-capacity",
-      "-community-governance",
-      "the-glassops-protocol",
-      "direction",
-      "-how-to-contribute",
-      "pull-request-process",
-      "report-bugs",
-      "-license-trademark"
-    ],
-    "links": [
-      {
-        "original": "[Apache License, Version 2.0](LICENSE)",
-        "text": "Apache License, Version 2.0",
-        "url": "LICENSE",
-        "lineNo": 13
       },
       {
-        "original": "[opening a new issue](https://github.com/glassops-platform/glassops/issues)",
-        "text": "opening a new issue",
-        "url": "https://github.com/glassops-platform/glassops/issues",
-        "lineNo": 41
-      }
-    ]
-  },
-  "packages/runtime/TRADEMARK.md": {
-    "anchors": [
-      "glassops-trademark-policy",
-      "permitted-uses",
-      "restricted-uses",
-      "commercial-licensing"
-    ],
-    "links": []
-  },
-  "packages/runtime/SECURITY.md": {
-    "anchors": [
-      "security-policy",
-      "supported-versions",
-      "reporting-a-vulnerability",
-      "how-to-report",
-      "what-to-expect",
-      "scope",
-      "out-of-scope",
-      "security-best-practices",
-      "acknowledgments"
-    ],
-    "links": [
+        "original": "[Deploy with GitHub](../guides/deploy-with-github.md)",
+        "text": "Deploy with GitHub",
+        "url": "../guides/deploy-with-github.md",
+        "lineNo": 43
+      },
       {
-        "original": "[GitHub private vulnerability reporting](https://github.com/glassops-platform/glassops/security/advisories/new)",
-        "text": "GitHub private vulnerability reporting",
-        "url": "https://github.com/glassops-platform/glassops/security/advisories/new",
-        "lineNo": 14
+        "original": "[CLI reference](cli.md#the-guard)",
+        "text": "CLI reference",
+        "url": "cli.md#the-guard",
+        "lineNo": 53
       }
     ]
   },
-  "packages/runtime/README.md": {
+  "testdata/sfdx/README.md": {
     "anchors": [
-      "glassops-runtime",
-      "what-it-does",
-      "contract-artifacts",
-      "usage-github-actions",
-      "inputs",
-      "outputs",
-      "local-development",
-      "prerequisites",
-      "helper-scripts-root",
-      "debugging-in-vs-code"
+      "test-salesforce-project"
     ],
     "links": []
   },
-  "packages/runtime/.github/pull_request_template.md": {
+  "docs/adr/011-monorepo-strategy.md": {
     "anchors": [
-      "description",
-      "type-of-change",
-      "testing",
-      "checklist",
-      "related-issues"
-    ],
-    "links": []
-  },
-  "packages/runtime/adr/002-docker-caching-strategy.md": {
-    "anchors": [
-      "adr-002-caching-strategy-in-docker-runtime",
-      "status",
+      "adr-011-monorepo-strategy-for-protocol-ecosystem",
       "context",
+      "the-problem-with-polyrepos-separate-repos",
       "decision",
+      "the-structure",
+      "the-publisher-pattern-for-distribution",
       "rationale",
+      "strategic-extensibility",
       "consequences",
       "alternatives"
     ],
     "links": []
   },
-  "packages/runtime/adr/001-six-phase-execution.md": {
+  "docs/adr/008-federated-documentation-structure.md": {
     "anchors": [
-      "adr-001-6-phase-runtime-execution-model",
+      "adr-008-federated-documentation-structure",
       "context",
       "decision",
+      "7-tier-hierarchy",
       "rationale",
+      "why-federated-structure",
+      "why-federated",
+      "implementation",
+      "phase-1-core-restructure-completed",
+      "phase-2-large-file-splitting-future",
       "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "design-principles",
+      "1-clear-ownership",
+      "2-no-duplication",
+      "3-protocol-supremacy",
+      "4-audience-first",
+      "alternatives-considered",
+      "alternative-1-keep-flat-structure",
+      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
+      "alternative-3-single-mega-document",
+      "alternative-4-wiki-style-with-heavy-cross-linking",
+      "validation-checklist",
+      "migration-path",
+      "future-enhancements",
+      "potential-additions",
+      "automation-opportunities",
+      "related-adrs",
+      "references",
       "alternatives"
-    ],
-    "links": []
-  },
-  "packages/runtime/adr/README.md": {
-    "anchors": [
-      "glassops-runtime---architecture-decision-records",
-      "scope",
-      "current-adrs",
-      "proposed-decisions-to-document",
-      "creating-a-new-adr",
-      "edit-the-file",
-      "update-this-readme",
-      "update-docsadr-indexmd"
     ],
     "links": [
       {
-        "original": "[Six Phase Execution Model](001-six-phase-execution.md)",
-        "text": "Six Phase Execution Model",
-        "url": "001-six-phase-execution.md",
-        "lineNo": 19
+        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
+        "text": "ADR-006: Documentation as Governed Artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 254
       },
       {
-        "original": "[Caching Strategy in Docker Runtime](002-docker-caching-strategy.md)",
-        "text": "Caching Strategy in Docker Runtime",
-        "url": "002-docker-caching-strategy.md",
-        "lineNo": 20
+        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "ADR-007: Protocol Supremacy Enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 255
       },
       {
-        "original": "[Master ADR Index](../../../docs/adr-index.md)",
-        "text": "Master ADR Index",
-        "url": "../../../docs/adr-index.md",
-        "lineNo": 32
-      },
-      {
-        "original": "[Master ADR Index](../../../docs/adr-index.md)",
-        "text": "Master ADR Index",
-        "url": "../../../docs/adr-index.md",
-        "lineNo": 47
-      },
-      {
-        "original": "[GlassOps ADRs](../../../docs/adr)",
-        "text": "GlassOps ADRs",
-        "url": "../../../docs/adr",
-        "lineNo": 48
-      },
-      {
-        "original": "[Runtime Package README](../README.md)",
-        "text": "Runtime Package README",
-        "url": "../README.md",
-        "lineNo": 49
+        "original": "[Divio Documentation System](https://documentation.divio.com/)",
+        "text": "Divio Documentation System",
+        "url": "https://documentation.divio.com/",
+        "lineNo": 261
       }
     ]
+  },
+  "internal/ci/testdata/github/README.md": {
+    "anchors": [
+      "github-api-fixtures"
+    ],
+    "links": []
+  },
+  "internal/core/report/testdata/summary-all-steps.md": {
+    "anchors": [
+      "glassops-report-error",
+      "validate-fail",
+      "gate-fail",
+      "deploy-error",
+      "permit-deny",
+      "deploy"
+    ],
+    "links": []
+  },
+  "internal/core/report/testdata/summary-pass.md": {
+    "anchors": [
+      "glassops-report-pass"
+    ],
+    "links": []
+  },
+  "internal/providers/salesforce/testdata/README.md": {
+    "anchors": [
+      "salesforce-provider-fixtures",
+      "sf",
+      "sgd",
+      "facts-the-fixtures-show"
+    ],
+    "links": []
   }
 }

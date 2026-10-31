@@ -96,9 +96,10 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 		}
 	}
 
+	level := testLevelFor(proj.cfg.Salesforce.TestLevel, used.Tier)
 	out, err := proj.provider.Validate(ctx, sess, cs, providers.ValidateOptions{
 		Dir:       g.dir,
-		TestLevel: testLevelFor(proj.cfg.Salesforce.TestLevel, used.Tier),
+		TestLevel: level,
 	})
 	if err != nil {
 		res.AddCheck("validate", run.StatusError, err.Error())
@@ -107,6 +108,10 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 	for k, v := range out.Facts {
 		res.Facts[k] = v
 	}
+	// gate binds this validation into a PERMIT only for the same plan, and quick deploy
+	// reuses it at the same test level, so both are recorded after the provider's own facts.
+	res.Facts["validate.plan_sha256"] = cs.SHA256
+	res.Facts["validate.test_level"] = level
 	if out.Passed {
 		res.AddCheck("validate", run.StatusPass, "check-only validate passed")
 	}

@@ -15,6 +15,7 @@ Salesforce DX project, or run `glassops init` to generate a similar `glassops.ya
 4. Add the Salesforce secrets `SF_JWT_KEY`, `SF_CLIENT_ID`, `SF_USERNAME`, `SF_DEVHUB_ORG_ID`, `SF_PROD_USERNAME` and `SF_PROD_ORG_ID` as repository secrets.
 
 The pr workflow never receives the permit key. Only a job in the protected environment can read it.
+The [GitHub deploy guide](../docs/guides/deploy-with-github.md) explains each part of the deploy job.
 
 ## Other commands in a workflow
 

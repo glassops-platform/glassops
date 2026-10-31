@@ -311,37 +311,3 @@ func TestTargetWithUnsetIDIsNotConfigured(t *testing.T) {
 		t.Fatalf("unset id var should count as not configured: %v", err)
 	}
 }
-
-func TestPhase3CommandsAreStubs(t *testing.T) {
-	cases := []struct {
-		args  []string
-		flags []string
-	}{
-		{[]string{"gate", "--target", "prod"}, []string{"target", "plan", "permit", "no-connect"}},
-		{[]string{"permit", "verify", "--target", "prod"}, []string{"target", "permit", "plan"}},
-		{[]string{"deploy", "--target", "prod"}, []string{"target", "plan", "permit", "wait", "resume"}},
-		{[]string{"report"}, []string{"sarif", "summary"}},
-	}
-	for _, tc := range cases {
-		name := strings.Split(strings.Join(tc.args, " "), " --")[0]
-		t.Run(name, func(t *testing.T) {
-			h := newHarness(t)
-			root := NewRootCommand(h.app)
-			c, _, err := root.Find(tc.args)
-			if err != nil {
-				t.Fatalf("not registered: %v", err)
-			}
-			for _, f := range tc.flags {
-				if c.Flags().Lookup(f) == nil {
-					t.Fatalf("%s has no --%s", c.CommandPath(), f)
-				}
-			}
-			if code := h.exec(tc.args...); code != exitcode.Error {
-				t.Fatalf("exit %d, want %d", code, exitcode.Error)
-			}
-			if !strings.Contains(h.out.String(), "is not implemented yet") {
-				t.Fatalf("output:\n%s", h.out)
-			}
-		})
-	}
-}

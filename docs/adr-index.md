@@ -39,14 +39,9 @@ Architecture Decision Records (ADRs) capture important architectural decisions a
 
 ---
 
-### 2. GlassOps Runtime (`glassops-runtime/docs/adr/`)
+### 2. Runtime
 
-**Runtime execution decisions for GitHub Actions adapter**
-
-| ADR                                                           | Title                              | Status   | Date       |
-| ------------------------------------------------------------- | ---------------------------------- | -------- | ---------- |
-| [001](../packages/runtime/adr/001-six-phase-execution.md)     | 6-Phase Execution Model            | Accepted | 2026-01-24 |
-| [002](../packages/runtime/adr/002-docker-caching-strategy.md) | Caching Strategy in Docker Runtime | Accepted | 2026-02-01 |
+The runtime that held its own ADRs was replaced by the `glassops` CLI. Its ADRs were removed with it.
 
 ---
 
@@ -68,7 +63,6 @@ Proposed → Accepted → Deprecated → Superseded
 ### 1. Choose the Right Location
 
 - **Platform-wide** → `glassops/docs/adr/`
-- **Runtime-specific** → `glassops-runtime/docs/adr/`
 
 ### 2. Use the Template
 

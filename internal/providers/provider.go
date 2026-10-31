@@ -11,10 +11,14 @@ package providers
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/glassops-platform/glassops/internal/core/config"
@@ -133,6 +137,54 @@ func ReadChangeSet(path string) (ChangeSet, error) {
 		return cs, fmt.Errorf("%s: schema is %q, want %q", path, cs.Schema, PlanSchema)
 	}
 	return cs, nil
+}
+
+// PlanDigest is the plan_sha256 of the files under out. It hashes every regular file in
+// order of its path relative to dir, with forward slashes: the path, a newline, then the
+// content. Every provider and every later check of a plan uses this one formula.
+func PlanDigest(dir, out string) (string, error) {
+	var files []string
+	err := filepath.WalkDir(out, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.Type().IsRegular() {
+			rel, err := filepath.Rel(dir, path)
+			if err != nil {
+				rel = path
+			}
+			files = append(files, filepath.ToSlash(rel))
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	sort.Strings(files)
+	h := sha256.New()
+	for _, rel := range files {
+		data, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(rel)))
+		if err != nil {
+			return "", err
+		}
+		h.Write([]byte(rel))
+		h.Write([]byte{'\n'})
+		h.Write(data)
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// CheckDigest recomputes the digest of the plan files under dir and returns an error when it
+// differs from cs.SHA256, which means the plan files changed after plan wrote them.
+func CheckDigest(dir string, cs ChangeSet) error {
+	got, err := PlanDigest(dir, filepath.Join(dir, filepath.FromSlash(cs.Dir)))
+	if err != nil {
+		return fmt.Errorf("hash the plan files: %w", err)
+	}
+	if got != cs.SHA256 {
+		return fmt.Errorf("the plan files under %s changed after plan wrote them", cs.Dir)
+	}
+	return nil
 }
 
 // ValidateOptions controls a check-only validate.
