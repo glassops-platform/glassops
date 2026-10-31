@@ -11,7 +11,7 @@ on:
   workflow_call:
     inputs:
       image:
-        description: The GlassOps container image.
+        description: The GlassOps container image. A consumer that sets analyze.enabled in glassops.yaml passes the glassops-analyzer image, for example ghcr.io/glassops-platform/glassops-analyzer:v1.
         type: string
         default: ghcr.io/glassops-platform/glassops:v1
       targets:

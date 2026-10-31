@@ -4,7 +4,7 @@ name: glassops deploy
 #   jobs:
 #     glassops:
 #       uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
-#       permissions: { contents: write, actions: read, pull-requests: read }
+#       permissions: { contents: write, actions: read, issues: read, pull-requests: read }
 #       secrets: inherit
 # The job runs in a protected GitHub environment. The permit key is a secret of that
 # environment and is read only by this job, in the one step that runs the pipeline.
@@ -50,10 +50,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     # contents: write pushes the glassops/deployed/* tag. actions: read lets gate read this
-    # run's own approval. pull-requests: read lets gate read the PR behind the commit.
+    # run's own approval. issues: read lets gate read who added an approval label. pull-requests: read
+    # lets gate read the PR behind the commit.
     permissions:
       contents: write
       actions: read
+      issues: read
       pull-requests: read
     # One deploy at a time per environment. A queued deploy waits and is never cancelled.
     concurrency:

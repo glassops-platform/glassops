@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -56,9 +57,9 @@ func TestInitConfigGolden(t *testing.T) {
 	}
 }
 
-// The pipelines the template writes are the default pipelines: deploy validates, gates,
-// deploys and reports, and pr ends with an env delete that runs even after a failure.
-func TestInitConfigPipelines(t *testing.T) {
+// The pipelines the template writes are exactly config.DefaultPipelines(), so the two cannot
+// drift apart.
+func TestInitConfigPipelinesAreTheDefaults(t *testing.T) {
 	got, err := render(configTemplate, initData{Provider: "salesforce"})
 	if err != nil {
 		t.Fatal(err)
@@ -67,28 +68,23 @@ func TestInitConfigPipelines(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := map[string][]string{
-		"pr": {
-			"plan", "check", "analyze", "env create",
-			"validate --target ephemeral --fallback-target prod",
-			"test --target ephemeral", "report", "env delete",
-		},
-		"deploy": {
-			"plan", "validate --target prod", "gate --target prod", "deploy --target prod", "report",
-		},
+	if !reflect.DeepEqual(cfg.Pipelines, config.DefaultPipelines()) {
+		t.Errorf("template pipelines %+v, default pipelines %+v", cfg.Pipelines, config.DefaultPipelines())
 	}
-	for name, steps := range want {
-		if len(cfg.Pipelines[name]) != len(steps) {
-			t.Fatalf("%s: %d steps, want %d", name, len(cfg.Pipelines[name]), len(steps))
-		}
-		for i, s := range steps {
-			if cfg.Pipelines[name][i].Run != s {
-				t.Errorf("%s step %d: %q, want %q", name, i, cfg.Pipelines[name][i].Run, s)
-			}
-		}
+}
+
+// The same holds for the example consumer repository.
+func TestExampleConfigPipelinesAreTheDefaults(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "examples", "consumer", "glassops.yaml"))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if cfg.Pipelines["pr"][7].When != "always" {
-		t.Error("env delete does not run when always")
+	cfg, err := config.Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(cfg.Pipelines, config.DefaultPipelines()) {
+		t.Errorf("example pipelines %+v, default pipelines %+v", cfg.Pipelines, config.DefaultPipelines())
 	}
 }
 
@@ -110,6 +106,7 @@ func TestInitGitHubWorkflowKeepsThePermitKeyInTheEnvironmentJob(t *testing.T) {
 	var wf struct {
 		Jobs map[string]struct {
 			Environment string                   `yaml:"environment"`
+			Permissions map[string]string        `yaml:"permissions"`
 			Steps       []map[string]interface{} `yaml:"steps"`
 		} `yaml:"jobs"`
 	}
@@ -118,6 +115,10 @@ func TestInitGitHubWorkflowKeepsThePermitKeyInTheEnvironmentJob(t *testing.T) {
 	}
 	if wf.Jobs["deploy"].Environment != "glassops-deploy" {
 		t.Fatalf("deploy job environment %q", wf.Jobs["deploy"].Environment)
+	}
+	wantPerms := map[string]string{"contents": "write", "actions": "read", "issues": "read", "pull-requests": "read"}
+	if !reflect.DeepEqual(wf.Jobs["deploy"].Permissions, wantPerms) {
+		t.Fatalf("deploy job permissions %v, want %v", wf.Jobs["deploy"].Permissions, wantPerms)
 	}
 	if wf.Jobs["pr"].Environment != "" {
 		t.Fatalf("pr job runs in environment %q", wf.Jobs["pr"].Environment)

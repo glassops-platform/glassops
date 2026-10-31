@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write
       actions: read
+      issues: read
       pull-requests: read
     with:
       environment: glassops-deploy
