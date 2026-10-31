@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -95,6 +97,93 @@ func (a *GitHubAPI) PullForCommit(ctx context.Context, repo, sha string) (number
 	return pick.Number, pick.User.Login, labels, nil
 }
 
+// Pull returns the author and labels of pull request number, from
+// GET /repos/{repo}/pulls/{number}.
+func (a *GitHubAPI) Pull(ctx context.Context, repo string, number int) (author string, labels []string, err error) {
+	if !validRepo(repo) {
+		return "", nil, fmt.Errorf("github api: repository %q is not owner/name", repo)
+	}
+	if number <= 0 {
+		return "", nil, fmt.Errorf("github api: pull request number %d is not valid", number)
+	}
+	var p apiPull
+	if _, err := a.get(ctx, "/repos/"+repo+"/pulls/"+strconv.Itoa(number), &p); err != nil {
+		return "", nil, err
+	}
+	labels = make([]string, 0, len(p.Labels))
+	for _, l := range p.Labels {
+		labels = append(labels, l.Name)
+	}
+	return p.User.Login, labels, nil
+}
+
+// maxEventPages caps how many pages of issue events LabelAdder reads.
+const maxEventPages = 20
+
+// apiEvent is one entry from the issue events endpoint.
+type apiEvent struct {
+	ID        int64     `json:"id"`
+	Event     string    `json:"event"`
+	CreatedAt time.Time `json:"created_at"`
+	Actor     struct {
+		Login string `json:"login"`
+	} `json:"actor"`
+	Label struct {
+		Name string `json:"name"`
+	} `json:"label"`
+}
+
+// LabelAdder returns who added label to issue or pull request number, from
+// GET /repos/{repo}/issues/{number}/events. It is the actor of the most recent "labeled" event
+// for the label, as long as no later "unlabeled" event removed it. It returns "" when the
+// events do not show the label as added. Reading the events needs the issues: read permission.
+func (a *GitHubAPI) LabelAdder(ctx context.Context, repo string, number int, label string) (string, error) {
+	if !validRepo(repo) {
+		return "", fmt.Errorf("github api: repository %q is not owner/name", repo)
+	}
+	if number <= 0 {
+		return "", fmt.Errorf("github api: issue number %d is not valid", number)
+	}
+	path := "/repos/" + repo + "/issues/" + strconv.Itoa(number) + "/events"
+	url := a.baseURL + path + "?per_page=100"
+	var all []apiEvent
+	for page := 0; url != ""; page++ {
+		if page == maxEventPages {
+			return "", fmt.Errorf("github api: GET %s: more than %d pages of events", path, maxEventPages)
+		}
+		// The token goes only to the API root it was configured for.
+		if !strings.HasPrefix(url, a.baseURL+"/") {
+			return "", fmt.Errorf("github api: GET %s: the next page is outside the API root", path)
+		}
+		var events []apiEvent
+		_, next, err := a.fetch(ctx, url, path, &events)
+		if err != nil {
+			return "", err
+		}
+		all = append(all, events...)
+		url = next
+	}
+	sort.SliceStable(all, func(i, j int) bool {
+		if !all[i].CreatedAt.Equal(all[j].CreatedAt) {
+			return all[i].CreatedAt.Before(all[j].CreatedAt)
+		}
+		return all[i].ID < all[j].ID
+	})
+	adder := ""
+	for _, e := range all {
+		if e.Label.Name != label {
+			continue
+		}
+		switch e.Event {
+		case "labeled":
+			adder = e.Actor.Login
+		case "unlabeled":
+			adder = ""
+		}
+	}
+	return adder, nil
+}
+
 // apiApproval is one entry from the run approvals endpoint.
 type apiApproval struct {
 	State   string `json:"state"`
@@ -163,9 +252,16 @@ type apiError struct {
 // get fetches path and decodes a 200 body into v. It returns the HTTP status whenever a
 // response arrived, so callers can tell a 422 apart from other failures.
 func (a *GitHubAPI) get(ctx context.Context, path string, v any) (int, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.baseURL+path, nil)
+	status, _, err := a.fetch(ctx, a.baseURL+path, path, v)
+	return status, err
+}
+
+// fetch GETs url and decodes a 200 body into v. It returns the status and the URL of the next
+// page from the Link header, or "" when there is none. label names the request in errors.
+func (a *GitHubAPI) fetch(ctx context.Context, url, label string, v any) (int, string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return 0, fmt.Errorf("github api: GET %s: %w", path, err)
+		return 0, "", fmt.Errorf("github api: GET %s: %w", label, err)
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
@@ -176,12 +272,12 @@ func (a *GitHubAPI) get(ctx context.Context, path string, v any) (int, error) {
 	resp, err := a.http.Do(req)
 	if err != nil {
 		// url.Error carries the URL, which holds no token, and the transport error.
-		return 0, fmt.Errorf("github api: GET %s: %w", path, err)
+		return 0, "", fmt.Errorf("github api: GET %s: %w", label, err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxAPIBody))
 	if err != nil {
-		return resp.StatusCode, fmt.Errorf("github api: GET %s: read body: %w", path, err)
+		return resp.StatusCode, "", fmt.Errorf("github api: GET %s: read body: %w", label, err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		var e apiError
@@ -190,10 +286,26 @@ func (a *GitHubAPI) get(ctx context.Context, path string, v any) (int, error) {
 		if msg == "" {
 			msg = http.StatusText(resp.StatusCode)
 		}
-		return resp.StatusCode, fmt.Errorf("github api: GET %s: HTTP %d: %s", path, resp.StatusCode, msg)
+		return resp.StatusCode, "", fmt.Errorf("github api: GET %s: HTTP %d: %s", label, resp.StatusCode, msg)
 	}
 	if err := json.Unmarshal(body, v); err != nil {
-		return resp.StatusCode, fmt.Errorf("github api: GET %s: parse body: %w", path, err)
+		return resp.StatusCode, "", fmt.Errorf("github api: GET %s: parse body: %w", label, err)
 	}
-	return resp.StatusCode, nil
+	return resp.StatusCode, nextLink(resp.Header.Get("Link")), nil
+}
+
+// nextLink returns the rel="next" URL from a Link header, or "".
+func nextLink(h string) string {
+	for _, part := range strings.Split(h, ",") {
+		url, params, ok := strings.Cut(strings.TrimSpace(part), ";")
+		if !ok {
+			continue
+		}
+		for _, p := range strings.Split(params, ";") {
+			if strings.TrimSpace(p) == `rel="next"` {
+				return strings.Trim(strings.TrimSpace(url), "<>")
+			}
+		}
+	}
+	return ""
 }
