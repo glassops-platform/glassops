@@ -2,10 +2,13 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -95,6 +98,19 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 		return app.finish(res, c, g)
 	}
 
+	var unreported []string
+	if proj.cfg.Test.Coverage.ClassMin != nil {
+		var perr error
+		out, unreported, perr = addUncoveredClasses(g, out)
+		if perr != nil {
+			res.AddCheck("coverage.plan", run.StatusFail, perr.Error())
+			res.Degrade(run.StatusFail)
+		}
+	}
+	if len(unreported) > 0 {
+		res.Facts["test.coverage_unreported"] = unreported
+	}
+
 	for k, v := range out.Facts {
 		res.Facts[k] = v
 	}
@@ -136,6 +152,52 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 
 	applyTestGate(res, proj.cfg.Test.Coverage.OrgMin, proj.cfg.Test.Coverage.ClassMin, out)
 	return app.finish(res, c, g)
+}
+
+// addUncoveredClasses counts every changed Apex class in .glassops/plan.json that the run
+// reported no coverage for as 0%, because sf lists only classes a test touched. A class whose
+// name ends in Test or _Test is taken for a test class and skipped, the same reading the gate's
+// coverage_min uses. It returns the classes it added. No plan.json, or a plan with no class
+// list, adds nothing. A plan that exists and cannot be read is an error, so a broken plan never
+// weakens the check.
+func addUncoveredClasses(g *globals, out providers.TestResult) (providers.TestResult, []string, error) {
+	cs, err := providers.ReadChangeSet(filepath.Join(g.dir, ".glassops", "plan.json"))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return out, nil, nil
+		}
+		return out, nil, fmt.Errorf("the changed classes could not be read, so unreported classes are not counted at 0%%: %w", err)
+	}
+	var classes []string
+	switch v := cs.Facts["salesforce.apex_classes"].(type) {
+	case []any:
+		for _, e := range v {
+			if name, ok := e.(string); ok {
+				classes = append(classes, name)
+			}
+		}
+	case []string:
+		classes = v
+	}
+	reported := map[string]bool{}
+	for _, cl := range out.Classes {
+		reported[cl.Name] = true
+	}
+	var added []string
+	for _, name := range classes {
+		if reported[name] || strings.HasSuffix(name, "Test") {
+			continue
+		}
+		reported[name] = true
+		added = append(added, name)
+	}
+	sort.Strings(added)
+	merged := append([]providers.ClassCoverage(nil), out.Classes...)
+	for _, name := range added {
+		merged = append(merged, providers.ClassCoverage{Name: name, Percent: 0})
+	}
+	out.Classes = merged
+	return out, added, nil
 }
 
 // applyTestGate adds the checks for a finished or unfinished test run.

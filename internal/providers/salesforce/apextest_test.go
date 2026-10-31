@@ -180,3 +180,16 @@ func TestRunTestsNoTestsFound(t *testing.T) {
 		t.Fatalf("result: %+v", res)
 	}
 }
+
+// The real uncovered-class capture (scratch org, 2026-10-31): sf lists only the class a test
+// touched, and the org-wide figure drops. The CLI counts the missing changed classes at 0%.
+func TestRunTestsUncoveredClassIsNotListed(t *testing.T) {
+	p, _, s := testerSetup(t, map[string]fakeReply{runTestPrefix: {Stdout: fixture(t, "apex-test-uncovered-class.json"), ExitCode: 100}})
+	res, err := p.RunTests(context.Background(), s, providers.TestRequest{Dir: t.TempDir(), TestLevel: "RunLocalTests"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OrgCoverage != 66 || len(res.Classes) != 1 || res.Classes[0].Name != "Greeter" {
+		t.Fatalf("org %d, classes %+v", res.OrgCoverage, res.Classes)
+	}
+}
