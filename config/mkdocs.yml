@@ -86,7 +86,6 @@ nav:
     - Architecture:
           - "Overview": docs/architecture/overview.md
           - "Control Plane": docs/adr/005-control-plane-architecture.md
-          - "Runtime Model": packages/runtime/adr/001-six-phase-execution.md
           - "ADR Master Index": docs/adr-index.md
           - "ADRs":
                 - "Platform ADRs Index": docs/adr/README.md
@@ -101,14 +100,9 @@ nav:
 
     - Reference:
           - "CLI Reference": docs/reference/cli.md
+          - "PERMIT and Rules": docs/reference/permit-and-rules.md
           - "Platform Reference": docs/reference/platform-reference.md
           - "Examples": examples/README.md
 
-    - Components:
-          - Runtime:
-                - "Overview": packages/runtime/README.md
-                - "Changelog": packages/runtime/CHANGELOG.md
-                - "Contributing": packages/runtime/CONTRIBUTING.md
-                - "Security": packages/runtime/SECURITY.md
-                - "Trademark": packages/runtime/TRADEMARK.md
-                - "ADRs": packages/runtime/adr/README.md
+    - Guides:
+          - "Deploy with GitHub": docs/guides/deploy-with-github.md
