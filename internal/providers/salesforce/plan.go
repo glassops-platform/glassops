@@ -2,13 +2,10 @@ package salesforce
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -231,35 +228,10 @@ func parseManifest(data []byte, name string) (manifest, error) {
 	return m, nil
 }
 
-// planDigest is the plan_sha256. It hashes every file under out, in order of its path
-// relative to dir with forward slashes. For each file it writes the relative path, a newline
-// and the file content. Phase 3 recomputes it the same way before a deploy.
+// planDigest is the plan_sha256, computed by the shared formula in providers.PlanDigest so
+// permit verify and deploy can recompute it.
 func planDigest(dir, out string) (string, error) {
-	var files []string
-	err := filepath.WalkDir(out, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.Type().IsRegular() {
-			files = append(files, relSlash(dir, path))
-		}
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-	sort.Strings(files)
-	h := sha256.New()
-	for _, rel := range files {
-		data, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil {
-			return "", err
-		}
-		h.Write([]byte(rel))
-		h.Write([]byte("\n"))
-		h.Write(data)
-	}
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return providers.PlanDigest(dir, out)
 }
 
 func relSlash(base, path string) string {

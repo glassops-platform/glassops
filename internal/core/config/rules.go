@@ -74,6 +74,26 @@ func Check(c *Config) []string {
 		}
 	}
 
+	if c.Policy.PermitTTL != "" {
+		d, err := time.ParseDuration(c.Policy.PermitTTL)
+		switch {
+		case err != nil:
+			add("policy.permit_ttl: %q is not a duration, such as 2h or 90m", c.Policy.PermitTTL)
+		case d < MinPermitTTL || d > MaxPermitTTL:
+			add("policy.permit_ttl: %s is outside %s to %s", c.Policy.PermitTTL, MinPermitTTL, MaxPermitTTL)
+		}
+	}
+
+	if sod := c.Policy.Rules.SeparationOfDuties; sod != nil && sod.Approval != nil {
+		a := sod.Approval
+		if a.Environment == "" && a.Label == "" {
+			add("policy.rules.separation_of_duties.approval: set environment or label")
+		}
+		if a.Label != "" && len(a.Approvers) == 0 {
+			add("policy.rules.separation_of_duties.approval: label %q needs approvers", a.Label)
+		}
+	}
+
 	for _, name := range sortedKeys(c.Pipelines) {
 		for i, s := range c.Pipelines[name] {
 			if strings.TrimSpace(s.Run) == "" {

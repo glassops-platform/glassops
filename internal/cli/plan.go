@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/glassops-platform/glassops/internal/ci"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/gitref"
 	"github.com/glassops-platform/glassops/internal/core/run"
@@ -28,8 +29,9 @@ func newPlanCommand(app *App, g *globals) *cobra.Command {
 		Long: "plan works out the change set between two git refs and writes the provider's\n" +
 			"manifests to .glassops/plan/ and the change set to .glassops/plan.json.\n" +
 			"With --from auto, a pull request uses the merge base with its base branch. With\n" +
-			"--target, auto uses the git tag glassops/deployed/<target>, then the merge base with\n" +
-			"the target's branch. A shallow clone is an error, never an empty plan.",
+			"--target, auto uses the git tag glassops/deployed/<target>. A target with no tag has\n" +
+			"never been deployed to, so the whole source is planned and a notice says so.\n" +
+			"A shallow clone is an error, never an empty plan.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.plan(cmd.Context(), g, o)
@@ -73,12 +75,36 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 		return strings.TrimSpace(string(out)), err
 	}
 
+	// First deploy rule: a target with no deployed tag has never received a deploy from
+	// glassops, so a delta against its branch would leave out everything already on it. The
+	// whole source is planned instead.
+	firstDeploy := false
+	if !full && o.target != "" && (o.from == "" || o.from == gitref.Auto) {
+		_, tagged, err := gitref.LastDeployed(git, g.dir, o.target)
+		if err != nil {
+			res.AddCheck("refs", run.StatusError, err.Error())
+			res.Errors = append(res.Errors, err.Error())
+			return app.finish(res, c, g)
+		}
+		firstDeploy, full = !tagged, !tagged
+	}
+	res.Facts["plan.first_deploy"] = firstDeploy
+
 	req := providers.PlanRequest{
 		Dir:    g.dir,
 		Full:   full,
 		OutDir: filepath.Join(g.dir, ".glassops", "plan"),
 	}
-	if full {
+	if firstDeploy {
+		if sha, err := git(g.dir, "rev-parse", "HEAD"); err == nil {
+			req.To = sha
+		}
+		tag, _ := gitref.DeployedTag(o.target)
+		msg := fmt.Sprintf("target %s has no tag %s, so this is its first deploy and the whole source is planned", o.target, tag)
+		res.AddCheck("refs", run.StatusSkipped, msg)
+		res.Facts["plan.from_source"] = "first-deploy"
+		c.Annotate(ci.Notice, "plan: "+msg)
+	} else if full {
 		// Best effort, only to record which commit the plan was made at.
 		if sha, err := git(g.dir, "rev-parse", "HEAD"); err == nil {
 			req.To = sha

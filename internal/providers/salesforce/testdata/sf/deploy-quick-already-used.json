@@ -1,0 +1,15 @@
+{
+  "name": "CannotQuickDeployError",
+  "message": "Job ID can't be used for quick deployment. Possible reasons include the deployment hasn't been validated, has already been deployed, or the validation expired because you ran it more than 10 days ago.",
+  "exitCode": 1,
+  "context": "DeployMetadataQuick",
+  "data": {
+    "errorCode": "sf:INVALID_ID_FIELD",
+    "message": "INVALID_ID_FIELD: There have been deploys in the org since the source validate happened"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "CannotQuickDeployError",
+  "status": 1,
+  "commandName": "DeployMetadataQuick"
+}

@@ -17,9 +17,11 @@ type fakeProvider struct {
 	describe   func(providers.Target) (providers.TargetInfo, error)
 	plan       func(providers.PlanRequest) (providers.ChangeSet, error)
 	validateFn func(providers.Target, providers.ChangeSet, providers.ValidateOptions) (providers.ValidateResult, error)
+	deploy     func(providers.Session, providers.ChangeSet, providers.DeployOptions) (providers.DeployResult, error)
 
-	mu       sync.Mutex
-	sessions []*fakeSession
+	mu          sync.Mutex
+	sessions    []*fakeSession
+	deployCalls int
 }
 
 type fakeSession struct {
@@ -78,6 +80,16 @@ func (f *fakeProvider) Validate(_ context.Context, s providers.Session, cs provi
 		return providers.ValidateResult{}, errors.New("fake: no validate set")
 	}
 	return f.validateFn(s.Target(), cs, o)
+}
+
+func (f *fakeProvider) Deploy(_ context.Context, s providers.Session, cs providers.ChangeSet, o providers.DeployOptions) (providers.DeployResult, error) {
+	f.mu.Lock()
+	f.deployCalls++
+	f.mu.Unlock()
+	if f.deploy == nil {
+		return providers.DeployResult{}, errors.New("fake: no deploy set")
+	}
+	return f.deploy(s, cs, o)
 }
 
 // allClosed reports whether every session the fake opened was closed at least once.

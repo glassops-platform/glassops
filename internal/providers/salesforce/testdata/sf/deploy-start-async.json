@@ -1,0 +1,13 @@
+{
+  "status": 0,
+  "result": {
+    "id": "0Af000000000003AAA",
+    "done": false,
+    "status": "Queued",
+    "files": [],
+    "zipSize": 2369,
+    "zipFileCount": 10,
+    "deployUrl": "https://example.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0Af000000000003AAA%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}

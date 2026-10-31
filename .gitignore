@@ -57,8 +57,8 @@ bin/
 obj/
 
 # Go
-packages/runtime/glassops
-packages/runtime/glassops.exe
+/glassops
+/glassops.exe
 vendor/
 
 # Python

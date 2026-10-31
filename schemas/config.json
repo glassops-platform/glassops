@@ -89,7 +89,12 @@
         },
         "blackouts": { "type": "array", "items": { "$ref": "#/$defs/blackout" } },
         "rules": { "$ref": "#/$defs/rules" },
-        "actors": { "type": "string", "minLength": 1 }
+        "actors": { "type": "string", "minLength": 1 },
+        "permit_ttl": {
+          "description": "How long a PERMIT stays valid, as a Go duration between 5m and 24h. Default 2h.",
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "window": {
@@ -130,7 +135,23 @@
         "separation_of_duties": {
           "type": "object",
           "additionalProperties": false,
-          "properties": { "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } } }
+          "properties": {
+            "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+            "approval": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "environment": { "type": "string", "minLength": 1 },
+                "label": { "type": "string", "minLength": 1 },
+                "approvers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
         },
         "destructive_needs_label": {
           "type": "object",
@@ -161,8 +182,14 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "enabled": { "type": "boolean" },
-            "from": { "type": "string", "minLength": 1 }
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "deploy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "quick": { "enum": ["prefer", "require", "off"] }
           }
         }
       }

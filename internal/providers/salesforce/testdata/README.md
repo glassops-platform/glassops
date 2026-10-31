@@ -28,6 +28,23 @@ and scrub it the same way.
 | `deploy-report-compile-fail.json`, `deploy-report-test-fail.json` | `sf project deploy report --job-id <id>` for the two failures. Exit 0 with the full body |
 | `create-scratch-eca-login-fail.json` | `sf org create scratch` from a Dev Hub logged in by JWT through an external client app. Signup worked, then the login to the new org failed |
 | `sgd-delta.json`, `sgd-delta-empty.json`, `sgd-delta-bad-ref.json` | `sf sgd source delta --json`. The JSON only names the output dir. The manifests are files |
+| `deploy-start-pass.json` | `sf project deploy start` that passed. Exit 0, `Succeeded`, `checkOnly` false, 4 of 4 components |
+| `deploy-start-compile-fail.json` | the same with an Apex compile error. Exit 1, and unlike `deploy validate` the body is full: `Failed`, 2 of 4, two component failures |
+| `deploy-start-async.json` | `sf project deploy start --async`. Exit 0, `Queued`, and only the job Id |
+| `deploy-report-pass.json` | `sf project deploy report --job-id <id>` for the async deploy above, after it finished. The full body |
+| `deploy-resume-pass.json` | `sf project deploy resume --job-id <id>` for the same deploy. The same full body |
+| `deploy-start-succeeded-partial.json` | `sf project deploy start --ignore-errors` with one bad class. Exit 68, `SucceededPartial`, 2 of 4. Without `--ignore-errors` a component error fails the whole deploy |
+| `deploy-validate-delta-pass.json` | `sf project deploy validate` of a delta with post-destructive changes. Exit 0, `Succeeded`, `checkOnly` true |
+| `deploy-quick-pass.json` | `sf project deploy quick --job-id <id>` of that validation. Exit 0, `Succeeded`, 4 of 4, no tests run, and a new deploy Id |
+| `deploy-report-quick.json` | `sf project deploy report` for the quick deploy |
+| `deploy-quick-already-used.json` | a second quick deploy of the same validation. Exit 1, `CannotQuickDeployError`. A validated Id can be quick deployed once |
+| `deploy-quick-invalid-id.json` | a quick deploy of an Id that was never validated. Exit 1, `sf:UNKNOWN_EXCEPTION`, "invalid parameter value" |
+| `deploy-validate-notestrun-rejected.json` | `sf project deploy validate --test-level NoTestRun`. Exit 1. `deploy validate` accepts only RunAllTestsInOrg, RunLocalTests, RunSpecifiedTests and RunRelevantTests |
+| `deploy-validate-destructive-not-found.json` | the delta validated again after the field was already deleted. Exit 1, `FailedValidationError`, and the body holds only `data.deployId` |
+| `deploy-report-destructive-not-found.json` | `sf project deploy report` for that validation. `Failed`, 3 of 3, `numberComponentErrors` 0, and one component failure on `destructiveChanges.xml`: "No CustomField named: Account.Tier__c found" |
+| `deploy-start-seed-field.json` | `sf project deploy start --metadata CustomField:Account.Tier__c` from the base ref, which puts the deleted field back. Exit 0, 1 of 1 |
+| `deploy-validate-delta-after-seed.json` | the same delta validated after that seed. Exit 0, `Succeeded`, 4 of 4, check-only |
+| `deploy-start-seed-missing-parent.json` | `sf project deploy start --metadata CustomField:Widget__c.Size__c` when the object does not exist. Exit 1, "Entity 'Widget__c' not found." |
 
 ## `sgd/`
 
@@ -47,3 +64,7 @@ and itself.
   times, one line per attempt.
 - Every JWT failure has the name `JwtGrantError` and the same first line. The cause is only in
   the later lines of `message` and in `cause`.
+- `deploy start` failures carry the full result body. Only `deploy validate` failures are thin.
+- A quick deploy is single use. A second attempt is `CannotQuickDeployError`.
+- When a destructive change names a component the org no longer has, the validate fails on a
+  warning. `numberComponentErrors` stays 0, and the reason is only in the component failures.

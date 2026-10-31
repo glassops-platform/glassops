@@ -1,0 +1,174 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-10-31T03:39:45.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-10-31T03:39:43.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "CustomField",
+          "created": true,
+          "createdDate": "2026-10-31T03:39:44.000Z",
+          "deleted": false,
+          "fileName": "objects/Account.object",
+          "fullName": "Account.Tier__c",
+          "id": "00N000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-10-31T03:39:44.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "id": "01p000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-10-31T03:39:44.000Z",
+          "deleted": false,
+          "fileName": "classes/GreeterTest.cls",
+          "fullName": "GreeterTest",
+          "id": "01p000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "PermissionSet",
+          "created": true,
+          "createdDate": "2026-10-31T03:39:45.000Z",
+          "deleted": false,
+          "fileName": "permissionsets/Greeter_User.permissionset",
+          "fullName": "Greeter_User",
+          "id": "0PS000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-10-31T03:39:45.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "codeCoverage": [
+          {
+            "id": "01p000000000001AAA",
+            "locationsCovered": [
+              {
+                "column": "0",
+                "line": "2",
+                "numExecutions": "0",
+                "time": "-1.0"
+              },
+              {
+                "column": "0",
+                "line": "3",
+                "numExecutions": "0",
+                "time": "-1.0"
+              }
+            ],
+            "name": "Greeter",
+            "namespace": null,
+            "numLocations": 2,
+            "numLocationsNotCovered": 0,
+            "type": "Class",
+            "dmlInfo": [],
+            "locationsNotCovered": [],
+            "methodInfo": [],
+            "soqlInfo": [],
+            "soslInfo": []
+          }
+        ],
+        "numFailures": 0,
+        "numTestsRun": 1,
+        "successes": [
+          {
+            "id": "01p000000000002AAA",
+            "methodName": "greetsByName",
+            "name": "GreeterTest",
+            "namespace": null,
+            "time": 22
+          }
+        ],
+        "totalTime": 42,
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000001AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-10-31T03:39:45.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 4,
+    "numberComponentsTotal": 4,
+    "numberFiles": "10",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 1,
+    "numberTestsTotal": 1,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-10-31T03:39:43.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": 2369,
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\Greeter.cls"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\Greeter.cls-meta.xml"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\GreeterTest.cls"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\classes\\GreeterTest.cls-meta.xml"
+      },
+      {
+        "fullName": "Account.Tier__c",
+        "type": "CustomField",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\objects\\Account\\fields\\Tier__c.field-meta.xml"
+      },
+      {
+        "fullName": "Greeter_User",
+        "type": "PermissionSet",
+        "state": "Created",
+        "filePath": "/work\\force-app\\main\\default\\permissionsets\\Greeter_User.permissionset-meta.xml"
+      }
+    ],
+    "zipFileCount": 10,
+    "deployUrl": "https://example.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0Af000000000001AAA%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}

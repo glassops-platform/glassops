@@ -2,7 +2,7 @@
 
 > **"GlassOps governs outcomes, not implementations."**
 
-**Status:** Direction. Most of what follows is not built yet. The only code in this repository is the Go runtime in `packages/runtime`.
+**Status:** Direction. Most of what follows is not built yet. The code in this repository is the Go `glassops` CLI, and only some of its commands exist so far. See the [CLI reference](reference/cli.md).
 
 ---
 
