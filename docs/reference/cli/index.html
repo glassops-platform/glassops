@@ -1,0 +1,3373 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="The Universal Governance Orchestration Protocol">
+      
+      
+        <meta name="author" content="Ryan Bumstead">
+      
+      
+        <link rel="canonical" href="https://glassops.io/docs/reference/cli/">
+      
+      
+        <link rel="prev" href="../../adr/011-monorepo-strategy/">
+      
+      
+        <link rel="next" href="../config/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>CLI Reference - GlassOps</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="GlassOps" class="md-header__button md-logo" aria-label="GlassOps" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GlassOps
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/glassops-platform/glassops" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    glassops-platform/glassops
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../vision/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Foundation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../adr/010-identity-contract/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Protocol (The Law)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/run-a-pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="GlassOps" class="md-nav__button md-logo" aria-label="GlassOps" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GlassOps
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/glassops-platform/glassops" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    glassops-platform/glassops
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Foundation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepaper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Whitepaper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../doc-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/009-8-10-vs-10-10-bridge-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The 8/10 Constraint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocol (The Law)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Protocol (The Law)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/010-identity-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity Contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/005-control-plane-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control Plane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr-index/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Master Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../adr/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/001-system-api-primitive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System API Primitive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/002-github-execution-authority/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Execution Authority
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/003-additive-governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Additive Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/004-schema-contract-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema Contract Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/006-documentation-as-governed-artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation as Governed Artifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/007-protocol-supremacy-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocol Supremacy Enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/008-federated-documentation-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Federated Documentation Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/011-monorepo-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monorepo Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#glassops-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops init
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops doctor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-doctor-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops doctor --auth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-describe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops describe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops validate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-permit-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops permit verify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env create
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env delete
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env sweep
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops analyze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-smart-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The smart seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isolated-salesforce-cli-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolated Salesforce CLI state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The guard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-never-logged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is never logged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-is-check-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate is check-only
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permit-and-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PERMIT and Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platform-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/run-a-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run a Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deploy-with-github/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy with GitHub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#glassops-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops init
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops doctor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-doctor-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops doctor --auth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-describe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops describe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops validate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-permit-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops permit verify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env create
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env delete
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-env-sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops env sweep
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glassops-analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        glassops analyze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-smart-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The smart seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isolated-salesforce-cli-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolated Salesforce CLI state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The guard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-never-logged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is never logged
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-is-check-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate is check-only
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/glassops-platform/glassops/edit/master/docs/docs/reference/cli.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="cli-reference">CLI Reference</h1>
+<blockquote>
+<p><strong>Early work.</strong> v0.3.0 is released as a prerelease. It has <code>init</code>, <code>doctor</code>, <code>describe</code>, <code>plan</code>, <code>validate</code>, <code>gate</code>, <code>permit verify</code>, <code>deploy</code> and <code>report</code>. The commands <code>env</code>, <code>test</code>, <code>run</code>, <code>check</code> and <code>analyze</code> are in the repository and ship in the next release.</p>
+</blockquote>
+<p><code>glassops</code> is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.</p>
+<hr />
+<h2 id="commands">Commands</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>glassops init</code></td>
+<td>Detects the provider and the CI system, then writes <code>glassops.yaml</code> and a CI file</td>
+</tr>
+<tr>
+<td><code>glassops doctor</code></td>
+<td>Checks the config, the tools, the git checkout and the environment variables the config names. With <code>--auth</code> it also logs in to targets</td>
+</tr>
+<tr>
+<td><code>glassops describe</code></td>
+<td>Logs in to one target, runs the guard, and records what the target reports about itself</td>
+</tr>
+<tr>
+<td><code>glassops plan</code></td>
+<td>Works out what changed between two git refs and writes the manifests and a change set</td>
+</tr>
+<tr>
+<td><code>glassops validate</code></td>
+<td>Runs a check-only validate of the change set against a target</td>
+</tr>
+<tr>
+<td><code>glassops gate</code></td>
+<td>Evaluates the policy rules for a target and writes a signed PERMIT</td>
+</tr>
+<tr>
+<td><code>glassops permit verify</code></td>
+<td>Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config</td>
+</tr>
+<tr>
+<td><code>glassops deploy</code></td>
+<td>Deploys the change set to a target, only under a valid PERMIT</td>
+</tr>
+<tr>
+<td><code>glassops report</code></td>
+<td>Summarises every result for the CI and writes SARIF</td>
+</tr>
+<tr>
+<td><code>glassops env create</code></td>
+<td>Creates the ephemeral environment (a scratch org) that later steps use</td>
+</tr>
+<tr>
+<td><code>glassops env delete</code></td>
+<td>Deletes that environment</td>
+</tr>
+<tr>
+<td><code>glassops env sweep</code></td>
+<td>Deletes old environments that a cancelled run left behind</td>
+</tr>
+<tr>
+<td><code>glassops test</code></td>
+<td>Runs Apex tests with coverage on a target and writes JUnit XML</td>
+</tr>
+<tr>
+<td><code>glassops run</code></td>
+<td>Runs a whole pipeline from <code>glassops.yaml</code></td>
+</tr>
+<tr>
+<td><code>glassops check</code></td>
+<td>Runs your own project scripts</td>
+</tr>
+<tr>
+<td><code>glassops analyze</code></td>
+<td>Runs the Code Analyzer and records the violation counts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-init"><code>glassops init</code></h3>
+<ul>
+<li>Detects a Salesforce project from <code>sfdx-project.json</code>.</li>
+<li>Detects the CI system from the project files (<code>.github</code>, <code>bitbucket-pipelines.yml</code>, <code>.gitlab-ci.yml</code>, <code>azure-pipelines.yml</code>) or from the environment it runs in.</li>
+<li>Writes <code>glassops.yaml</code> with commented stub targets and the default <code>pr</code> and <code>deploy</code> pipelines.</li>
+<li>For GitHub, also writes <code>.github/workflows/glassops.yml</code>, which runs <code>glassops doctor</code> on full git history. Other CI systems are detected but get no CI file yet.</li>
+<li>Never overwrites a file unless you pass <code>--force</code>.</li>
+</ul>
+<h3 id="glassops-doctor"><code>glassops doctor</code></h3>
+<p>Runs these checks and fails if any of them fails:</p>
+<ul>
+<li><code>glassops.yaml</code>, when present, against the schema and its rules. Without the file, the defaults are used.</li>
+<li>The provider: the config and the project files must agree.</li>
+<li>The tools: <code>git</code> always, plus <code>sf</code> and the <code>sfdx-git-delta</code> plugin for Salesforce projects. Versions are recorded.</li>
+<li>The analyzer, only when <code>analyze.enabled</code> is <code>true</code>: Java 11 or newer and the Code Analyzer plugin (<code>tool.java</code> and <code>tool.code-analyzer</code>). Both are in the <code>glassops-analyzer</code> image.</li>
+<li>The checkout: a shallow clone fails, because it would make every change set empty. On GitHub, use <code>actions/checkout</code> with <code>fetch-depth: 0</code>.</li>
+<li>The environment: every <code>$VAR</code> the config names must be set. Only presence is checked. Values are never printed or stored.</li>
+<li>The PERMIT key: on a <code>pull_request</code> or <code>pull_request_target</code> run, <code>GLASSOPS_PERMIT_KEY</code> should not be set. If it is, <code>doctor</code> adds a <code>permit.key</code> check whose detail starts with <code>warning:</code> and a CI warning annotation. This never fails the command. Only presence is checked. See <a href="../permit-and-rules/#the-signing-key">PERMIT and rules</a>.</li>
+</ul>
+<h3 id="glassops-doctor-auth"><code>glassops doctor --auth</code></h3>
+<p>Adds a login to each target in the config, or only the one named by <code>--target</code>, and runs the <a href="#the-guard">guard</a> on it. Without <code>--auth</code>, <code>doctor</code> never logs in. The environment check covers every <code>$VAR</code> the config names. With <code>--auth --target</code>, it covers only that target's variables, so a target that does not exist yet, such as a scratch org that a later step creates, does not fail the check.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--auth</code></td>
+<td>Also log in to targets and run the guard</td>
+</tr>
+<tr>
+<td><code>--target</code></td>
+<td>With <code>--auth</code>, check only this target</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-describe"><code>glassops describe</code></h3>
+<p>Logs in to one target, runs the guard, and writes what the target reports about itself to <code>.glassops/results/describe.json</code>. A guard mismatch exits 2 before anything else runs.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-plan"><code>glassops plan</code></h3>
+<p>Works out the change set between two git refs. It writes the provider's manifests to <code>.glassops/plan/</code> and the change set to <code>.glassops/plan.json</code>. For Salesforce, <code>sfdx-git-delta</code> works out the delta and the project's <code>.forceignore</code> applies. A shallow clone is an error, never an empty plan. With <code>salesforce.delta.enabled: false</code>, <code>plan</code> lists the whole source instead, and it reads no git history.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--from</code></td>
+<td><code>auto</code></td>
+<td>Base git ref, or <code>auto</code></td>
+</tr>
+<tr>
+<td><code>--to</code></td>
+<td><code>auto</code></td>
+<td>Head git ref, or <code>auto</code> (<code>HEAD</code>)</td>
+</tr>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target the plan is for, used by <code>--from auto</code></td>
+</tr>
+</tbody>
+</table>
+<p>With <code>--from auto</code>, a pull request uses the merge base with its base branch. With <code>--target</code>, <code>auto</code> uses the git tag <code>glassops/deployed/&lt;target&gt;</code>, then the merge base with the target's branch. Without either, pass <code>--from</code>.</p>
+<p>First deploy rule: with <code>--target</code> and <code>--from auto</code>, a target that has no <code>glassops/deployed/&lt;target&gt;</code> tag has never received a deploy from glassops. <code>plan</code> then plans the whole source instead of a delta, prints a notice, and records the facts <code>plan.first_deploy</code> and <code>plan.from_source: first-deploy</code>. A shallow clone is still an error.</p>
+<h3 id="glassops-validate"><code>glassops validate</code></h3>
+<p>Logs in to the target, runs the guard, and runs a check-only validate of the change set in <code>.glassops/plan.json</code>. It never deploys. See <a href="#validate-is-check-only">Validate is check-only</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+<tr>
+<td><code>--fallback-target</code></td>
+<td></td>
+<td>Target to use when <code>--target</code> is not configured or not reachable</td>
+</tr>
+<tr>
+<td><code>--plan</code></td>
+<td><code>&lt;dir&gt;/.glassops/plan.json</code></td>
+<td>Change set file</td>
+</tr>
+<tr>
+<td><code>--check-only</code></td>
+<td><code>true</code></td>
+<td>Always true. <code>false</code> is refused</td>
+</tr>
+</tbody>
+</table>
+<p>A target counts as not configured when it is missing from <code>glassops.yaml</code> or when its <code>id</code> variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from <code>salesforce.test_level</code> for the tier of the target used, then its <code>default</code> entry, then the Salesforce CLI's own default. An empty change set ends with status <code>empty</code> and no login. <code>validate</code> records the facts <code>validate.plan_sha256</code> and <code>validate.test_level</code>, which <code>gate</code> uses to decide whether a deploy may reuse the validation. See <a href="../permit-and-rules/#validation-binding-and-quick-deploy">validation binding</a>.</p>
+<h3 id="glassops-gate"><code>glassops gate</code></h3>
+<p>Reads the change set, the earlier results in the results directory and the CI context. It builds the facts for one target, runs the policy rules over them, and writes a signed PERMIT to <code>.glassops/permit.json</code>. It writes the PERMIT whether the answer is allow or deny, and it deletes any PERMIT already at that path first, so an old allow never survives a failed run. Unless <code>--no-connect</code> is set, it logs in to the target and runs the <a href="#the-guard">guard</a>. The rules, the PERMIT and the evidence <code>gate</code> reads are described in <a href="../permit-and-rules/">PERMIT and rules</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+<tr>
+<td><code>--plan</code></td>
+<td><code>&lt;dir&gt;/.glassops/plan.json</code></td>
+<td>Change set file</td>
+</tr>
+<tr>
+<td><code>--permit</code></td>
+<td><code>&lt;dir&gt;/.glassops/permit.json</code></td>
+<td>Where the PERMIT is written</td>
+</tr>
+<tr>
+<td><code>--no-connect</code></td>
+<td><code>false</code></td>
+<td>Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the <code>guard</code> check is <code>skipped</code></td>
+</tr>
+</tbody>
+</table>
+<p>Needs <code>GLASSOPS_PERMIT_KEY</code>. Reads <code>.glassops/plan.json</code>, <code>.glassops/results/plan.json</code> and <code>.glassops/results/validate.json</code> when they exist, and the CI context. Writes <code>.glassops/permit.json</code>, <code>.glassops/facts.json</code> and <code>.glassops/results/gate.json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The PERMIT allows the deploy</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>Policy denies the deploy. The signed PERMIT is still written</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td><code>GLASSOPS_PERMIT_KEY</code> is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies</td>
+</tr>
+</tbody>
+</table>
+<p>Result facts: <code>gate.allow</code>, <code>gate.ephemeral</code>, <code>gate.permit_id</code> and <code>gate.expires_at</code>.</p>
+<h3 id="glassops-permit-verify"><code>glassops permit verify</code></h3>
+<p>Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, and that it matches the target, the commit, the plan and the config. The order is in <a href="../permit-and-rules/#what-permit-verify-and-deploy-check">PERMIT and rules</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+<tr>
+<td><code>--permit</code></td>
+<td><code>&lt;dir&gt;/.glassops/permit.json</code></td>
+<td>PERMIT file</td>
+</tr>
+<tr>
+<td><code>--plan</code></td>
+<td><code>&lt;dir&gt;/.glassops/plan.json</code></td>
+<td>Change set file</td>
+</tr>
+</tbody>
+</table>
+<p>Needs <code>GLASSOPS_PERMIT_KEY</code>. Reads the PERMIT, the change set, the plan files under <code>.glassops/plan/</code>, <code>glassops.yaml</code> and the CI commit. Writes <code>.glassops/results/permit-verify.json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The PERMIT holds</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>The PERMIT does not hold: bad signature, denied, expired, a different target, commit, plan or config, a file that is not a readable PERMIT, or plan files changed after <code>plan</code></td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>The key is missing or unusable, or the PERMIT file, the change set, the config or the commit cannot be read or found</td>
+</tr>
+</tbody>
+</table>
+<p>Result facts: <code>permit.key_id</code>, <code>permit.id</code> and <code>permit.expires_at</code>.</p>
+<h3 id="glassops-deploy"><code>glassops deploy</code></h3>
+<p>Verifies the PERMIT before it logs in. Then it runs the <a href="#the-guard">guard</a> and deploys the change set in <code>.glassops/plan.json</code>. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See <a href="../permit-and-rules/#validation-binding-and-quick-deploy">validation binding</a>. Success is read from the target's result body. After a successful deploy it moves the git tag <code>glassops/deployed/&lt;target&gt;</code> to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the <code>tag</code> check is <code>skipped</code>, <code>deploy.tag_pushed</code> is <code>false</code>, and the CI gets a warning annotation.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+<tr>
+<td><code>--plan</code></td>
+<td><code>&lt;dir&gt;/.glassops/plan.json</code></td>
+<td>Change set file</td>
+</tr>
+<tr>
+<td><code>--permit</code></td>
+<td><code>&lt;dir&gt;/.glassops/permit.json</code></td>
+<td>PERMIT file</td>
+</tr>
+<tr>
+<td><code>--wait</code></td>
+<td>the provider's</td>
+<td>How long to wait for the deploy, such as <code>30m</code>. The Salesforce provider waits 60 minutes</td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td></td>
+<td>Job Id of an earlier deploy to wait on again. Skips quick deploy</td>
+</tr>
+</tbody>
+</table>
+<p>Needs <code>GLASSOPS_PERMIT_KEY</code>. The deployed commit is the CI's commit, or <code>git rev-parse HEAD</code> when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status <code>empty</code> and no login.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The deploy succeeded, or the change set was empty</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>The deploy ran and the target reported failures, or <code>salesforce.deploy.quick</code> is <code>require</code> and the PERMIT holds no passed validation to quick deploy</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within <code>--wait</code>. A timeout keeps the job Id and prints the <code>--resume</code> command, and does not move the tag</td>
+</tr>
+</tbody>
+</table>
+<p>Result facts: <code>deploy.permit_id</code>, <code>deploy.quick_mode</code>, <code>deploy.id</code>, <code>deploy.quick</code>, <code>deploy.timed_out</code>, <code>deploy.commit</code>, <code>deploy.tag</code> and <code>deploy.tag_pushed</code>, plus the provider's own facts.</p>
+<h3 id="glassops-report"><code>glassops report</code></h3>
+<p>Reads every result in the results directory. It writes a markdown summary to the CI's run summary, and with <code>--summary</code> also to a file. It writes SARIF to <code>--sarif</code> for policy denials found in the PERMIT and for failed checks in the <code>validate</code> and <code>deploy</code> results. SARIF files already in the results directory, such as Code Analyzer's, are merged into the output. The SARIF file it writes is skipped when it reads the directory again. <code>report</code> writes no result file of its own.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--sarif</code></td>
+<td><code>&lt;dir&gt;/.glassops/report.sarif</code></td>
+<td>SARIF file to write</td>
+</tr>
+<tr>
+<td><code>--summary</code></td>
+<td></td>
+<td>Also write the markdown summary to this file</td>
+</tr>
+</tbody>
+</table>
+<p><code>report</code> exits with the worst status among the results: <code>0</code> when all pass, <code>1</code> when any failed, <code>2</code> when any errored. That lets a CI run it after a failed step with <code>if: always()</code> and still fail the job. It also exits <code>2</code> when there are no results or one cannot be read.</p>
+<h3 id="glassops-env-create"><code>glassops env create</code></h3>
+<p>Creates the ephemeral environment named under <code>environments</code> in <code>glassops.yaml</code>, from its Dev Hub target, for later steps to use. It logs in to the hub and runs the <a href="#the-guard">guard</a> on it. The default pr pipeline runs it before <code>validate</code>.</p>
+<p>For Salesforce it does not run <code>sf org create scratch</code>. It creates a <code>ScratchOrgInfo</code> record in the Dev Hub (a signup), polls until the record is <code>Active</code> for up to 15 minutes, and exchanges the record's auth code for a login. A signup refused for capacity or a transient error is retried up to three times. A signup that is still not active after 15 minutes is not retried, because it could still become active. The scratch definition file (<code>environments.&lt;target&gt;.definition</code>) supports the keys <code>edition</code>, <code>features</code>, <code>hasSampleData</code>, <code>language</code>, <code>country</code>, <code>description</code>, <code>release</code> and <code>sourceOrg</code>. Any other key, including <code>settings</code>, is an error, so an org is never created without something the file asks for. <code>orgName</code> is replaced by the environment name.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td><code>ephemeral</code></td>
+<td>Environment name from the <code>environments</code> section</td>
+</tr>
+<tr>
+<td><code>--name</code></td>
+<td><code>&lt;prefix&gt;-&lt;repo&gt;-&lt;pr or branch&gt;-&lt;run&gt;</code></td>
+<td>Environment name. The prefix is <code>environments.&lt;target&gt;.prefix</code>, default <code>glassops</code>. Outside CI the repo is the project directory and the run is a UTC timestamp</td>
+</tr>
+<tr>
+<td><code>--ttl-days</code></td>
+<td><code>environments.&lt;target&gt;.ttl_days</code>, else <code>1</code></td>
+<td>Days the environment lives</td>
+</tr>
+<tr>
+<td><code>--shape</code></td>
+<td><code>environments.&lt;target&gt;.shape</code></td>
+<td>Source org Id for an org shape. A <code>$VAR</code> is read from the environment</td>
+</tr>
+<tr>
+<td><code>--env-file</code></td>
+<td><code>&lt;dir&gt;/.glassops/env/&lt;target&gt;/env.json</code></td>
+<td>Where to write <code>env.json</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>How later steps use the org.</strong> <code>env create</code> writes <code>env.json</code> and a login file. <code>env.json</code> records the environment name, Id, expiry and the path of the login file, and holds no secret. The login file holds an <code>sfdx-url</code> login, is readable only by the current user, and lives in the operating system's temporary directory. When each command runs in its own container, set <code>TMPDIR</code> to a mount they share. A later command that resolves a target named under <code>environments</code>, such as <code>validate --target ephemeral</code>, finds <code>env.json</code> and logs in with that file instead of the <code>$VAR</code> settings. With no <code>env.json</code>, the target falls back to its <code>targets</code> entry, and <code>--fallback-target</code> applies if that is not configured. An <code>env.json</code> that records a failed create (<code>ready: false</code>) counts as not configured. On GitHub, <code>env create</code> also sets the step outputs <code>env_id</code>, <code>env_file</code> and <code>auth_file</code>.</p>
+<p><code>env create</code> refuses to run when <code>env.json</code> already exists, so run <code>env delete</code> first. If the create fails after the signup was requested, <code>env.json</code> is still written so <code>env delete</code> can remove the org.</p>
+<p>Writes <code>.glassops/results/env-create.json</code> with the facts <code>env.file</code>, <code>env.id</code>, <code>env.record_id</code>, <code>env.name</code>, <code>env.auth_file</code> and <code>env.expires_at</code>, plus the provider's own.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The environment is active</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td><code>environments.&lt;target&gt;</code> is not configured, <code>env.json</code> already exists, the hub login or guard failed, or the signup failed or timed out</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-env-delete"><code>glassops env delete</code></h3>
+<p>Deletes the environment from its hub. It reads <code>env.json</code>, or finds the environment by <code>--name</code>. With neither, nothing is recorded to delete: the <code>delete</code> check is <code>skipped</code> and the command exits 0. Deleting an environment that is already gone passes. After a delete from <code>env.json</code>, it removes the login file and <code>env.json</code>, so later steps fall back to the config. The default pr pipeline runs it with <code>when: always</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td><code>ephemeral</code></td>
+<td>Environment name from the <code>environments</code> section</td>
+</tr>
+<tr>
+<td><code>--name</code></td>
+<td>the one <code>env create</code> made</td>
+<td>Delete by name instead of from <code>env.json</code></td>
+</tr>
+<tr>
+<td><code>--env-file</code></td>
+<td><code>&lt;dir&gt;/.glassops/env/&lt;target&gt;/env.json</code></td>
+<td><code>env.json</code> to read</td>
+</tr>
+</tbody>
+</table>
+<p>Writes <code>.glassops/results/env-delete.json</code>. Exit <code>0</code> when the environment is deleted, already gone, or nothing is recorded. Exit <code>2</code> when the config, the hub login or <code>env.json</code> (for another target or hub) is wrong, or the delete fails.</p>
+<h3 id="glassops-env-sweep"><code>glassops env sweep</code></h3>
+<p>Deletes every environment on the hub whose name starts with <code>&lt;prefix&gt;-</code> and that is older than <code>--max-age</code>, and lists what it deleted. It never matches the bare prefix. Run it on a schedule to remove environments that a cancelled run left behind.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td><code>ephemeral</code></td>
+<td>Environment name from the <code>environments</code> section, which supplies the hub and the prefix</td>
+</tr>
+<tr>
+<td><code>--max-age</code></td>
+<td><code>environments.&lt;target&gt;.ttl_days</code> as a duration</td>
+<td>Delete environments older than this, such as <code>24h</code>. Must be above zero</td>
+</tr>
+</tbody>
+</table>
+<p>Writes <code>.glassops/results/env-sweep.json</code> with the facts <code>env.prefix</code>, <code>env.max_age</code>, <code>env.deleted</code> and <code>env.deleted_count</code>. Exit <code>0</code> when the sweep finished, <code>2</code> when the config, the hub login or a delete failed.</p>
+<h3 id="glassops-test"><code>glassops test</code></h3>
+<p>Logs in to the target, runs the guard, and runs the target's Apex tests with code coverage. It never deploys. It writes JUnit XML and checks the result against <code>test.coverage</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--target</code></td>
+<td></td>
+<td>Target name from <code>glassops.yaml</code> (required)</td>
+</tr>
+<tr>
+<td><code>--level</code></td>
+<td><code>test.level</code> for the target's tier, then <code>test.level.default</code></td>
+<td>Test level, such as <code>RunLocalTests</code></td>
+</tr>
+<tr>
+<td><code>--tests</code></td>
+<td></td>
+<td>Comma separated tests to run, for a level that names them</td>
+</tr>
+<tr>
+<td><code>--wait</code></td>
+<td>the provider's</td>
+<td>How long to wait for the run, such as <code>30m</code></td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td></td>
+<td>Run Id of an earlier run to wait on again, instead of starting a new one</td>
+</tr>
+<tr>
+<td><code>--junit</code></td>
+<td><code>&lt;results-dir&gt;/test.junit.xml</code></td>
+<td>JUnit XML file to write</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coverage.</strong> Percentages are rounded down, so a rounded-up value never passes a minimum. Both settings are optional:</p>
+<ul>
+<li><code>test.coverage.org_min</code> compares against the org-wide coverage that <code>sf</code> reports. That figure counts every class in the org, so it catches classes that no test touches.</li>
+<li><code>test.coverage.class_min</code> compares each class that the test run reports. <code>test</code> sees per-class coverage only for the classes in that report, so a class that no test ran against can be missing from it. Set <code>org_min</code> as well to catch those.</li>
+</ul>
+<p>If a minimum is set and its figure is not reported, that is a failure, never a pass. A run that does not finish within <code>--wait</code> fails and names the run Id, and <code>--resume</code> waits on it again.</p>
+<p><strong>No tests found.</strong> When <code>sf</code> reports that no Apex tests were found, <code>test</code> records the fact <code>test.none_found</code>. It fails when <code>org_min</code> or <code>class_min</code> is set, because coverage cannot be checked. When neither is set, the status is <code>empty</code>, the <code>tests</code> check is <code>skipped</code>, and it exits 0.</p>
+<p>Writes <code>.glassops/results/test.json</code> and the JUnit file (listed as an artifact). Facts: <code>test.ran</code>, <code>test.failed</code>, <code>test.finished</code>, <code>test.run_id</code>, <code>test.org_coverage</code> (a whole percent, absent when unknown), <code>test.coverage.&lt;Class&gt;.percent</code> and <code>target.source</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The tests passed and every set minimum is met, or no tests were found and no minimum is set</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>A test failed, the run did not finish, coverage is below a minimum or was not reported, or no tests ran while a minimum is set</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>The target could not be resolved, the login or guard failed, or the tests could not be run</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-run"><code>glassops run</code></h3>
+<p>Runs the steps of one pipeline from <code>glassops.yaml</code>, in order, in one process. See <a href="../../guides/run-a-pipeline/">Run a pipeline</a> for the default pipelines.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>glassops<span class="w"> </span>run<span class="w"> </span>pr
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>glassops<span class="w"> </span>run<span class="w"> </span>deploy<span class="w"> </span>--dry-run
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dry-run</code></td>
+<td><code>false</code></td>
+<td>Print the steps and the global flags each one gets. Runs nothing and removes nothing</td>
+</tr>
+</tbody>
+</table>
+<p>A step is a glassops command line such as <code>validate --target prod</code>, or a map with <code>step</code>, <code>when</code> and, for an <code>exec</code> step, <code>run</code>.</p>
+<p><strong>When a step runs.</strong> <code>when</code> decides what happens after an earlier step failed.</p>
+<table>
+<thead>
+<tr>
+<th><code>when</code></th>
+<th>The step runs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success</code> (the default)</td>
+<td>Only when no earlier step failed</td>
+</tr>
+<tr>
+<td><code>failure</code></td>
+<td>Only when an earlier step failed</td>
+</tr>
+<tr>
+<td><code>always</code></td>
+<td>Every time, including after a failure or a cancel</td>
+</tr>
+</tbody>
+</table>
+<p>A step has failed when its exit code is not 0. After a <code>plan</code> step that exits 0, <code>run</code> reads <code>.glassops/plan.json</code>. An empty plan skips every later step that is not <code>when: always</code>, with the reason "the plan is empty". A plan that cannot be read is an error (exit 2), and later <code>success</code> steps are skipped, so it is never read as an empty plan. A cancel (Ctrl+C or SIGTERM) stops the current step and skips the rest except <code>when: always</code> steps, which still run with up to 2 minutes each. A cancelled run exits at least 2.</p>
+<p><strong>Exec steps.</strong> A step named <code>exec</code> runs its <code>run</code> command with <code>sh -c</code> in the project directory. The command inherits the environment and gets <code>GLASSOPS_RESULTS_DIR</code>, the absolute path of the results directory. Its output goes straight to the run's output. A zero exit passes and any other exit is a fail (exit 1). A command that cannot start, is stopped by a signal or is cancelled is an error (exit 2). Each exec step writes <code>exec.&lt;n&gt;.json</code>, where <code>n</code> counts exec steps from 1, with one <code>command</code> check and the facts <code>exec.run</code>, <code>exec.index</code> and <code>exec.exit_code</code>.</p>
+<p><strong>Global flags.</strong> Every glassops step receives this run's <code>--dir</code>, <code>--config</code>, <code>--results-dir</code> and <code>--ci</code>, so all steps read one project and write to one results directory.</p>
+<p><strong>Stale results.</strong> Before the first step, a real run removes <code>run.json</code> and every top-level <code>*.json</code> file in the results directory whose <code>schema</code> is <code>glassops.result/v1</code>. It does not recurse and keeps every other file, such as SARIF and JUnit files. This stops an earlier run from reading as evidence for this one. The count is the fact <code>run.stale_removed</code>. A removal failure exits 2 before any step runs.</p>
+<p><strong>Exit code.</strong> The worst exit code of all steps. Any code other than 0 and 1 ranks as 2.</p>
+<p>Writes <code>.glassops/results/run.json</code> with the facts <code>run.pipeline</code>, <code>run.steps</code> (index, step, <code>when</code>, argv, result, exit code, duration, skip reason), <code>run.exit_code</code>, <code>run.empty_plan</code>, <code>run.cancelled</code> and <code>run.stale_removed</code>, and one check per step. A pipeline that is not in the config, or a step that does not parse, exits 2 before anything runs.</p>
+<h3 id="glassops-check"><code>glassops check</code></h3>
+<p>Runs your own project scripts, such as lint or unit test commands, and records the outcome. It does not replace those tools.</p>
+<p>Scripts come from <code>check.scripts</code> in <code>glassops.yaml</code>, a list of <code>name</code> and <code>run</code> entries. Each runs with <code>sh -c</code> in the project directory, in order, and every script runs even after an earlier one failed. A script's output goes to the log and never into the result.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--script</code></td>
+<td></td>
+<td>Run only the script with this name. An unknown name is an error</td>
+</tr>
+</tbody>
+</table>
+<p>Writes <code>.glassops/results/check.json</code> with one check per script named <code>script.&lt;name&gt;</code> and the facts <code>check.scripts</code>, <code>check.passed</code> and <code>check.failed</code>. With no scripts configured the status is <code>empty</code> and the exit code is 0.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Every script exited 0, or none are configured</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>A script exited non-zero</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td><code>sh</code> could not start, or <code>--script</code> names no entry</td>
+</tr>
+</tbody>
+</table>
+<h3 id="glassops-analyze"><code>glassops analyze</code></h3>
+<p>Runs the Salesforce Code Analyzer over the project and records how many violations it found. It runs only when <code>analyze.enabled: true</code> is set in <code>glassops.yaml</code>. Without that, it records a <code>skipped</code> check, the status <code>empty</code>, and exits 0.</p>
+<p>The analyzer needs Java 11 or newer and the Code Analyzer plugin of the Salesforce CLI. The standard <code>glassops</code> image has neither, so run <code>analyze</code> in the separate <code>glassops-analyzer</code> image, which adds them. <code>glassops doctor</code> checks for Java and the plugin when <code>analyze.enabled</code> is true. Only the Salesforce provider is supported.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--rule-selector</code></td>
+<td><code>analyze.rule_selector</code>, else <code>Recommended</code></td>
+<td>Rules to run</td>
+</tr>
+<tr>
+<td><code>--sarif</code></td>
+<td><code>&lt;results-dir&gt;/analyze.sarif</code></td>
+<td>SARIF file to write</td>
+</tr>
+</tbody>
+</table>
+<p><code>analyze</code> does not decide what is too severe. It exits 0 whatever it found, so long as the analyzer ran. The <code>gate</code> rule <code>analyzer_max_severity</code> reads the counts and decides. It writes <code>.glassops/results/analyze.json</code> with the facts <code>analyze.rule_selector</code>, <code>analyze.total</code> and <code>analyze.sev1</code> to <code>analyze.sev5</code>. The SARIF file and the analyzer's own JSON (<code>.glassops/analyze/code-analyzer.json</code>, beside the results directory) are listed as artifacts, and <code>report</code> merges the SARIF file into its output.</p>
+<table>
+<thead>
+<tr>
+<th>Exit</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The analyzer ran, or <code>analyze</code> is off</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>The analyzer could not run, its output could not be read, or the provider is not Salesforce</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-smart-seed">The smart seed</h3>
+<p>A destructive change, such as a deleted field, cannot be validated on a fresh scratch org, because the component it deletes was never there. When <code>validate</code> runs against a scratch org and the change set has destructive members, it first deploys the base state they need. The base ref is the plan's <code>from</code> ref. <code>salesforce.ephemeral.seed</code> chooses how:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>What it deploys</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>minimal</code> (the default)</td>
+<td>Only the destructive members, from the base ref, plus the parent object of any child component (field, record type, validation rule and similar) whose parent is a custom object (<code>__c</code>, <code>__mdt</code> or <code>__e</code>)</td>
+</tr>
+<tr>
+<td><code>full</code></td>
+<td>The whole source at the base ref</td>
+</tr>
+<tr>
+<td><code>off</code></td>
+<td>Nothing. The destructive change is validated against the org as it is</td>
+</tr>
+</tbody>
+</table>
+<p>If a minimal seed fails because something else is missing (an error such as <code>Entity 'Widget__c' not found</code>), the seed falls back to the full seed, records <code>validate.seed.fallback: true</code> and raises a CI warning. A failed seed stops <code>validate</code> before it runs. The seed applies to scratch targets only. <code>validate</code> records <code>validate.seed.mode</code>, <code>validate.seed.fallback</code> and <code>validate.seed.members</code>.</p>
+<hr />
+<h2 id="authentication">Authentication</h2>
+<p>Each target names its login under <code>auth</code>. There are three methods, and every secret value is a <code>$VAR</code> that names an environment variable. Values stay in your CI's secret store and never go in the file.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Fields</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jwt</code></td>
+<td><code>username</code>, <code>client_id</code>, <code>key</code>, optional <code>instance_url</code></td>
+<td><code>key</code> is a <code>$VAR</code> that holds the private key as PEM text. A value that is not PEM text is read as the path of a key file</td>
+</tr>
+<tr>
+<td><code>sfdx-url</code></td>
+<td><code>url</code></td>
+<td><code>url</code> is a <code>$VAR</code> that holds a <code>force://</code> auth URL</td>
+</tr>
+<tr>
+<td><code>access-token</code></td>
+<td><code>token</code>, <code>instance_url</code></td>
+<td><code>token</code> is a <code>$VAR</code> that holds an access token</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">targets</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">devhub</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SF_DEVHUB_ORG_ID</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">tier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">devhub</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">auth</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> method</span><span class="p">:</span><span class="w"> </span><span class="nv">jwt</span><span class="p p-Indicator">,</span><span class="nt"> username</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_USERNAME</span><span class="p p-Indicator">,</span><span class="nt"> client_id</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_CLIENT_ID</span><span class="p p-Indicator">,</span><span class="nt"> key</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_JWT_KEY</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">ephemeral</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SF_EPHEMERAL_ORG_ID</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">tier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">auth</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> method</span><span class="p">:</span><span class="w"> </span><span class="nv">sfdx-url</span><span class="p p-Indicator">,</span><span class="nt"> url</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_EPHEMERAL_AUTH_URL</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</code></pre></div>
+<h3 id="isolated-salesforce-cli-state">Isolated Salesforce CLI state</h3>
+<p>Every command that talks to an org runs the Salesforce CLI with its own temporary home directory (<code>HOME</code> and <code>USERPROFILE</code>). It never reads or writes the Salesforce CLI logins you have on your machine. The temporary directory, and any key file written into it, is removed when the command ends, including when it is stopped with Ctrl+C or SIGTERM. Logins are retried only on network and server errors, never on a bad key, an unknown user or an expired token.</p>
+<h3 id="the-guard">The guard</h3>
+<p>Before any step does anything to a target, the guard compares the org the login reached with the target in the config. A mismatch exits 2.</p>
+<ul>
+<li>The Id is compared on its first 15 characters, case-sensitively, so a 15 and an 18 character form of one Id match.</li>
+<li>A target with no Id configured fails, because it cannot be checked.</li>
+<li>Tier <code>prod</code> and tier <code>devhub</code> need a production org.</li>
+<li>Tier <code>ephemeral</code> needs a scratch org.</li>
+<li>Every other tier checks the Id only.</li>
+</ul>
+<h3 id="what-is-never-logged">What is never logged</h3>
+<p>Results, step outputs, CI annotations and error messages never contain the org's company name, tokens, private keys, auth URLs or full usernames. Usernames are masked to their first character and domain, such as <code>u***@example.com</code>. Email-shaped text in a tool's error message is masked the same way.</p>
+<h3 id="validate-is-check-only">Validate is check-only</h3>
+<p><code>validate</code> is check-only by construction. It only ever runs <code>sf project deploy validate</code>, never a deploy, and <code>--check-only=false</code> is refused. After the run it reads the full result with <code>sf project deploy report</code> and exits 2 if the target reports anything other than a check-only run. Keep a Dev Hub for managing scratch orgs, and validate against a scratch org or a sandbox.</p>
+<hr />
+<h2 id="global-flags">Global flags</h2>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dir</code></td>
+<td><code>.</code></td>
+<td>Project root</td>
+</tr>
+<tr>
+<td><code>--config</code></td>
+<td><code>&lt;dir&gt;/glassops.yaml</code></td>
+<td>Config file</td>
+</tr>
+<tr>
+<td><code>--results-dir</code></td>
+<td><code>&lt;dir&gt;/.glassops/results</code></td>
+<td>Where results are written</td>
+</tr>
+<tr>
+<td><code>--ci</code></td>
+<td><code>auto</code></td>
+<td>CI system: <code>auto</code>, <code>github</code> or <code>local</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="exit-codes">Exit codes</h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Pass</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>A policy or check failed. The tool itself worked</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>A tool or infrastructure error stopped the command, or the command line was invalid</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="results">Results</h2>
+<p>Every command writes <code>.glassops/results/&lt;step&gt;.json</code> in one envelope, described by <a href="https://github.com/glassops-platform/glassops/blob/main/schemas/result.json"><code>schemas/result.json</code></a>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"glassops.result/v1"</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">"step"</span><span class="p">:</span><span class="w"> </span><span class="s2">"doctor"</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pass"</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">"started"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-26T12:00:00Z"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">"ended"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-26T12:00:02Z"</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">"provider"</span><span class="p">:</span><span class="w"> </span><span class="s2">"salesforce"</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">"checks"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tool.sf"</span><span class="p">,</span><span class="w"> </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pass"</span><span class="p">,</span><span class="w"> </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.155.7"</span><span class="w"> </span><span class="p">}],</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">"facts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"tools.sf"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.155.7"</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">"artifacts"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">"errors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>status</code> is one of <code>pass</code>, <code>fail</code>, <code>error</code>, <code>skipped</code> or <code>empty</code>.</p>
+<p>On GitHub, each command also sets the step outputs <code>status</code> and <code>result</code> (the result file path), adds an error annotation for each failed check, and writes a table to the job summary.</p>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<p><code>glassops.yaml</code> is optional. Every key, with an example, is in the <a href="../config/">configuration reference</a>. The schema is <a href="https://github.com/glassops-platform/glassops/blob/main/schemas/config.json"><code>schemas/config.json</code></a>.</p>
+<hr />
+<h2 id="end-to-end-check">End-to-end check</h2>
+<p>The workflow <a href="https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml"><code>cli-e2e.yml</code></a> creates a scratch org in a Dev Hub, runs <code>doctor --auth</code>, <code>plan</code> and <code>validate</code> against it, and deletes the org. It runs on demand and on pushes to <code>main</code>, and it skips with a notice when the Salesforce secrets are not set. The scripts are in <a href="https://github.com/glassops-platform/glassops/tree/main/scripts/e2e"><code>scripts/e2e</code></a>.</p>
+<hr />
+<h2 id="install">Install</h2>
+<p>v0.3.0 is released as a prerelease, with a container image at <code>ghcr.io/glassops-platform/glassops:0.3.0</code>. The image adds Node 22, the Salesforce CLI and <code>sfdx-git-delta</code>. The commands <code>env</code>, <code>test</code>, <code>run</code>, <code>check</code> and <code>analyze</code> are not in v0.3.0. To use them now, build from a checkout with Go 1.27.3 or later:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>go<span class="w"> </span>build<span class="w"> </span>-o<span class="w"> </span>glassops<span class="w"> </span>./cmd/glassops
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>./glassops<span class="w"> </span>doctor
+</code></pre></div>
+<p>Or build the container image with <code>docker build -t glassops .</code> from the repository root. The <code>analyze</code> command needs the separate <code>glassops-analyzer</code> image, which adds Java and the Code Analyzer plugin. Build it with <code>docker build -f Dockerfile.analyzer -t glassops-analyzer .</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.sections", "navigation.expand", "content.code.copy", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>

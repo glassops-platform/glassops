@@ -1,0 +1,2511 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="The Universal Governance Orchestration Protocol">
+      
+      
+        <meta name="author" content="Ryan Bumstead">
+      
+      
+        <link rel="canonical" href="https://glassops.io/docs/reference/permit-and-rules/">
+      
+      
+        <link rel="prev" href="../config/">
+      
+      
+        <link rel="next" href="../platform-reference/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>PERMIT and Rules - GlassOps</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#permit-and-rules" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="GlassOps" class="md-header__button md-logo" aria-label="GlassOps" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GlassOps
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PERMIT and Rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/glassops-platform/glassops" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    glassops-platform/glassops
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../vision/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Foundation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../adr/010-identity-contract/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Protocol (The Law)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../cli/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/run-a-pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="GlassOps" class="md-nav__button md-logo" aria-label="GlassOps" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GlassOps
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/glassops-platform/glassops" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    glassops-platform/glassops
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Foundation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepaper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Whitepaper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../doc-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/009-8-10-vs-10-10-bridge-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The 8/10 Constraint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocol (The Law)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Protocol (The Law)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/010-identity-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity Contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/005-control-plane-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control Plane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr-index/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR Master Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../adr/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/001-system-api-primitive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System API Primitive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/002-github-execution-authority/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Execution Authority
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/003-additive-governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Additive Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/004-schema-contract-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema Contract Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/006-documentation-as-governed-artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation as Governed Artifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/007-protocol-supremacy-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocol Supremacy Enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/008-federated-documentation-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Federated Documentation Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/011-monorepo-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monorepo Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PERMIT and Rules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PERMIT and Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-permit-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a PERMIT is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-signing-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The signing key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gate-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gate does
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What gate does">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fail-closed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail closed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-ephemeral-automatic-permit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ephemeral automatic PERMIT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-permit-verify-and-deploy-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What permit verify and deploy check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-binding-and-quick-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation binding and quick deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-v1-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The v1 rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The v1 rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windowtier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window.&lt;tier&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blackout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blackout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coverage_min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coverage_min
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#destructive_needs_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        destructive_needs_label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#separation_of_duties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        separation_of_duties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyzer_max_severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyzer_max_severity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-gate-reads-from-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence gate reads from GitHub
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platform-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/run-a-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run a Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deploy-with-github/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy with GitHub
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-permit-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a PERMIT is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-signing-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The signing key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gate-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gate does
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What gate does">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fail-closed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail closed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-ephemeral-automatic-permit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ephemeral automatic PERMIT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-permit-verify-and-deploy-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What permit verify and deploy check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-binding-and-quick-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation binding and quick deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-v1-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The v1 rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The v1 rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windowtier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window.&lt;tier&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blackout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blackout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coverage_min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coverage_min
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#destructive_needs_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        destructive_needs_label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#separation_of_duties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        separation_of_duties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyzer_max_severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyzer_max_severity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-gate-reads-from-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence gate reads from GitHub
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/glassops-platform/glassops/edit/master/docs/docs/reference/permit-and-rules.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="permit-and-rules">PERMIT and Rules</h1>
+<blockquote>
+<p><strong>Early work.</strong> v0.3.0 is released as a prerelease and includes <code>gate</code>, <code>permit verify</code> and <code>deploy</code>. This page covers them.</p>
+</blockquote>
+<p>A PERMIT is a signed file that records one decision: whether one plan may be deployed to one target. <code>glassops gate</code> makes the decision and writes the PERMIT. <code>glassops deploy</code> and <code>glassops permit verify</code> refuse to go on unless the PERMIT is genuine, still valid and about the thing being deployed. This page describes the PERMIT, the rules that feed it, and the evidence <code>gate</code> reads. The commands are in the <a href="../cli/">CLI reference</a>.</p>
+<hr />
+<h2 id="what-a-permit-is">What a PERMIT is</h2>
+<p>The PERMIT is JSON in <code>.glassops/permit.json</code>, with the schema name <code>glassops.permit/v1</code>. It holds:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>A random identifier, in hex</td>
+</tr>
+<tr>
+<td><code>allow</code></td>
+<td><code>true</code> or <code>false</code>. A deny is recorded as a PERMIT too</td>
+</tr>
+<tr>
+<td><code>issued_at</code>, <code>expires_at</code></td>
+<td>When it was made and when it stops being valid. The lifetime is <code>policy.permit_ttl</code></td>
+</tr>
+<tr>
+<td><code>target</code></td>
+<td>The target <code>name</code>, <code>tier</code>, <code>id</code> and <code>kind</code>. The Id and kind are what the login reported, unless <code>--no-connect</code> was used</td>
+</tr>
+<tr>
+<td><code>commit</code></td>
+<td>The commit the CI reported</td>
+</tr>
+<tr>
+<td><code>plan_sha256</code></td>
+<td>The hash of the plan files</td>
+</tr>
+<tr>
+<td><code>config_sha256</code></td>
+<td>The hash of <code>glassops.yaml</code></td>
+</tr>
+<tr>
+<td><code>validation</code></td>
+<td>Optional. The deploy Id of a passed check-only validation, its test level and <code>passed</code></td>
+</tr>
+<tr>
+<td><code>separation_of_duties</code></td>
+<td>How the separation of duties rule was met. See below</td>
+</tr>
+<tr>
+<td><code>checks</code></td>
+<td>Every rule result, each with its rule name, outcome and detail</td>
+</tr>
+<tr>
+<td><code>signature</code></td>
+<td>The algorithm, the key id and the signature value</td>
+</tr>
+</tbody>
+</table>
+<p>A PERMIT binds to a specific target, commit, plan and config. Change any of them after <code>gate</code> ran and the PERMIT no longer matches.</p>
+<hr />
+<h2 id="the-signing-key">The signing key</h2>
+<p>The PERMIT is signed with HMAC-SHA256. The key comes from the environment variable <code>GLASSOPS_PERMIT_KEY</code>, which holds base64 text that decodes to at least 32 bytes. Standard base64 is accepted with or without padding. A shorter key is refused, and the error never contains the key. One way to make a key:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">48</span>
+</code></pre></div>
+<p>The <code>key_id</code> in the signature is the first eight hex characters of the SHA-256 of the key. It names the key without revealing it. <code>permit verify</code> and <code>deploy</code> refuse a PERMIT whose <code>key_id</code> differs from their own key's, with the message that it was signed with a different key.</p>
+<p>The signature covers the whole PERMIT, with the signature value left out: keys sorted, no extra whitespace, times in UTC. A PERMIT file with a field the format does not know, or with trailing data, is refused as unreadable, because such a field would not be covered by the signature.</p>
+<p><strong>The key must never be available to pull request jobs.</strong> Anyone who can run a job with the key can sign an allow. Put it in a protected CI environment that only the deploy job uses. <code>glassops doctor</code> adds a warning when <code>GLASSOPS_PERMIT_KEY</code> is set on a <code>pull_request</code> or <code>pull_request_target</code> run. See <a href="../../guides/deploy-with-github/">Deploy with GitHub</a>.</p>
+<hr />
+<h2 id="what-gate-does">What <code>gate</code> does</h2>
+<p><code>gate</code> always writes a signed PERMIT, including when policy denies the deploy. The deny is part of the record. Before it does anything else, it deletes any PERMIT already at the output path, so a stale allow can never stand in for the current run.</p>
+<p>Two things stop it before a PERMIT is written, and both exit 2: <code>GLASSOPS_PERMIT_KEY</code> is missing or unusable, and the plan file or the target cannot be found. Everything after that still produces a signed PERMIT.</p>
+<p>The checks in the PERMIT come in this order: the <code>guard</code> check, the <code>validation.bound</code> check, the rule results, then any <code>evidence.*</code> failures. The guard is the org Id and tier check described in the <a href="../cli/#the-guard">CLI reference</a>. With <code>--no-connect</code> it does not run, the PERMIT records the configured Id and the kind the tier requires, and the <code>guard</code> check is <code>skipped</code>.</p>
+<p><code>gate</code> also writes the facts it evaluated to <code>.glassops/facts.json</code>.</p>
+<h3 id="fail-closed">Fail closed</h3>
+<p>Missing evidence is never a pass.</p>
+<ul>
+<li>A rule that needs a fact that is not there fails, or says so in its detail.</li>
+<li>A tool or infrastructure problem while gathering evidence adds a failing <code>evidence.&lt;name&gt;</code> check. The PERMIT denies, is still signed and written, and <code>gate</code> exits 2 instead of 1. Examples: the guard refusing the target, a GitHub API call that fails, a result file that exists but cannot be read, a missing commit or plan hash, and plan files that no longer match the plan hash.</li>
+<li>A rule set with no rules is a defect, never a pass.</li>
+</ul>
+<h3 id="the-ephemeral-automatic-permit">The ephemeral automatic PERMIT</h3>
+<p>A target whose login the guard accepted as a scratch org gets an automatic PERMIT. Only the org Id guard applies. The rules are not run, no GitHub API call is made, and the PERMIT carries an <code>ephemeral</code> check and a <code>not_applicable</code> separation of duties record. It is issued only when the guard really ran and saw a scratch org, so <code>--no-connect</code> on an ephemeral target runs the full rule set instead. The result fact <code>gate.ephemeral</code> says which happened.</p>
+<hr />
+<h2 id="what-permit-verify-and-deploy-check">What <code>permit verify</code> and <code>deploy</code> check</h2>
+<p>Both use the same verification, in this order. The first failure is the one reported.</p>
+<p><code>permit verify</code>, before the PERMIT checks:</p>
+<ol>
+<li>The key. A missing or unusable key is an error (exit 2) before anything else is read.</li>
+<li>The config, the target, the change set and the commit. A problem reading any of them is an error (exit 2).</li>
+<li>The PERMIT file. A missing file is an error (exit 2). A file that is not a readable PERMIT is a failure (exit 1).</li>
+<li>The plan files. If the files under <code>.glassops/plan/</code> no longer hash to the change set's <code>plan_sha256</code>, the plan was edited after <code>plan</code> and the check fails (exit 1).</li>
+</ol>
+<p><code>deploy</code>, before the PERMIT checks, reads the target, the change set, the config hash and the commit, then checks the plan files the same way. In <code>deploy</code> every refusal is exit 2, because nothing may touch the target. The login comes after verification.</p>
+<p>The PERMIT checks, shared by both:</p>
+<ol>
+<li>The signature: it exists, the algorithm is <code>HMAC-SHA256</code>, the key id matches, and the value verifies.</li>
+<li>The schema is <code>glassops.permit/v1</code>.</li>
+<li><code>allow</code> is true.</li>
+<li>It has not expired.</li>
+<li>The target name matches.</li>
+<li>The target Id matches. Ids compare on their canonical form, so a 15 and an 18 character form of one Id are equal.</li>
+<li>The commit matches.</li>
+<li>The plan hash matches.</li>
+<li>The config hash matches.</li>
+</ol>
+<p>Checking the signature first means a forged or damaged PERMIT is rejected before any of its contents are trusted. <code>deploy</code> additionally compares the PERMIT against the deployed commit, which is the CI's commit, or <code>git rev-parse HEAD</code> when the CI reports none.</p>
+<hr />
+<h2 id="validation-binding-and-quick-deploy">Validation binding and quick deploy</h2>
+<p><code>gate</code> can bind a check-only validation into the PERMIT, so <code>deploy</code> can quick deploy it instead of deploying again. It binds the validation only when all of these hold for <code>.glassops/results/validate.json</code>:</p>
+<ul>
+<li>The result passed.</li>
+<li>It is for the same target name.</li>
+<li>It was a check-only run with a deploy Id.</li>
+<li>It records the plan hash it validated (<code>validate.plan_sha256</code>) and that hash equals the current plan.</li>
+</ul>
+<p>The PERMIT then carries <code>validation</code> with the deploy Id and the recorded test level. The <code>validation.bound</code> check says whether it was bound and why not. It never denies. Without a bound validation, <code>deploy</code> runs a full deploy.</p>
+<p>How <code>deploy</code> uses it depends on <code>salesforce.deploy.quick</code> in <code>glassops.yaml</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prefer</code> (default)</td>
+<td>Quick deploy the bound validation. If the target refuses it, fall back to a full deploy and record <code>salesforce.quick_refused</code></td>
+</tr>
+<tr>
+<td><code>require</code></td>
+<td>Quick deploy only. With no passed validation in the PERMIT, <code>deploy</code> fails with exit 1 before any login. If the target refuses the quick deploy, no full deploy runs</td>
+</tr>
+<tr>
+<td><code>off</code></td>
+<td>Always run a full deploy</td>
+</tr>
+</tbody>
+</table>
+<p>The target refuses a quick deploy when the validation was never run, was already deployed, or is more than ten days old.</p>
+<hr />
+<h2 id="the-v1-rules">The v1 rules</h2>
+<p><code>gate</code> runs these seven rules, in this order. Every rule runs, so the PERMIT lists every reason for a deny. Only a <code>fail</code> outcome denies. The outcomes are <code>pass</code>, <code>fail</code>, <code>skipped</code>, <code>waived_by_config</code> and <code>satisfied_by_approval</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Outcomes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plan_not_empty</code></td>
+<td><code>fail</code> if the plan has no changes, or the facts do not say. Otherwise <code>pass</code></td>
+</tr>
+<tr>
+<td><code>window.&lt;tier&gt;</code></td>
+<td>See below</td>
+</tr>
+<tr>
+<td><code>blackout</code></td>
+<td>See below</td>
+</tr>
+<tr>
+<td><code>coverage_min</code></td>
+<td>See below</td>
+</tr>
+<tr>
+<td><code>destructive_needs_label</code></td>
+<td>See below</td>
+</tr>
+<tr>
+<td><code>separation_of_duties</code></td>
+<td>See below</td>
+</tr>
+<tr>
+<td><code>analyzer_max_severity</code></td>
+<td>See below</td>
+</tr>
+</tbody>
+</table>
+<h3 id="windowtier"><code>window.&lt;tier&gt;</code></h3>
+<p>Named after the target's tier, such as <code>window.prod</code>. Configured as <code>policy.windows.&lt;tier&gt;</code>, a list of weekly windows with <code>days</code>, <code>from</code>, <code>to</code> and <code>tz</code>.</p>
+<ul>
+<li><code>skipped</code> when no window is configured for the tier.</li>
+<li><code>pass</code> when now is inside any window for the tier.</li>
+<li><code>fail</code> when now is outside every window, or a window cannot be used (an unknown time zone or a bad clock).</li>
+<li><code>fail</code>, under the plain name <code>window</code>, when the tier is unknown and any window is configured anywhere.</li>
+</ul>
+<p>Times are wall clock times in the window's zone, so the window moves with daylight saving time. A window is <code>from</code> up to but not including <code>to</code>. A window whose <code>to</code> is earlier than its <code>from</code> runs past midnight and belongs to the day it starts on. A window where <code>from</code> equals <code>to</code> never matches.</p>
+<h3 id="blackout"><code>blackout</code></h3>
+<p>Configured as <code>policy.blackouts</code>, a list with <code>from</code> and <code>to</code> dates (<code>YYYY-MM-DD</code>), optional <code>tiers</code> and an optional <code>reason</code>. Dates are compared in UTC, because a blackout has no time zone, and both ends are included.</p>
+<ul>
+<li><code>skipped</code> when no blackouts are configured.</li>
+<li><code>fail</code> when today (UTC) falls in a blackout that covers the target's tier. An empty <code>tiers</code> list covers every tier. When the tier is not known, every blackout in range counts.</li>
+<li><code>pass</code> otherwise.</li>
+</ul>
+<h3 id="coverage_min"><code>coverage_min</code></h3>
+<p>Configured as <code>policy.rules.coverage_min</code>, a whole number from 0 to 100.</p>
+<ul>
+<li><code>skipped</code> when it is not set.</li>
+<li><code>fail</code> when the plan facts do not list the changed Apex classes.</li>
+<li>Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless its name ends in <code>Test</code> or <code>_Test</code>. Those are treated as test classes, and the detail says how many.</li>
+<li><code>pass</code> when every class is at or above the minimum.</li>
+</ul>
+<h3 id="destructive_needs_label"><code>destructive_needs_label</code></h3>
+<p>Configured as <code>policy.rules.destructive_needs_label</code> with a <code>label</code> and optional <code>tiers</code>. An empty <code>tiers</code> list covers every tier.</p>
+<ul>
+<li><code>skipped</code> when it is not set, or the target's tier is not covered.</li>
+<li><code>fail</code> when the tier is unknown, or the facts do not say how many destructive changes the plan has.</li>
+<li><code>pass</code> when the plan has no destructive changes.</li>
+<li>With destructive changes: <code>fail</code> when no pull request was found, or the pull request lacks the label. <code>pass</code> when it has the label.</li>
+</ul>
+<h3 id="separation_of_duties"><code>separation_of_duties</code></h3>
+<p>Configured as <code>policy.rules.separation_of_duties</code> with <code>tiers</code> and an optional <code>approval</code>. It makes sure the person who deploys is not the author of the change.</p>
+<ul>
+<li><code>skipped</code> when the rule is not set.</li>
+<li><code>waived_by_config</code> when the target's tier is not in <code>tiers</code>. <strong>An empty <code>tiers</code> list turns the rule off everywhere</strong>, because every tier is then outside the list.</li>
+<li>Enforced when the tier is in <code>tiers</code>. The author is the pull request author and the deployer is the CI actor, compared without regard to case.<ul>
+<li>With no <code>approval</code> configured, it <code>pass</code>es when both are known and differ, and <code>fail</code>s when either is unknown or they are the same.</li>
+<li>With an <code>approval</code> configured, it <code>pass</code>es when they differ. When they are the same or unknown, it looks for a configured approval and gives <code>satisfied_by_approval</code>, or <code>fail</code> when none is found.</li>
+</ul>
+</li>
+</ul>
+<p>Two kinds of approval can satisfy the rule:</p>
+<table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Configured as</th>
+<th>Counts when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>environment</code></td>
+<td><code>approval.environment</code></td>
+<td>The run has an approved review for that environment</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td><code>approval.label</code> and <code>approval.approvers</code></td>
+<td>The pull request has the label, and the person who added it is one of the approvers</td>
+</tr>
+</tbody>
+</table>
+<p>A label approver may be the pull request author. The explicit approval by a listed approver is the control.</p>
+<p>The PERMIT's <code>separation_of_duties</code> block records the result. Its <code>mode</code> is <code>enforced</code>, <code>waived_by_config</code>, <code>satisfied_by_approval</code> or <code>not_applicable</code> (the rule is off, or the PERMIT is an ephemeral automatic one). It also holds the author, the deployer and, for an approval, the mechanism and approver.</p>
+<h3 id="analyzer_max_severity"><code>analyzer_max_severity</code></h3>
+<p>Configured as <code>policy.rules.analyzer_max_severity</code>, a whole number from 1 to 5, where 1 is the worst.</p>
+<ul>
+<li><code>skipped</code> when it is not set.</li>
+<li><code>skipped</code> when there are no analyze facts, because the analyzer did not run. This is the one place a missing fact does not fail: a limit with no analysis behind it is not enforced until analysis exists.</li>
+<li><code>fail</code> when the facts show any violations at the configured severity or worse.</li>
+<li><code>pass</code> otherwise.</li>
+</ul>
+<hr />
+<h2 id="configuration-example">Configuration example</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">salesforce</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">targets</span><span class="p">:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">prod</span><span class="p">:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">00D000000000000</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">tier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">auth</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> method</span><span class="p">:</span><span class="w"> </span><span class="nv">jwt</span><span class="p p-Indicator">,</span><span class="nt"> username</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_PROD_USERNAME</span><span class="p p-Indicator">,</span><span class="nt"> client_id</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_CLIENT_ID</span><span class="p p-Indicator">,</span><span class="nt"> key</span><span class="p">:</span><span class="w"> </span><span class="nv">$SF_JWT_KEY</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nt">policy</span><span class="p">:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">permit_ttl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2h</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">windows</span><span class="p">:</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="nt">prod</span><span class="p">:</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> days</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">tue</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">thu</span><span class="p p-Indicator">],</span><span class="nt"> from</span><span class="p">:</span><span class="w"> </span><span class="s">"18:00"</span><span class="p p-Indicator">,</span><span class="nt"> to</span><span class="p">:</span><span class="w"> </span><span class="s">"22:00"</span><span class="p p-Indicator">,</span><span class="nt"> tz</span><span class="p">:</span><span class="w"> </span><span class="nv">America/Chicago</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">blackouts</span><span class="p">:</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> from</span><span class="p">:</span><span class="w"> </span><span class="s">"2026-12-20"</span><span class="p p-Indicator">,</span><span class="nt"> to</span><span class="p">:</span><span class="w"> </span><span class="s">"2027-01-03"</span><span class="p p-Indicator">,</span><span class="nt"> tiers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">prod</span><span class="p p-Indicator">],</span><span class="nt"> reason</span><span class="p">:</span><span class="w"> </span><span class="nv">holiday freeze</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="nt">coverage_min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">85</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="nt">destructive_needs_label</span><span class="p">:</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">      </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">destructive-ok</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">      </span><span class="nt">tiers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">prod</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="nt">separation_of_duties</span><span class="p">:</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">      </span><span class="nt">tiers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">prod</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">      </span><span class="nt">approval</span><span class="p">:</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">        </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">glassops-deploy</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nt">analyzer_max_severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="nt">salesforce</span><span class="p">:</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">  </span><span class="nt">test_level</span><span class="p">:</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="nt">prod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RunLocalTests</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">  </span><span class="nt">deploy</span><span class="p">:</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">    </span><span class="nt">quick</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prefer</span>
+</code></pre></div>
+<p><code>permit_ttl</code> is a duration from 5 minutes to 24 hours. The default is 2 hours.</p>
+<hr />
+<h2 id="evidence-gate-reads-from-github">Evidence <code>gate</code> reads from GitHub</h2>
+<p>Some rules need facts that only GitHub knows. When the CI is GitHub and a token is available in <code>GITHUB_TOKEN</code> or <code>GH_TOKEN</code>, <code>gate</code> reads them through the GitHub API. Without a token it reads nothing, the facts stay absent, and the rules that need them fail. The ephemeral automatic PERMIT makes no API calls. <code>GITHUB_API_URL</code> overrides the API address.</p>
+<table>
+<thead>
+<tr>
+<th>Read</th>
+<th>Used for</th>
+<th>Token permission</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /repos/{repo}/pulls/{number}</code> on a <code>pull_request</code> run</td>
+<td>Pull request author and labels</td>
+<td><code>pull-requests: read</code></td>
+</tr>
+<tr>
+<td><code>GET /repos/{repo}/commits/{sha}/pulls</code> on a push</td>
+<td>The merged pull request for the commit, its author and labels</td>
+<td><code>pull-requests: read</code></td>
+</tr>
+<tr>
+<td><code>GET /repos/{repo}/actions/runs/{run_id}/approvals</code></td>
+<td>Environment approvals for this run</td>
+<td><code>actions: read</code></td>
+</tr>
+<tr>
+<td><code>GET /repos/{repo}/issues/{number}/events</code></td>
+<td>Who added the approval label, only when <code>approval.label</code> is configured and the pull request has it</td>
+<td><code>issues: read</code></td>
+</tr>
+</tbody>
+</table>
+<p>On a push, the actor is <code>GITHUB_ACTOR</code>, the person who pushed or merged. A push that was not merged from a pull request has no author, and a rule that needs one fails. A call that fails adds an <code>evidence.ci.*</code> failure, so <code>gate</code> denies and exits 2.</p>
+<p>The job also needs <code>contents: write</code> for <code>deploy</code>, because it pushes the <code>glassops/deployed/&lt;target&gt;</code> tag. Without it the deploy still succeeds and only the tag push warns.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.indexes", "navigation.tabs", "navigation.sections", "navigation.expand", "content.code.copy", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
