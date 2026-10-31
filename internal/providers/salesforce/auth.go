@@ -83,6 +83,12 @@ func (p *Provider) resolveLogin(t providers.Target) (login, error) {
 			}
 		}
 	case "sfdx-url":
+		if t.AuthFile != "" {
+			if l.sfdxURL, err = p.readAuthFile(t.AuthFile); err != nil {
+				return l, err
+			}
+			break
+		}
 		if l.sfdxURL, err = p.resolve("url", a.URL, false); err != nil {
 			return l, err
 		}
@@ -274,4 +280,69 @@ func scrub(msg string, secrets []string) string {
 		lines = append(lines, ln)
 	}
 	return redact.Text(strings.Join(lines, " / "))
+}
+
+// readAuthFile reads the sfdx url from an auth file env create wrote. The file must be a
+// regular file inside the temp dir or a .glassops dir, and on Unix only its owner may read
+// it. Its content never reaches an error.
+func (p *Provider) readAuthFile(path string) (string, error) {
+	if !filepath.IsAbs(path) {
+		return "", errors.New("auth file: the path is not absolute")
+	}
+	fi, err := os.Lstat(path)
+	if err != nil {
+		return "", fmt.Errorf("auth file: %w", err)
+	}
+	if !fi.Mode().IsRegular() {
+		return "", errors.New("auth file: not a regular file, refusing it")
+	}
+	if !isWindows && fi.Mode().Perm() != 0o600 {
+		return "", fmt.Errorf("auth file: mode is %04o, want 0600, refusing it", fi.Mode().Perm())
+	}
+	if !p.authFilePlace(path) {
+		return "", errors.New("auth file: outside the temp dir and .glassops, refusing it")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("auth file: %w", err)
+	}
+	v := strings.TrimSpace(string(data))
+	if !strings.HasPrefix(v, "force://") || strings.ContainsAny(v, "\r\n") {
+		return "", errors.New("auth file: does not hold one sfdx url")
+	}
+	return v, nil
+}
+
+// authFilePlace reports whether path is inside the OS temp dir, the provider's temp dir, or
+// a directory named .glassops. The CLI checks the project's own .glassops more strictly.
+func (p *Provider) authFilePlace(path string) bool {
+	real, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+	norm := func(s string) string {
+		if isWindows {
+			return strings.ToLower(s)
+		}
+		return s
+	}
+	for _, root := range []string{os.TempDir(), p.tempDir} {
+		if root == "" {
+			continue
+		}
+		r, err := filepath.EvalSymlinks(root)
+		if err != nil {
+			continue
+		}
+		rel, err := filepath.Rel(norm(r), norm(real))
+		if err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && !filepath.IsAbs(rel) {
+			return true
+		}
+	}
+	for d := filepath.Dir(real); d != filepath.Dir(d); d = filepath.Dir(d) {
+		if filepath.Base(d) == ".glassops" {
+			return true
+		}
+	}
+	return false
 }
