@@ -7,4 +7,6 @@ var (
 	_ providers.Environments = (*Provider)(nil)
 	_ providers.Seeder       = (*Provider)(nil)
 	_ providers.Tester       = (*Provider)(nil)
+	_ providers.Verifier     = (*Provider)(nil)
+	_ providers.Configurable = (*Provider)(nil)
 )

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glassops-platform/glassops/schemas/engine-result.json",
+  "title": "glassops engine result",
+  "description": "What a command run by provider exec may write to <results-dir>/exec-<step>.json. Without the file, glassops reads the outcome from the exit code alone.",
+  "type": "object",
+  "required": ["schema", "step", "passed"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "glassops.engine-result/v1" },
+    "step": { "enum": ["plan", "describe", "validate", "deploy", "verify"] },
+    "passed": { "type": "boolean" },
+    "id": {
+      "description": "The target's Id for the run, such as a deploy Id, when it has one.",
+      "type": "string"
+    },
+    "components_deployed": { "type": "integer", "minimum": 0 },
+    "problems": {
+      "description": "One line per failure.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "facts": {
+      "description": "Detail for the result, under keys that start with exec.",
+      "type": "object",
+      "propertyNames": { "pattern": "^exec\\." }
+    }
+  }
+}

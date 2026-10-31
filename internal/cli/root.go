@@ -50,7 +50,7 @@ func NewRootCommand(app *App) *cobra.Command {
 	pf.StringVar(&g.dir, "dir", ".", "project root")
 	pf.StringVar(&g.configPath, "config", "", "config file (default <dir>/glassops.yaml)")
 	pf.StringVar(&g.resultsDir, "results-dir", "", "where results are written (default <dir>/.glassops/results)")
-	pf.StringVar(&g.ciName, "ci", "auto", "CI system: auto, github or local")
+	pf.StringVar(&g.ciName, "ci", "auto", "CI system: auto, github, bitbucket, gitlab or local")
 
 	root.AddCommand(
 		newDoctorCommand(app, g),
@@ -67,6 +67,7 @@ func NewRootCommand(app *App) *cobra.Command {
 		newRunCommand(app, g),
 		newCheckCommand(app, g),
 		newAnalyzeCommand(app, g),
+		newVerifyCommand(app, g),
 	)
 	return root
 }

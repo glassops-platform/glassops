@@ -104,7 +104,7 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		return stop("plan", err)
 	}
 
-	pm, err := app.verifyPermit(o, g, permit.Expect{
+	pm, err := app.verifyPermit(o, g, proj.cfg, permit.Expect{
 		TargetName:   t.Name,
 		TargetID:     proj.provider.CanonicalID(t.ID),
 		Commit:       commit,
@@ -192,11 +192,12 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	return app.finish(res, c, g)
 }
 
-// verifyPermit reads the PERMIT and checks it against want with the key from the
-// environment. The returned PERMIT is filled in whenever it could be read, so its Id can be
-// recorded even when it does not verify. The key itself never reaches an error.
-func (app *App) verifyPermit(o *deployOptions, g *globals, want permit.Expect) (permit.Permit, error) {
-	key, err := app.permitKey()
+// verifyPermit reads the PERMIT and checks it against want with the verifier
+// policy.permit.signing selects, for hmac the key from the environment. The returned PERMIT
+// is filled in whenever it could be read, so its Id can be recorded even when it does not
+// verify. The key itself never reaches an error.
+func (app *App) verifyPermit(o *deployOptions, g *globals, cfg *config.Config, want permit.Expect) (permit.Permit, error) {
+	verifier, err := permit.VerifierFor(cfg, permit.Keys{HMACKey: app.permitKey, NewHMAC: permitFuncs.signer})
 	if err != nil {
 		return permit.Permit{}, err
 	}
@@ -208,7 +209,7 @@ func (app *App) verifyPermit(o *deployOptions, g *globals, want permit.Expect) (
 	if err != nil {
 		return permit.Permit{}, fmt.Errorf("read PERMIT: %w", err)
 	}
-	if err := permitFuncs.verify(pm, permitFuncs.signer(key), want); err != nil {
+	if err := permitFuncs.verify(pm, verifier, want); err != nil {
 		return pm, fmt.Errorf("PERMIT %s does not allow this deploy: %w", pm.ID, err)
 	}
 	return pm, nil

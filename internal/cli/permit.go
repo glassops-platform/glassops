@@ -68,17 +68,22 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 		return app.finish(res, c, g)
 	}
 
-	// The key comes first, so a missing key is reported before anything else is read.
-	keyText, ok := app.LookupEnv(permit.KeyEnv)
-	if !ok || keyText == "" {
-		return stop("key", fmt.Errorf("%s is not set", permit.KeyEnv))
-	}
-	key, err := permit.ParseKey(keyText)
+	// The verifier comes first, so a missing key is reported before anything else is read.
+	// policy.permit.signing picks it. A config that does not load means hmac here, and its
+	// error is reported below.
+	signer, err := permit.VerifierFor(app.peekConfig(g), permit.Keys{HMACKey: func() ([]byte, error) {
+		keyText, ok := app.LookupEnv(permit.KeyEnv)
+		if !ok || keyText == "" {
+			return nil, fmt.Errorf("%s is not set", permit.KeyEnv)
+		}
+		return permit.ParseKey(keyText)
+	}})
 	if err != nil {
 		return stop("key", err)
 	}
-	signer := permit.NewHMAC(key)
-	res.Facts["permit.key_id"] = signer.(permit.KeyIdentifier).KeyID()
+	if ki, ok := signer.(permit.KeyIdentifier); ok {
+		res.Facts["permit.key_id"] = ki.KeyID()
+	}
 
 	proj, err := app.loadProject(g)
 	if err != nil {
@@ -163,4 +168,14 @@ func (app *App) permitKeyWarning(event string) (string, bool) {
 		return "", false
 	}
 	return permit.KeyEnv + " is set in a " + event + " run. The key should exist only in the protected deploy job, because a pull request run can sign a PERMIT with it", true
+}
+
+// peekConfig loads the config only to choose the PERMIT verifier, or returns nil when it does
+// not load. The command reports a config error itself where it loads the config for real.
+func (app *App) peekConfig(g *globals) *config.Config {
+	loaded, err := config.Load(g.dir, g.configPath, "")
+	if err != nil {
+		return nil
+	}
+	return loaded.Config
 }

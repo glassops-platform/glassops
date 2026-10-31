@@ -94,6 +94,16 @@ func Check(c *Config) []string {
 		}
 	}
 
+	if c.Policy.Permit.Method() == SigningSigstore {
+		if c.Policy.Permit.Identity == "" || c.Policy.Permit.Issuer == "" {
+			add("policy.permit: sigstore signing needs both identity and issuer")
+		}
+	}
+
+	if c.Provider == ExecProvider && len(c.Exec.Paths) == 0 {
+		add("exec.paths: provider exec needs at least one path to plan from")
+	}
+
 	for _, name := range sortedKeys(c.Environments) {
 		e := c.Environments[name]
 		if _, ok := c.Targets[e.DevHub]; !ok {
@@ -135,6 +145,9 @@ func EnvRefs(c *Config) []string {
 	}
 	for _, e := range c.Environments {
 		note(e.Shape)
+	}
+	for _, v := range c.Telemetry.OTLP.Headers {
+		note(v)
 	}
 	out := make([]string, 0, len(set))
 	for k := range set {

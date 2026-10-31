@@ -39,12 +39,12 @@ type deployResultBody struct {
 	NumberComponentsDeployed flexInt `json:"numberComponentsDeployed"`
 }
 
-// Deploy deploys cs to the session's org. With opts.ValidatedID it quick deploys that
+// nativeDeploy deploys cs to the session's org. With opts.ValidatedID it quick deploys that
 // validation, and a validation the org refuses falls back to a full deploy unless
 // opts.QuickOnly is set. With opts.ResumeID it waits on an earlier deploy instead. Success is
 // read from the result body only: status Succeeded, not check-only, at least one component
 // deployed and no component or test failures.
-func (p *Provider) Deploy(ctx context.Context, s providers.Session, cs providers.ChangeSet, opts providers.DeployOptions) (providers.DeployResult, error) {
+func (p *Provider) nativeDeploy(ctx context.Context, s providers.Session, cs providers.ChangeSet, opts providers.DeployOptions) (providers.DeployResult, error) {
 	sess, ok := asSession(s)
 	if !ok {
 		return providers.DeployResult{}, errors.New("salesforce: deploy needs a session from this provider")

@@ -21,10 +21,10 @@ const (
 	planDestructive = "destructiveChanges/destructiveChanges.xml"
 )
 
-// Plan works out the change set with sfdx-git-delta, or from the whole source when req.Full
+// nativePlan works out the change set with sfdx-git-delta, or from the whole source when req.Full
 // is set. It needs no login. Everything it writes goes under req.OutDir, which must sit
 // inside <req.Dir>/.glassops/.
-func (p *Provider) Plan(ctx context.Context, req providers.PlanRequest) (providers.ChangeSet, error) {
+func (p *Provider) nativePlan(ctx context.Context, req providers.PlanRequest) (providers.ChangeSet, error) {
 	dir, err := filepath.Abs(req.Dir)
 	if err != nil {
 		return providers.ChangeSet{}, err

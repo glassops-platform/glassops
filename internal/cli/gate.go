@@ -128,7 +128,10 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		return app.finish(res, c, g)
 	}
 
-	signer, err := permitSigner(app.Getenv(permit.KeyEnv))
+	signer, err := permit.SignerFor(cfg, permit.Keys{
+		HMACKey: func() ([]byte, error) { return gateHMACKey(app.Getenv(permit.KeyEnv)) },
+		NewHMAC: gateSigner,
+	})
 	if err != nil {
 		res.AddCheck("permit.key", run.StatusError, err.Error())
 		return app.finish(res, c, g)
@@ -175,6 +178,7 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	}
 
 	now := app.Now().UTC()
+	var policyErr error
 	// validation.bound only says whether deploy may quick deploy. It never denies.
 	checks := []policy.Result{guardCheck, bound}
 	allow := guardCheck.Outcome != policy.Fail
@@ -190,9 +194,13 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 			// An empty rule set would allow everything, so it is a defect, never a pass.
 			gr.evidenceFail("policy", "no policy rules are loaded")
 		}
-		ok, results := policy.Evaluate(rules, policy.Input{Facts: gr.doc, Config: cfg, Now: now})
+		// The Go rules always run first. Rego, when configured, can only add results, and an
+		// evaluator that cannot decide denies and makes gate exit 2.
+		in := policy.Input{Facts: gr.doc, Config: cfg, Now: now}
+		ok, results, err := policy.EvaluateAll(ctx, policy.Evaluators(rules, cfg), in)
 		allow = allow && ok
 		checks = append(checks, results...)
+		policyErr = err
 	}
 	if len(gr.evidence) > 0 {
 		allow = false
@@ -246,13 +254,17 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	if !allow {
 		res.Degrade(run.StatusFail)
 	}
+	if policyErr != nil {
+		// The PERMIT is written as a deny, and the step is an error because policy could not
+		// be evaluated.
+		res.AddCheck("policy.evaluate", run.StatusError, policyErr.Error())
+	}
 	return app.finish(res, c, g)
 }
 
-// permitSigner reads the key from GLASSOPS_PERMIT_KEY with permit.ParseKey, so gate accepts
-// exactly the keys permit verify accepts, and returns the signer for it. No error includes the
-// value.
-func permitSigner(value string) (permit.Signer, error) {
+// gateHMACKey reads the key from GLASSOPS_PERMIT_KEY with permit.ParseKey, so gate accepts
+// exactly the keys permit verify accepts. No error includes the value.
+func gateHMACKey(value string) ([]byte, error) {
 	if strings.TrimSpace(value) == "" {
 		return nil, fmt.Errorf("%s is not set, so no PERMIT can be signed", permit.KeyEnv)
 	}
@@ -260,7 +272,7 @@ func permitSigner(value string) (permit.Signer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", permit.KeyEnv, err)
 	}
-	return gateSigner(key), nil
+	return key, nil
 }
 
 // newPermitID returns 16 random bytes in hex, or "" when the system has no randomness.

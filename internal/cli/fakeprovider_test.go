@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
 
@@ -24,6 +25,9 @@ type fakeProvider struct {
 	sweepEnvs  func(hub providers.Session, prefix string, maxAge time.Duration) ([]providers.Env, error)
 	seed       func(providers.Session, providers.SeedRequest) (providers.SeedResult, error)
 	runTests   func(providers.Session, providers.TestRequest) (providers.TestResult, error)
+	verifyFn   func(providers.Session, providers.VerifyRequest) (providers.VerifyResult, error)
+	// configure is called by loadProject. Nil accepts every config.
+	configure func(*config.Config) error
 
 	mu          sync.Mutex
 	sessions    []*fakeSession
@@ -103,6 +107,8 @@ var (
 	_ providers.Environments = (*fakeProvider)(nil)
 	_ providers.Seeder       = (*fakeProvider)(nil)
 	_ providers.Tester       = (*fakeProvider)(nil)
+	_ providers.Verifier     = (*fakeProvider)(nil)
+	_ providers.Configurable = (*fakeProvider)(nil)
 )
 
 func (f *fakeProvider) CreateEnv(_ context.Context, hub providers.Session, req providers.EnvRequest) (providers.Env, error) {
@@ -158,4 +164,18 @@ func reportsAs(k providers.Kind) func(providers.Target) (providers.TargetInfo, e
 	return func(t providers.Target) (providers.TargetInfo, error) {
 		return providers.TargetInfo{ID: t.ID, Kind: k, Facts: map[string]any{}}, nil
 	}
+}
+
+func (f *fakeProvider) Verify(_ context.Context, s providers.Session, req providers.VerifyRequest) (providers.VerifyResult, error) {
+	if f.verifyFn == nil {
+		return providers.VerifyResult{}, errors.New("fake: no verify set")
+	}
+	return f.verifyFn(s, req)
+}
+
+func (f *fakeProvider) Configure(cfg *config.Config) error {
+	if f.configure == nil {
+		return nil
+	}
+	return f.configure(cfg)
 }
