@@ -16,9 +16,6 @@ func TestPhase4CommandsAreStubs(t *testing.T) {
 		args  []string
 		flags []string
 	}{
-		{"env create", []string{"env", "create"}, []string{"target", "name", "ttl-days", "shape"}},
-		{"env delete", []string{"env", "delete"}, []string{"target", "name"}},
-		{"env sweep", []string{"env", "sweep"}, []string{"target", "max-age"}},
 		{"run", []string{"run", "pr"}, []string{"dry-run"}},
 	}
 	for _, tc := range cases {
