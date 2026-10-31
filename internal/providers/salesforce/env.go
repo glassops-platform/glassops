@@ -96,10 +96,11 @@ func (p *Provider) CreateEnv(ctx context.Context, hub providers.Session, req pro
 	if !ok {
 		return providers.Env{}, errors.New("salesforce: env create needs a session from this provider")
 	}
-	values, name, facts, err := signupValues(req)
+	plan, err := signupValues(req)
 	if err != nil {
 		return providers.Env{}, err
 	}
+	values, name, facts := plan.values, plan.name, plan.facts
 
 	var env providers.Env
 	var sfdxURL string
@@ -124,35 +125,82 @@ func (p *Provider) CreateEnv(ctx context.Context, hub providers.Session, req pro
 	if env.AuthFile, err = p.writeAuthFile(ctx, sfdxURL); err != nil {
 		return env, err
 	}
-	if err := p.checkEnvLogin(ctx, env); err != nil {
+	org, err := p.envLogin(ctx, env)
+	if err != nil {
 		return env, err
 	}
-	return env, nil
+	defer org.Close()
+	if len(plan.settings) == 0 {
+		return env, nil
+	}
+	return p.applySettings(ctx, sess, org, env, plan.settings)
 }
 
-// signupValues builds the --values text for the ScratchOrgInfo record and the org name.
-func signupValues(req providers.EnvRequest) (string, string, map[string]any, error) {
+// applySettings deploys the definition's settings to the new org in org. When the deploy
+// fails it deletes the org from hub, with a context of its own so that a stopped run still
+// cleans up, and returns a *SettingsError that says whether the delete worked.
+func (p *Provider) applySettings(ctx context.Context, hub, org *session, env providers.Env, files []settingsFile) (providers.Env, error) {
+	id, err := p.deploySettings(ctx, org, files)
+	if id != "" {
+		env.Facts["salesforce.settings_deploy_id"] = id
+	}
+	env.Facts["salesforce.settings_deployed"] = err == nil
+	if err == nil {
+		return env, nil
+	}
+	var se *SettingsError
+	if !errors.As(err, &se) {
+		se = &SettingsError{cause: err}
+	}
+	cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), settingsCleanupTimeout)
+	defer cancel()
+	if derr := p.DeleteEnv(cleanup, hub, env); derr != nil {
+		se.DeleteErr = derr
+	} else {
+		se.Deleted = true
+		// DeleteEnv removed the auth file with the org.
+		env.AuthFile = ""
+	}
+	env.Facts["salesforce.settings_org_deleted"] = se.Deleted
+	return env, se
+}
+
+// signupPlan is what CreateEnv works out before it signs up: the --values text for the
+// ScratchOrgInfo record, the org name, the first facts and the converted settings files.
+type signupPlan struct {
+	values   string
+	name     string
+	facts    map[string]any
+	settings []settingsFile
+}
+
+// signupValues builds the signup plan. The whole definition is read and converted here, so
+// a definition env create cannot apply never creates an org.
+func signupValues(req providers.EnvRequest) (signupPlan, error) {
 	name := req.Name
 	if len(name) > orgNameMax {
 		name = strings.TrimRight(name[:orgNameMax], "-._")
 	}
 	if !envNameOK.MatchString(name) {
-		return "", "", nil, fmt.Errorf("salesforce: env name %q may hold only letters, digits, dot, dash and underscore", req.Name)
+		return signupPlan{}, fmt.Errorf("salesforce: env name %q may hold only letters, digits, dot, dash and underscore", req.Name)
 	}
 	days := int((req.TTL + 24*time.Hour - 1) / (24 * time.Hour))
 	if req.TTL <= 0 || days > maxScratchDays {
-		return "", "", nil, fmt.Errorf("salesforce: a scratch org lives 1 to %d days, not %s", maxScratchDays, req.TTL)
+		return signupPlan{}, fmt.Errorf("salesforce: a scratch org lives 1 to %d days, not %s", maxScratchDays, req.TTL)
 	}
 
-	fields, err := readDefinition(req.Dir, req.DefinitionFile)
+	fields, settings, err := readDefinition(req.Dir, req.DefinitionFile)
 	if err != nil {
-		return "", "", nil, err
+		return signupPlan{}, err
 	}
 	facts := map[string]any{}
+	if len(settings) > 0 {
+		facts["salesforce.settings"] = settingsNames(settings)
+	}
 	if req.Shape != "" {
 		shape := strings.TrimSpace(req.Shape)
 		if !strings.HasPrefix(shape, "00D") || !sfID.MatchString(shape) {
-			return "", "", nil, errors.New("salesforce: the org shape must be an org Id, 15 or 18 characters starting 00D")
+			return signupPlan{}, errors.New("salesforce: the org shape must be an org Id, 15 or 18 characters starting 00D")
 		}
 		// An org shape replaces the edition. The record names the 15-character source org.
 		delete(fields, "Edition")
@@ -179,14 +227,14 @@ func signupValues(req providers.EnvRequest) (string, string, map[string]any, err
 	for _, k := range keys {
 		v := fields[k]
 		if valueBlock.MatchString(v) {
-			return "", "", nil, fmt.Errorf("salesforce: the value for %s holds a quote or a line break", k)
+			return signupPlan{}, fmt.Errorf("salesforce: the value for %s holds a quote or a line break", k)
 		}
 		if strings.ContainsAny(v, " \t") {
 			v = "'" + v + "'"
 		}
 		parts = append(parts, k+"="+v)
 	}
-	return strings.Join(parts, " "), name, facts, nil
+	return signupPlan{values: strings.Join(parts, " "), name: name, facts: facts, settings: settings}, nil
 }
 
 // definitionFields maps the definition file keys env create supports to ScratchOrgInfo
@@ -203,25 +251,38 @@ var definitionFields = map[string]string{
 	"sourceOrg":     "SourceOrg",
 }
 
-// readDefinition reads the scratch org definition file into ScratchOrgInfo fields. An empty
-// path means no file. A key env create cannot apply, such as settings, is an error, so an
-// org is never created without part of what the file asks for.
-func readDefinition(dir, rel string) (map[string]string, error) {
+// readDefinition reads the scratch org definition file into ScratchOrgInfo fields and the
+// Settings files its settings key converts to. An empty path means no file. A key env
+// create cannot apply, such as objectSettings inside settings, is an error, so an org is
+// never created without part of what the file asks for.
+func readDefinition(dir, rel string) (map[string]string, []settingsFile, error) {
 	fields := map[string]string{}
 	if rel == "" {
-		return fields, nil
+		return fields, nil, nil
 	}
 	data, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(rel)))
 	if err != nil {
-		return nil, fmt.Errorf("salesforce: read definition file: %w", err)
+		return nil, nil, fmt.Errorf("salesforce: read definition file: %w", err)
 	}
 	var def map[string]any
 	if err := json.Unmarshal(data, &def); err != nil {
-		return nil, fmt.Errorf("salesforce: parse definition file %s: %w", rel, err)
+		return nil, nil, fmt.Errorf("salesforce: parse definition file %s: %w", rel, err)
+	}
+	var settings []settingsFile
+	if _, ok := def["settings"]; ok {
+		var raw struct {
+			Settings json.RawMessage `json:"settings"`
+		}
+		if err := json.Unmarshal(data, &raw); err != nil {
+			return nil, nil, fmt.Errorf("salesforce: parse definition file %s: %w", rel, err)
+		}
+		if settings, err = convertSettings(raw.Settings); err != nil {
+			return nil, nil, err
+		}
 	}
 	var unsupported []string
 	for k, v := range def {
-		if k == "orgName" {
+		if k == "orgName" || k == "settings" {
 			continue
 		}
 		field, ok := definitionFields[k]
@@ -239,20 +300,20 @@ func readDefinition(dir, rel string) (map[string]string, error) {
 			for _, it := range t {
 				s, ok := it.(string)
 				if !ok {
-					return nil, fmt.Errorf("salesforce: definition key %s must list strings", k)
+					return nil, nil, fmt.Errorf("salesforce: definition key %s must list strings", k)
 				}
 				items = append(items, s)
 			}
 			fields[field] = strings.Join(items, ";")
 		default:
-			return nil, fmt.Errorf("salesforce: definition key %s has an unsupported value", k)
+			return nil, nil, fmt.Errorf("salesforce: definition key %s has an unsupported value", k)
 		}
 	}
 	if len(unsupported) > 0 {
 		sort.Strings(unsupported)
-		return nil, fmt.Errorf("salesforce: env create cannot apply definition keys %s", strings.Join(unsupported, ", "))
+		return nil, nil, fmt.Errorf("salesforce: env create cannot apply definition keys %s", strings.Join(unsupported, ", "))
 	}
-	return fields, nil
+	return fields, settings, nil
 }
 
 // signup creates one ScratchOrgInfo record, waits until it is Active and exchanges its auth
@@ -462,18 +523,22 @@ func (p *Provider) writeAuthFile(ctx context.Context, sfdxURL string) (string, e
 	return file, nil
 }
 
-// checkEnvLogin logs in to the new org with the auth file, in a throwaway home, and checks
-// that the org it reaches is the one the signup made.
-func (p *Provider) checkEnvLogin(ctx context.Context, env providers.Env) error {
+// envLogin logs in to the new org with the auth file, in a throwaway home, and checks that
+// the org it reaches is the one the signup made. The caller closes the session, which
+// removes the home.
+func (p *Provider) envLogin(ctx context.Context, env providers.Env) (*session, error) {
 	home, err := os.MkdirTemp(p.tempDir, "glassops-session-")
 	if err != nil {
-		return fmt.Errorf("salesforce: create the login dir: %w", err)
+		return nil, fmt.Errorf("salesforce: create the login dir: %w", err)
 	}
-	defer os.RemoveAll(home)
+	s := &session{target: providers.Target{Name: env.Name, ID: env.ID}, home: home, alias: sessionAlias}
+	fail := func(err error) (*session, error) {
+		_ = s.Close()
+		return nil, err
+	}
 	if err := os.Chmod(home, 0o700); err != nil {
-		return fmt.Errorf("salesforce: protect the login dir: %w", err)
+		return fail(fmt.Errorf("salesforce: protect the login dir: %w", err))
 	}
-	s := &session{home: home, alias: sessionAlias}
 	args := []string{"org", "login", "sfdx-url", "--sfdx-url-file", env.AuthFile, "--alias", s.alias}
 	var got string
 	err = p.loginAttempts(ctx, func() error {
@@ -492,14 +557,14 @@ func (p *Provider) checkEnvLogin(ctx context.Context, env providers.Env) error {
 	})
 	if err != nil {
 		if ctx.Err() != nil {
-			return ctx.Err()
+			return fail(ctx.Err())
 		}
-		return fmt.Errorf("salesforce: log in to the new scratch org: %s", scrub(err.Error(), nil))
+		return fail(fmt.Errorf("salesforce: log in to the new scratch org: %s", scrub(err.Error(), nil)))
 	}
 	if got == "" || p.CanonicalID(got) != p.CanonicalID(env.ID) {
-		return fmt.Errorf("salesforce: the auth file reaches org %q, not the new scratch org %s", got, env.ID)
+		return fail(fmt.Errorf("salesforce: the auth file reaches org %q, not the new scratch org %s", got, env.ID))
 	}
-	return nil
+	return s, nil
 }
 
 // DeleteEnv deletes the scratch org env names from the Dev Hub session hub. It finds the org
