@@ -12,9 +12,14 @@ type AnalyzerMaxSeverity struct{}
 // Name returns the rule name.
 func (AnalyzerMaxSeverity) Name() string { return "analyzer_max_severity" }
 
-// analyzeFallback returns analyze.max_severity from the config. The config on this branch has
-// no such field yet, so it returns nil. Once foundation B adds the field, return it here.
-func analyzeFallback(Input) *int { return nil }
+// analyzeFallback returns analyze.max_severity from the config, the default the rule falls back
+// to when policy.rules.analyzer_max_severity is not set.
+func analyzeFallback(in Input) *int {
+	if in.Config == nil {
+		return nil
+	}
+	return in.Config.Analyze.MaxSeverity
+}
 
 // Evaluate checks analyze.sev1 to analyze.sev5.
 func (AnalyzerMaxSeverity) Evaluate(in Input) []Result {

@@ -88,6 +88,7 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 	}
 	defer sess.Close()
 	res.Target = used.Name
+	res.Facts["target.source"] = targetSource(used)
 	res.Facts["validate.fallback_used"] = fallbackUsed
 
 	if info.Kind == providers.KindScratch && len(cs.Destructive) > 0 {

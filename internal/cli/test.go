@@ -75,6 +75,7 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 		return app.finish(res, c, g)
 	}
 	res.Target = t.Name
+	res.Facts["target.source"] = targetSource(t)
 	sess, _, err := app.connect(ctx, proj.provider, t)
 	if err != nil {
 		res.AddCheck("target", run.StatusError, err.Error())

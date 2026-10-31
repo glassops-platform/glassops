@@ -133,6 +133,9 @@ func EnvRefs(c *Config) []string {
 			note(v)
 		}
 	}
+	for _, e := range c.Environments {
+		note(e.Shape)
+	}
 	out := make([]string, 0, len(set))
 	for k := range set {
 		out = append(out, k)

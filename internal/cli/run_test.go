@@ -61,7 +61,7 @@ func runHarness(t *testing.T, cs providers.ChangeSet, pipelines string) (*harnes
 	return h, req, cfgPath
 }
 
-func readResult(t *testing.T, path string) run.Result {
+func readRunResult(t *testing.T, path string) run.Result {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -119,7 +119,7 @@ func TestRunPipelineEndToEnd(t *testing.T) {
 		t.Fatalf("plan did not read the run's --config: %+v", *req)
 	}
 
-	r := readResult(t, filepath.Join(results, "run.json"))
+	r := readRunResult(t, filepath.Join(results, "run.json"))
 	if r.Status != run.StatusFail || r.Facts["run.pipeline"] != "pr" {
 		t.Fatalf("run result %+v", r)
 	}
@@ -157,7 +157,7 @@ func TestRunPipelineEndToEnd(t *testing.T) {
 	}
 
 	// Every step wrote to the run's results dir, and nothing to the default one.
-	readResult(t, filepath.Join(results, "plan.json"))
+	readRunResult(t, filepath.Join(results, "plan.json"))
 	if _, err := os.Stat(filepath.Join(h.dir, ".glassops", "results")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("a step wrote to the default results dir: %v", err)
 	}
@@ -187,7 +187,7 @@ func TestRunPipelineEndToEnd(t *testing.T) {
 		"exec.3": {"lint", run.StatusFail},
 		"exec.4": {"cleanup", run.StatusPass},
 	} {
-		er := readResult(t, filepath.Join(results, n+".json"))
+		er := readRunResult(t, filepath.Join(results, n+".json"))
 		if er.Step != n || er.Status != tc.status || er.Facts["exec.run"] != tc.run || len(er.Checks) != 1 || er.Checks[0].Name != "command" || !strings.Contains(er.Checks[0].Detail, tc.run) {
 			t.Fatalf("%s envelope %+v", n, er)
 		}

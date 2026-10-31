@@ -107,6 +107,7 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		return &exitcode.ExitError{Code: exitcode.Error, Err: err}
 	}
 	cfg := loaded.Config
+	rememberProjectDir(cfg, g.dir)
 
 	res := run.New("gate", app.Now)
 	res.Provider = proj.provider.Name()
@@ -142,6 +143,7 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		res.AddCheck("target", run.StatusError, err.Error())
 		return app.finish(res, c, g)
 	}
+	res.Facts["target.source"] = targetSource(t)
 
 	gr := &gateRun{app: app, cfg: cfg, proj: proj, doc: facts.New()}
 	cictx := c.Context()
