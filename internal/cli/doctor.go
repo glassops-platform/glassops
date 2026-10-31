@@ -140,6 +140,13 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 		}
 	}
 
+	// 6b. The PERMIT key does not belong in a pull request run. A warning, never a failure,
+	// and presence only.
+	if msg, bad := app.permitKeyWarning(c.Context().Event); bad {
+		res.AddCheck("permit.key", run.StatusPass, "warning: "+msg)
+		c.Annotate(ci.Warning, "doctor permit.key: "+msg)
+	}
+
 	// 7. Logins and the guard, only when asked.
 	if o.auth {
 		app.doctorAuth(ctx, res, cfg, p, o.target)
