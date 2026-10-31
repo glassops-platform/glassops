@@ -1,0 +1,57 @@
+# Merge requests run the pr pipeline. A push to the default branch runs the deploy pipeline in
+# the production environment. Set GLASSOPS_PERMIT_KEY as a CI/CD variable that is protected,
+# masked and limited to the production environment, on a protected default branch. Generate the
+# key with: openssl rand -base64 32
+# Add the variables that glassops.yaml names with $VAR as masked CI/CD variables.
+# This file has not been run on a real GitLab runner yet.
+default:
+  image:
+    name: ghcr.io/glassops-platform/glassops:v1
+    # The image starts glassops by default. GitLab needs a shell to run the script lines.
+    entrypoint: [""]
+
+variables:
+  # Full history, so change sets between commits are complete.
+  GIT_DEPTH: "0"
+
+stages:
+  - pr
+  - deploy
+
+glassops-pr:
+  stage: pr
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - glassops doctor
+    - glassops run pr
+  after_script:
+    - glassops report
+  artifacts:
+    when: always
+    paths:
+      - .glassops/
+    reports:
+      dotenv: .glassops/outputs.env
+
+glassops-deploy:
+  stage: deploy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: production
+  # One deploy at a time. A queued deploy waits and is never cancelled.
+  resource_group: glassops-deploy
+  script:
+    - glassops doctor
+    - glassops run deploy
+    # glassops moves the glassops/deployed/* tag in the checkout, but a job token usually cannot
+    # push, so the tag push only warns here. Pushing it needs a credential you provide.
+  after_script:
+    - glassops report
+  artifacts:
+    when: always
+    paths:
+      - .glassops/
+    reports:
+      dotenv: .glassops/outputs.env
