@@ -10,36 +10,6 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/run"
 )
 
-func TestPhase4CommandsAreStubs(t *testing.T) {
-	cases := []struct {
-		name  string
-		args  []string
-		flags []string
-	}{
-		{"run", []string{"run", "pr"}, []string{"dry-run"}},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			h := newHarness(t)
-			c, _, err := NewRootCommand(h.app).Find(tc.args)
-			if err != nil || c.CommandPath() != "glassops "+tc.name {
-				t.Fatalf("not registered: %v", err)
-			}
-			for _, f := range tc.flags {
-				if c.Flags().Lookup(f) == nil {
-					t.Fatalf("%s has no --%s", c.CommandPath(), f)
-				}
-			}
-			if code := h.exec(tc.args...); code != exitcode.Error {
-				t.Fatalf("exit %d, want %d", code, exitcode.Error)
-			}
-			if !strings.Contains(h.out.String(), tc.name+" is not implemented yet") {
-				t.Fatalf("output:\n%s", h.out)
-			}
-		})
-	}
-}
-
 func TestEnvTargetDefaultsToEphemeral(t *testing.T) {
 	root := NewRootCommand(newHarness(t).app)
 	for _, sub := range []string{"create", "delete", "sweep"} {
