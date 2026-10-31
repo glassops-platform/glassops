@@ -7,7 +7,9 @@
 
 ## Status
 
-GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. This repository is mid-rebuild and nothing here is released. What exists today is the first part of the `glassops` CLI, written in Go. It replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
+GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
+
+v0.3.0 is released as a prerelease, with a container image at `ghcr.io/glassops-platform/glassops:0.3.0`. The next release adds the commands `env`, `test`, `run`, `check` and `analyze`, the reusable GitHub workflows, and a separate `glassops-analyzer` image (`ghcr.io/glassops-platform/glassops-analyzer`) that adds Java and the Code Analyzer for `analyze`. Until then, build from a checkout to use them.
 
 ---
 
@@ -15,7 +17,26 @@ GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI
 
 ### The `glassops` CLI
 
-The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command. Today these exist: `init`, `doctor`, `describe`, `plan`, `validate`, `gate`, `permit verify`, `deploy` and `report`. In order, they set up a project, check the environment, log in to a target and run the org Id guard, work out a change set, run a check-only validate, evaluate policy into a signed PERMIT, check that PERMIT, deploy only under it, and summarise the results as markdown and SARIF. Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every command except `report` writes a result file to `.glassops/results/`. See the [CLI reference](docs/reference/cli.md), [PERMIT and rules](docs/reference/permit-and-rules.md) and the [GitHub deploy guide](docs/guides/deploy-with-github.md).
+The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command, and `glassops run` runs a whole pipeline of them.
+
+| Command | What it does |
+|---|---|
+| `init` | Detects the provider and CI system, then writes `glassops.yaml` and a CI file |
+| `doctor` | Checks the config, tools, git checkout and environment variables. With `--auth` it also logs in to targets |
+| `describe` | Logs in to a target, runs the org Id guard and records what the target reports |
+| `plan` | Works out the change set between two git refs |
+| `validate` | Runs a check-only validate of the change set. On a scratch org it first seeds what a destructive change needs |
+| `gate` | Evaluates the policy rules for a target into a signed PERMIT |
+| `permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
+| `deploy` | Deploys the change set, only under a valid PERMIT, then moves the deployed tag |
+| `report` | Summarises every result as markdown and SARIF |
+| `env create`, `env delete`, `env sweep` | Create, delete and sweep ephemeral scratch orgs that later steps use |
+| `test` | Runs Apex tests with coverage on a target and writes JUnit XML |
+| `check` | Runs your own project scripts |
+| `analyze` | Runs the Code Analyzer and records violation counts. Needs `analyze.enabled: true` and the `glassops-analyzer` image |
+| `run` | Runs a named pipeline from `glassops.yaml`, such as the default `pr` and `deploy` |
+
+Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every command except `report` writes a result file to `.glassops/results/`. See the [CLI reference](docs/reference/cli.md), the [configuration reference](docs/reference/config.md), [PERMIT and rules](docs/reference/permit-and-rules.md), [Run a pipeline](docs/guides/run-a-pipeline.md) and the [GitHub deploy guide](docs/guides/deploy-with-github.md).
 
 ---
 
@@ -24,7 +45,9 @@ The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each ste
 - **Architecture overview:** [`overview.md`](docs/architecture/overview.md)
 - **Vision:** [`vision.md`](docs/vision.md)
 - **CLI reference:** [`cli.md`](docs/reference/cli.md)
+- **Configuration reference:** [`config.md`](docs/reference/config.md)
 - **PERMIT and rules:** [`permit-and-rules.md`](docs/reference/permit-and-rules.md)
+- **Run a pipeline:** [`run-a-pipeline.md`](docs/guides/run-a-pipeline.md)
 - **Deploy with GitHub:** [`deploy-with-github.md`](docs/guides/deploy-with-github.md)
 - **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
 - **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
@@ -43,7 +66,9 @@ Teams that:
 
 ## Quick Start
 
-**Not yet released.** No tag or release exists, so there is no pinned version to reference. To try the CLI today, build it from a checkout of this repository with `go build -o glassops ./cmd/glassops`, or build the container image with `docker build -t glassops .`. The example workflow is in [`examples/workflows/glassops-deploy.yml`](examples/workflows/glassops-deploy.yml).
+The released image is `ghcr.io/glassops-platform/glassops:0.3.0`. To use the newer commands, build the CLI from a checkout with `go build -o glassops ./cmd/glassops`, or build the container image with `docker build -t glassops .`.
+
+On GitHub, [`examples/consumer/`](examples/consumer/) is the smallest working layout. It holds a `glassops.yaml` and two short workflows that call the reusable workflows `glassops-pr.yml` and `glassops-deploy.yml` from this repository. The deploy caller passes `GLASSOPS_PERMIT_KEY` by name, and the value lives only as a secret of the protected `glassops-deploy` environment. See the [GitHub deploy guide](docs/guides/deploy-with-github.md). Or run `glassops init` in a Salesforce DX project to generate a similar setup.
 
 ---
 
