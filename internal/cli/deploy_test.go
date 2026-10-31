@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,8 +58,9 @@ func deployFakeCanonical(p permit.Permit) []byte {
 	return b
 }
 
-// deployFakeVerify checks a PERMIT the way the permit package is specified to, in the same order,
-// returning the same sentinel errors.
+// deployFakeVerify checks a PERMIT the way the permit package is specified to, in the same
+// order, returning the same sentinel errors. Like the real Verify, it compares the PERMIT's
+// target Id in canonical form, here the fake provider's 15 character form.
 func deployFakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) error {
 	if err := s.Verify(deployFakeCanonical(p), p.Signature.Value); err != nil {
 		return fmt.Errorf("%w: %v", permit.ErrSignature, err)
@@ -68,7 +70,7 @@ func deployFakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) erro
 		return permit.ErrDenied
 	case !want.Now.Before(p.ExpiresAt):
 		return permit.ErrExpired
-	case p.Target.Name != want.TargetName, p.Target.ID != want.TargetID, p.Commit != want.Commit,
+	case p.Target.Name != want.TargetName, (&fakeProvider{}).CanonicalID(p.Target.ID) != want.TargetID, p.Commit != want.Commit,
 		p.PlanSHA256 != want.PlanSHA256, p.ConfigSHA256 != want.ConfigSHA256:
 		return permit.ErrMismatch
 	}
@@ -117,7 +119,7 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 	useDeployPermitFakes(t)
 	h := &deployHarness{harness: newHarness(t)}
 	h.write(t, "glassops.yaml", cfg)
-	writePlan(t, h.harness, false)
+	planSHA := h.writeDeployPlan(t, false)
 	h.env["GITHUB_ACTIONS"] = "true"
 	h.env["GITHUB_SHA"] = deployCommitSHA
 	h.env[permit.KeyEnv] = deployKey
@@ -150,9 +152,9 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 		Schema: permit.Schema, ID: "a1b2c3d4", Allow: true,
 		IssuedAt:     time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC),
 		ExpiresAt:    time.Date(2026, 10, 26, 13, 0, 0, 0, time.UTC),
-		Target:       permit.Target{Name: "qa", Tier: "qa", ID: "00D000000000002", Kind: "sandbox"},
+		Target:       permit.Target{Name: "qa", Tier: "qa", ID: "00D000000000002AAA", Kind: "sandbox"},
 		Commit:       deployCommitSHA,
-		PlanSHA256:   "",
+		PlanSHA256:   planSHA,
 		ConfigSHA256: loaded.SHA256(),
 		Validation:   &permit.Validation{DeployID: deployValidated, TestLevel: "RunLocalTests", Passed: true},
 	}
@@ -161,6 +163,28 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 	}
 	h.writePermit(t, p, true)
 	return h
+}
+
+// writeDeployPlan writes a synthetic manifest and plan.json with a matching plan_sha256, so the
+// plan still verifies when deploy recomputes the digest from the files. It returns the digest.
+func (h *deployHarness) writeDeployPlan(t *testing.T, empty bool) string {
+	t.Helper()
+	const rel = ".glassops/plan/package/package.xml"
+	content := "<Package/>\n"
+	h.write(t, filepath.FromSlash(rel), content)
+	// The plan digest formula: each file under the plan dir, sorted by path, as path, newline,
+	// content. One file here.
+	sum := sha256.Sum256([]byte(rel + "\n" + content))
+	digest := hex.EncodeToString(sum[:])
+	cs := providers.ChangeSet{
+		Schema: providers.PlanSchema, Provider: "salesforce",
+		Dir: ".glassops/plan", Manifest: rel,
+		Destructive: []string{}, Empty: empty, SHA256: digest, Facts: map[string]any{},
+	}
+	if err := providers.WriteChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"), cs); err != nil {
+		t.Fatal(err)
+	}
+	return digest
 }
 
 // writePermit writes p, signed with the test key when sign is true.
@@ -470,7 +494,7 @@ func TestDeployGuardMismatchIsExit2(t *testing.T) {
 
 func TestDeployEmptyPlanSkipsLogin(t *testing.T) {
 	h := newDeployHarness(t, deployConfig, nil)
-	writePlan(t, h.harness, true)
+	h.writeDeployPlan(t, true)
 	if code := h.run(); code != exitcode.OK {
 		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
