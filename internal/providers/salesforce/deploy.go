@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -129,6 +130,9 @@ func (p *Provider) nativeDeploy(ctx context.Context, s providers.Session, cs pro
 func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, env envelope, runErr error, quick bool, extra map[string]any) (providers.DeployResult, error) {
 	body, ok := parseDeployBody(env.Result)
 	if !ok {
+		body, ok = bodyFromFailure(runErr)
+	}
+	if !ok {
 		id := failureDeployID(runErr)
 		if id == "" {
 			if runErr != nil {
@@ -137,10 +141,18 @@ func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, en
 			return providers.DeployResult{}, errors.New("salesforce: deploy reported no result body")
 		}
 		rep, err := p.sf(ctx, sess, dir, "project", "deploy", "report", "--job-id", id, "--target-org", sess.alias)
-		if err != nil {
-			return providers.DeployResult{}, fmt.Errorf("salesforce: read deploy result %s: %w", id, err)
+		if err == nil || rep.Result != nil {
+			body, ok = parseDeployBody(rep.Result)
 		}
-		if body, ok = parseDeployBody(rep.Result); !ok {
+		if !ok {
+			if isWaitTimeout(runErr) {
+				// The wait ran out and the deploy is still running in the org. That is a
+				// timeout the caller can resume, not a tool failure.
+				return timedOutResult(id), nil
+			}
+			if err != nil {
+				return providers.DeployResult{}, fmt.Errorf("salesforce: read deploy result %s: %w", id, err)
+			}
 			return providers.DeployResult{}, fmt.Errorf("salesforce: deploy report for %s has no result body", id)
 		}
 	}
@@ -154,33 +166,88 @@ func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, en
 	return res, nil
 }
 
+// waitTimeoutStatus is the exit status sf gives when --wait runs out before the deploy ends
+// [unverified: from sf's documented exit codes, no timeout was captured. Capture it with the
+// command in the log entry for the deploy timeout].
+const waitTimeoutStatus = 69
+
+// deployIDPattern matches a deploy Id (the 0Af key prefix) in an sf message.
+var deployIDPattern = regexp.MustCompile(`(?:^|[^A-Za-z0-9])(0Af[A-Za-z0-9]{12}(?:[A-Za-z0-9]{3})?)(?:[^A-Za-z0-9]|$)`)
+
 // parseDeployBody reads a deploy body. ok is false when raw holds no body with an Id and a
-// status, such as an error envelope.
+// status, such as an error envelope. A body with an Id, no status and done false is an
+// unfinished deploy and reads as status InProgress.
 func parseDeployBody(raw json.RawMessage) (deployResultBody, bool) {
 	var b deployResultBody
 	if len(raw) == 0 || json.Unmarshal(raw, &b) != nil {
 		return b, false
 	}
+	if b.ID != "" && b.Status == "" && b.Done != nil && !*b.Done {
+		b.Status = "InProgress"
+	}
 	return b, b.ID != "" && b.Status != ""
+}
+
+// bodyFromFailure reads a full deploy body from the data of a failure envelope, which is
+// where a wait timeout can carry it [unverified].
+func bodyFromFailure(err error) (deployResultBody, bool) {
+	var sfErr *SFError
+	if !errors.As(err, &sfErr) {
+		return deployResultBody{}, false
+	}
+	return parseDeployBody(sfErr.Data)
+}
+
+// isWaitTimeout reports whether err is sf giving up the wait on a deploy [unverified]: status
+// 69, or an error name or message that says the wait timed out.
+func isWaitTimeout(err error) bool {
+	var sfErr *SFError
+	if !errors.As(err, &sfErr) {
+		return false
+	}
+	text := strings.ToLower(sfErr.Name + " " + sfErr.Message)
+	return sfErr.Status == waitTimeoutStatus || strings.Contains(text, "timeout") || strings.Contains(text, "timed out") ||
+		strings.Contains(text, "did not complete")
+}
+
+// timedOutResult is the result for a deploy that is still running after the wait.
+func timedOutResult(id string) providers.DeployResult {
+	return providers.DeployResult{
+		ID: id, TimedOut: true,
+		Problems: []string{fmt.Sprintf("deploy %s has not finished, the wait ran out", id)},
+		Facts:    map[string]any{"salesforce.timed_out": true, "salesforce.check_only": false},
+	}
 }
 
 // failureDeployID returns the deploy Id an sf failure carries in data, or "".
 func failureDeployID(err error) string {
 	var sfErr *SFError
-	if !errors.As(err, &sfErr) || len(sfErr.Data) == 0 {
+	if !errors.As(err, &sfErr) {
 		return ""
 	}
 	var data struct {
 		DeployID string `json:"deployId"`
 		ID       string `json:"id"`
+		JobID    string `json:"jobId"`
 	}
-	if json.Unmarshal(sfErr.Data, &data) != nil {
-		return ""
+	if len(sfErr.Data) > 0 {
+		_ = json.Unmarshal(sfErr.Data, &data) // data of another shape falls through to the message
 	}
-	if data.DeployID != "" {
+	switch {
+	case data.DeployID != "":
 		return data.DeployID
+	case data.ID != "":
+		return data.ID
+	case data.JobID != "":
+		return data.JobID
 	}
-	return data.ID
+	// A timeout can name the Id only in its message [unverified].
+	if isWaitTimeout(err) {
+		if m := deployIDPattern.FindStringSubmatch(sfErr.Message); m != nil {
+			return m[1]
+		}
+	}
+	return ""
 }
 
 // finished reports whether a deploy status is final.

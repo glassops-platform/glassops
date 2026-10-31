@@ -2,6 +2,7 @@ package salesforce
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -451,5 +452,60 @@ func TestDeployNeedsOwnSession(t *testing.T) {
 	p := newTestProvider(t, newFakeExec(nil), nil)
 	if _, err := p.Deploy(context.Background(), nil, providers.ChangeSet{}, providers.DeployOptions{}); err == nil {
 		t.Fatal("deploy accepted a session it did not make")
+	}
+}
+
+// The deploy wait timeout was never captured. These envelopes are synthetic, built from sf's
+// documented exit status 69 and the shape of deploy-start-async.json. [unverified] Capture with
+// `sf project deploy start --manifest <package.xml> --wait 1 --json --target-org <scratch>` on a
+// deploy that takes longer than a minute.
+func TestDeployWaitTimeoutShapes(t *testing.T) {
+	var asyncEnv struct {
+		Result json.RawMessage `json:"result"`
+	}
+	if err := json.Unmarshal(fixture(t, "deploy-start-async.json"), &asyncEnv); err != nil {
+		t.Fatal(err)
+	}
+	body := string(asyncEnv.Result)
+	cases := []struct {
+		name, reply string
+		report      *fakeReply
+	}{
+		{"status 69 with the body in result", `{"status":69,"result":` + body + `,"warnings":[]}`, nil},
+		{"status 69 with the body in data", `{"status":69,"name":"SyntheticTimeout","message":"synthetic","data":` + body + `}`, nil},
+		{"body without a status and done false", `{"status":69,"result":{"id":"0Af000000000003AAA","done":false}}`, nil},
+		{"Id only in data, report says in progress", `{"status":69,"name":"SyntheticTimeout","message":"synthetic","data":{"jobId":"0Af000000000003AAA"}}`,
+			&fakeReply{Stdout: []byte(`{"status":0,"result":` + body + `}`)}},
+		{"Id only in the message, report fails", `{"status":69,"name":"SyntheticTimeout","message":"wait timed out, run sf project deploy resume --job-id 0Af000000000003AAA"}`,
+			&fakeReply{Stdout: []byte(`{"status":1,"name":"Boom","message":"boom"}`), ExitCode: 1}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, f, s, dir, cs := deploySetup(t, nil)
+			f.replies = map[string]fakeReply{queryPrefix: sandboxOrg(t), startPrefix: {Stdout: []byte(tc.reply), ExitCode: 69}}
+			if tc.report != nil {
+				f.replies[reportPrefix] = *tc.report
+			}
+			res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.Passed || !res.TimedOut || res.ID != "0Af000000000003AAA" || res.Facts["salesforce.timed_out"] != true {
+				t.Fatalf("result: %+v", res)
+			}
+		})
+	}
+}
+
+// A non-timeout failure that leaves no body and a report that fails stays an error.
+func TestDeployThinFailureWithFailingReportIsError(t *testing.T) {
+	p, f, s, dir, cs := deploySetup(t, nil)
+	f.replies = map[string]fakeReply{
+		queryPrefix:  sandboxOrg(t),
+		startPrefix:  {Stdout: []byte(`{"status":1,"name":"SyntheticThinError","message":"synthetic","data":{"deployId":"0Af000000000003AAA"}}`), ExitCode: 1},
+		reportPrefix: {Stdout: []byte(`{"status":1,"name":"Boom","message":"boom"}`), ExitCode: 1},
+	}
+	if _, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir}); err == nil {
+		t.Fatal("a failed report was read as a result")
 	}
 }
