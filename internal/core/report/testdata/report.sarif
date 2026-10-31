@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "glassops",
+          "version": "test",
+          "informationUri": "https://github.com/glassops-platform/glassops",
+          "rules": [
+            {
+              "id": "glassops.deploy.deploy"
+            },
+            {
+              "id": "glassops.gate.window.prod"
+            },
+            {
+              "id": "glassops.validate.problem"
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "glassops.gate.window.prod",
+          "level": "error",
+          "message": {
+            "text": "window.prod: outside the deploy window"
+          }
+        },
+        {
+          "ruleId": "glassops.validate.problem",
+          "level": "error",
+          "message": {
+            "text": "ApexClass AccountService: Variable does not exist: acct (line 14)"
+          }
+        },
+        {
+          "ruleId": "glassops.validate.problem",
+          "level": "error",
+          "message": {
+            "text": "force-app/main/default/classes/Util.cls:27 Unexpected token | here"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/Util.cls"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "glassops.validate.problem",
+          "level": "error",
+          "message": {
+            "text": "force-app\\main\\default\\triggers\\T.trigger: missing semicolon"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/triggers/T.trigger"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "glassops.deploy.deploy",
+          "level": "error",
+          "message": {
+            "text": "deploy: the target stopped answering for u***@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "tool": {
+        "driver": {
+          "name": "Code Analyzer"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "pmd:X",
+          "level": "warning",
+          "message": {
+            "text": "m"
+          }
+        }
+      ]
+    }
+  ]
+}
