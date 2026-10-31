@@ -39,10 +39,10 @@ const evidencePrefix = "evidence."
 
 // The policy and signing seams gate calls. They are variables so tests can supply stand-ins.
 var (
-	gateRules   = policy.Default
-	gateSigner  = permit.NewHMAC
-	gateSign  = permit.Sign
-	gateWrite = permit.Write
+	gateRules  = policy.Default
+	gateSigner = permit.NewHMAC
+	gateSign   = permit.Sign
+	gateWrite  = permit.Write
 )
 
 type gateOptions struct {
