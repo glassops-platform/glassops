@@ -227,8 +227,9 @@ jobs:
           cat "$RUNNER_TEMP/repo/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       # Phase 4: one glassops run in one container. It plans a delta that deletes a field,
-      # creates a scratch org, seeds the deleted field so the validate can pass, runs the tests
-      # with the coverage gate, runs an exec step that reads the results, reports and deletes the org.
+      # creates a scratch org, seeds the deleted field so the validate can pass, gates and deploys
+      # into the created org, runs the tests there with the coverage gate, runs an exec step,
+      # reports and deletes the org.
       - name: Run a pipeline with a created scratch org
         if: env.HAS_SF_SECRETS == 'true'
         run: |
@@ -236,7 +237,7 @@ jobs:
           cp testdata/e2e/glassops-run.yaml "$RUNNER_TEMP/repo4/glassops.yaml"
           sed -i 's|^    - step: report$|    - step: report --summary .glassops/summary.md|' "$RUNNER_TEMP/repo4/glassops.yaml"
           set +e
-          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID -e GLASSOPS_PERMIT_KEY \
             -v "$RUNNER_TEMP/repo4:/work" -w /work \
             glassops:e2e run e2e --ci local
           code=$?
