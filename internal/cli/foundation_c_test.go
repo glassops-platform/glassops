@@ -176,4 +176,3 @@ func TestRunExportsTelemetryAndOnlyWarns(t *testing.T) {
 		t.Fatal("telemetry exported without telemetry configured")
 	}
 }
-
