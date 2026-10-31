@@ -122,6 +122,11 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 	res.Facts["permit.id"] = p.ID
 	res.Facts["permit.expires_at"] = p.ExpiresAt.UTC()
 
+	if err := providers.CheckDigest(g.dir, cs); err != nil {
+		res.AddCheck("plan", run.StatusFail, err.Error())
+		return app.finish(res, c, g)
+	}
+
 	canon := proj.provider.CanonicalID
 	err = permit.Verify(p, signer, permit.Expect{
 		TargetName:   o.target,

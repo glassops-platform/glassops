@@ -16,10 +16,11 @@ import (
 	"github.com/glassops-platform/glassops/internal/providers"
 )
 
-const (
-	testCommit   = "0123456789abcdef0123456789abcdef01234567"
-	testPlanHash = "synthetic-plan-hash"
-)
+const testCommit = "0123456789abcdef0123456789abcdef01234567"
+
+// testPlanHash is the digest of the synthetic manifest permitHarness writes. Every harness
+// writes the same bytes at the same path, so the digest is the same each time.
+var testPlanHash string
 
 // testPermitKey is a synthetic key of 32 bytes, not a real one.
 func testPermitKey(b byte) string {
@@ -34,6 +35,12 @@ func permitHarness(t *testing.T) *harness {
 	h.write(t, "glassops.yaml", validateConfig)
 	h.app.Providers = providers.Registry{&fakeProvider{detect: true}}
 	h.write(t, "sfdx-project.json", "{}")
+	h.write(t, ".glassops/plan/package/package.xml", "<Package/>")
+	digest, err := providers.PlanDigest(h.dir, filepath.Join(h.dir, ".glassops", "plan"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	testPlanHash = digest
 	cs := providers.ChangeSet{
 		Schema: providers.PlanSchema, Provider: "salesforce", SHA256: testPlanHash,
 		Dir: ".glassops/plan", Manifest: ".glassops/plan/package/package.xml",
@@ -166,6 +173,17 @@ func TestPermitVerifyChangedFilesFail(t *testing.T) {
 		}
 		if code := h.execGitHub("permit", "verify", "--target", "qa"); code != exitcode.Fail {
 			t.Fatalf("exit %d, output:\n%s", code, h.out)
+		}
+	})
+	t.Run("plan files edited after plan", func(t *testing.T) {
+		h := permitHarness(t)
+		writePermit(t, h, 1, nil)
+		h.write(t, ".glassops/plan/package/package.xml", "<Package><types/></Package>")
+		if code := h.execGitHub("permit", "verify", "--target", "qa"); code != exitcode.Fail {
+			t.Fatalf("exit %d, output:\n%s", code, h.out)
+		}
+		if !strings.Contains(h.out.String(), "changed after plan wrote them") {
+			t.Fatalf("output:\n%s", h.out)
 		}
 	})
 	t.Run("other commit", func(t *testing.T) {
