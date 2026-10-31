@@ -1,0 +1,91 @@
+{
+  "runDir": "/w/",
+  "violationCounts": {
+    "total": 3,
+    "sev1": 0,
+    "sev2": 0,
+    "sev3": 0,
+    "sev4": 3,
+    "sev5": 0
+  },
+  "versions": {
+    "code-analyzer": "0.53.0",
+    "regex": "0.40.0",
+    "pmd": "0.46.0",
+    "cpd": "0.46.0"
+  },
+  "violations": [
+    {
+      "rule": "ApexDoc",
+      "engine": "pmd",
+      "severity": 4,
+      "tags": [
+        "Recommended",
+        "Documentation",
+        "Apex"
+      ],
+      "primaryLocationIndex": 0,
+      "locations": [
+        {
+          "file": "force-app/main/default/classes/Greeter.cls",
+          "startLine": 1,
+          "startColumn": 21,
+          "endLine": 5,
+          "endColumn": 2
+        }
+      ],
+      "message": "Missing ApexDoc comment",
+      "resources": [
+        "https://docs.pmd-code.org/pmd-doc-7.26.0/pmd_rules_apex_documentation.html#apexdoc"
+      ]
+    },
+    {
+      "rule": "ApexDoc",
+      "engine": "pmd",
+      "severity": 4,
+      "tags": [
+        "Recommended",
+        "Documentation",
+        "Apex"
+      ],
+      "primaryLocationIndex": 0,
+      "locations": [
+        {
+          "file": "force-app/main/default/classes/Greeter.cls",
+          "startLine": 2,
+          "startColumn": 19,
+          "endLine": 4,
+          "endColumn": 6
+        }
+      ],
+      "message": "Missing ApexDoc comment",
+      "resources": [
+        "https://docs.pmd-code.org/pmd-doc-7.26.0/pmd_rules_apex_documentation.html#apexdoc"
+      ]
+    },
+    {
+      "rule": "ApexUnitTestClassShouldHaveRunAs",
+      "engine": "pmd",
+      "severity": 4,
+      "tags": [
+        "Recommended",
+        "BestPractices",
+        "Apex"
+      ],
+      "primaryLocationIndex": 0,
+      "locations": [
+        {
+          "file": "force-app/main/default/classes/GreeterTest.cls",
+          "startLine": 4,
+          "startColumn": 12,
+          "endLine": 6,
+          "endColumn": 6
+        }
+      ],
+      "message": "Apex unit test classes should have at least one System.runAs() call",
+      "resources": [
+        "https://docs.pmd-code.org/pmd-doc-7.26.0/pmd_rules_apex_bestpractices.html#apexunittestclassshouldhaverunas"
+      ]
+    }
+  ]
+}

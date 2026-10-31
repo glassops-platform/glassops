@@ -1,0 +1,171 @@
+{
+  "version": "2.1.0",
+  "$schema": "http://json.schemastore.org/sarif-2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "pmd",
+          "semanticVersion": "0.46.0",
+          "informationUri": "https://example.my.salesforce.com/docs/platform/salesforce-code-analyzer/guide/engines.html",
+          "rules": [
+            {
+              "id": "ApexDoc",
+              "properties": {
+                "category": [
+                  "Recommended",
+                  "Documentation",
+                  "Apex"
+                ],
+                "severity": 4
+              },
+              "helpUri": "https://docs.pmd-code.org/pmd-doc-7.26.0/pmd_rules_apex_documentation.html#apexdoc"
+            },
+            {
+              "id": "ApexUnitTestClassShouldHaveRunAs",
+              "properties": {
+                "category": [
+                  "Recommended",
+                  "BestPractices",
+                  "Apex"
+                ],
+                "severity": 4
+              },
+              "helpUri": "https://docs.pmd-code.org/pmd-doc-7.26.0/pmd_rules_apex_bestpractices.html#apexunittestclassshouldhaverunas"
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "ApexDoc",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "Missing ApexDoc comment"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/Greeter.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 2
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/Greeter.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 2
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "ApexDoc",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "Missing ApexDoc comment"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/Greeter.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 19,
+                  "endLine": 4,
+                  "endColumn": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/Greeter.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 19,
+                  "endLine": 4,
+                  "endColumn": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "ApexUnitTestClassShouldHaveRunAs",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "Apex unit test classes should have at least one System.runAs() call"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/GreeterTest.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 12,
+                  "endLine": 6,
+                  "endColumn": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "force-app/main/default/classes/GreeterTest.cls",
+                  "uriBaseId": "/w/"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 12,
+                  "endLine": 6,
+                  "endColumn": 6
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "workingDirectory": {
+            "uri": "/w/"
+          }
+        }
+      ]
+    }
+  ]
+}
