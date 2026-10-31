@@ -31,17 +31,17 @@ const (
 // deployKey is a synthetic 32 byte key, base64 as GLASSOPS_PERMIT_KEY holds it.
 var deployKey = base64.StdEncoding.EncodeToString([]byte("synthetic-test-key-32-bytes-long"))
 
-// fakeSigner is a synthetic Signer for these tests. It stands in for the HMAC signer until
+// deployFakeSigner is a synthetic Signer for these tests. It stands in for the HMAC signer until
 // the permit package can sign.
-type fakeSigner struct{ key []byte }
+type deployFakeSigner struct{ key []byte }
 
-func (s fakeSigner) Alg() string { return "FAKE-HMAC-SHA256" }
-func (s fakeSigner) Sign(c []byte) (string, error) {
+func (s deployFakeSigner) Alg() string { return "FAKE-HMAC-SHA256" }
+func (s deployFakeSigner) Sign(c []byte) (string, error) {
 	m := hmac.New(sha256.New, s.key)
 	m.Write(c)
 	return base64.StdEncoding.EncodeToString(m.Sum(nil)), nil
 }
-func (s fakeSigner) Verify(c []byte, v string) error {
+func (s deployFakeSigner) Verify(c []byte, v string) error {
 	want, _ := s.Sign(c)
 	if !hmac.Equal([]byte(want), []byte(v)) {
 		return permit.ErrSignature
@@ -49,18 +49,18 @@ func (s fakeSigner) Verify(c []byte, v string) error {
 	return nil
 }
 
-// fakeCanonical is the synthetic canonical form: the PERMIT as JSON with the signature value
+// deployFakeCanonical is the synthetic canonical form: the PERMIT as JSON with the signature value
 // emptied.
-func fakeCanonical(p permit.Permit) []byte {
+func deployFakeCanonical(p permit.Permit) []byte {
 	p.Signature.Value = ""
 	b, _ := json.Marshal(p)
 	return b
 }
 
-// fakeVerify checks a PERMIT the way the permit package is specified to, in the same order,
+// deployFakeVerify checks a PERMIT the way the permit package is specified to, in the same order,
 // returning the same sentinel errors.
-func fakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) error {
-	if err := s.Verify(fakeCanonical(p), p.Signature.Value); err != nil {
+func deployFakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) error {
+	if err := s.Verify(deployFakeCanonical(p), p.Signature.Value); err != nil {
 		return fmt.Errorf("%w: %v", permit.ErrSignature, err)
 	}
 	switch {
@@ -75,9 +75,9 @@ func fakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) error {
 	return nil
 }
 
-// usePermitFakes swaps in synthetic PERMIT functions for one test. When the permit package
+// useDeployPermitFakes swaps in synthetic PERMIT functions for one test. When the permit package
 // can sign and verify, the read and verify fakes can go and the real ones be used.
-func usePermitFakes(t *testing.T) {
+func useDeployPermitFakes(t *testing.T) {
 	t.Helper()
 	saved := permitFuncs
 	permitFuncs.read = func(path string) (permit.Permit, error) {
@@ -88,8 +88,8 @@ func usePermitFakes(t *testing.T) {
 		}
 		return p, json.Unmarshal(data, &p)
 	}
-	permitFuncs.verify = fakeVerify
-	permitFuncs.signer = func(key []byte) permit.Signer { return fakeSigner{key: key} }
+	permitFuncs.verify = deployFakeVerify
+	permitFuncs.signer = func(key []byte) permit.Signer { return deployFakeSigner{key: key} }
 	t.Cleanup(func() { permitFuncs = saved })
 }
 
@@ -114,7 +114,7 @@ type deployHarness struct {
 // provider whose deploy passes as a full deploy.
 func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *deployHarness {
 	t.Helper()
-	usePermitFakes(t)
+	useDeployPermitFakes(t)
 	h := &deployHarness{harness: newHarness(t)}
 	h.write(t, "glassops.yaml", cfg)
 	writePlan(t, h.harness, false)
@@ -169,7 +169,7 @@ func (h *deployHarness) writePermit(t *testing.T, p permit.Permit, sign bool) {
 	if sign {
 		key, _ := base64.StdEncoding.DecodeString(deployKey)
 		p.Signature = permit.Signature{Alg: "FAKE-HMAC-SHA256"}
-		p.Signature.Value, _ = fakeSigner{key: key}.Sign(fakeCanonical(p))
+		p.Signature.Value, _ = deployFakeSigner{key: key}.Sign(deployFakeCanonical(p))
 	}
 	data, _ := json.MarshalIndent(p, "", "  ")
 	h.write(t, filepath.Join(".glassops", "permit.json"), string(data))
