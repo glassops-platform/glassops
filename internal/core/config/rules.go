@@ -94,6 +94,13 @@ func Check(c *Config) []string {
 		}
 	}
 
+	for _, name := range sortedKeys(c.Environments) {
+		e := c.Environments[name]
+		if _, ok := c.Targets[e.DevHub]; !ok {
+			add("environments.%s.devhub: %q is not a configured target", name, e.DevHub)
+		}
+	}
+
 	for _, name := range sortedKeys(c.Pipelines) {
 		for i, s := range c.Pipelines[name] {
 			if strings.TrimSpace(s.Run) == "" {

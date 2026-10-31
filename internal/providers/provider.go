@@ -4,6 +4,9 @@
 // of target, such as a Salesforce org type, goes into facts under the provider's name, for
 // example "salesforce.org_type". Deploy is part of the interface, and callers must verify a
 // PERMIT before they call it.
+//
+// Environments, Seeder and Tester are optional capabilities. A command checks for them with a
+// type assertion on the Provider.
 package providers
 
 import (
@@ -231,4 +234,110 @@ func (r Registry) Get(name string) Provider {
 		}
 	}
 	return nil
+}
+
+// EnvRequest asks for one ephemeral environment.
+type EnvRequest struct {
+	// Name is the environment's name, such as glassops-<repo>-<pr>-<run>.
+	Name string
+	// DefinitionFile is the definition path, relative to Dir.
+	DefinitionFile string
+	Dir            string
+	// TTL is how long the environment lives. Salesforce counts it in whole days.
+	TTL time.Duration
+	// Shape is an optional source org Id for an org shape.
+	Shape string
+}
+
+// Env is a created environment. The material a later step logs in with is held only in
+// AuthFile, a file with mode 0600, and never in a result.
+type Env struct {
+	// ID is the environment's own Id, such as an org Id.
+	ID string
+	// RecordID is the provider's request record, such as ScratchOrgInfo, kept for cleanup.
+	RecordID  string
+	Name      string
+	ExpiresAt time.Time
+	// AuthFile is the path of the 0600 file holding the login material.
+	AuthFile string
+	Facts    map[string]any
+}
+
+// Environments is implemented by providers that create ephemeral environments.
+type Environments interface {
+	// CreateEnv creates one environment from the hub.
+	CreateEnv(ctx context.Context, hub Session, req EnvRequest) (Env, error)
+	// DeleteEnv deletes env from the hub.
+	DeleteEnv(ctx context.Context, hub Session, env Env) error
+	// SweepEnvs deletes environments named with prefix that are older than maxAge, and reports them.
+	SweepEnvs(ctx context.Context, hub Session, prefix string, maxAge time.Duration) ([]Env, error)
+}
+
+// SeedRequest asks a provider to put the base state an ephemeral target needs before a
+// destructive change can be validated there.
+type SeedRequest struct {
+	Dir string
+	// BaseRef is the resolved git ref the deleted components come from.
+	BaseRef string
+	Plan    ChangeSet
+	// Mode is "minimal", "full" or "off".
+	Mode string
+}
+
+// SeedResult is what a seed put on the target.
+type SeedResult struct {
+	// Mode is the mode actually used: "minimal", "full" or "none".
+	Mode string
+	// Fallback is true when minimal failed on a missing dependency and full was used.
+	Fallback bool
+	// Members lists what was seeded, as "Type:Name".
+	Members []string
+	Facts   map[string]any
+}
+
+// Seeder is implemented by providers that can seed an ephemeral target.
+type Seeder interface {
+	// Seed puts the base state req needs on the target.
+	Seed(ctx context.Context, s Session, req SeedRequest) (SeedResult, error)
+}
+
+// TestRequest asks for a test run.
+type TestRequest struct {
+	Dir       string
+	TestLevel string
+	Tests     []string
+	// Wait is how long to wait for the run. Zero means the provider default.
+	Wait time.Duration
+	// ResumeID resumes watching an earlier run instead of starting a new one.
+	ResumeID string
+}
+
+// ClassCoverage is the line coverage of one class.
+type ClassCoverage struct {
+	Name    string
+	Lines   int
+	Covered int
+	Percent int
+}
+
+// TestResult is the outcome of a test run.
+type TestResult struct {
+	Passed   bool
+	Finished bool
+	RunID    string
+	Ran      int
+	Failed   int
+	// OrgCoverage is the org-wide coverage percent, -1 when unknown.
+	OrgCoverage int
+	Classes     []ClassCoverage
+	Failures    []string
+	// JUnit is provider-produced JUnit XML when available.
+	JUnit []byte
+	Facts map[string]any
+}
+
+// Tester is implemented by providers that run tests on a target.
+type Tester interface {
+	// RunTests runs or resumes a test run.
+	RunTests(ctx context.Context, s Session, req TestRequest) (TestResult, error)
 }

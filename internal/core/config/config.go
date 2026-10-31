@@ -27,6 +27,104 @@ type Config struct {
 	Policy     Policy            `yaml:"policy,omitempty" json:"policy,omitempty"`
 	Salesforce Salesforce        `yaml:"salesforce,omitempty" json:"salesforce,omitempty"`
 	Pipelines  map[string][]Step `yaml:"pipelines,omitempty" json:"pipelines,omitempty"`
+	// Environments maps the target name an ephemeral environment registers as to how it is
+	// created.
+	Environments map[string]Environment `yaml:"environments,omitempty" json:"environments,omitempty"`
+	Test         Test                   `yaml:"test,omitempty" json:"test,omitempty"`
+	Check        Checks                 `yaml:"check,omitempty" json:"check,omitempty"`
+	Analyze      Analyze                `yaml:"analyze,omitempty" json:"analyze,omitempty"`
+}
+
+// Defaults for the environments section.
+const (
+	DefaultEnvPrefix  = "glassops"
+	DefaultEnvTTLDays = 1
+)
+
+// Environment says how one ephemeral environment is created.
+type Environment struct {
+	// DevHub is the name of the configured target that creates the environment.
+	DevHub string `yaml:"devhub" json:"devhub"`
+	// Definition is the definition file, relative to the project root.
+	Definition string `yaml:"definition,omitempty" json:"definition,omitempty"`
+	// TTLDays is how many days the environment lives. Use Days to read it with the default.
+	TTLDays int `yaml:"ttl_days,omitempty" json:"ttl_days,omitempty"`
+	// Shape is an optional source org Id for an org shape, or a $VAR holding one.
+	Shape string `yaml:"shape,omitempty" json:"shape,omitempty"`
+	// Prefix starts every environment name. Use NamePrefix to read it with the default.
+	Prefix string `yaml:"prefix,omitempty" json:"prefix,omitempty"`
+}
+
+// Days returns TTLDays, or DefaultEnvTTLDays when it is not set.
+func (e Environment) Days() int {
+	if e.TTLDays == 0 {
+		return DefaultEnvTTLDays
+	}
+	return e.TTLDays
+}
+
+// NamePrefix returns Prefix, or DefaultEnvPrefix when it is not set.
+func (e Environment) NamePrefix() string {
+	if e.Prefix == "" {
+		return DefaultEnvPrefix
+	}
+	return e.Prefix
+}
+
+// Test holds the test step settings.
+type Test struct {
+	// Level maps a tier, or "default", to a test level name.
+	Level    map[string]string `yaml:"level,omitempty" json:"level,omitempty"`
+	Coverage Coverage          `yaml:"coverage,omitempty" json:"coverage,omitempty"`
+}
+
+// Coverage holds the minimum coverage percents the test step enforces. Nil means not set.
+type Coverage struct {
+	OrgMin   *int `yaml:"org_min,omitempty" json:"org_min,omitempty"`
+	ClassMin *int `yaml:"class_min,omitempty" json:"class_min,omitempty"`
+}
+
+// Checks holds the scripts the check step runs.
+type Checks struct {
+	Scripts []Script `yaml:"scripts,omitempty" json:"scripts,omitempty"`
+}
+
+// Script is one named command the check step runs.
+type Script struct {
+	Name string `yaml:"name" json:"name"`
+	Run  string `yaml:"run" json:"run"`
+}
+
+// DefaultRuleSelector is the analyzer rule selector when analyze.rule_selector is not set.
+const DefaultRuleSelector = "Recommended"
+
+// Analyze holds the static analysis settings.
+type Analyze struct {
+	Enabled      *bool  `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	RuleSelector string `yaml:"rule_selector,omitempty" json:"rule_selector,omitempty"`
+	// MaxSeverity is the default for policy.rules.analyzer_max_severity. 1 is critical.
+	// Violations at this severity or worse fail gate.
+	MaxSeverity *int `yaml:"max_severity,omitempty" json:"max_severity,omitempty"`
+}
+
+// Selector returns RuleSelector, or DefaultRuleSelector when it is not set.
+func (a Analyze) Selector() string {
+	if a.RuleSelector == "" {
+		return DefaultRuleSelector
+	}
+	return a.RuleSelector
+}
+
+// AnalyzerMaxSeverity returns policy.rules.analyzer_max_severity when it is set, else
+// analyze.max_severity. ok is false when neither is set.
+func (c *Config) AnalyzerMaxSeverity() (severity int, ok bool) {
+	if v := c.Policy.Rules.AnalyzerMaxSeverity; v != nil {
+		return *v, true
+	}
+	if v := c.Analyze.MaxSeverity; v != nil {
+		return *v, true
+	}
+	return 0, false
 }
 
 // Target is one place changes go, such as an org.
@@ -128,11 +226,36 @@ type DestructiveLabelRule struct {
 
 // Salesforce holds provider settings.
 type Salesforce struct {
-	Engine     string            `yaml:"engine,omitempty" json:"engine,omitempty"`
-	APIVersion string            `yaml:"api_version,omitempty" json:"api_version,omitempty"`
-	TestLevel  map[string]string `yaml:"test_level,omitempty" json:"test_level,omitempty"`
-	Delta      Delta             `yaml:"delta,omitempty" json:"delta,omitempty"`
-	Deploy     SalesforceDeploy  `yaml:"deploy,omitempty" json:"deploy,omitempty"`
+	Engine     string              `yaml:"engine,omitempty" json:"engine,omitempty"`
+	APIVersion string              `yaml:"api_version,omitempty" json:"api_version,omitempty"`
+	TestLevel  map[string]string   `yaml:"test_level,omitempty" json:"test_level,omitempty"`
+	Delta      Delta               `yaml:"delta,omitempty" json:"delta,omitempty"`
+	Deploy     SalesforceDeploy    `yaml:"deploy,omitempty" json:"deploy,omitempty"`
+	Ephemeral  SalesforceEphemeral `yaml:"ephemeral,omitempty" json:"ephemeral,omitempty"`
+}
+
+// Seed modes for salesforce.ephemeral.seed.
+const (
+	// SeedMinimal deploys only the components a destructive change deletes, from the base ref.
+	SeedMinimal = "minimal"
+	// SeedFull deploys the whole source at the base ref.
+	SeedFull = "full"
+	// SeedOff seeds nothing.
+	SeedOff = "off"
+)
+
+// SalesforceEphemeral controls ephemeral Salesforce targets.
+type SalesforceEphemeral struct {
+	// Seed is minimal, full or off. Use SeedMode to read it with the default applied.
+	Seed string `yaml:"seed,omitempty" json:"seed,omitempty"`
+}
+
+// SeedMode returns Seed, or SeedMinimal when it is not set.
+func (e SalesforceEphemeral) SeedMode() string {
+	if e.Seed == "" {
+		return SeedMinimal
+	}
+	return e.Seed
 }
 
 // Delta controls change-set generation.
@@ -164,11 +287,17 @@ func (d SalesforceDeploy) QuickMode() string {
 	return d.Quick
 }
 
+// ExecStep is the step name that runs Exec instead of a glassops command.
+const ExecStep = "exec"
+
 // Step is one pipeline entry. In YAML it is either a plain command string or an object
 // with a step and a when condition.
 type Step struct {
 	Run  string `yaml:"step" json:"step"`
 	When string `yaml:"when,omitempty" json:"when,omitempty"`
+	// Exec is the shell command an exec step runs, with sh -c on Linux and macOS. It is set
+	// only when Run is ExecStep.
+	Exec string `yaml:"run,omitempty" json:"run,omitempty"`
 }
 
 // UnmarshalYAML accepts both "plan" and {step: plan, when: always}.

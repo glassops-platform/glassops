@@ -115,6 +115,18 @@ func TestParseRejects(t *testing.T) {
 		{"approval without mechanism", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { tiers: [prod], approval: { approvers: [octocat] } }\n", "set environment or label"},
 		{"label without approvers", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { label: ok-to-deploy } }\n", "needs approvers"},
 		{"unknown approval key", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { team: ops } }\n", "/policy/rules/separation_of_duties/approval"},
+		{"exec without run", "version: 1\npipelines:\n  pr:\n    - { step: exec }\n", "/pipelines/pr/0"},
+		{"run on a glassops step", "version: 1\npipelines:\n  pr:\n    - { step: plan, run: echo hi }\n", "/pipelines/pr/0"},
+		{"devhub not a target", "version: 1\nenvironments:\n  ephemeral: { devhub: hub }\n", "environments.ephemeral.devhub"},
+		{"environment without devhub", "version: 1\nenvironments:\n  ephemeral: { ttl_days: 1 }\n", "/environments/ephemeral"},
+		{"ttl days zero", "version: 1\ntargets:\n  devhub: {}\nenvironments:\n  ephemeral: { devhub: devhub, ttl_days: 0 }\n", "/environments/ephemeral/ttl_days"},
+		{"bad shape", "version: 1\ntargets:\n  devhub: {}\nenvironments:\n  ephemeral: { devhub: devhub, shape: org }\n", "/environments/ephemeral/shape"},
+		{"bad seed", "version: 1\nsalesforce:\n  ephemeral: { seed: some }\n", "/salesforce/ephemeral/seed"},
+		{"coverage over 100", "version: 1\ntest:\n  coverage: { org_min: 101 }\n", "/test/coverage/org_min"},
+		{"coverage below 0", "version: 1\ntest:\n  coverage: { class_min: -1 }\n", "/test/coverage/class_min"},
+		{"max severity 0", "version: 1\nanalyze: { max_severity: 0 }\n", "/analyze/max_severity"},
+		{"max severity 6", "version: 1\nanalyze: { max_severity: 6 }\n", "/analyze/max_severity"},
+		{"script without run", "version: 1\ncheck:\n  scripts: [{ name: lint }]\n", "/check/scripts/0"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -232,5 +244,108 @@ func TestLoadedSHA256(t *testing.T) {
 	crlf := &Loaded{Raw: []byte("version: 1\r\n")}
 	if got := crlf.SHA256(); got != want {
 		t.Fatalf("CRLF SHA256 = %s, want the LF hash %s", got, want)
+	}
+}
+
+const phase4Config = `version: 1
+targets:
+  devhub: { id: 00D000000000001, tier: devhub }
+environments:
+  ephemeral:
+    devhub: devhub
+    definition: config/project-scratch-def.json
+    ttl_days: 2
+    shape: $SHAPE_ORG_ID
+    prefix: ci
+salesforce:
+  ephemeral:
+    seed: full
+test:
+  level: { default: RunLocalTests }
+  coverage: { org_min: 75, class_min: 70 }
+check:
+  scripts:
+    - name: lint
+      run: npm run lint
+analyze:
+  enabled: true
+  rule_selector: Security
+  max_severity: 2
+pipelines:
+  pr:
+    - plan
+    - step: exec
+      run: ./scripts/publish.sh
+      when: success
+`
+
+func TestParsePhase4Config(t *testing.T) {
+	cfg, err := Parse([]byte(phase4Config))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	e := cfg.Environments["ephemeral"]
+	want := Environment{DevHub: "devhub", Definition: "config/project-scratch-def.json", TTLDays: 2, Shape: "$SHAPE_ORG_ID", Prefix: "ci"}
+	if e != want || e.Days() != 2 || e.NamePrefix() != "ci" {
+		t.Fatalf("environment = %+v", e)
+	}
+	if got := cfg.Salesforce.Ephemeral.SeedMode(); got != SeedFull {
+		t.Fatalf("SeedMode = %q", got)
+	}
+	if cfg.Test.Level["default"] != "RunLocalTests" || *cfg.Test.Coverage.OrgMin != 75 || *cfg.Test.Coverage.ClassMin != 70 {
+		t.Fatalf("test = %+v", cfg.Test)
+	}
+	if !reflect.DeepEqual(cfg.Check.Scripts, []Script{{Name: "lint", Run: "npm run lint"}}) {
+		t.Fatalf("check = %+v", cfg.Check)
+	}
+	if !*cfg.Analyze.Enabled || cfg.Analyze.Selector() != "Security" {
+		t.Fatalf("analyze = %+v", cfg.Analyze)
+	}
+	if sev, ok := cfg.AnalyzerMaxSeverity(); !ok || sev != 2 {
+		t.Fatalf("AnalyzerMaxSeverity = %d, %v", sev, ok)
+	}
+	steps := []Step{{Run: "plan"}, {Run: ExecStep, Exec: "./scripts/publish.sh", When: "success"}}
+	if !reflect.DeepEqual(cfg.Pipelines["pr"], steps) {
+		t.Fatalf("pr pipeline = %+v", cfg.Pipelines["pr"])
+	}
+}
+
+func TestPhase4Defaults(t *testing.T) {
+	var e Environment
+	if e.Days() != 1 || e.NamePrefix() != "glassops" {
+		t.Fatalf("environment defaults: %d, %q", e.Days(), e.NamePrefix())
+	}
+	var se SalesforceEphemeral
+	if se.SeedMode() != SeedMinimal {
+		t.Fatalf("seed default = %q", se.SeedMode())
+	}
+	var a Analyze
+	if a.Selector() != "Recommended" {
+		t.Fatalf("rule selector default = %q", a.Selector())
+	}
+}
+
+func TestAnalyzerMaxSeverityPrefersPolicy(t *testing.T) {
+	one, three := 1, 3
+	cases := []struct {
+		name   string
+		rules  *int
+		global *int
+		want   int
+		ok     bool
+	}{
+		{"neither", nil, nil, 0, false},
+		{"analyze only", nil, &three, 3, true},
+		{"policy only", &one, nil, 1, true},
+		{"both, policy wins", &one, &three, 1, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Config{Policy: Policy{Rules: Rules{AnalyzerMaxSeverity: tc.rules}}, Analyze: Analyze{MaxSeverity: tc.global}}
+			got, ok := c.AnalyzerMaxSeverity()
+			if got != tc.want || ok != tc.ok {
+				t.Fatalf("got %d, %v", got, ok)
+			}
+		})
 	}
 }

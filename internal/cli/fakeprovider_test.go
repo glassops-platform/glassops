@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/glassops-platform/glassops/internal/providers"
 )
@@ -18,6 +19,11 @@ type fakeProvider struct {
 	plan       func(providers.PlanRequest) (providers.ChangeSet, error)
 	validateFn func(providers.Target, providers.ChangeSet, providers.ValidateOptions) (providers.ValidateResult, error)
 	deploy     func(providers.Session, providers.ChangeSet, providers.DeployOptions) (providers.DeployResult, error)
+	createEnv  func(hub providers.Session, req providers.EnvRequest) (providers.Env, error)
+	deleteEnv  func(hub providers.Session, env providers.Env) error
+	sweepEnvs  func(hub providers.Session, prefix string, maxAge time.Duration) ([]providers.Env, error)
+	seed       func(providers.Session, providers.SeedRequest) (providers.SeedResult, error)
+	runTests   func(providers.Session, providers.TestRequest) (providers.TestResult, error)
 
 	mu          sync.Mutex
 	sessions    []*fakeSession
@@ -90,6 +96,48 @@ func (f *fakeProvider) Deploy(_ context.Context, s providers.Session, cs provide
 		return providers.DeployResult{}, errors.New("fake: no deploy set")
 	}
 	return f.deploy(s, cs, o)
+}
+
+// The fake implements every optional capability. Each unset func fails.
+var (
+	_ providers.Environments = (*fakeProvider)(nil)
+	_ providers.Seeder       = (*fakeProvider)(nil)
+	_ providers.Tester       = (*fakeProvider)(nil)
+)
+
+func (f *fakeProvider) CreateEnv(_ context.Context, hub providers.Session, req providers.EnvRequest) (providers.Env, error) {
+	if f.createEnv == nil {
+		return providers.Env{}, errors.New("fake: no createEnv set")
+	}
+	return f.createEnv(hub, req)
+}
+
+func (f *fakeProvider) DeleteEnv(_ context.Context, hub providers.Session, env providers.Env) error {
+	if f.deleteEnv == nil {
+		return errors.New("fake: no deleteEnv set")
+	}
+	return f.deleteEnv(hub, env)
+}
+
+func (f *fakeProvider) SweepEnvs(_ context.Context, hub providers.Session, prefix string, maxAge time.Duration) ([]providers.Env, error) {
+	if f.sweepEnvs == nil {
+		return nil, errors.New("fake: no sweepEnvs set")
+	}
+	return f.sweepEnvs(hub, prefix, maxAge)
+}
+
+func (f *fakeProvider) Seed(_ context.Context, s providers.Session, req providers.SeedRequest) (providers.SeedResult, error) {
+	if f.seed == nil {
+		return providers.SeedResult{}, errors.New("fake: no seed set")
+	}
+	return f.seed(s, req)
+}
+
+func (f *fakeProvider) RunTests(_ context.Context, s providers.Session, req providers.TestRequest) (providers.TestResult, error) {
+	if f.runTests == nil {
+		return providers.TestResult{}, errors.New("fake: no runTests set")
+	}
+	return f.runTests(s, req)
 }
 
 // allClosed reports whether every session the fake opened was closed at least once.
