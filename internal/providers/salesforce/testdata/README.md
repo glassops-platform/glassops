@@ -47,6 +47,7 @@ and scrub it the same way.
 | `deploy-start-seed-missing-parent.json` | `sf project deploy start --metadata CustomField:Widget__c.Size__c` when the object does not exist. Exit 1, "Entity 'Widget__c' not found." |
 | `apex-test-pass.json` | `sf apex run test --code-coverage --result-format json` with `--wait`, all passing. Exit 0, `summary.outcome` "Passed", `summary.orgWideCoverage` "100%" |
 | `apex-test-fail.json` | the same with one failing test. Exit 100, `summary.outcome` "Failed", `summary.failing` 1 |
+| `apex-test-uncovered-class.json` | the same after deploying a class no test touches. `coverage.coverage[]` does not list that class, while `summary.orgWideCoverage` drops to "66%". Org-wide coverage catches an untested class and the per-class list does not |
 | `apex-test-async.json` | the same without `--wait`. Exit 0, and only `testRunId` |
 | `apex-get-test-fail.json` | `sf apex get test --test-run-id <id>` for that run, which has a failing test. Exit 100 with the full body |
 | `query-active-scratch-org.json` | `sf data query` of `ActiveScratchOrg` on the Dev Hub: `Id`, `ScratchOrg`, `SignupUsername`, `OrgName`, `CreatedDate`, `ExpirationDate`, `ScratchOrgInfoId` |

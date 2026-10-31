@@ -1,0 +1,103 @@
+{
+  "status": 100,
+  "result": {
+    "summary": {
+      "failRate": "50%",
+      "failing": 1,
+      "hostname": "https://example.my.salesforce.com",
+      "orgId": "00D000000000001AAA",
+      "outcome": "Failed",
+      "passRate": "50%",
+      "passing": 1,
+      "skipped": 0,
+      "testRunId": "707000000000001",
+      "testStartTime": "2026-10-31T04:17:55.000Z",
+      "testsRan": 2,
+      "userId": "005000000000001AAA",
+      "username": "user@example.com",
+      "commandTime": "234 ms",
+      "testExecutionTime": "61 ms",
+      "testTotalTime": "61 ms",
+      "orgWideCoverage": "66%",
+      "testRunCoverage": "100%"
+    },
+    "tests": [
+      {
+        "Id": "07M000000000001AAA",
+        "QueueItemId": "709000000000001AAA",
+        "StackTrace": "Class.FailingTest.fails: line 1, column 1",
+        "Message": "System.AssertException: Assertion Failed: deliberate: Expected: 1, Actual: 2",
+        "AsyncApexJobId": "707000000000001AAA",
+        "MethodName": "fails",
+        "Outcome": "Fail",
+        "ApexClass": {
+          "Id": "01p000000000001AAA",
+          "Name": "FailingTest",
+          "NamespacePrefix": null
+        },
+        "RunTime": 11,
+        "FullName": "FailingTest.fails"
+      },
+      {
+        "Id": "07M000000000002AAA",
+        "QueueItemId": "709000000000002AAA",
+        "StackTrace": null,
+        "Message": null,
+        "AsyncApexJobId": "707000000000001AAA",
+        "MethodName": "greetsByName",
+        "Outcome": "Pass",
+        "ApexClass": {
+          "Id": "01p000000000002AAA",
+          "Name": "GreeterTest",
+          "NamespacePrefix": null
+        },
+        "RunTime": 50,
+        "FullName": "GreeterTest.greetsByName"
+      }
+    ],
+    "coverage": {
+      "coverage": [
+        {
+          "id": "01p000000000003AAA",
+          "name": "Greeter",
+          "totalLines": 2,
+          "lines": {
+            "2": 1,
+            "3": 1
+          },
+          "totalCovered": 2,
+          "coveredPercent": 100
+        }
+      ],
+      "records": [
+        {
+          "ApexTestClass": {
+            "Id": "07M000000000002AAA",
+            "Name": "GreeterTest"
+          },
+          "Coverage": {
+            "coveredLines": [
+              2,
+              3
+            ],
+            "uncoveredLines": []
+          },
+          "TestMethodName": "greetsByName",
+          "NumLinesCovered": 2,
+          "ApexClassOrTrigger": {
+            "Id": "01p000000000003AAA",
+            "Name": "Greeter"
+          },
+          "NumLinesUncovered": 0
+        }
+      ],
+      "summary": {
+        "totalLines": 2,
+        "coveredLines": 2,
+        "orgWideCoverage": "66%",
+        "testRunCoverage": "100%"
+      }
+    }
+  },
+  "warnings": []
+}

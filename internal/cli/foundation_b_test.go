@@ -19,7 +19,6 @@ func TestPhase4CommandsAreStubs(t *testing.T) {
 		{"env create", []string{"env", "create"}, []string{"target", "name", "ttl-days", "shape"}},
 		{"env delete", []string{"env", "delete"}, []string{"target", "name"}},
 		{"env sweep", []string{"env", "sweep"}, []string{"target", "max-age"}},
-		{"test", []string{"test", "--target", "ephemeral"}, []string{"target", "level", "tests", "wait", "junit"}},
 		{"run", []string{"run", "pr"}, []string{"dry-run"}},
 		{"check", []string{"check"}, []string{"script"}},
 		{"analyze", []string{"analyze"}, []string{"rule-selector", "sarif"}},
