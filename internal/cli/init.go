@@ -22,8 +22,20 @@ var configTemplate string
 //go:embed templates/github-workflow.yml.tmpl
 var githubWorkflowTemplate string
 
+//go:embed templates/bitbucket-pipelines.yml.tmpl
+var bitbucketPipelinesTemplate string
+
+//go:embed templates/gitlab-ci.yml.tmpl
+var gitlabPipelinesTemplate string
+
 // githubWorkflowPath is where init writes the GitHub workflow.
 const githubWorkflowPath = ".github/workflows/glassops.yml"
+
+// bitbucketPipelinesPath and gitlabPipelinesPath are where init writes the other CI files.
+const (
+	bitbucketPipelinesPath = "bitbucket-pipelines.yml"
+	gitlabPipelinesPath    = ".gitlab-ci.yml"
+)
 
 func newInitCommand(app *App, g *globals) *cobra.Command {
 	var force bool
@@ -90,6 +102,18 @@ func (app *App) init(g *globals, force bool) error {
 			return &exitcode.ExitError{Code: exitcode.Error, Err: err}
 		}
 		app.writeFile(res, "ci.github", filepath.Join(g.dir, filepath.FromSlash(githubWorkflowPath)), wf, force)
+	case "bitbucket":
+		pl, err := render(bitbucketPipelinesTemplate, data)
+		if err != nil {
+			return &exitcode.ExitError{Code: exitcode.Error, Err: err}
+		}
+		app.writeFile(res, "ci.bitbucket", filepath.Join(g.dir, bitbucketPipelinesPath), pl, force)
+	case "gitlab":
+		pl, err := render(gitlabPipelinesTemplate, data)
+		if err != nil {
+			return &exitcode.ExitError{Code: exitcode.Error, Err: err}
+		}
+		app.writeFile(res, "ci.gitlab", filepath.Join(g.dir, gitlabPipelinesPath), pl, force)
 	case "":
 		res.AddCheck("ci", run.StatusSkipped, "no CI detected, so no CI file written")
 	default:

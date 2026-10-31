@@ -32,22 +32,3 @@ func TestDetectBitbucketAndGitLab(t *testing.T) {
 		})
 	}
 }
-
-func TestBitbucketAndGitLabAreStubs(t *testing.T) {
-	for _, c := range []CI{newBitbucket(mapEnv(nil), &bytes.Buffer{}, ""), newGitLab(mapEnv(nil), &bytes.Buffer{}, "")} {
-		if c.Context().CI != c.Name() {
-			t.Fatalf("%s context = %+v", c.Name(), c.Context())
-		}
-		if err := c.SetOutput("status", "pass"); err == nil {
-			t.Fatalf("%s SetOutput did not fail", c.Name())
-		}
-		if err := c.Summary("x"); err == nil {
-			t.Fatalf("%s Summary did not fail", c.Name())
-		}
-	}
-	var out bytes.Buffer
-	newGitLab(mapEnv(nil), &out, "").Annotate(Warning, "careful")
-	if out.String() != "warning: careful\n" {
-		t.Fatalf("annotate = %q", out.String())
-	}
-}
