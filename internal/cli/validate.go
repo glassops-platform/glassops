@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/glassops-platform/glassops/internal/ci"
+	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
@@ -29,7 +31,9 @@ func newValidateCommand(app *App, g *globals) *cobra.Command {
 			"check-only validate of the change set in .glassops/plan.json. It never deploys.\n" +
 			"If the target reports anything other than a check-only run, validate exits 2.\n" +
 			"With --fallback-target, a target that is not configured or cannot be reached is\n" +
-			"replaced by the fallback for the same check-only run.",
+			"replaced by the fallback for the same check-only run.\n" +
+			"On a scratch target, a plan that deletes components first gets them deployed from\n" +
+			"the plan's base ref, as salesforce.ephemeral.seed says (minimal, full or off).",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.validate(cmd.Context(), g, o)
@@ -77,7 +81,7 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 		return app.finish(res, c, g)
 	}
 
-	sess, used, fallbackUsed, err := app.validateConnect(ctx, proj, o)
+	sess, used, info, fallbackUsed, err := app.validateConnect(ctx, proj, o)
 	if err != nil {
 		res.AddCheck("target", run.StatusError, err.Error())
 		return app.finish(res, c, g)
@@ -85,6 +89,12 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 	defer sess.Close()
 	res.Target = used.Name
 	res.Facts["validate.fallback_used"] = fallbackUsed
+
+	if info.Kind == providers.KindScratch && len(cs.Destructive) > 0 {
+		if !app.seed(ctx, res, c, proj, sess, cs, g) {
+			return app.finish(res, c, g)
+		}
+	}
 
 	out, err := proj.provider.Validate(ctx, sess, cs, providers.ValidateOptions{
 		Dir:       g.dir,
@@ -112,20 +122,21 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 // validateConnect resolves the target and logs in. A target that is not configured, or a
 // login that fails, falls back to --fallback-target when one is set. A guard mismatch or any
 // other failure never does.
-func (app *App) validateConnect(ctx context.Context, proj *project, o *validateOptions) (providers.Session, providers.Target, bool, error) {
-	fallback := func(reason error) (providers.Session, providers.Target, bool, error) {
+func (app *App) validateConnect(ctx context.Context, proj *project, o *validateOptions) (providers.Session, providers.Target, providers.TargetInfo, bool, error) {
+	var none providers.TargetInfo
+	fallback := func(reason error) (providers.Session, providers.Target, providers.TargetInfo, bool, error) {
 		if o.fallbackTarget == "" {
-			return nil, providers.Target{}, false, reason
+			return nil, providers.Target{}, none, false, reason
 		}
 		ft, err := app.target(proj.cfg, o.fallbackTarget)
 		if err != nil {
-			return nil, providers.Target{}, false, fmt.Errorf("fallback target: %w", err)
+			return nil, providers.Target{}, none, false, fmt.Errorf("fallback target: %w", err)
 		}
-		s, _, err := app.connect(ctx, proj.provider, ft)
+		s, info, err := app.connect(ctx, proj.provider, ft)
 		if err != nil {
-			return nil, ft, true, fmt.Errorf("fallback target: %w", err)
+			return nil, ft, none, true, fmt.Errorf("fallback target: %w", err)
 		}
-		return s, ft, true, nil
+		return s, ft, info, true, nil
 	}
 
 	t, err := app.target(proj.cfg, o.target)
@@ -133,16 +144,63 @@ func (app *App) validateConnect(ctx context.Context, proj *project, o *validateO
 		return fallback(err)
 	}
 	if err != nil {
-		return nil, t, false, err
+		return nil, t, none, false, err
 	}
-	s, _, err := app.connect(ctx, proj.provider, t)
+	s, info, err := app.connect(ctx, proj.provider, t)
 	if errors.Is(err, ErrLogin) && ctx.Err() == nil {
 		return fallback(err)
 	}
 	if err != nil {
-		return nil, t, false, err
+		return nil, t, none, false, err
 	}
-	return s, t, false, nil
+	return s, t, info, false, nil
+}
+
+// seed puts the base state a destructive change needs on a scratch target before it is
+// validated there, as salesforce.ephemeral.seed says. It records validate.seed.mode,
+// validate.seed.fallback and validate.seed.members. It returns false when the validate must
+// not run, because the seed failed or could not be attempted.
+func (app *App) seed(ctx context.Context, res *run.Result, c ci.CI, proj *project, sess providers.Session, cs providers.ChangeSet, g *globals) bool {
+	mode := proj.cfg.Salesforce.Ephemeral.SeedMode()
+	res.Facts["validate.seed.mode"] = mode
+	res.Facts["validate.seed.fallback"] = false
+	res.Facts["validate.seed.members"] = []string{}
+	switch {
+	case mode == config.SeedOff:
+		res.AddCheck("seed", run.StatusSkipped, "seed is off, so the destructive change is validated on the target as it is")
+		return true
+	case cs.From == "":
+		res.Facts["validate.seed.mode"] = "none"
+		res.AddCheck("seed", run.StatusSkipped, "the plan has no base ref, so there is nothing to seed")
+		return true
+	}
+	seeder, ok := proj.provider.(providers.Seeder)
+	if !ok {
+		res.AddCheck("seed", run.StatusError, fmt.Sprintf("provider %s cannot seed a target, set seed to off to validate without it", proj.provider.Name()))
+		return false
+	}
+	out, err := seeder.Seed(ctx, sess, providers.SeedRequest{Dir: g.dir, BaseRef: cs.From, Plan: cs, Mode: mode})
+	if err != nil {
+		res.AddCheck("seed", run.StatusError, err.Error())
+		return false
+	}
+	for k, v := range out.Facts {
+		res.Facts[k] = v
+	}
+	members := out.Members
+	if members == nil {
+		members = []string{}
+	}
+	res.Facts["validate.seed.mode"] = out.Mode
+	res.Facts["validate.seed.fallback"] = out.Fallback
+	res.Facts["validate.seed.members"] = members
+	detail := fmt.Sprintf("seeded %d components from the base ref, mode %s", len(members), out.Mode)
+	if out.Fallback {
+		detail += ", after the minimal seed failed on a missing dependency"
+		c.Annotate(ci.Warning, "validate: the minimal seed failed on a missing dependency, so the whole base ref source was deployed to the target first")
+	}
+	res.AddCheck("seed", run.StatusPass, detail)
+	return true
 }
 
 // testLevelFor picks the test level for a tier: the tier's own entry, else "default", else
