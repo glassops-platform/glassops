@@ -226,6 +226,44 @@ jobs:
             glassops:e2e report --ci local --summary /work/.glassops/summary.md --sarif /work/.glassops/report.sarif
           cat "$RUNNER_TEMP/repo/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
+      # Phase 4: one glassops run in one container. It plans a delta that deletes a field,
+      # creates a scratch org, seeds the deleted field so the validate can pass, runs the tests
+      # with the coverage gate, runs an exec step that reads the results, reports and deletes the org.
+      - name: Run a pipeline with a created scratch org
+        if: env.HAS_SF_SECRETS == 'true'
+        run: |
+          sh testdata/sfdx/build-repo.sh "$RUNNER_TEMP/repo4"
+          cp testdata/e2e/glassops-run.yaml "$RUNNER_TEMP/repo4/glassops.yaml"
+          sed -i 's|^    - step: report$|    - step: report --summary .glassops/summary.md|' "$RUNNER_TEMP/repo4/glassops.yaml"
+          set +e
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
+            -v "$RUNNER_TEMP/repo4:/work" -w /work \
+            glassops:e2e run e2e --ci local
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/repo4/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+          node -e '
+            const fs = require("fs"), dir = process.argv[1];
+            const facts = n => (JSON.parse(fs.readFileSync(dir + "/" + n + ".json", "utf8")).facts || {});
+            const v = facts("validate"), t = facts("test"), r = facts("run");
+            const problems = [];
+            if (v["validate.seed.mode"] !== "minimal") problems.push("seed mode " + v["validate.seed.mode"]);
+            if (!JSON.stringify(v["validate.seed.members"] || []).includes("Account.Tier__c")) problems.push("seed members " + JSON.stringify(v["validate.seed.members"]));
+            if (!(t["test.org_coverage"] >= 75)) problems.push("org coverage " + t["test.org_coverage"]);
+            if (r["run.exit_code"] !== 0) problems.push("run exit " + r["run.exit_code"]);
+            if (problems.length) { console.error("unexpected pipeline results: " + problems.join(", ")); process.exit(1); }
+            console.log("run e2e: minimal seed, validate, tests at " + t["test.org_coverage"] + "% org coverage, exec step, report, env delete");
+          ' "$RUNNER_TEMP/repo4/.glassops/results"
+          exit $code
+
+      - name: Sweep any scratch org the pipeline left
+        if: always() && env.HAS_SF_SECRETS == 'true'
+        run: |
+          [ -f "$RUNNER_TEMP/repo4/glassops.yaml" ] || exit 0
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
+            -v "$RUNNER_TEMP/repo4:/work" -w /work \
+            glassops:e2e env sweep --max-age 1s --ci local
+
       - name: Look for a scratch org to delete
         id: scratch
         if: always() && env.HAS_SF_SECRETS == 'true'
@@ -258,4 +296,5 @@ jobs:
             ${{ runner.temp }}/repo/.glassops/facts.json
             ${{ runner.temp }}/repo/.glassops/summary.md
             ${{ runner.temp }}/repo/.glassops/report.sarif
+            ${{ runner.temp }}/repo4/.glassops/results/
           if-no-files-found: warn

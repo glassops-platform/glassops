@@ -1,0 +1,52 @@
+{
+  "schema": "glassops.result/v1",
+  "step": "doctor",
+  "status": "fail",
+  "started": "2026-10-31T04:56:17.4431923Z",
+  "ended": "2026-10-31T04:56:19.9581295Z",
+  "provider": "salesforce",
+  "checks": [
+    {
+      "name": "config",
+      "status": "pass",
+      "detail": "glassops-run.yaml"
+    },
+    {
+      "name": "provider",
+      "status": "fail",
+      "detail": "config says salesforce but no salesforce project was found in ."
+    },
+    {
+      "name": "tool.git",
+      "status": "pass",
+      "detail": "2.52.0.windows.1"
+    },
+    {
+      "name": "tool.sf",
+      "status": "pass",
+      "detail": "2.154.4"
+    },
+    {
+      "name": "tool.sfdx-git-delta",
+      "status": "fail",
+      "detail": "sfdx-git-delta is not installed (sf plugins install sfdx-git-delta)"
+    },
+    {
+      "name": "git.checkout",
+      "status": "pass",
+      "detail": "full history"
+    },
+    {
+      "name": "env",
+      "status": "fail",
+      "detail": "not set: SF_CLIENT_ID, SF_DEVHUB_ORG_ID, SF_JWT_KEY, SF_USERNAME"
+    }
+  ],
+  "facts": {
+    "ci": "local",
+    "tools.git": "2.52.0.windows.1",
+    "tools.sf": "2.154.4"
+  },
+  "artifacts": [],
+  "errors": []
+}
