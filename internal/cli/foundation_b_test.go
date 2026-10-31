@@ -20,8 +20,6 @@ func TestPhase4CommandsAreStubs(t *testing.T) {
 		{"env delete", []string{"env", "delete"}, []string{"target", "name"}},
 		{"env sweep", []string{"env", "sweep"}, []string{"target", "max-age"}},
 		{"run", []string{"run", "pr"}, []string{"dry-run"}},
-		{"check", []string{"check"}, []string{"script"}},
-		{"analyze", []string{"analyze"}, []string{"rule-selector", "sarif"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
