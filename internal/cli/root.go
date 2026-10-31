@@ -58,6 +58,10 @@ func NewRootCommand(app *App) *cobra.Command {
 		newDescribeCommand(app, g),
 		newPlanCommand(app, g),
 		newValidateCommand(app, g),
+		newGateCommand(app, g),
+		newPermitCommand(app, g),
+		newDeployCommand(app, g),
+		newReportCommand(app, g),
 	)
 	return root
 }

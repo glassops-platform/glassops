@@ -4,10 +4,14 @@ package config
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -50,6 +54,31 @@ type Policy struct {
 	Blackouts []Blackout          `yaml:"blackouts,omitempty" json:"blackouts,omitempty"`
 	Rules     Rules               `yaml:"rules,omitempty" json:"rules,omitempty"`
 	Actors    string              `yaml:"actors,omitempty" json:"actors,omitempty"`
+	// PermitTTL is how long a PERMIT stays valid, as a Go duration such as "2h". Use TTL to
+	// read it with the default applied.
+	PermitTTL string `yaml:"permit_ttl,omitempty" json:"permit_ttl,omitempty"`
+}
+
+// DefaultPermitTTL is the PERMIT lifetime when policy.permit_ttl is not set.
+const DefaultPermitTTL = 2 * time.Hour
+
+// Bounds Check enforces on policy.permit_ttl.
+const (
+	MinPermitTTL = 5 * time.Minute
+	MaxPermitTTL = 24 * time.Hour
+)
+
+// TTL returns the PERMIT lifetime. An empty or unparsable value gives DefaultPermitTTL.
+// Check rejects an unparsable value, so a loaded config never has one.
+func (p Policy) TTL() time.Duration {
+	if p.PermitTTL == "" {
+		return DefaultPermitTTL
+	}
+	d, err := time.ParseDuration(p.PermitTTL)
+	if err != nil {
+		return DefaultPermitTTL
+	}
+	return d
 }
 
 // Window is a weekly time range when changes to a tier are allowed.
@@ -72,13 +101,23 @@ type Blackout struct {
 type Rules struct {
 	CoverageMin           *int                  `yaml:"coverage_min,omitempty" json:"coverage_min,omitempty"`
 	AnalyzerMaxSeverity   *int                  `yaml:"analyzer_max_severity,omitempty" json:"analyzer_max_severity,omitempty"`
-	SeparationOfDuties    *TierRule             `yaml:"separation_of_duties,omitempty" json:"separation_of_duties,omitempty"`
+	SeparationOfDuties    *SoDRule              `yaml:"separation_of_duties,omitempty" json:"separation_of_duties,omitempty"`
 	DestructiveNeedsLabel *DestructiveLabelRule `yaml:"destructive_needs_label,omitempty" json:"destructive_needs_label,omitempty"`
 }
 
-// TierRule applies to the listed tiers.
-type TierRule struct {
-	Tiers []string `yaml:"tiers,omitempty" json:"tiers,omitempty"`
+// SoDRule requires that the person who deploys to the listed tiers is not the author of the
+// change, unless an approval satisfies it.
+type SoDRule struct {
+	Tiers    []string     `yaml:"tiers,omitempty" json:"tiers,omitempty"`
+	Approval *SoDApproval `yaml:"approval,omitempty" json:"approval,omitempty"`
+}
+
+// SoDApproval names the approval that satisfies separation of duties: a CI environment
+// approval, or a PR label applied by one of the approvers.
+type SoDApproval struct {
+	Environment string   `yaml:"environment,omitempty" json:"environment,omitempty"`
+	Label       string   `yaml:"label,omitempty" json:"label,omitempty"`
+	Approvers   []string `yaml:"approvers,omitempty" json:"approvers,omitempty"`
 }
 
 // DestructiveLabelRule requires a PR label before destructive changes reach the listed tiers.
@@ -93,12 +132,36 @@ type Salesforce struct {
 	APIVersion string            `yaml:"api_version,omitempty" json:"api_version,omitempty"`
 	TestLevel  map[string]string `yaml:"test_level,omitempty" json:"test_level,omitempty"`
 	Delta      Delta             `yaml:"delta,omitempty" json:"delta,omitempty"`
+	Deploy     SalesforceDeploy  `yaml:"deploy,omitempty" json:"deploy,omitempty"`
 }
 
 // Delta controls change-set generation.
 type Delta struct {
-	Enabled *bool  `yaml:"enabled,omitempty" json:"enabled,omitempty"`
-	From    string `yaml:"from,omitempty" json:"from,omitempty"`
+	Enabled *bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+}
+
+// Quick deploy modes for salesforce.deploy.quick.
+const (
+	// QuickPrefer quick deploys the validated Id when the org accepts it, else runs a full deploy.
+	QuickPrefer = "prefer"
+	// QuickRequire fails the deploy when the org refuses the quick deploy.
+	QuickRequire = "require"
+	// QuickOff always runs a full deploy.
+	QuickOff = "off"
+)
+
+// SalesforceDeploy controls a real deploy to Salesforce.
+type SalesforceDeploy struct {
+	// Quick is prefer, require or off. Use QuickMode to read it with the default applied.
+	Quick string `yaml:"quick,omitempty" json:"quick,omitempty"`
+}
+
+// QuickMode returns Quick, or QuickPrefer when it is not set.
+func (d SalesforceDeploy) QuickMode() string {
+	if d.Quick == "" {
+		return QuickPrefer
+	}
+	return d.Quick
 }
 
 // Step is one pipeline entry. In YAML it is either a plain command string or an object
@@ -123,6 +186,21 @@ type Loaded struct {
 	Config *Config
 	// Path is the file read, or "" when defaults were used.
 	Path string
+	// Raw is the file's bytes as read, or nil when defaults were used.
+	Raw []byte
+}
+
+// SHA256 returns the hex SHA-256 of the raw file bytes. With no file it hashes Config encoded
+// as JSON, which encoding/json writes the same way every time for the same value.
+func (l *Loaded) SHA256() string {
+	data := l.Raw
+	if data == nil {
+		// A Config holds only strings, numbers, bools, slices, maps and structs, so encoding
+		// cannot fail.
+		data, _ = json.Marshal(l.Config)
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
 }
 
 // ErrNotFound is returned by Load when the file does not exist and required is true.
@@ -153,7 +231,7 @@ func Load(dir, path, provider string) (*Loaded, error) {
 	if cfg.Provider == "" {
 		cfg.Provider = provider
 	}
-	return &Loaded{Config: cfg, Path: path}, nil
+	return &Loaded{Config: cfg, Path: path, Raw: data}, nil
 }
 
 // Parse decodes and validates config bytes.

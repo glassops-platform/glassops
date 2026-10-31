@@ -29,7 +29,9 @@ func (g *GitHub) Context() Context {
 		Actor: g.env("GITHUB_ACTOR"),
 		RunID: g.env("GITHUB_RUN_ID"),
 		// GITHUB_BASE_REF is set only on pull request events.
-		BaseRef: g.env("GITHUB_BASE_REF"),
+		BaseRef:         g.env("GITHUB_BASE_REF"),
+		TriggeringActor: g.env("GITHUB_TRIGGERING_ACTOR"),
+		Token:           g.env("GITHUB_TOKEN"),
 	}
 	// Pull request refs look like refs/pull/<number>/merge.
 	if parts := strings.Split(c.Ref, "/"); len(parts) == 4 && parts[1] == "pull" {

@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/glassops-platform/glassops/internal/core/facts"
 )
 
 // Context describes where and why a command is running.
@@ -21,6 +23,16 @@ type Context struct {
 	PRNumber string
 	BaseRef  string // pull request base branch, empty outside a pull request
 	RunID    string
+	// TriggeringActor is who started this run attempt. On a re-run it can differ from Actor.
+	TriggeringActor string
+	// PRAuthor, Labels and Approvals are approval evidence. Context only carries them. A
+	// layer that reads them from the CI fills them in, and until then they stay empty.
+	PRAuthor  string
+	Labels    []string
+	Approvals []facts.Approval
+	// Token is the CI's API token. It must never reach a result, a log or a fact. Do not
+	// print it, and JSON encoding leaves it out.
+	Token string `json:"-"`
 }
 
 // Level is the severity of an annotation.

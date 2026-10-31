@@ -2,6 +2,7 @@ package ci
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -114,5 +115,31 @@ func TestGitHubBaseRef(t *testing.T) {
 	}
 	if got := newLocal(&bytes.Buffer{}, t.TempDir()).Context().BaseRef; got != "" {
 		t.Fatalf("local BaseRef = %q, want empty", got)
+	}
+}
+
+func TestGitHubTriggeringActorAndToken(t *testing.T) {
+	g := newGitHub(mapEnv(map[string]string{
+		"GITHUB_ACTOR":            "octocat",
+		"GITHUB_TRIGGERING_ACTOR": "hubot",
+		"GITHUB_TOKEN":            "ghs_example",
+	}), &bytes.Buffer{})
+	c := g.Context()
+	if c.Actor != "octocat" || c.TriggeringActor != "hubot" || c.Token != "ghs_example" {
+		t.Fatalf("actor %q, triggering actor %q, token set %v", c.Actor, c.TriggeringActor, c.Token != "")
+	}
+	if c.PRAuthor != "" || c.Labels != nil || c.Approvals != nil {
+		t.Fatal("the GitHub layer filled approval evidence")
+	}
+	data, err := json.Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "ghs_example") {
+		t.Fatal("the token was encoded")
+	}
+	l := newLocal(&bytes.Buffer{}, t.TempDir()).Context()
+	if l.Token != "" || l.TriggeringActor != "" || l.PRAuthor != "" {
+		t.Fatal("local context filled a GitHub-only field")
 	}
 }

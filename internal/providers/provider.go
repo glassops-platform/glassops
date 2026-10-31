@@ -2,7 +2,8 @@
 //
 // The core speaks in targets, sessions, change sets and facts. Anything specific to one kind
 // of target, such as a Salesforce org type, goes into facts under the provider's name, for
-// example "salesforce.org_type". Deploy joins the interface in a later phase.
+// example "salesforce.org_type". Deploy is part of the interface, and callers must verify a
+// PERMIT before they call it.
 package providers
 
 import (
@@ -11,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/glassops-platform/glassops/internal/core/config"
 )
@@ -147,6 +149,41 @@ type ValidateResult struct {
 	Facts    map[string]any
 }
 
+// DeployOptions controls a real deploy.
+type DeployOptions struct {
+	// Dir is the project root. Change set paths are relative to it.
+	Dir string
+	// TestLevel is the provider's test level name. Empty means the provider default.
+	TestLevel string
+	// Tests names the tests to run when the test level needs them.
+	Tests []string
+	// ValidatedID is the check-only validation bound into the PERMIT. When set, the provider
+	// quick deploys exactly this Id while the target still accepts it.
+	ValidatedID string
+	// QuickOnly makes a refused quick deploy a failure instead of a fall back to a full deploy.
+	QuickOnly bool
+	// Wait is how long to wait for the deploy before returning a job Id to resume. Zero means
+	// the provider default.
+	Wait time.Duration
+	// ResumeID resumes watching an earlier deploy instead of starting a new one.
+	ResumeID string
+}
+
+// DeployResult is the outcome of a real deploy, read from the target's result body.
+type DeployResult struct {
+	Passed bool
+	// ID is the target's Id for the deploy.
+	ID string
+	// Quick is true when ValidatedID was quick deployed.
+	Quick bool
+	// TimedOut is true when Wait ran out before the deploy finished. ID can be resumed.
+	TimedOut           bool
+	ComponentsDeployed int
+	// Problems has one line per component or test failure.
+	Problems []string
+	Facts    map[string]any
+}
+
 // Provider is one kind of delivery target, such as Salesforce.
 type Provider interface {
 	// Name is the value used for provider in glassops.yaml.
@@ -165,6 +202,8 @@ type Provider interface {
 	Plan(ctx context.Context, req PlanRequest) (ChangeSet, error)
 	// Validate runs a check-only validate of cs. It never changes the target.
 	Validate(ctx context.Context, s Session, cs ChangeSet, opts ValidateOptions) (ValidateResult, error)
+	// Deploy changes the target. Callers must have verified a PERMIT first.
+	Deploy(ctx context.Context, s Session, cs ChangeSet, opts DeployOptions) (DeployResult, error)
 }
 
 // Registry lists every known provider in detection order.

@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 const fullConfig = `version: 1
@@ -34,12 +35,16 @@ policy:
   rules:
     coverage_min: 75
     analyzer_max_severity: 2
-    separation_of_duties: { tiers: [prod] }
+    separation_of_duties:
+      tiers: [prod]
+      approval: { environment: glassops-deploy, label: approved-deploy, approvers: [octocat] }
     destructive_needs_label: { label: approved-destructive, tiers: [qa, prod] }
   actors: ./glassops/actors.yaml
+  permit_ttl: 90m
 salesforce:
   test_level: { default: RunLocalTests, ephemeral: RunLocalTests }
-  delta: { enabled: true, from: auto }
+  delta: { enabled: true }
+  deploy: { quick: require }
   api_version: auto
 pipelines:
   pr:
@@ -61,6 +66,16 @@ func TestParseFullConfig(t *testing.T) {
 	}
 	if *cfg.Policy.Rules.CoverageMin != 75 {
 		t.Fatalf("coverage_min = %d", *cfg.Policy.Rules.CoverageMin)
+	}
+	sod := cfg.Policy.Rules.SeparationOfDuties
+	if sod == nil || sod.Approval == nil || sod.Approval.Environment != "glassops-deploy" || !reflect.DeepEqual(sod.Approval.Approvers, []string{"octocat"}) {
+		t.Fatalf("separation_of_duties = %+v", sod)
+	}
+	if got := cfg.Policy.TTL(); got != 90*time.Minute {
+		t.Fatalf("TTL = %s, want 90m", got)
+	}
+	if got := cfg.Salesforce.Deploy.QuickMode(); got != QuickRequire {
+		t.Fatalf("QuickMode = %q, want require", got)
 	}
 	want := []Step{{Run: "plan"}, {Run: "env delete", When: "always"}}
 	if !reflect.DeepEqual(cfg.Pipelines["pr"], want) {
@@ -92,6 +107,14 @@ func TestParseRejects(t *testing.T) {
 		{"unknown tz", "version: 1\npolicy:\n  windows:\n    prod: [{ days: [mon], from: \"18:00\", to: \"20:00\", tz: Mars/Olympus }]\n", "unknown time zone"},
 		{"blackout reversed", "version: 1\npolicy:\n  blackouts: [{ from: 2027-01-03, to: 2026-12-20 }]\n", "is before"},
 		{"duplicate key", "version: 1\ntargets:\n  a: {}\n  a: {}\n", "already defined"},
+		{"delta from is gone", "version: 1\nsalesforce:\n  delta: { from: auto }\n", "/salesforce/delta"},
+		{"bad quick", "version: 1\nsalesforce:\n  deploy: { quick: sometimes }\n", "/salesforce/deploy/quick"},
+		{"permit ttl not a duration", "version: 1\npolicy:\n  permit_ttl: soon\n", "is not a duration"},
+		{"permit ttl too short", "version: 1\npolicy:\n  permit_ttl: 1m\n", "is outside"},
+		{"permit ttl too long", "version: 1\npolicy:\n  permit_ttl: 25h\n", "is outside"},
+		{"approval without mechanism", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { tiers: [prod], approval: { approvers: [octocat] } }\n", "set environment or label"},
+		{"label without approvers", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { label: ok-to-deploy } }\n", "needs approvers"},
+		{"unknown approval key", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { team: ops } }\n", "/policy/rules/separation_of_duties/approval"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -144,5 +167,65 @@ func TestDefaultConfigPassesSchema(t *testing.T) {
 	// The defaults must be expressible as a valid file, because init writes them.
 	if problems := Check(Default("salesforce")); len(problems) > 0 {
 		t.Fatalf("default config problems: %v", problems)
+	}
+}
+
+func TestDefaultsForNewSettings(t *testing.T) {
+	var p Policy
+	if got := p.TTL(); got != 2*time.Hour {
+		t.Fatalf("default TTL = %s", got)
+	}
+	var d SalesforceDeploy
+	if got := d.QuickMode(); got != QuickPrefer {
+		t.Fatalf("default QuickMode = %q", got)
+	}
+	cfg, err := Parse([]byte("version: 1\npolicy:\n  permit_ttl: 5m\n  rules:\n    separation_of_duties: { approval: { environment: glassops-deploy } }\n"))
+	if err != nil {
+		t.Fatalf("a 5m TTL and an environment approval should be valid: %v", err)
+	}
+	if got := cfg.Policy.TTL(); got != 5*time.Minute {
+		t.Fatalf("TTL = %s", got)
+	}
+}
+
+func TestLoadedSHA256(t *testing.T) {
+	dir := t.TempDir()
+	body := []byte("version: 1\n")
+	if err := os.WriteFile(filepath.Join(dir, FileName), body, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	l, err := Load(dir, "", "salesforce")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(l.Raw, body) {
+		t.Fatalf("Raw = %q", l.Raw)
+	}
+	// The SHA-256 of the file bytes "version: 1\n".
+	const want = "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+	if got := l.SHA256(); got != want {
+		t.Fatalf("SHA256 = %s, want %s", got, want)
+	}
+
+	d1, err := Load(t.TempDir(), "", "salesforce")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d2, err := Load(t.TempDir(), "", "salesforce")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d1.Raw != nil || d1.SHA256() != d2.SHA256() {
+		t.Fatal("the default config hash is not stable")
+	}
+	if d1.SHA256() == want {
+		t.Fatal("the default and file hashes collide")
+	}
+	other, err := Load(t.TempDir(), "", "other")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if other.SHA256() == d1.SHA256() {
+		t.Fatal("the default hash ignores the config")
 	}
 }
