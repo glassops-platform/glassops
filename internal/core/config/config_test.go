@@ -349,3 +349,37 @@ func TestAnalyzerMaxSeverityPrefersPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultPipelines(t *testing.T) {
+	want := map[string][]Step{
+		"pr": {
+			{Run: "plan"},
+			{Run: "check"},
+			{Run: "analyze"},
+			{Run: "env create"},
+			{Run: "validate --target ephemeral --fallback-target prod"},
+			{Run: "test --target ephemeral"},
+			{Run: "report"},
+			{Run: "env delete", When: "always"},
+		},
+		"deploy": {
+			{Run: "plan --target prod"},
+			{Run: "validate --target prod"},
+			{Run: "gate --target prod"},
+			{Run: "deploy --target prod"},
+			{Run: "report"},
+		},
+	}
+	got := DefaultPipelines()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("DefaultPipelines =\n%+v\nwant\n%+v", got, want)
+	}
+	if !reflect.DeepEqual(Default("salesforce").Pipelines, want) {
+		t.Fatal("Default does not use DefaultPipelines")
+	}
+	// Each call returns its own copy, so a caller that edits one cannot change the defaults.
+	got["pr"][0].Run = "changed"
+	if DefaultPipelines()["pr"][0].Run != "plan" {
+		t.Fatal("DefaultPipelines shares state between calls")
+	}
+}
