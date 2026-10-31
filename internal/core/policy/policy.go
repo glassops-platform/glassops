@@ -67,5 +67,13 @@ func Evaluate(rules []Rule, in Input) (allow bool, results []Result) {
 
 // Default returns the v1 rule set.
 func Default() []Rule {
-	return nil
+	return []Rule{
+		PlanNotEmpty{},
+		Window{},
+		Blackout{},
+		CoverageMin{},
+		DestructiveNeedsLabel{},
+		SeparationOfDuties{},
+		AnalyzerMaxSeverity{},
+	}
 }
