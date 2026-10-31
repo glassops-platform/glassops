@@ -12,8 +12,8 @@ import (
 // Auto asks Resolve to pick a ref.
 const Auto = "auto"
 
-// DeployedTagPrefix starts the tag that marks what a target last received. Phase 2 only
-// reads it.
+// DeployedTagPrefix starts the tag that marks what a target last received. plan reads it
+// and deploy moves it.
 const DeployedTagPrefix = "glassops/deployed/"
 
 // Runner runs git with args in dir and returns stdout. A non-zero exit is an error.

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -27,9 +26,6 @@ type deployOptions struct {
 	wait       time.Duration
 	resumeID   string
 }
-
-// deployMinKeyBytes is the shortest HMAC key deploy accepts, after base64 decoding.
-const deployMinKeyBytes = 32
 
 // permitFuncs is how deploy reads and checks a PERMIT. Tests replace it.
 var permitFuncs = struct {
@@ -104,6 +100,9 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	if err != nil {
 		return stop("commit", err)
 	}
+	if err := providers.CheckDigest(g.dir, cs); err != nil {
+		return stop("plan", err)
+	}
 
 	pm, err := app.verifyPermit(o, g, permit.Expect{
 		TargetName:   t.Name,
@@ -112,6 +111,7 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		PlanSHA256:   cs.SHA256,
 		ConfigSHA256: cfgSHA,
 		Now:          app.Now(),
+		CanonicalID:  proj.provider.CanonicalID,
 	})
 	if pm.ID != "" {
 		res.Facts["deploy.permit_id"] = pm.ID
@@ -220,14 +220,7 @@ func (app *App) permitKey() ([]byte, error) {
 	if v == "" {
 		return nil, fmt.Errorf("%s is not set, so the PERMIT cannot be verified", permit.KeyEnv)
 	}
-	key, err := base64.StdEncoding.DecodeString(v)
-	if err != nil {
-		return nil, fmt.Errorf("%s is not valid base64", permit.KeyEnv)
-	}
-	if len(key) < deployMinKeyBytes {
-		return nil, fmt.Errorf("%s is %d bytes after decoding, want at least %d", permit.KeyEnv, len(key), deployMinKeyBytes)
-	}
-	return key, nil
+	return permit.ParseKey(v)
 }
 
 // configSHA256 is the hash a PERMIT binds the config by. It loads the config again, because
