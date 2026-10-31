@@ -318,9 +318,7 @@ func TestPhase3CommandsAreStubs(t *testing.T) {
 		flags []string
 	}{
 		{[]string{"gate", "--target", "prod"}, []string{"target", "plan", "permit", "no-connect"}},
-		{[]string{"permit", "verify", "--target", "prod"}, []string{"target", "permit", "plan"}},
 		{[]string{"deploy", "--target", "prod"}, []string{"target", "plan", "permit", "wait", "resume"}},
-		{[]string{"report"}, []string{"sarif", "summary"}},
 	}
 	for _, tc := range cases {
 		name := strings.Split(strings.Join(tc.args, " "), " --")[0]
