@@ -172,15 +172,31 @@ func gateHarness(t *testing.T, cfg string) (*harness, *fakeProvider) {
 	return h, fp
 }
 
-// writeGatePlan writes cs as the plan, filling the fields every plan has.
+// writeGatePlan writes a synthetic manifest under .glassops/plan and cs as the plan, with the
+// fields every plan has and the real digest of the plan files.
 func writeGatePlan(t *testing.T, h *harness, cs providers.ChangeSet) {
 	t.Helper()
+	h.write(t, ".glassops/plan/package/package.xml", "<Package><types><members>Foo</members><name>ApexClass</name></types></Package>\n")
 	cs.Schema, cs.Provider = providers.PlanSchema, "salesforce"
 	cs.Dir, cs.Manifest = ".glassops/plan", ".glassops/plan/package/package.xml"
-	cs.SHA256 = "5e1f0c3a9b7d2e4f6a8c0b1d3e5f7a9c2b4d6e8f0a1c3e5b7d9f1a3c5e7b9d1f" // synthetic
+	sum, err := providers.PlanDigest(h.dir, filepath.Join(h.dir, ".glassops", "plan"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cs.SHA256 = sum
 	if err := providers.WriteChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"), cs); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// planHash returns the plan_sha256 of the harness's plan.
+func planHash(t *testing.T, h *harness) string {
+	t.Helper()
+	cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cs.SHA256
 }
 
 // githubServer serves the GitHub fixtures by path and counts requests.
@@ -240,6 +256,7 @@ func defaultRoutes() map[string]string {
 		"/repos/" + gateRepo + "/commits/" + labelSHA + "/pulls":           "commit-pulls-labelled.json",
 		"/repos/" + gateRepo + "/commits/" + unknownSHA + "/pulls":         "422 commit-pulls-unknown.json",
 		"/repos/" + gateRepo + "/actions/runs/" + gateRunID + "/approvals": "run-approvals.json",
+		"/repos/" + gateRepo + "/issues/45/events":                         "issue-events-labelled.json",
 	}
 }
 
@@ -380,8 +397,8 @@ func TestGateKeyProblemsExitTwoWithoutPermit(t *testing.T) {
 		name, key, want string
 	}{
 		{"missing", "", "is not set"},
-		{"not base64", "not*base64!", "not valid standard base64"},
-		{"too short", base64.StdEncoding.EncodeToString([]byte("short-key")), "decodes to 9 bytes"},
+		{"not base64", "not*base64!", "not valid base64"},
+		{"too short", base64.StdEncoding.EncodeToString([]byte("short-key")), "the key is 9 bytes"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -508,7 +525,7 @@ func assertNoToken(t *testing.T, h *harness) {
 	}
 }
 
-func TestGateLabelApprovalHasNoApprover(t *testing.T) {
+func TestGateLabelApprovalApproverFromIssueEvents(t *testing.T) {
 	var seen []facts.Approval
 	rule := ruleFunc{name: "separation_of_duties", fn: func(in policy.Input) []policy.Result {
 		seen = in.Facts.Approvals()
@@ -523,7 +540,7 @@ func TestGateLabelApprovalHasNoApprover(t *testing.T) {
 	if code := h.gate("--target", "prod"); code != exitcode.Fail {
 		t.Fatalf("exit %d, want 1. output:\n%s", code, h.out)
 	}
-	if len(seen) != 1 || seen[0] != (facts.Approval{Mechanism: "label", Label: "dependencies"}) {
+	if len(seen) != 1 || seen[0] != (facts.Approval{Mechanism: "label", Label: "dependencies", Approver: "dependabot[bot]"}) {
 		t.Fatalf("approvals: %+v", seen)
 	}
 	d := readFacts(t, h)
@@ -612,7 +629,7 @@ func TestGateEphemeralTargetGetsAutomaticPermit(t *testing.T) {
 	}
 	p := readPermit(t, h)
 	verifySigned(t, p)
-	if !p.Allow || p.Target.Kind != "scratch" || len(p.Checks) != 2 || p.Checks[0].Rule != "guard" || p.Checks[1].Rule != "ephemeral" {
+	if !p.Allow || p.Target.Kind != "scratch" || len(p.Checks) != 3 || p.Checks[0].Rule != "guard" || p.Checks[1].Rule != "validation.bound" || p.Checks[2].Rule != "ephemeral" {
 		t.Fatalf("PERMIT: %+v", p)
 	}
 	if p.SeparationOfDuties.Mode != "not_applicable" {
@@ -723,31 +740,46 @@ func writeResult(t *testing.T, h *harness, r *run.Result) {
 	}
 }
 
-func TestGateBindsValidationForTheSameTarget(t *testing.T) {
-	validate := func(target string, status run.Status, checkOnly bool) *run.Result {
+func TestGateBindsValidationOnlyForTheSamePlan(t *testing.T) {
+	const same = "same-plan"
+	validate := func(target string, status run.Status, checkOnly bool, plan string) *run.Result {
 		r := run.New("validate", nil)
 		r.Target = target
 		r.Status = status
 		r.Facts["salesforce.deploy_id"] = "0Af000000000001AAA"
 		r.Facts["salesforce.check_only"] = checkOnly
 		r.Facts["salesforce.coverage.Foo.percent"] = 91
+		r.Facts["validate.test_level"] = "RunSpecifiedTests"
+		if plan != "" {
+			r.Facts["validate.plan_sha256"] = plan
+		}
 		return r
 	}
 	cases := []struct {
-		name string
-		r    *run.Result
-		want *permit.Validation
+		name   string
+		r      *run.Result
+		want   *permit.Validation
+		reason string
 	}{
-		{"passed for this target", validate("prod", run.StatusPass, true), &permit.Validation{DeployID: "0Af000000000001AAA", TestLevel: "RunLocalTests", Passed: true}},
-		{"fallback or other target", validate("qa", run.StatusPass, true), nil},
-		{"failed", validate("prod", run.StatusFail, true), nil},
-		{"not check-only", validate("prod", run.StatusPass, false), nil},
+		{"passed for this target and plan", validate("prod", run.StatusPass, true, same), &permit.Validation{DeployID: "0Af000000000001AAA", TestLevel: "RunSpecifiedTests", Passed: true}, "0Af000000000001AAA"},
+		{"fallback or other target", validate("qa", run.StatusPass, true, same), nil, `for target "qa"`},
+		{"failed", validate("prod", run.StatusFail, true, same), nil, "is fail"},
+		{"not check-only", validate("prod", run.StatusPass, false, same), nil, "not a check-only"},
+		{"no plan hash recorded", validate("prod", run.StatusPass, true, ""), nil, "does not record which plan"},
+		{"different plan", validate("prod", run.StatusPass, true, "0000"), nil, "different plan"},
+		{"no validate result", nil, nil, "no validate result"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
 			h, _ := gateHarness(t, gateConfig)
-			writeResult(t, h, tc.r)
+			if tc.r != nil {
+				if tc.r.Facts["validate.plan_sha256"] == same {
+					tc.r.Facts["validate.plan_sha256"] = planHash(t, h)
+				}
+				writeResult(t, h, tc.r)
+			}
+			// An unbound validation never denies.
 			if code := h.gate("--target", "prod"); code != exitcode.OK {
 				t.Fatalf("exit %d, output:\n%s", code, h.out)
 			}
@@ -755,10 +787,159 @@ func TestGateBindsValidationForTheSameTarget(t *testing.T) {
 			if (p.Validation == nil) != (tc.want == nil) || (tc.want != nil && *p.Validation != *tc.want) {
 				t.Fatalf("validation %+v, want %+v", p.Validation, tc.want)
 			}
-			if n, ok := readFacts(t, h).Int("salesforce.coverage.Foo.percent"); !ok || n != 91 {
-				t.Fatal("validate facts were not merged")
+			c, ok := findCheck(p.Checks, "validation.bound")
+			wantOutcome := policy.Skipped
+			if tc.want != nil {
+				wantOutcome = policy.Pass
+			}
+			if !ok || c.Outcome != wantOutcome || !strings.Contains(c.Detail, tc.reason) {
+				t.Fatalf("validation.bound: %+v, want %s containing %q", c, wantOutcome, tc.reason)
+			}
+			if tc.r != nil {
+				if n, ok := readFacts(t, h).Int("salesforce.coverage.Foo.percent"); !ok || n != 91 {
+					t.Fatal("validate facts were not merged")
+				}
 			}
 		})
+	}
+}
+
+func TestGatePlanFilesEditedAfterPlanDeny(t *testing.T) {
+	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
+	h, _ := gateHarness(t, gateConfig)
+	h.write(t, ".glassops/plan/package/package.xml", "<Package>edited</Package>\n")
+	if code := h.gate("--target", "prod"); code != exitcode.Error {
+		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
+	}
+	p := readPermit(t, h)
+	verifySigned(t, p)
+	if c, ok := findCheck(p.Checks, "evidence.plan.digest"); p.Allow || !ok || c.Outcome != policy.Fail {
+		t.Fatalf("allow %v, checks %+v", p.Allow, p.Checks)
+	}
+}
+
+func TestGateAcceptsUnpaddedKeyLikePermitVerify(t *testing.T) {
+	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
+	h, _ := gateHarness(t, gateConfig)
+	// 33 bytes, so the unpadded form really lacks its padding.
+	h.env["GLASSOPS_PERMIT_KEY"] = base64.RawStdEncoding.EncodeToString([]byte("0123456789abcdef0123456789abcdef0"))
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+}
+
+func TestGatePullRequestEventReadsThePull(t *testing.T) {
+	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
+	h, _ := gateHarness(t, gateConfig)
+	h.env["GITHUB_EVENT_NAME"] = "pull_request"
+	h.env["GITHUB_REF"] = "refs/pull/46/merge"
+	h.env["GITHUB_SHA"] = "1111111111111111111111111111111111111111" // a synthetic test merge commit
+	delete(h.env, "GITHUB_RUN_ID")
+	routes := defaultRoutes()
+	routes["/repos/"+gateRepo+"/pulls/46"] = "pull.json"
+	gs := newGitHubServer(t, routes)
+	h.useAPI(gs)
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	d := readFacts(t, h)
+	if v, _ := d.String(facts.CIPRAuthor); v != "rdbumstead" {
+		t.Fatalf("author %q", v)
+	}
+	if v, _ := d.String(facts.CIPRNumber); v != "46" {
+		t.Fatalf("number %q", v)
+	}
+	if l, ok := d.Strings(facts.CILabels); !ok || len(l) != 0 {
+		t.Fatalf("labels %v %v", l, ok)
+	}
+	if gs.count() != 1 || gs.hits[0] != "/repos/"+gateRepo+"/pulls/46" {
+		t.Fatalf("requests: %v", gs.hits)
+	}
+}
+
+func TestGatePullRequestReadErrorDenies(t *testing.T) {
+	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
+	h, _ := gateHarness(t, gateConfig)
+	h.env["GITHUB_REF"] = "refs/pull/99/merge"
+	delete(h.env, "GITHUB_RUN_ID")
+	h.useAPI(newGitHubServer(t, defaultRoutes()))
+	if code := h.gate("--target", "prod"); code != exitcode.Error {
+		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
+	}
+	if c, ok := findCheck(readPermit(t, h).Checks, "evidence.ci.pull_request"); !ok || c.Outcome != policy.Fail {
+		t.Fatal("no evidence failure for the pull request")
+	}
+}
+
+// The tests below use the real v1 rules and the real HMAC signer, with no stand-ins.
+
+func realVerify(t *testing.T, h *harness, fp *fakeProvider, target, id string) permit.Permit {
+	t.Helper()
+	p, err := permit.Read(filepath.Join(h.dir, ".glassops", "permit.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := permit.ParseKey(syntheticKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := config.Load(h.dir, "", "salesforce")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = permit.Verify(p, permit.NewHMAC(key), permit.Expect{
+		TargetName: target, TargetID: fp.CanonicalID(id), CanonicalID: fp.CanonicalID,
+		Commit: h.env["GITHUB_SHA"], PlanSHA256: planHash(t, h), ConfigSHA256: loaded.SHA256(), Now: h.app.Now(),
+	})
+	if err != nil {
+		t.Fatalf("permit.Verify: %v\noutput:\n%s", err, h.out)
+	}
+	return p
+}
+
+func TestGateRealRulesSoDByEnvironmentApproval(t *testing.T) {
+	h, fp := gateHarness(t, sodConfig)
+	h.env["GITHUB_ACTOR"] = "rdbumstead" // the author deploys, so only the approval satisfies SoD
+	h.useAPI(newGitHubServer(t, defaultRoutes()))
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	p := realVerify(t, h, fp, "prod", "00D000000000001AAA")
+	want := permit.SoD{Mode: "satisfied_by_approval", Mechanism: "environment", Approver: "rdbumstead", Author: "rdbumstead", Deployer: "rdbumstead"}
+	if p.SeparationOfDuties == nil || *p.SeparationOfDuties != want || p.Signature.Alg != "HMAC-SHA256" {
+		t.Fatalf("sod %+v, signature %+v", p.SeparationOfDuties, p.Signature)
+	}
+}
+
+func TestGateRealRulesSoDByLabelApproval(t *testing.T) {
+	cfg := strings.Replace(sodConfig, "{ environment: glassops-deploy }", `{ label: dependencies, approvers: ["dependabot[bot]"] }`, 1)
+	h, fp := gateHarness(t, cfg)
+	h.env["GITHUB_SHA"] = labelSHA
+	h.env["GITHUB_ACTOR"] = "dependabot[bot]"
+	delete(h.env, "GITHUB_RUN_ID")
+	h.useAPI(newGitHubServer(t, defaultRoutes()))
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	p := realVerify(t, h, fp, "prod", "00D000000000001AAA")
+	if s := p.SeparationOfDuties; s == nil || s.Mode != "satisfied_by_approval" || s.Mechanism != "label" || s.Approver != "dependabot[bot]" {
+		t.Fatalf("sod %+v", s)
+	}
+}
+
+func TestGateRealRulesLabelFromSomeoneElseFails(t *testing.T) {
+	// The label was added by dependabot[bot], who is not a listed approver.
+	cfg := strings.Replace(sodConfig, "{ environment: glassops-deploy }", "{ label: dependencies, approvers: [rdbumstead] }", 1)
+	h, _ := gateHarness(t, cfg)
+	h.env["GITHUB_SHA"] = labelSHA
+	h.env["GITHUB_ACTOR"] = "dependabot[bot]"
+	delete(h.env, "GITHUB_RUN_ID")
+	h.useAPI(newGitHubServer(t, defaultRoutes()))
+	if code := h.gate("--target", "prod"); code != exitcode.Fail {
+		t.Fatalf("exit %d, want 1. output:\n%s", code, h.out)
+	}
+	if p := readPermit(t, h); p.Allow {
+		t.Fatal("allowed with a label from someone who is not an approver")
 	}
 }
 
