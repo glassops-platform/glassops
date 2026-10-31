@@ -54,7 +54,8 @@ runs:
         # the same path they have on the runner, so the CLI writes to them directly.
         args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w "/work/$INPUT_WORKDIR")
         for name in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_REF GITHUB_SHA GITHUB_EVENT_NAME \
-          GITHUB_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_TRIGGERING_ACTOR GITHUB_API_URL \n          GITHUB_SERVER_URL; do
+          GITHUB_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_TRIGGERING_ACTOR GITHUB_API_URL \
+          GITHUB_SERVER_URL; do
           args+=(-e "$name")
         done
         for file in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
