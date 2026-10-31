@@ -1,0 +1,11 @@
+{
+  "name": "Error",
+  "message": "Expected --test-level=NoTestRun to be one of: RunAllTestsInOrg, RunLocalTests, RunSpecifiedTests, RunRelevantTests\nSee more help with --help",
+  "exitCode": 1,
+  "context": "DeployMetadataValidate",
+  "cause": "FlagInvalidOptionError: Expected --test-level=NoTestRun to be one of: RunAllTestsInOrg, RunLocalTests, RunSpecifiedTests, RunRelevantTests\nSee more help with --help",
+  "warnings": [],
+  "code": "1",
+  "status": 1,
+  "commandName": "DeployMetadataValidate"
+}

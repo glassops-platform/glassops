@@ -1,0 +1,14 @@
+{
+  "name": "FailedValidationError",
+  "message": "Failed to validate the deployment (0Af000000000007AAA). Due To:\nWarning in destructiveChanges.xml - No CustomField named: Account.Tier__c found",
+  "exitCode": 1,
+  "context": "DeployMetadataValidate",
+  "data": {
+    "deployId": "0Af000000000007AAA"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "FailedValidationError",
+  "status": 1,
+  "commandName": "DeployMetadataValidate"
+}

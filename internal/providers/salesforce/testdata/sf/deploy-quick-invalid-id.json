@@ -1,0 +1,15 @@
+{
+  "name": "sf:UNKNOWN_EXCEPTION",
+  "message": "UNKNOWN_EXCEPTION: invalid parameter value",
+  "exitCode": 1,
+  "context": "DeployMetadataQuick",
+  "data": {
+    "errorCode": "sf:UNKNOWN_EXCEPTION",
+    "message": "UNKNOWN_EXCEPTION: invalid parameter value"
+  },
+  "cause": "sf:UNKNOWN_EXCEPTION: UNKNOWN_EXCEPTION: invalid parameter value",
+  "warnings": [],
+  "code": "1",
+  "status": 1,
+  "commandName": "DeployMetadataQuick"
+}

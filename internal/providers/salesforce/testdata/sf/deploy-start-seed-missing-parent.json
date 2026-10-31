@@ -1,0 +1,83 @@
+{
+  "status": 1,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-10-31T03:43:01.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-10-31T03:43:01.000Z",
+    "details": {
+      "componentFailures": [
+        {
+          "changed": false,
+          "columnNumber": 13,
+          "componentType": "CustomField",
+          "created": false,
+          "createdDate": "2026-10-31T03:43:01.000Z",
+          "deleted": false,
+          "fileName": "objects/Widget__c.object",
+          "fullName": "Widget__c.Size__c",
+          "lineNumber": 11,
+          "problem": "Entity 'Widget__c' not found.",
+          "problemType": "Error",
+          "success": false
+        }
+      ],
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-10-31T03:43:01.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      }
+    },
+    "done": true,
+    "id": "0Af000000000010AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-10-31T03:43:01.000Z",
+    "numberComponentErrors": 1,
+    "numberComponentsDeployed": 0,
+    "numberComponentsTotal": 1,
+    "numberFiles": "3",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-10-31T03:43:01.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": 787,
+    "files": [
+      {
+        "fullName": "Widget__c.Size__c",
+        "type": "CustomField",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/work\\force-app\\main\\default\\objects\\Widget__c\\fields\\Size__c.field-meta.xml",
+        "lineNumber": 11,
+        "columnNumber": 13,
+        "error": "Entity 'Widget__c' not found. (11:13)"
+      }
+    ],
+    "zipFileCount": 3,
+    "deployUrl": "https://example.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0Af000000000010AAA%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}
