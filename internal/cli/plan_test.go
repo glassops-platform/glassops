@@ -115,33 +115,84 @@ func TestPlanEmptyIsStatusEmpty(t *testing.T) {
 	}
 }
 
-func TestPlanTargetUsesDeployedTagThenBranch(t *testing.T) {
-	cfg := "version: 1\ntargets:\n  qa:\n    id: $QA_ID\n    tier: qa\n    branch: develop\n    auth: { method: sfdx-url, url: $QA_URL }\n"
+const planTargetConfig = "version: 1\ntargets:\n  qa:\n    id: $QA_ID\n    tier: qa\n    branch: develop\n    auth: { method: sfdx-url, url: $QA_URL }\n"
 
+func TestPlanTargetUsesDeployedTag(t *testing.T) {
 	// $QA_ID is unset on purpose: plan needs no Id and must not read it.
 	tagged, req, _ := planHarness(t, deltaSet(), nil, gitAnswers(map[string]string{
 		"rev-parse --verify --quiet refs/tags/glassops/deployed/qa^{commit}": planBase,
 	}))
-	tagged.write(t, "glassops.yaml", cfg)
+	tagged.write(t, "glassops.yaml", planTargetConfig)
 	if code := tagged.exec("plan", "--target", "qa"); code != exitcode.OK {
 		t.Fatalf("exit %d, output:\n%s", code, tagged.out)
 	}
-	if req.From != planBase {
-		t.Fatalf("From = %s, want the tag", req.From)
+	if req.From != planBase || req.Full {
+		t.Fatalf("request = %+v, want a delta from the tag", req)
 	}
-	if r := tagged.result(t, "plan"); r.Target != "qa" || r.Facts["plan.from_source"] != "tag" {
+	r := tagged.result(t, "plan")
+	if r.Target != "qa" || r.Facts["plan.from_source"] != "tag" || r.Facts["plan.first_deploy"] != false {
 		t.Fatalf("result = %+v", r)
 	}
+}
 
-	branch, req, _ := planHarness(t, deltaSet(), nil, gitAnswers(map[string]string{
+// First deploy rule: a target with no deployed tag plans the whole source and says why,
+// even when a merge base with its branch exists, because that delta would be empty or partial.
+func TestPlanTargetWithoutTagPlansFullSource(t *testing.T) {
+	cs := deltaSet()
+	cs.Destructive = []string{}
+	h, req, calls := planHarness(t, cs, nil, gitAnswers(map[string]string{
 		"merge-base HEAD origin/develop": planBase,
 	}))
-	branch.write(t, "glassops.yaml", cfg)
-	if code := branch.exec("plan", "--target", "qa"); code != exitcode.OK {
-		t.Fatalf("exit %d, output:\n%s", code, branch.out)
+	h.write(t, "glassops.yaml", planTargetConfig)
+	if code := h.exec("plan", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
-	if req.From != planBase {
-		t.Fatalf("From = %s, want the merge base", req.From)
+	if !req.Full || req.From != "" || req.To != planHead {
+		t.Fatalf("request = %+v, want a full plan at HEAD", req)
+	}
+	for _, c := range *calls {
+		if strings.Contains(c, "merge-base") {
+			t.Fatalf("a first deploy still ran git %q", c)
+		}
+	}
+	r := h.result(t, "plan")
+	if r.Status != run.StatusPass || r.Facts["plan.first_deploy"] != true || r.Facts["plan.from_source"] != "first-deploy" || r.Facts["plan.full"] != true {
+		t.Fatalf("result = %+v", r)
+	}
+	if checkStatus(r, "refs") != run.StatusSkipped {
+		t.Fatalf("checks = %+v", r.Checks)
+	}
+	if out := h.out.String(); !strings.Contains(out, "notice: plan: target qa has no tag glassops/deployed/qa") || !strings.Contains(out, "whole source") {
+		t.Fatalf("no first deploy notice in output:\n%s", out)
+	}
+}
+
+func TestPlanTargetExplicitFromIgnoresTag(t *testing.T) {
+	h, req, calls := planHarness(t, deltaSet(), nil, gitAnswers(map[string]string{
+		"rev-parse --verify --quiet HEAD~1^{commit}": planBase,
+	}))
+	h.write(t, "glassops.yaml", planTargetConfig)
+	if code := h.exec("plan", "--target", "qa", "--from", "HEAD~1"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if req.Full || req.From != planBase {
+		t.Fatalf("request = %+v, want the explicit delta", req)
+	}
+	for _, c := range *calls {
+		if strings.Contains(c, "refs/tags") {
+			t.Fatalf("an explicit --from still looked up the tag: %q", c)
+		}
+	}
+}
+
+func TestPlanTargetShallowCloneIsExit2(t *testing.T) {
+	h, _, _ := planHarness(t, deltaSet(), nil, map[string]string{"rev-parse --is-shallow-repository": "true"})
+	h.write(t, "glassops.yaml", planTargetConfig)
+	if code := h.exec("plan", "--target", "qa"); code != exitcode.Error {
+		t.Fatalf("exit %d, want 2: a shallow clone must not read as a first deploy. output:\n%s", code, h.out)
+	}
+	if _, err := os.Stat(filepath.Join(h.dir, ".glassops", "plan.json")); err == nil {
+		t.Fatal("plan.json written for a shallow clone")
 	}
 }
 
