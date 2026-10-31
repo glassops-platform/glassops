@@ -39,6 +39,10 @@ type Target struct {
 	// Auth still holds $VAR references. The provider resolves them when it logs in, so
 	// secret values never pass through the core.
 	Auth config.Auth
+	// AuthFile, when set, is the path of the 0600 file an ephemeral environment's login
+	// material is in, written by env create. The provider reads it instead of a $VAR. Only
+	// the path passes through the core, never the content.
+	AuthFile string
 }
 
 // Session is a logged-in connection to one target. Close removes everything the login left

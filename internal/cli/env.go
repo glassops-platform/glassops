@@ -370,6 +370,13 @@ func (app *App) envDelete(ctx context.Context, g *globals, o *envDeleteOptions) 
 	}
 	res.AddCheck("delete", run.StatusPass, "deleted "+label+", or it was already gone")
 	if fromState {
+		// The provider removes an auth file it made. This also covers one it did not, as long
+		// as it sits where an auth file may, so a later step falls back to the config.
+		if env.AuthFile != "" && authFileAllowed(g.dir, env.AuthFile) == nil {
+			if err := os.Remove(env.AuthFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+				res.AddCheck("auth_file", run.StatusError, fmt.Sprintf("remove the auth file: %v", err))
+			}
+		}
 		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			res.AddCheck("env.json", run.StatusError, fmt.Sprintf("remove %s: %v", path, err))
 		}

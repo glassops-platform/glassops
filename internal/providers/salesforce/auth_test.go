@@ -603,3 +603,142 @@ func TestHelperAuthProcess(t *testing.T) {
 	// Authenticate only returns if the login ended. The parent kills this process.
 	os.Exit(3)
 }
+
+// Synthetic value for the auth file env create writes. It differs from testSfdx, so a test
+// can tell which one a login used.
+const testEnvSfdx = "force://PlatformCLI::TESTENVREFRESH@example.my.salesforce.com"
+
+// isolateTemp points the OS temp dir at a fresh dir and returns it, so a test can place an
+// auth file inside or outside it.
+func isolateTemp(t *testing.T) string {
+	t.Helper()
+	tmp := filepath.Join(t.TempDir(), "tmp")
+	if err := os.MkdirAll(tmp, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, k := range []string{"TMPDIR", "TMP", "TEMP"} {
+		t.Setenv(k, tmp)
+	}
+	return tmp
+}
+
+func writeAuth(t *testing.T, path, content string, mode os.FileMode) string {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(content), mode); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, mode); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func authFileTarget(path string) providers.Target {
+	tg := sfdxTarget()
+	tg.AuthFile = path
+	return tg
+}
+
+func TestAuthenticateSfdxURLFromAuthFile(t *testing.T) {
+	tmp := isolateTemp(t)
+	path := writeAuth(t, filepath.Join(tmp, "glassops-env-1", "sfdx-url.txt"), testEnvSfdx+"\n", 0o600)
+	var used string
+	exec := func(_ context.Context, c Cmd) (Output, error) {
+		if c.Name == "icacls" {
+			return Output{}, nil
+		}
+		for i, a := range c.Args {
+			if a == "--sfdx-url-file" {
+				data, _ := os.ReadFile(c.Args[i+1])
+				used = string(data)
+			}
+			if strings.Contains(a, "TESTENVREFRESH") {
+				t.Errorf("auth file content in argv: %s", a)
+			}
+		}
+		return Output{Stdout: fixture(t, "login-sfdx-url-scratch.json")}, nil
+	}
+	// T_URL is set, and must be ignored when an auth file is given.
+	p := NewWithOptions(Options{Exec: exec, LookupEnv: func(k string) (string, bool) { v, ok := testEnv()[k]; return v, ok }, TempDir: tmp})
+	s, err := p.Authenticate(context.Background(), authFileTarget(path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	if used != testEnvSfdx {
+		t.Fatalf("login used %q, want the auth file's url", used)
+	}
+	if data, err := os.ReadFile(path); err != nil || string(data) != testEnvSfdx+"\n" {
+		t.Fatalf("auth file changed or removed by the login: %q %v", data, err)
+	}
+}
+
+func TestAuthFileInsideGlassopsDirIsAllowed(t *testing.T) {
+	isolateTemp(t)
+	path := writeAuth(t, filepath.Join(t.TempDir(), "proj", ".glassops", "env", "ephemeral", "auth"), testEnvSfdx, 0o600)
+	p := NewWithOptions(Options{})
+	if got, err := p.readAuthFile(path); err != nil || got != testEnvSfdx {
+		t.Fatalf("got %q, err %v", got, err)
+	}
+}
+
+func TestAuthFileRefusals(t *testing.T) {
+	type tc struct {
+		name string
+		path func(t *testing.T, tmp string) string
+		want string
+	}
+	cases := []tc{
+		{"outside temp and .glassops", func(t *testing.T, _ string) string {
+			return writeAuth(t, filepath.Join(t.TempDir(), "elsewhere", "auth"), testEnvSfdx, 0o600)
+		}, "outside the temp dir"},
+		{"relative path", func(*testing.T, string) string { return filepath.Join("glassops-env-1", "auth") }, "not absolute"},
+		{"missing file", func(_ *testing.T, tmp string) string { return filepath.Join(tmp, "nope") }, "auth file"},
+		{"a directory", func(t *testing.T, tmp string) string {
+			d := filepath.Join(tmp, "adir")
+			_ = os.MkdirAll(d, 0o700)
+			return d
+		}, "not a regular file"},
+		{"not an sfdx url", func(t *testing.T, tmp string) string {
+			return writeAuth(t, filepath.Join(tmp, "auth"), "SECRETVALUE-not-a-url", 0o600)
+		}, "does not hold one sfdx url"},
+		{"two lines", func(t *testing.T, tmp string) string {
+			return writeAuth(t, filepath.Join(tmp, "auth"), testEnvSfdx+"\n"+testEnvSfdx, 0o600)
+		}, "does not hold one sfdx url"},
+	}
+	if !isWindows {
+		cases = append(cases,
+			tc{"group readable", func(t *testing.T, tmp string) string {
+				return writeAuth(t, filepath.Join(tmp, "auth"), testEnvSfdx, 0o640)
+			}, "want 0600"},
+			tc{"symlink", func(t *testing.T, tmp string) string {
+				real := writeAuth(t, filepath.Join(tmp, "real"), testEnvSfdx, 0o600)
+				link := filepath.Join(tmp, "link")
+				if err := os.Symlink(real, link); err != nil {
+					t.Skip(err)
+				}
+				return link
+			}, "not a regular file"})
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			tmp := isolateTemp(t)
+			called := false
+			exec := func(context.Context, Cmd) (Output, error) { called = true; return Output{}, nil }
+			p := NewWithOptions(Options{Exec: exec, LookupEnv: func(k string) (string, bool) { v, ok := testEnv()[k]; return v, ok }, TempDir: tmp})
+			_, err := p.Authenticate(context.Background(), authFileTarget(c.path(t, tmp)))
+			if err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Fatalf("err %v, want %q", err, c.want)
+			}
+			if strings.Contains(err.Error(), "SECRETVALUE") || strings.Contains(err.Error(), "TESTENVREFRESH") {
+				t.Fatalf("content in error: %v", err)
+			}
+			if called {
+				t.Fatal("sf ran after a refused auth file")
+			}
+		})
+	}
+}
