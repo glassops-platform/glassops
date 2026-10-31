@@ -23,6 +23,8 @@ pipelines:
     - plan --from HEAD~1 --to HEAD
     - env create
     - validate --target ephemeral
+    - gate --target ephemeral
+    - deploy --target ephemeral
     - test --target ephemeral
     - step: exec
       run: test -s "$GLASSOPS_RESULTS_DIR/validate.json" && test -s "$GLASSOPS_RESULTS_DIR/test.json"

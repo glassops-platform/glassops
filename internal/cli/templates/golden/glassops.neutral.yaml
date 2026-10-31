@@ -39,7 +39,6 @@ pipelines:
     - analyze
     - env create
     - validate --target ephemeral --fallback-target prod
-    - test --target ephemeral
     - step: report
       when: always
     - step: env delete
