@@ -81,9 +81,12 @@ jobs:
           images: ghcr.io/glassops-platform/${{ matrix.image.name }}
           # A prerelease tag such as v1.2.0-rc1 gets only its own version tag. The major tag
           # (v1) and latest move only on a final release, and metadata-action leaves v0 out.
+          # Both 1.2.3 and v1.2.3 are pushed, because action.yml maps a reference of v1.2.3 to the
+          # image tag v1.2.3. The moving major v1 is pushed for final releases only.
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern=v{{major}}
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}},enable=${{ !contains(github.ref_name, '-') }}
 
       - uses: docker/build-push-action@v6
         with:

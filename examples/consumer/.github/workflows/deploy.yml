@@ -17,7 +17,10 @@ jobs:
       pull-requests: read
     with:
       environment: glassops-deploy
+    # The permit key is a secret of the glassops-deploy environment only. The caller still passes
+    # it by name, because a called workflow does not see environment secrets otherwise.
     secrets:
+      GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
       SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
       SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
       SF_USERNAME: ${{ secrets.SF_USERNAME }}
