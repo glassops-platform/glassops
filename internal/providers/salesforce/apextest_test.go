@@ -167,3 +167,16 @@ func TestParsePercent(t *testing.T) {
 		}
 	}
 }
+
+// The reply below is synthetic, built like the error sf returns for an org with no Apex.
+func TestRunTestsNoTestsFound(t *testing.T) {
+	p, _, s := testerSetup(t, map[string]fakeReply{runTestPrefix: {
+		Stdout: []byte(`{"status":1,"name":"Error","message":"INVALID_INPUT: No tests found for category: Apex"}`), ExitCode: 1}})
+	res, err := p.RunTests(context.Background(), s, providers.TestRequest{Dir: t.TempDir(), TestLevel: "RunLocalTests"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.Finished || res.Ran != 0 || res.OrgCoverage != -1 || res.Facts["test.none_found"] != true {
+		t.Fatalf("result: %+v", res)
+	}
+}

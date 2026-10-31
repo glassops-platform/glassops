@@ -5,9 +5,14 @@ name: glassops deploy
 #     glassops:
 #       uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
 #       permissions: { contents: write, actions: read, issues: read, pull-requests: read }
-#       secrets: inherit
-# The job runs in a protected GitHub environment. The permit key is a secret of that
-# environment and is read only by this job, in the one step that runs the pipeline.
+#       secrets:
+#         GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+#         SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+# The job runs in a protected GitHub environment. The permit key lives only as a secret of that
+# environment. A called workflow gets an environment secret only when the caller passes it by
+# name, as above, and the value is then resolved from the environment of the deploy job.
+# glassops runs in its container, one docker run per command. The checkout, the tag push and the
+# uploads run on the runner.
 on:
   workflow_call:
     inputs:
@@ -24,10 +29,9 @@ on:
         type: string
         default: ''
     secrets:
-      # Declared only so the workflow can be checked. Do not pass it from the caller. The value
-      # comes from the secrets of the protected environment.
+      # The caller passes it by name. The value is a secret of the protected environment only.
       GLASSOPS_PERMIT_KEY:
-        required: false
+        required: true
       SF_JWT_KEY:
         required: false
       SF_CLIENT_ID:
@@ -61,12 +65,36 @@ jobs:
     concurrency:
       group: glassops-deploy-${{ inputs.environment }}
       cancel-in-progress: false
-    container: ${{ inputs.image }}
     steps:
       - id: checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install the glassops command
+        env:
+          GLASSOPS_IMAGE: ${{ inputs.image }}
+        run: |
+          # glassops runs in its image, one container per command, with the workspace mounted.
+          # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
+          # image cannot run them.
+          mkdir -p "$RUNNER_TEMP/glassops-bin"
+          cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -u
+          args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
+          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+            args+=(-e "$n")
+          done
+          for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+            p="${!f:-}"
+            if [ -n "$p" ]; then args+=(-e "$f" -v "$p:$p"); fi
+          done
+          exec docker "${args[@]}" "$GLASSOPS_IMAGE" "$@"
+          WRAPPER
+          chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
+          echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
+          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
 
       - name: Log in to each target
         if: inputs.targets != ''
@@ -86,15 +114,26 @@ jobs:
       - id: pipeline
         name: Run the deploy pipeline
         env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GLASSOPS_PASS_ENV: GLASSOPS_PERMIT_KEY
+          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
           SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
           SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
           SF_USERNAME: ${{ secrets.SF_USERNAME }}
           SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
           SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
           SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
-          GITHUB_TOKEN: ${{ github.token }}
-          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
         run: glassops run deploy
+
+      # The container has no git credentials, so its own tag push is only a warning. The tag is
+      # moved in the checkout, and this step pushes it with the checkout's credentials.
+      - name: Push the deployed tag
+        if: always() && steps.checkout.outcome == 'success'
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ -n "$(git tag -l 'glassops/deployed/*')" ]; then
+            git push --force origin 'refs/tags/glassops/deployed/*:refs/tags/glassops/deployed/*'
+          fi
 
       - name: Report
         if: always() && steps.checkout.outcome == 'success'

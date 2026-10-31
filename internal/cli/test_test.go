@@ -209,3 +209,35 @@ func TestTestUnconfiguredTargetIsExit2(t *testing.T) {
 		t.Fatalf("exit %d", code)
 	}
 }
+
+func noneFoundResult() providers.TestResult {
+	return providers.TestResult{Finished: true, OrgCoverage: -1, Facts: map[string]any{"test.none_found": true}}
+}
+
+func TestTestNoneFoundWithMinimumFails(t *testing.T) {
+	h, fp := testHarness(t, "  coverage: { org_min: 75 }\n")
+	fp.runTests = func(providers.Session, providers.TestRequest) (providers.TestResult, error) {
+		return noneFoundResult(), nil
+	}
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if r.Status != run.StatusFail || r.Facts["test.none_found"] != true || !strings.Contains(h.out.String(), "no Apex tests ran in qa, so coverage cannot be checked") {
+		t.Fatalf("result %+v\n%s", r, h.out)
+	}
+}
+
+func TestTestNoneFoundWithoutMinimumIsEmpty(t *testing.T) {
+	h, fp := testHarness(t, "")
+	fp.runTests = func(providers.Session, providers.TestRequest) (providers.TestResult, error) {
+		return noneFoundResult(), nil
+	}
+	if code := h.exec("test", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if r.Status != run.StatusEmpty || checkStatus(r, "tests") != run.StatusSkipped || r.Facts["test.none_found"] != true {
+		t.Fatalf("result %+v", r)
+	}
+}

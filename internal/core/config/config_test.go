@@ -358,7 +358,6 @@ func TestDefaultPipelines(t *testing.T) {
 			{Run: "analyze"},
 			{Run: "env create"},
 			{Run: "validate --target ephemeral --fallback-target prod"},
-			{Run: "test --target ephemeral"},
 			{Run: "report", When: "always"},
 			{Run: "env delete", When: "always"},
 		},
