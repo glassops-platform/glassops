@@ -28,8 +28,8 @@ type deployOptions struct {
 	resumeID   string
 }
 
-// minPermitKeyBytes is the shortest HMAC key deploy accepts, after base64 decoding.
-const minPermitKeyBytes = 32
+// deployMinKeyBytes is the shortest HMAC key deploy accepts, after base64 decoding.
+const deployMinKeyBytes = 32
 
 // permitFuncs is how deploy reads and checks a PERMIT. Tests replace it.
 var permitFuncs = struct {
@@ -224,8 +224,8 @@ func (app *App) permitKey() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s is not valid base64", permit.KeyEnv)
 	}
-	if len(key) < minPermitKeyBytes {
-		return nil, fmt.Errorf("%s is %d bytes after decoding, want at least %d", permit.KeyEnv, len(key), minPermitKeyBytes)
+	if len(key) < deployMinKeyBytes {
+		return nil, fmt.Errorf("%s is %d bytes after decoding, want at least %d", permit.KeyEnv, len(key), deployMinKeyBytes)
 	}
 	return key, nil
 }
