@@ -485,8 +485,16 @@ func TestSignupValues(t *testing.T) {
 		{"definition fields", providers.EnvRequest{Name: "n", TTL: time.Hour},
 			`{"orgName":"Ignored","edition":"Partner Developer","features":["EnableSetPasswordInApi","MultiCurrency"],"hasSampleData":false}`,
 			[]string{"Edition='Partner Developer'", "Features=EnableSetPasswordInApi;MultiCurrency", "HasSampleData=false", "OrgName=n "}, []string{"Ignored"}, ""},
-		{"definition settings are refused", providers.EnvRequest{Name: "n", TTL: time.Hour},
-			`{"edition":"Developer","settings":{"lightningExperienceSettings":{"enableS1DesktopEnabled":true}}}`, nil, nil, "cannot apply definition keys settings"},
+		{"definition settings stay out of the record", providers.EnvRequest{Name: "n", TTL: time.Hour},
+			`{"edition":"Developer","settings":{"lightningExperienceSettings":{"enableS1DesktopEnabled":true}}}`,
+			[]string{"Edition=Developer"}, []string{"enableS1DesktopEnabled", "Settings"}, ""},
+		{"objectSettings are refused", providers.EnvRequest{Name: "n", TTL: time.Hour},
+			`{"edition":"Developer","settings":{"mobileSettings":{"enableS1EncryptedStoragePref2":false}},"objectSettings":{"account":{"sharingModel":"private"}}}`,
+			nil, nil, "cannot apply definition keys objectSettings"},
+		{"objectSettings inside settings are refused", providers.EnvRequest{Name: "n", TTL: time.Hour},
+			`{"settings":{"objectSettings":{"account":{"sharingModel":"private"}}}}`, nil, nil, "cannot apply objectSettings"},
+		{"a bad settings block stops the signup", providers.EnvRequest{Name: "n", TTL: time.Hour},
+			`{"settings":{"mobileSettings":true}}`, nil, nil, "must be an object"},
 		{"definition value with a quote", providers.EnvRequest{Name: "n", TTL: time.Hour}, `{"description":"it's"}`, nil, nil, "quote"},
 	}
 	for _, tc := range cases {
@@ -501,7 +509,7 @@ func TestSignupValues(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			values, _, _, err := signupValues(tc.req)
+			plan, err := signupValues(tc.req)
 			if tc.err != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.err) {
 					t.Fatalf("err %v, want %q", err, tc.err)
@@ -511,7 +519,7 @@ func TestSignupValues(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			values += " "
+			values := plan.values + " "
 			for _, w := range tc.want {
 				if !strings.Contains(values, w) {
 					t.Fatalf("values %q lack %q", values, w)

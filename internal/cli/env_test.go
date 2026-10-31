@@ -13,6 +13,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	"github.com/glassops-platform/glassops/internal/providers/salesforce"
 )
 
 const envConfig = `version: 1
@@ -148,13 +149,85 @@ func TestEnvCreateFailureAfterRequestStillRecords(t *testing.T) {
 func TestEnvCreateFailureBeforeRequestWritesNothing(t *testing.T) {
 	h, fp := envHarness(t)
 	fp.createEnv = func(providers.Session, providers.EnvRequest) (providers.Env, error) {
-		return providers.Env{}, errors.New("salesforce: env create cannot apply definition keys settings")
+		return providers.Env{}, errors.New("salesforce: env create cannot apply definition keys objectSettings")
 	}
 	if code := h.exec("env", "create"); code != exitcode.Error {
 		t.Fatalf("exit %d", code)
 	}
 	if _, err := os.Stat(h.envFile()); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("env.json written: %v", err)
+	}
+}
+
+func TestEnvCreateWritesEnvJSONOnlyAfterTheProviderReturns(t *testing.T) {
+	h, fp := envHarness(t)
+	fp.createEnv = func(providers.Session, providers.EnvRequest) (providers.Env, error) {
+		// The Salesforce provider deploys the settings inside CreateEnv. Nothing may be
+		// recorded as ready before that is done.
+		if _, err := os.Stat(h.envFile()); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("env.json exists while the environment is still being set up: %v", err)
+		}
+		env := synthEnv()
+		env.Facts["salesforce.settings_deployed"] = true
+		return env, nil
+	}
+	if code := h.exec("env", "create"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if s := h.readEnv(t); !s.Ready {
+		t.Fatalf("env.json %+v", s)
+	}
+	if r := h.result(t, "env-create"); r.Facts["salesforce.settings_deployed"] != true {
+		t.Fatalf("facts %v", r.Facts)
+	}
+}
+
+func TestEnvCreateSettingsFailure(t *testing.T) {
+	problem := "Settings Communities: You can't enable Digital Experiences in this org"
+	cases := []struct {
+		name string
+		err  *salesforce.SettingsError
+		// authFile is what the provider still reports: empty once the org is deleted.
+		authFile string
+		code     int
+		status   run.Status
+		detail   string
+	}{
+		{"refused and deleted exits 1", &salesforce.SettingsError{Problems: []string{problem}, Rejected: true, Deleted: true},
+			"", exitcode.Fail, run.StatusFail, "The scratch org was deleted. env.json records the attempt"},
+		{"refused and the delete failed exits 2", &salesforce.SettingsError{Problems: []string{problem}, Rejected: true, DeleteErr: errors.New("insufficient access rights")},
+			synthEnv().AuthFile, exitcode.Error, run.StatusError, "env delete can remove it"},
+		{"deploy that never ran exits 2", &salesforce.SettingsError{Deleted: true},
+			"", exitcode.Error, run.StatusError, "env delete can remove it"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, fp := envHarness(t)
+			fp.createEnv = func(providers.Session, providers.EnvRequest) (providers.Env, error) {
+				env := synthEnv()
+				env.AuthFile = tc.authFile
+				env.Facts["salesforce.settings_deployed"] = false
+				env.Facts["salesforce.settings_org_deleted"] = tc.err.Deleted
+				return env, tc.err
+			}
+			if code := h.exec("env", "create"); code != tc.code {
+				t.Fatalf("exit %d, want %d, output:\n%s", code, tc.code, h.out)
+			}
+			s := h.readEnv(t)
+			if s.Ready || s.ID != synthEnv().ID || s.RecordID != synthEnv().RecordID || s.AuthFile != tc.authFile {
+				t.Fatalf("env.json %+v", s)
+			}
+			r := h.result(t, "env-create")
+			if checkStatus(r, "create") != tc.status || r.Facts["salesforce.settings_org_deleted"] != tc.err.Deleted {
+				t.Fatalf("result %+v", r)
+			}
+			if !strings.Contains(h.out.String(), tc.detail) {
+				t.Fatalf("output lacks %q:\n%s", tc.detail, h.out)
+			}
+			if strings.Contains(h.out.String(), "output env_id=") {
+				t.Fatalf("outputs set for a failed create:\n%s", h.out)
+			}
+		})
 	}
 }
 
