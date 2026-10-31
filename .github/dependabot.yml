@@ -2,9 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: gomod
-    directories:
-      - /
-      - /packages/runtime
+    directory: /
     schedule:
       interval: weekly
     groups:
@@ -20,9 +18,7 @@ updates:
         update-types: [minor, patch]
 
   - package-ecosystem: docker
-    directories:
-      - /
-      - /packages/runtime
+    directory: /
     schedule:
       interval: weekly
     groups:

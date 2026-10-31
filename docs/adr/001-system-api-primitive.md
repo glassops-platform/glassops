@@ -6,7 +6,7 @@
 
 ---
 
-> **Note:** Superseded. The runtime in `packages/runtime` does not follow this design. The `glassops-platform/glassops-runtime` repository holds an earlier TypeScript runtime and is no longer developed. No `@v4` tag or `action-*` release exists.
+> **Note:** Superseded. The GitHub Action runtime that once lived in this repository was replaced by the `glassops` CLI and does not follow this design. The `glassops-platform/glassops-runtime` repository holds an earlier TypeScript runtime and is no longer developed. No `@v4` tag or `action-*` release exists.
 
 ## Context
 

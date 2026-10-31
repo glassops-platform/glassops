@@ -20,7 +20,7 @@ These documents live here (`docs/`) and guide you through the system.
 
 | Component          | Documentation Authority                                                                                                                 |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Runtime**        | [`packages/runtime/README.md`](../packages/runtime/README.md) <br/> [`/adr`](../packages/runtime/adr/README.md)                         |
+| **CLI**            | [`cli.md`](reference/cli.md) <br/> [`permit-and-rules.md`](reference/permit-and-rules.md)                                               |
 
 ---
 

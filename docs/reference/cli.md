@@ -15,8 +15,12 @@
 | `glassops describe` | Logs in to one target, runs the guard, and records what the target reports about itself |
 | `glassops plan` | Works out what changed between two git refs and writes the manifests and a change set |
 | `glassops validate` | Runs a check-only validate of the change set against a target |
+| `glassops gate` | Evaluates the policy rules for a target and writes a signed PERMIT |
+| `glassops permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
+| `glassops deploy` | Deploys the change set to a target, only under a valid PERMIT |
+| `glassops report` | Summarises every result for the CI and writes SARIF |
 
-Other commands, such as `gate`, `deploy` and `run`, are planned and not built yet.
+Further commands are planned and not built yet.
 
 ### `glassops init`
 
@@ -35,6 +39,7 @@ Runs these checks and fails if any of them fails:
 - The tools: `git` always, plus `sf` and the `sfdx-git-delta` plugin for Salesforce projects. Versions are recorded.
 - The checkout: a shallow clone fails, because it would make every change set empty. On GitHub, use `actions/checkout` with `fetch-depth: 0`.
 - The environment: every `$VAR` the config names must be set. Only presence is checked. Values are never printed or stored.
+- The PERMIT key: on a `pull_request` or `pull_request_target` run, `GLASSOPS_PERMIT_KEY` should not be set. If it is, `doctor` adds a `permit.key` check whose detail starts with `warning:` and a CI warning annotation. This never fails the command. Only presence is checked. See [PERMIT and rules](permit-and-rules.md#the-signing-key).
 
 ### `glassops doctor --auth`
 
@@ -65,6 +70,8 @@ Works out the change set between two git refs. It writes the provider's manifest
 
 With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
 
+First deploy rule: with `--target` and `--from auto`, a target that has no `glassops/deployed/<target>` tag has never received a deploy from glassops. `plan` then plans the whole source instead of a delta, prints a notice, and records the facts `plan.first_deploy` and `plan.from_source: first-deploy`. A shallow clone is still an error.
+
 ### `glassops validate`
 
 Logs in to the target, runs the guard, and runs a check-only validate of the change set in `.glassops/plan.json`. It never deploys. See [Validate is check-only](#validate-is-check-only).
@@ -76,7 +83,81 @@ Logs in to the target, runs the guard, and runs a check-only validate of the cha
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--check-only` | `true` | Always true. `false` is refused |
 
-A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login.
+A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login. `validate` records the facts `validate.plan_sha256` and `validate.test_level`, which `gate` uses to decide whether a deploy may reuse the validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy).
+
+### `glassops gate`
+
+Reads the change set, the earlier results in the results directory and the CI context. It builds the facts for one target, runs the policy rules over them, and writes a signed PERMIT to `.glassops/permit.json`. It writes the PERMIT whether the answer is allow or deny, and it deletes any PERMIT already at that path first, so an old allow never survives a failed run. Unless `--no-connect` is set, it logs in to the target and runs the [guard](#the-guard). The rules, the PERMIT and the evidence `gate` reads are described in [PERMIT and rules](permit-and-rules.md).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--permit` | `<dir>/.glassops/permit.json` | Where the PERMIT is written |
+| `--no-connect` | `false` | Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the `guard` check is `skipped` |
+
+Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
+
+| Exit | When |
+|---|---|
+| `0` | The PERMIT allows the deploy |
+| `1` | Policy denies the deploy. The signed PERMIT is still written |
+| `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
+
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id` and `gate.expires_at`.
+
+### `glassops permit verify`
+
+Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, and that it matches the target, the commit, the plan and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+
+Needs `GLASSOPS_PERMIT_KEY`. Reads the PERMIT, the change set, the plan files under `.glassops/plan/`, `glassops.yaml` and the CI commit. Writes `.glassops/results/permit-verify.json`.
+
+| Exit | When |
+|---|---|
+| `0` | The PERMIT holds |
+| `1` | The PERMIT does not hold: bad signature, denied, expired, a different target, commit, plan or config, a file that is not a readable PERMIT, or plan files changed after `plan` |
+| `2` | The key is missing or unusable, or the PERMIT file, the change set, the config or the commit cannot be read or found |
+
+Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
+
+### `glassops deploy`
+
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
+| `--wait` | the provider's | How long to wait for the deploy, such as `30m`. The Salesforce provider waits 60 minutes |
+| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy |
+
+Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status `empty` and no login.
+
+| Exit | When |
+|---|---|
+| `0` | The deploy succeeded, or the change set was empty |
+| `1` | The deploy ran and the target reported failures, or `salesforce.deploy.quick` is `require` and the PERMIT holds no passed validation to quick deploy |
+| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
+
+Result facts: `deploy.permit_id`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts.
+
+### `glassops report`
+
+Reads every result in the results directory. It writes a markdown summary to the CI's run summary, and with `--summary` also to a file. It writes SARIF to `--sarif` for policy denials found in the PERMIT and for failed checks in the `validate` and `deploy` results. SARIF files already in the results directory, such as Code Analyzer's, are merged into the output. The SARIF file it writes is skipped when it reads the directory again. `report` writes no result file of its own.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--sarif` | `<dir>/.glassops/report.sarif` | SARIF file to write |
+| `--summary` | | Also write the markdown summary to this file |
+
+`report` exits with the worst status among the results: `0` when all pass, `1` when any failed, `2` when any errored. That lets a CI run it after a failed step with `if: always()` and still fail the job. It also exits `2` when there are no results or one cannot be read.
 
 ---
 
