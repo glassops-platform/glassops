@@ -30,8 +30,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # goreleaser creates the release as a draft. Tags with a prerelease suffix (-rc1) or a 0.x
+  # version are marked as prereleases, so a 1.0 line starts clean.
+  prerelease:
+    name: Mark Prerelease
+    needs: binaries
+    if: contains(github.ref_name, '-') || startsWith(github.ref_name, 'v0.')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Mark the release as a prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \$ENV.TAG) | .id" | head -n 1)
+          if [ -z "$id" ]; then
+            echo "::error::No release was found for $TAG"
+            exit 1
+          fi
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$id" -F prerelease=true
+
   image:
-    name: Release Image
+    name: Release ${{ matrix.image.name }} Image
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - { name: glassops, dockerfile: Dockerfile }
+          - { name: glassops-analyzer, dockerfile: Dockerfile.analyzer }
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -49,7 +78,9 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/glassops-platform/glassops
+          images: ghcr.io/glassops-platform/${{ matrix.image.name }}
+          # A prerelease tag such as v1.2.0-rc1 gets only its own version tag. The major tag
+          # (v1) and latest move only on a final release, and metadata-action leaves v0 out.
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern=v{{major}}
@@ -57,6 +88,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.image.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

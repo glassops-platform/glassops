@@ -1,0 +1,83 @@
+name: GlassOps
+description: Run a glassops command in the GlassOps container, with the workspace mounted.
+author: glassops-platform
+
+inputs:
+  command:
+    description: The glassops arguments, for example "run pr" or "gate --target prod". Split on spaces, with no shell quoting.
+    required: true
+  image:
+    description: The container image to run. Empty means ghcr.io/glassops-platform/glassops at the tag this action was referenced by, or latest when the reference is a branch or a commit.
+    required: false
+    default: ''
+  env:
+    description: Names of environment variables to pass through to the container, one per line. Set the values with env on the step that uses this action.
+    required: false
+    default: ''
+  github-token:
+    description: Passed to the container as GITHUB_TOKEN. Empty passes none, which is right for commands that do not call the GitHub API. The gate command needs it.
+    required: false
+    default: ''
+  working-directory:
+    description: The directory glassops runs in, relative to the workspace.
+    required: false
+    default: '.'
+
+outputs:
+  exit-code:
+    description: The exit code of glassops. 0 passed, 1 a policy or check failed, 2 a tool or infrastructure error.
+    value: ${{ steps.run.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_IMAGE: ${{ inputs.image }}
+        INPUT_ENV: ${{ inputs.env }}
+        INPUT_TOKEN: ${{ inputs.github-token }}
+        INPUT_WORKDIR: ${{ inputs.working-directory }}
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        set -u
+        image="$INPUT_IMAGE"
+        if [ -z "$image" ]; then
+          case "$ACTION_REF" in
+            v[0-9]*) image="ghcr.io/glassops-platform/glassops:$ACTION_REF" ;;
+            *) image="ghcr.io/glassops-platform/glassops:latest" ;;
+          esac
+        fi
+
+        # The workspace is mounted at /work. The CI files (step summary, outputs) are mounted at
+        # the same path they have on the runner, so the CLI writes to them directly.
+        args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w "/work/$INPUT_WORKDIR")
+        for name in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_REF GITHUB_SHA GITHUB_EVENT_NAME \
+          GITHUB_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_TRIGGERING_ACTOR; do
+          args+=(-e "$name")
+        done
+        for file in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+          path="${!file:-}"
+          if [ -n "$path" ]; then
+            args+=(-e "$file" -v "$path:$path")
+          fi
+        done
+        if [ -n "$INPUT_TOKEN" ]; then
+          args+=(-e GITHUB_TOKEN)
+          export GITHUB_TOKEN="$INPUT_TOKEN"
+        fi
+        while IFS= read -r name; do
+          name="${name//[[:space:]]/}"
+          if [ -n "$name" ]; then
+            args+=(-e "$name")
+          fi
+        done <<< "$INPUT_ENV"
+
+        read -r -a cmd <<< "$INPUT_COMMAND"
+        set +e
+        docker "${args[@]}" "$image" "${cmd[@]}"
+        code=$?
+        set -e
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit "$code"

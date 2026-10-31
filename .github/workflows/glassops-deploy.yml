@@ -1,0 +1,110 @@
+name: glassops deploy
+
+# A reusable workflow. Call it from a push to main workflow:
+#   jobs:
+#     glassops:
+#       uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
+#       permissions: { contents: write, actions: read, pull-requests: read }
+#       secrets: inherit
+# The job runs in a protected GitHub environment. The permit key is a secret of that
+# environment and is read only by this job, in the one step that runs the pipeline.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: The GlassOps container image.
+        type: string
+        default: ghcr.io/glassops-platform/glassops:v1
+      environment:
+        description: The protected GitHub environment that holds the permit key and the required reviewers.
+        type: string
+        default: glassops-deploy
+      targets:
+        description: Space separated target names to log in to before the pipeline, so a bad login fails early.
+        type: string
+        default: ''
+    secrets:
+      # Declared only so the workflow can be checked. Do not pass it from the caller. The value
+      # comes from the secrets of the protected environment.
+      GLASSOPS_PERMIT_KEY:
+        required: false
+      SF_JWT_KEY:
+        required: false
+      SF_CLIENT_ID:
+        required: false
+      SF_USERNAME:
+        required: false
+      SF_DEVHUB_ORG_ID:
+        required: false
+      SF_PROD_USERNAME:
+        required: false
+      SF_PROD_ORG_ID:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: glassops run deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    # contents: write pushes the glassops/deployed/* tag. actions: read lets gate read this
+    # run's own approval. pull-requests: read lets gate read the PR behind the commit.
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    # One deploy at a time per environment. A queued deploy waits and is never cancelled.
+    concurrency:
+      group: glassops-deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    container: ${{ inputs.image }}
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Log in to each target
+        if: inputs.targets != ''
+        env:
+          TARGETS: ${{ inputs.targets }}
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+        run: |
+          for t in $TARGETS; do
+            glassops doctor --auth --target "$t"
+          done
+
+      - id: pipeline
+        name: Run the deploy pipeline
+        env:
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+        run: glassops run deploy
+
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
+
+      - name: Keep the evidence
+        if: always() && steps.checkout.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: glassops-deploy-evidence
+          path: |
+            .glassops/results/
+            .glassops/plan.json
+            .glassops/permit.json
+          if-no-files-found: warn

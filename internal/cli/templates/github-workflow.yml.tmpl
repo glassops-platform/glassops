@@ -1,5 +1,9 @@
 name: glassops
 
+# Pull requests run the pr pipeline. A push to main runs the deploy pipeline in the
+# glassops-deploy environment. Create that environment in the repository settings, add the
+# required reviewers and a deployment branch rule for main, and set the permit key as a secret
+# of that environment only. Generate the key with: openssl rand -base64 32
 on:
   pull_request:
   push:
@@ -9,14 +13,64 @@ permissions:
   contents: read
 
 jobs:
-  doctor:
-    name: glassops doctor
+  pr:
+    name: glassops run pr
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
     container: ghcr.io/glassops-platform/glassops:v1
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      # Add the secrets that glassops.yaml names with $VAR, for example:
+      # SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - id: checkout
+        uses: actions/checkout@v4
         with:
           # Full history, so change sets between commits are complete.
           fetch-depth: 0
       - name: Check the project is ready for glassops
         run: glassops doctor
+      - name: Run the pr pipeline
+        run: glassops run pr
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
+      - name: Upload SARIF
+        if: always() && steps.checkout.outcome == 'success' && hashFiles('.glassops/report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .glassops/report.sarif
+          category: glassops
+
+  deploy:
+    name: glassops run deploy
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: glassops-deploy
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    concurrency:
+      group: glassops-deploy
+      cancel-in-progress: false
+    container: ghcr.io/glassops-platform/glassops:v1
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run the deploy pipeline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+          # Add the secrets that glassops.yaml names with $VAR, for example:
+          # SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+        run: glassops run deploy
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
