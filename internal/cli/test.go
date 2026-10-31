@@ -111,6 +111,22 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 		res.Facts["test.coverage."+cl.Name+".percent"] = cl.Percent
 	}
 
+	if out.Facts["test.none_found"] == true {
+		path, err := app.writeJUnit(g, o, out)
+		if err == nil {
+			res.Artifacts = append(res.Artifacts, path)
+		}
+		cov := proj.cfg.Test.Coverage
+		if cov.OrgMin != nil || cov.ClassMin != nil {
+			res.AddCheck("tests", run.StatusFail, fmt.Sprintf("no Apex tests ran in %s, so coverage cannot be checked", t.Name))
+			res.Degrade(run.StatusFail)
+		} else {
+			res.AddCheck("tests", run.StatusSkipped, "no Apex tests were found")
+			res.Status = run.StatusEmpty
+		}
+		return app.finish(res, c, g)
+	}
+
 	if path, err := app.writeJUnit(g, o, out); err != nil {
 		res.AddCheck("junit", run.StatusError, err.Error())
 	} else {

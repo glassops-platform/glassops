@@ -84,6 +84,12 @@ func (p *Provider) RunTests(ctx context.Context, s providers.Session, req provid
 
 	body, err := p.apexRun(ctx, sess, req.Dir, args)
 	if err != nil {
+		var sfErr *SFError
+		if errors.As(err, &sfErr) && strings.Contains(strings.ToLower(sfErr.Message), "no tests found") {
+			// An org with no Apex tests is a result, not a tool failure.
+			return providers.TestResult{Finished: true, OrgCoverage: -1,
+				Facts: map[string]any{"test.none_found": true}}, nil
+		}
 		return providers.TestResult{}, err
 	}
 	if body.Summary == nil && body.TestRunID != "" && req.ResumeID == "" {
