@@ -27,6 +27,11 @@ version: 1
 #   rules:
 #     coverage_min: 75
 
+# The analyze step runs only when analyze.enabled is true. Code Analyzer needs the
+# glassops-analyzer image (ghcr.io/glassops-platform/glassops-analyzer) in the CI job.
+# analyze:
+#   enabled: true
+
 pipelines:
   pr:
     - plan
@@ -35,12 +40,14 @@ pipelines:
     - env create
     - validate --target ephemeral --fallback-target prod
     - test --target ephemeral
-    - report
+    - step: report
+      when: always
     - step: env delete
       when: always
   deploy:
-    - plan
+    - plan --target prod
     - validate --target prod
     - gate --target prod
     - deploy --target prod
-    - report
+    - step: report
+      when: always
