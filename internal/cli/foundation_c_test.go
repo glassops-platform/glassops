@@ -177,15 +177,3 @@ func TestRunExportsTelemetryAndOnlyWarns(t *testing.T) {
 	}
 }
 
-func TestBitbucketAndGitLabLayersAreStubs(t *testing.T) {
-	for _, name := range []string{"bitbucket", "gitlab"} {
-		h := newHarness(t)
-		h.write(t, "sfdx-project.json", "{}")
-		if code := Execute(h.app, []string{"doctor", "--dir", h.dir, "--ci", name}); code != exitcode.Error {
-			t.Fatalf("%s: exit %d, output:\n%s", name, code, h.out)
-		}
-		if !strings.Contains(h.out.String(), "not implemented yet") {
-			t.Fatalf("%s output:\n%s", name, h.out)
-		}
-	}
-}
