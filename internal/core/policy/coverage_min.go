@@ -89,7 +89,11 @@ func orgCoverage(in Input, min int) (Result, bool) {
 	return Result{Rule: "coverage_min.org", Outcome: Pass, Detail: fmt.Sprintf("org wide coverage %d%% is at or above %d%%", pct, min)}, true
 }
 
-// orgMin returns test.coverage.org_min from the config. The config on this branch has no such
-// field yet, so it returns nil and the org wide check does not run. Once foundation B adds the
-// field, return it here. orgCoverage is tested directly.
-func orgMin(Input) *int { return nil }
+// orgMin returns test.coverage.org_min from the config, or nil when it is not set, and then the
+// org wide check does not run.
+func orgMin(in Input) *int {
+	if in.Config == nil {
+		return nil
+	}
+	return in.Config.Test.Coverage.OrgMin
+}

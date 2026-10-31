@@ -190,7 +190,7 @@ func TestInitWritesValidConfigAndWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generated config does not parse: %v", err)
 	}
-	if cfg.Provider != "salesforce" || len(cfg.Pipelines["pr"]) != 8 || cfg.Pipelines["pr"][7].When != "always" {
+	if cfg.Provider != "salesforce" || len(cfg.Pipelines["pr"]) != 7 || cfg.Pipelines["pr"][6].When != "always" {
 		t.Fatalf("generated config: %+v", cfg)
 	}
 	wf, err := os.ReadFile(filepath.Join(h.dir, ".github", "workflows", "glassops.yml"))

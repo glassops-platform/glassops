@@ -1,0 +1,146 @@
+name: glassops
+
+# Pull requests run the pr pipeline. A push to main runs the deploy pipeline in the
+# glassops-deploy environment. Create that environment in the repository settings, add the
+# required reviewers and a deployment branch rule for main, and set the permit key as a secret
+# of that environment only. Generate the key with: openssl rand -base64 32
+# glassops runs in its container, one docker run per command. The checkout, the tag push and the
+# uploads run on the runner. A project that sets analyze.enabled uses the glassops-analyzer image.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pr:
+    name: glassops run pr
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history, so change sets between commits are complete.
+          fetch-depth: 0
+
+      - name: Install the glassops command
+        env:
+          GLASSOPS_IMAGE: ghcr.io/glassops-platform/glassops:v1
+        run: |
+          # glassops runs in its image, one container per command, with the workspace mounted.
+          # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
+          # image cannot run them.
+          mkdir -p "$RUNNER_TEMP/glassops-bin"
+          cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -u
+          args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
+          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+            args+=(-e "$n")
+          done
+          for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+            p="${!f:-}"
+            if [ -n "$p" ]; then args+=(-e "$f" -v "$p:$p"); fi
+          done
+          exec docker "${args[@]}" "$GLASSOPS_IMAGE" "$@"
+          WRAPPER
+          chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
+          echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
+          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Check the project is ready for glassops
+        run: glassops doctor
+
+      - name: Run the pr pipeline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Add the secrets that glassops.yaml names with $VAR, for example:
+          # SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+        run: glassops run pr
+
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
+
+      - name: Upload SARIF
+        if: always() && steps.checkout.outcome == 'success' && hashFiles('.glassops/report.sarif') != ''
+        # A pull request from a fork has no security-events: write, so this must not fail the run.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .glassops/report.sarif
+          category: glassops
+
+  deploy:
+    name: glassops run deploy
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: glassops-deploy
+    permissions:
+      contents: write
+      actions: read
+      issues: read
+      pull-requests: read
+    concurrency:
+      group: glassops-deploy
+      cancel-in-progress: false
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install the glassops command
+        env:
+          GLASSOPS_IMAGE: ghcr.io/glassops-platform/glassops:v1
+        run: |
+          # glassops runs in its image, one container per command, with the workspace mounted.
+          # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
+          # image cannot run them.
+          mkdir -p "$RUNNER_TEMP/glassops-bin"
+          cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -u
+          args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
+          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+            args+=(-e "$n")
+          done
+          for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+            p="${!f:-}"
+            if [ -n "$p" ]; then args+=(-e "$f" -v "$p:$p"); fi
+          done
+          exec docker "${args[@]}" "$GLASSOPS_IMAGE" "$@"
+          WRAPPER
+          chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
+          echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
+          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Run the deploy pipeline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GLASSOPS_PASS_ENV: GLASSOPS_PERMIT_KEY
+          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+          # Add the secrets that glassops.yaml names with $VAR, for example:
+          # SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+        run: glassops run deploy
+
+      # The container has no git credentials, so its own tag push is only a warning. The tag is
+      # moved in the checkout, and this step pushes it with the checkout's credentials.
+      - name: Push the deployed tag
+        if: always() && steps.checkout.outcome == 'success'
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ -n "$(git tag -l 'glassops/deployed/*')" ]; then
+            git push --force origin 'refs/tags/glassops/deployed/*:refs/tags/glassops/deployed/*'
+          fi
+
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report

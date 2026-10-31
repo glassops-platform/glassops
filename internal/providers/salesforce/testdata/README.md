@@ -45,12 +45,30 @@ and scrub it the same way.
 | `deploy-start-seed-field.json` | `sf project deploy start --metadata CustomField:Account.Tier__c` from the base ref, which puts the deleted field back. Exit 0, 1 of 1 |
 | `deploy-validate-delta-after-seed.json` | the same delta validated after that seed. Exit 0, `Succeeded`, 4 of 4, check-only |
 | `deploy-start-seed-missing-parent.json` | `sf project deploy start --metadata CustomField:Widget__c.Size__c` when the object does not exist. Exit 1, "Entity 'Widget__c' not found." |
+| `apex-test-pass.json` | `sf apex run test --code-coverage --result-format json` with `--wait`, all passing. Exit 0, `summary.outcome` "Passed", `summary.orgWideCoverage` "100%" |
+| `apex-test-fail.json` | the same with one failing test. Exit 100, `summary.outcome` "Failed", `summary.failing` 1 |
+| `apex-test-uncovered-class.json` | the same after deploying a class no test touches. `coverage.coverage[]` does not list that class, while `summary.orgWideCoverage` drops to "66%". Org-wide coverage catches an untested class and the per-class list does not |
+| `apex-test-async.json` | the same without `--wait`. Exit 0, and only `testRunId` |
+| `apex-get-test-fail.json` | `sf apex get test --test-run-id <id>` for that run, which has a failing test. Exit 100 with the full body |
+| `query-active-scratch-org.json` | `sf data query` of `ActiveScratchOrg` on the Dev Hub: `Id`, `ScratchOrg`, `SignupUsername`, `OrgName`, `CreatedDate`, `ExpirationDate`, `ScratchOrgInfoId` |
+| `query-scratch-org-info.json` | `sf data query` of `ScratchOrgInfo` on the Dev Hub: `Id`, `Status`, `ErrorCode`, `ScratchOrg`, `OrgName`, `CreatedDate`, `ExpirationDate` |
 
 ## `sgd/`
 
 The manifests `sfdx-git-delta` wrote for the fixtures above. `delta/` is a change that edits two
 Apex classes and a permission set and deletes a custom field. `empty/` is a delta between a commit
 and itself.
+
+## `codeanalyzer/`
+
+Output from `sf code-analyzer run` (plugin 5.16.0, core 0.53.0) in a container, over a project
+with three low severity violations.
+
+| File | Command |
+|---|---|
+| `code-analyzer.json` | `--output-file` with a `.json` name. `violationCounts` holds `total` and `sev1` to `sev5`, and `violations` lists each one. Exit 0 with violations |
+| `code-analyzer.sarif` | `--output-file` with a `.sarif` name. SARIF 2.1.0 written by the plugin itself. It has one run, for `pmd`, the only engine with violations |
+| `code-analyzer-threshold-stdout.txt` | the terminal output with `--severity-threshold 4`. Exit 4, "Error (ThresholdExceeded)" |
 
 ## Facts the fixtures show
 
@@ -68,3 +86,8 @@ and itself.
 - A quick deploy is single use. A second attempt is `CannotQuickDeployError`.
 - When a destructive change names a component the org no longer has, the validate fails on a
   warning. `numberComponentErrors` stays 0, and the reason is only in the component failures.
+- `summary.orgWideCoverage` is a string with a percent sign, such as "100%". A failing test
+  run is exit 100.
+- `ActiveScratchOrg` has no `Status` field. Its `ScratchOrg` is the 15-character org Id.
+- Code Analyzer exits 0 when it finds violations. Only `--severity-threshold` changes the exit
+  code.

@@ -1,0 +1,53 @@
+# glassops.yaml: configuration for the glassops CLI.
+# Schema: https://github.com/glassops-platform/glassops/blob/main/schemas/config.json
+version: 1
+provider: salesforce
+
+# Targets are where changes go. Uncomment and fill in one block per target.
+# Secrets are named with $VAR, so the values stay in your CI's secret store.
+# targets:
+#   devhub:
+#     id: $SF_DEVHUB_ORG_ID          # org Id guard: login must land on this org
+#     tier: devhub
+#     auth: { method: jwt, username: $SF_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+#   prod:
+#     id: $SF_PROD_ORG_ID
+#     tier: prod
+#     branch: main
+#     auth: { method: jwt, username: $SF_PROD_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+
+# The pr pipeline creates a short-lived environment named ephemeral through this section.
+# environments:
+#   ephemeral:
+#     devhub: devhub
+
+# Policy is evaluated by glassops gate before anything changes a target.
+# policy:
+#   windows:
+#     prod: [{ days: [tue, thu], from: "18:00", to: "22:00", tz: America/Chicago }]
+#   rules:
+#     coverage_min: 75
+
+# The analyze step runs only when analyze.enabled is true. Code Analyzer needs the
+# glassops-analyzer image (ghcr.io/glassops-platform/glassops-analyzer) in the CI job.
+# analyze:
+#   enabled: true
+
+pipelines:
+  pr:
+    - plan
+    - check
+    - analyze
+    - env create
+    - validate --target ephemeral --fallback-target prod
+    - step: report
+      when: always
+    - step: env delete
+      when: always
+  deploy:
+    - plan --target prod
+    - validate --target prod
+    - gate --target prod
+    - deploy --target prod
+    - step: report
+      when: always

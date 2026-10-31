@@ -4,6 +4,12 @@ name: CLI End-to-End
 # at a time, so only one scratch org exists at a time.
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: "all runs every part, pipeline runs only the glassops run part (one scratch org)"
+        type: choice
+        options: [all, pipeline]
+        default: all
   push:
     branches: [main]
 
@@ -59,7 +65,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/scratch"
 
       - name: Doctor, with a login to the Dev Hub
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
             -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
@@ -67,7 +73,7 @@ jobs:
             glassops:e2e doctor --auth --target devhub
 
       - name: Create the scratch org
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm --entrypoint sh \
             -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME \
@@ -76,7 +82,7 @@ jobs:
             glassops:e2e /scripts/scratch-create.sh /out
 
       - name: Hand the scratch org to later steps
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           # Mask first, before the value is used anywhere else.
           url=$(cat "$RUNNER_TEMP/scratch/auth-url")
@@ -88,7 +94,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Plan the delta
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
             -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
@@ -96,7 +102,7 @@ jobs:
             glassops:e2e plan --from HEAD~1 --to HEAD
 
       - name: Check the delta holds one destructive change
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           # The container runs as root and owns .glassops/, so the copy goes next to it.
           cp "$RUNNER_TEMP/repo/.glassops/plan.json" "$RUNNER_TEMP/plan-delta.json"
@@ -114,7 +120,7 @@ jobs:
       # A check-only validate never deploys commit 1, so the delta's destructive change would
       # name a field the scratch org never had. The validate runs the full source instead.
       - name: Plan the full source
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
             -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
@@ -122,7 +128,7 @@ jobs:
             glassops:e2e plan --config /work/glassops-full.yaml
 
       - name: Validate against the scratch org
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
             -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
@@ -141,7 +147,7 @@ jobs:
           git -C "$RUNNER_TEMP/repo" remote add origin /origin.git
 
       - name: Gate the validated plan
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL -e GLASSOPS_PERMIT_KEY \
             -v "$RUNNER_TEMP/repo:/work" -w /work \
@@ -157,7 +163,7 @@ jobs:
           ' "$RUNNER_TEMP/repo/.glassops/permit.json"
 
       - name: A tampered PERMIT is refused before any login
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           node -e '
             const fs = require("fs");
@@ -185,14 +191,14 @@ jobs:
           ' "$RUNNER_TEMP/repo/.glassops/results/deploy.json"
 
       - name: Verify the PERMIT
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL -e GLASSOPS_PERMIT_KEY \
             -v "$RUNNER_TEMP/repo:/work" -w /work \
             glassops:e2e permit verify --target ephemeral --config /work/glassops-full.yaml --ci local
 
       - name: Deploy into the scratch org
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL -e GLASSOPS_PERMIT_KEY \
             -v "$RUNNER_TEMP/repo:/work" -v "$RUNNER_TEMP/origin.git:/origin.git" -w /work \
@@ -208,7 +214,7 @@ jobs:
           if [ "$head" != "$tag" ]; then echo "deployed tag is $tag, HEAD is $head" >&2; exit 1; fi
 
       - name: Plan from the deployed tag
-        if: env.HAS_SF_SECRETS == 'true'
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
             -v "$RUNNER_TEMP/repo:/work" -w /work \
@@ -220,11 +226,50 @@ jobs:
           ' "$RUNNER_TEMP/repo/.glassops/plan.json"
 
       - name: Report
-        if: always() && env.HAS_SF_SECRETS == 'true'
+        if: always() && env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -v "$RUNNER_TEMP/repo:/work" -w /work \
             glassops:e2e report --ci local --summary /work/.glassops/summary.md --sarif /work/.glassops/report.sarif
           cat "$RUNNER_TEMP/repo/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # Phase 4: one glassops run in one container. It plans a delta that deletes a field,
+      # creates a scratch org, seeds the deleted field so the validate can pass, gates and deploys
+      # into the created org, runs the tests there with the coverage gate, runs an exec step,
+      # reports and deletes the org.
+      - name: Run a pipeline with a created scratch org
+        if: env.HAS_SF_SECRETS == 'true'
+        run: |
+          sh testdata/sfdx/build-repo.sh "$RUNNER_TEMP/repo4"
+          cp testdata/e2e/glassops-run.yaml "$RUNNER_TEMP/repo4/glassops.yaml"
+          sed -i 's|^    - step: report$|    - step: report --summary .glassops/summary.md|' "$RUNNER_TEMP/repo4/glassops.yaml"
+          set +e
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID -e GLASSOPS_PERMIT_KEY \
+            -v "$RUNNER_TEMP/repo4:/work" -w /work \
+            glassops:e2e run e2e --ci local
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/repo4/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+          node -e '
+            const fs = require("fs"), dir = process.argv[1];
+            const facts = n => (JSON.parse(fs.readFileSync(dir + "/" + n + ".json", "utf8")).facts || {});
+            const v = facts("validate"), t = facts("test"), r = facts("run");
+            const problems = [];
+            if (v["validate.seed.mode"] !== "minimal") problems.push("seed mode " + v["validate.seed.mode"]);
+            if (!JSON.stringify(v["validate.seed.members"] || []).includes("Account.Tier__c")) problems.push("seed members " + JSON.stringify(v["validate.seed.members"]));
+            if (!(t["test.org_coverage"] >= 75)) problems.push("org coverage " + t["test.org_coverage"]);
+            if (r["run.exit_code"] !== 0) problems.push("run exit " + r["run.exit_code"]);
+            if (problems.length) { console.error("unexpected pipeline results: " + problems.join(", ")); process.exit(1); }
+            console.log("run e2e: minimal seed, validate, tests at " + t["test.org_coverage"] + "% org coverage, exec step, report, env delete");
+          ' "$RUNNER_TEMP/repo4/.glassops/results"
+          exit $code
+
+      - name: Sweep any scratch org the pipeline left
+        if: always() && env.HAS_SF_SECRETS == 'true'
+        run: |
+          [ -f "$RUNNER_TEMP/repo4/glassops.yaml" ] || exit 0
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
+            -v "$RUNNER_TEMP/repo4:/work" -w /work \
+            glassops:e2e env sweep --max-age 1s --ci local
 
       - name: Look for a scratch org to delete
         id: scratch
@@ -258,4 +303,5 @@ jobs:
             ${{ runner.temp }}/repo/.glassops/facts.json
             ${{ runner.temp }}/repo/.glassops/summary.md
             ${{ runner.temp }}/repo/.glassops/report.sarif
+            ${{ runner.temp }}/repo4/.glassops/results/
           if-no-files-found: warn

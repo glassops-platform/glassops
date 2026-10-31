@@ -24,7 +24,16 @@
         "minItems": 1,
         "items": { "$ref": "#/$defs/step" }
       }
-    }
+    },
+    "environments": {
+      "description": "Ephemeral environments, keyed by the target name each one registers as.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/environment" }
+    },
+    "test": { "$ref": "#/$defs/test" },
+    "check": { "$ref": "#/$defs/check" },
+    "analyze": { "$ref": "#/$defs/analyze" }
   },
   "$defs": {
     "name": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
@@ -191,7 +200,72 @@
           "properties": {
             "quick": { "enum": ["prefer", "require", "off"] }
           }
+        },
+        "ephemeral": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "seed": { "enum": ["minimal", "full", "off"] }
+          }
         }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["devhub"],
+      "properties": {
+        "devhub": { "$ref": "#/$defs/name" },
+        "definition": { "type": "string", "minLength": 1 },
+        "ttl_days": { "type": "integer", "minimum": 1 },
+        "shape": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }] },
+        "prefix": { "type": "string", "minLength": 1 }
+      }
+    },
+    "percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "org_min": { "$ref": "#/$defs/percent" },
+            "class_min": { "$ref": "#/$defs/percent" }
+          }
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scripts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "run"],
+            "properties": {
+              "name": { "$ref": "#/$defs/name" },
+              "run": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "analyze": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "rule_selector": { "type": "string", "minLength": 1 },
+        "max_severity": { "type": "integer", "minimum": 1, "maximum": 5 }
       }
     },
     "step": {
@@ -203,8 +277,12 @@
           "required": ["step"],
           "properties": {
             "step": { "type": "string", "minLength": 1 },
+            "run": { "type": "string", "minLength": 1 },
             "when": { "enum": ["success", "failure", "always"] }
-          }
+          },
+          "if": { "properties": { "step": { "const": "exec" } } },
+          "then": { "required": ["run"] },
+          "else": { "not": { "required": ["run"] } }
         }
       ]
     }

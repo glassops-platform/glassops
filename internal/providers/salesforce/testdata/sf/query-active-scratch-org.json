@@ -1,0 +1,23 @@
+{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "ActiveScratchOrg",
+          "url": "/services/data/v68.0/sobjects/ActiveScratchOrg/2AS000000000001AAA"
+        },
+        "Id": "2AS000000000001AAA",
+        "ScratchOrg": "00D000000000002",
+        "SignupUsername": "user@example.com",
+        "OrgName": "GlassOps E2E",
+        "CreatedDate": "2026-10-31T03:39:25.000+0000",
+        "ExpirationDate": "2026-11-01",
+        "ScratchOrgInfoId": "2SR000000000001AAA"
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

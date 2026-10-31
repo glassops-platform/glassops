@@ -1,0 +1,94 @@
+ ›   Warning: @salesforce/cli update available from 2.155.7 to 2.156.8.
+
+Streaming logs in real time to:
+    /tmp/sfca-2026_10_31_03_44_26_767.log
+
+Selecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 0%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 11%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 22%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 23%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 24%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 31%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 32%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 33%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 44%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 55%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 56%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 59%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 67%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 68%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 69%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 80%; Elapsed time: 0sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 80%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 87%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 88%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 89%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 90%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 97%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 98%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 99%; Elapsed time: 1sSelecting rules... Eligible engines: retire-js, regex, uibundle, eslint, apexguru, flow, pmd, cpd, sfge; Completion: 100%; Elapsed time: 1sSelecting rules... done.
+Executing rules... 0 of 1 engines finished after 0s.
+- regex at 0% completion.Executing rules... 0 of 2 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 0% completion.Executing rules... 0 of 2 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 2% completion.Executing rules... 0 of 2 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 6.86% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 6.86% completion.
+- cpd at 0% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 6.86% completion.
+- cpd at 2% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 6.86% completion.
+- cpd at 5% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 6.86% completion.
+- cpd at 9.65% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 10.58% completion.
+- cpd at 9.65% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 10.58% completion.
+- cpd at 14.3% completion.Executing rules... 0 of 3 engines finished after 0s.
+- regex at 0% completion.
+- pmd at 14.3% completion.
+- cpd at 14.3% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 14.3% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 23.6% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 32.9% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 51.5% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 70.1% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 88.7% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 93.35% completion.Executing rules... 1 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 98% completion.Executing rules... 2 of 3 engines finished after 0s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 100% completion.Executing rules... 2 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 14.3% completion.
+- cpd at 100% completion.Executing rules... 2 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 51.5% completion.
+- cpd at 100% completion.Executing rules... 2 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 88.7% completion.
+- cpd at 100% completion.Executing rules... 2 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 93.35% completion.
+- cpd at 100% completion.Executing rules... 2 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 98% completion.
+- cpd at 100% completion.Executing rules... 3 of 3 engines finished after 1s.
+- regex at 100% completion.
+- pmd at 100% completion.
+- cpd at 100% completion.Executing rules... done. Executed rules from regex, pmd, cpd.
+
+=== Summary
+
+Found 3 violation(s) across 2 file(s):
+    3 Low severity violation(s) found.
+
+Results written to:
+    /w/ca-thresh.json
+
+Additional log information written to:
+    /tmp/sfca-2026_10_31_03_44_26_767.log
+Error (ThresholdExceeded): 3 violations met or exceeded the severity threshold of "Low".
+
+

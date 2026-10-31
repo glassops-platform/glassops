@@ -1,0 +1,34 @@
+version: 1
+provider: salesforce
+targets:
+  devhub:
+    id: $SF_DEVHUB_ORG_ID
+    tier: devhub
+    auth: { method: jwt, username: $SF_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+environments:
+  ephemeral:
+    devhub: devhub
+    ttl_days: 1
+    prefix: glassops-e2e
+salesforce:
+  test_level:
+    ephemeral: RunLocalTests
+  ephemeral:
+    seed: minimal
+test:
+  level: { default: RunLocalTests }
+  coverage: { org_min: 75, class_min: 75 }
+pipelines:
+  e2e:
+    - plan --from HEAD~1 --to HEAD
+    - env create
+    - validate --target ephemeral
+    - gate --target ephemeral
+    - deploy --target ephemeral
+    - test --target ephemeral
+    - step: exec
+      run: test -s "$GLASSOPS_RESULTS_DIR/validate.json" && test -s "$GLASSOPS_RESULTS_DIR/test.json"
+    - step: report
+      when: always
+    - step: env delete
+      when: always

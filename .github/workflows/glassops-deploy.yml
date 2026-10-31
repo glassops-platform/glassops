@@ -1,0 +1,151 @@
+name: glassops deploy
+
+# A reusable workflow. Call it from a push to main workflow:
+#   jobs:
+#     glassops:
+#       uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
+#       permissions: { contents: write, actions: read, issues: read, pull-requests: read }
+#       secrets:
+#         GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+#         SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+# The job runs in a protected GitHub environment. The permit key lives only as a secret of that
+# environment. A called workflow gets an environment secret only when the caller passes it by
+# name, as above, and the value is then resolved from the environment of the deploy job.
+# glassops runs in its container, one docker run per command. The checkout, the tag push and the
+# uploads run on the runner.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: The GlassOps container image.
+        type: string
+        default: ghcr.io/glassops-platform/glassops:v1
+      environment:
+        description: The protected GitHub environment that holds the permit key and the required reviewers.
+        type: string
+        default: glassops-deploy
+      targets:
+        description: Space separated target names to log in to before the pipeline, so a bad login fails early.
+        type: string
+        default: ''
+    secrets:
+      # The caller passes it by name. The value is a secret of the protected environment only.
+      GLASSOPS_PERMIT_KEY:
+        required: true
+      SF_JWT_KEY:
+        required: false
+      SF_CLIENT_ID:
+        required: false
+      SF_USERNAME:
+        required: false
+      SF_DEVHUB_ORG_ID:
+        required: false
+      SF_PROD_USERNAME:
+        required: false
+      SF_PROD_ORG_ID:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: glassops run deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    # contents: write pushes the glassops/deployed/* tag. actions: read lets gate read this
+    # run's own approval. issues: read lets gate read who added an approval label. pull-requests: read
+    # lets gate read the PR behind the commit.
+    permissions:
+      contents: write
+      actions: read
+      issues: read
+      pull-requests: read
+    # One deploy at a time per environment. A queued deploy waits and is never cancelled.
+    concurrency:
+      group: glassops-deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install the glassops command
+        env:
+          GLASSOPS_IMAGE: ${{ inputs.image }}
+        run: |
+          # glassops runs in its image, one container per command, with the workspace mounted.
+          # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
+          # image cannot run them.
+          mkdir -p "$RUNNER_TEMP/glassops-bin"
+          cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -u
+          args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
+          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+            args+=(-e "$n")
+          done
+          for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+            p="${!f:-}"
+            if [ -n "$p" ]; then args+=(-e "$f" -v "$p:$p"); fi
+          done
+          exec docker "${args[@]}" "$GLASSOPS_IMAGE" "$@"
+          WRAPPER
+          chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
+          echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
+          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Log in to each target
+        if: inputs.targets != ''
+        env:
+          TARGETS: ${{ inputs.targets }}
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+        run: |
+          for t in $TARGETS; do
+            glassops doctor --auth --target "$t"
+          done
+
+      - id: pipeline
+        name: Run the deploy pipeline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GLASSOPS_PASS_ENV: GLASSOPS_PERMIT_KEY
+          GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+        run: glassops run deploy
+
+      # The container has no git credentials, so its own tag push is only a warning. The tag is
+      # moved in the checkout, and this step pushes it with the checkout's credentials.
+      - name: Push the deployed tag
+        if: always() && steps.checkout.outcome == 'success'
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ -n "$(git tag -l 'glassops/deployed/*')" ]; then
+            git push --force origin 'refs/tags/glassops/deployed/*:refs/tags/glassops/deployed/*'
+          fi
+
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
+
+      - name: Keep the evidence
+        if: always() && steps.checkout.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: glassops-deploy-evidence
+          path: |
+            .glassops/results/
+            .glassops/plan.json
+            .glassops/permit.json
+          if-no-files-found: warn

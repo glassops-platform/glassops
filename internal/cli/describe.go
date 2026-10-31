@@ -51,6 +51,7 @@ func (app *App) describe(ctx context.Context, g *globals, o *describeOptions) er
 	res := run.New("describe", app.Now)
 	res.Provider = proj.provider.Name()
 	res.Target = t.Name
+	res.Facts["target.source"] = targetSource(t)
 
 	s, info, err := app.connect(ctx, proj.provider, t)
 	if err != nil {

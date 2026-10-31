@@ -62,6 +62,11 @@ func NewRootCommand(app *App) *cobra.Command {
 		newPermitCommand(app, g),
 		newDeployCommand(app, g),
 		newReportCommand(app, g),
+		newEnvCommand(app, g),
+		newTestCommand(app, g),
+		newRunCommand(app, g),
+		newCheckCommand(app, g),
+		newAnalyzeCommand(app, g),
 	)
 	return root
 }
@@ -83,6 +88,13 @@ func Execute(app *App, args []string) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return ExecuteContext(ctx, app, args)
+}
+
+// Execute builds a fresh command tree and runs argv in this process with ctx, sharing app,
+// so every step sees one auth store and one clock. It returns the exit code. It installs no
+// signal handler, so the caller, such as run, owns cancellation through ctx.
+func (app *App) Execute(ctx context.Context, argv []string) int {
+	return ExecuteContext(ctx, app, argv)
 }
 
 // ExecuteContext is Execute with a caller-supplied context, for tests.

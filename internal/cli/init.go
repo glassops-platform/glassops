@@ -147,8 +147,10 @@ func (app *App) writeFile(res *run.Result, check, path string, data []byte, forc
 	res.AddCheck(check, run.StatusPass, verb+" "+path)
 }
 
+// render fills a template. The templates use [[ and ]] as delimiters, because GitHub
+// workflows use {{ }} themselves.
 func render(tmpl string, data any) ([]byte, error) {
-	t, err := template.New("t").Option("missingkey=error").Parse(tmpl)
+	t, err := template.New("t").Delims("[[", "]]").Option("missingkey=error").Parse(tmpl)
 	if err != nil {
 		return nil, err
 	}

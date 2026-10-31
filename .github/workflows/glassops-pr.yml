@@ -1,0 +1,122 @@
+name: glassops pr
+
+# A reusable workflow. Call it from a pull_request workflow:
+#   jobs:
+#     glassops:
+#       uses: glassops-platform/glassops/.github/workflows/glassops-pr.yml@v1
+#       permissions: { contents: read, pull-requests: read, security-events: write }
+#       secrets: inherit
+# It never receives the permit key. Only the deploy workflow does, from its environment.
+# glassops runs in its container, one docker run per command. The checkout and the uploads run on
+# the runner. A consumer that sets analyze.enabled passes the glassops-analyzer image as image.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: The GlassOps container image. A consumer that sets analyze.enabled in glassops.yaml passes the glassops-analyzer image, for example ghcr.io/glassops-platform/glassops-analyzer:v1.
+        type: string
+        default: ghcr.io/glassops-platform/glassops:v1
+      targets:
+        description: Space separated target names to log in to before the pipeline, so a bad login fails early.
+        type: string
+        default: ''
+      upload-sarif:
+        description: Upload the SARIF file to code scanning. Needs GitHub code scanning on the repository.
+        type: boolean
+        default: true
+    secrets:
+      SF_JWT_KEY:
+        required: false
+      SF_CLIENT_ID:
+        required: false
+      SF_USERNAME:
+        required: false
+      SF_DEVHUB_ORG_ID:
+        required: false
+      SF_PROD_USERNAME:
+        required: false
+      SF_PROD_ORG_ID:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  pr:
+    name: glassops run pr
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history, so the change set between the base and the head is complete.
+          fetch-depth: 0
+
+      - name: Install the glassops command
+        env:
+          GLASSOPS_IMAGE: ${{ inputs.image }}
+        run: |
+          # glassops runs in its image, one container per command, with the workspace mounted.
+          # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
+          # image cannot run them.
+          mkdir -p "$RUNNER_TEMP/glassops-bin"
+          cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
+          #!/usr/bin/env bash
+          set -u
+          args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
+          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+            args+=(-e "$n")
+          done
+          for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
+            p="${!f:-}"
+            if [ -n "$p" ]; then args+=(-e "$f" -v "$p:$p"); fi
+          done
+          exec docker "${args[@]}" "$GLASSOPS_IMAGE" "$@"
+          WRAPPER
+          chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
+          echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
+          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Log in to each target
+        if: inputs.targets != ''
+        env:
+          TARGETS: ${{ inputs.targets }}
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+        run: |
+          for t in $TARGETS; do
+            glassops doctor --auth --target "$t"
+          done
+
+      - id: pipeline
+        name: Run the pr pipeline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+          SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+          SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
+        run: glassops run pr
+
+      - name: Report
+        if: always() && steps.checkout.outcome == 'success'
+        run: glassops report
+
+      - name: Upload SARIF
+        if: always() && inputs.upload-sarif && steps.checkout.outcome == 'success' && hashFiles('.glassops/report.sarif') != ''
+        # A pull request from a fork has no security-events: write, so this must not fail the run.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .glassops/report.sarif
+          category: glassops

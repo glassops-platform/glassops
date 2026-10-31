@@ -44,6 +44,11 @@ func newDoctorCommand(app *App, g *globals) *cobra.Command {
 	return cmd
 }
 
+// doctorExtras are more checks doctor runs after its own tool checks, in order, when the config
+// loaded. Each appends its checks to the result in the order it returns them. Other files add
+// to it from init.
+var doctorExtras []func(app *App, cfg *config.Config) []run.Check
+
 func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error {
 	c, err := app.detectCI(g)
 	if err != nil {
@@ -107,6 +112,15 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 		for _, t := range p.Tools() {
 			v, err := t.Version()
 			app.checkTool(res, t.Name, v, err)
+		}
+	}
+
+	// 4a. Checks other files register.
+	if cfg != nil {
+		for _, extra := range doctorExtras {
+			for _, ch := range extra(app, cfg) {
+				res.AddCheck(ch.Name, ch.Status, ch.Detail)
+			}
 		}
 	}
 

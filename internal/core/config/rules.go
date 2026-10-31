@@ -94,6 +94,13 @@ func Check(c *Config) []string {
 		}
 	}
 
+	for _, name := range sortedKeys(c.Environments) {
+		e := c.Environments[name]
+		if _, ok := c.Targets[e.DevHub]; !ok {
+			add("environments.%s.devhub: %q is not a configured target", name, e.DevHub)
+		}
+	}
+
 	for _, name := range sortedKeys(c.Pipelines) {
 		for i, s := range c.Pipelines[name] {
 			if strings.TrimSpace(s.Run) == "" {
@@ -125,6 +132,9 @@ func EnvRefs(c *Config) []string {
 		for _, v := range []string{t.ID, t.Auth.Username, t.Auth.ClientID, t.Auth.Key, t.Auth.URL, t.Auth.Token} {
 			note(v)
 		}
+	}
+	for _, e := range c.Environments {
+		note(e.Shape)
 	}
 	out := make([]string, 0, len(set))
 	for k := range set {
