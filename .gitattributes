@@ -1,2 +1,6 @@
 # Shell scripts run in Linux containers, so they keep LF endings even on a Windows checkout.
 *.sh text eol=lf
+# Go sources and test fixtures keep LF so gofmt and golden-file tests behave the same on every
+# checkout.
+*.go text eol=lf
+**/testdata/** text eol=lf

@@ -228,4 +228,9 @@ func TestLoadedSHA256(t *testing.T) {
 	if other.SHA256() == d1.SHA256() {
 		t.Fatal("the default hash ignores the config")
 	}
+
+	crlf := &Loaded{Raw: []byte("version: 1\r\n")}
+	if got := crlf.SHA256(); got != want {
+		t.Fatalf("CRLF SHA256 = %s, want the LF hash %s", got, want)
+	}
 }

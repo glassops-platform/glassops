@@ -190,11 +190,13 @@ type Loaded struct {
 	Raw []byte
 }
 
-// SHA256 returns the hex SHA-256 of the raw file bytes. With no file it hashes Config encoded
-// as JSON, which encoding/json writes the same way every time for the same value.
+// SHA256 returns the hex SHA-256 of the raw file bytes, with CRLF read as LF. With no file it
+// hashes Config encoded as JSON, which encoding/json writes the same way every time.
 func (l *Loaded) SHA256() string {
-	data := l.Raw
-	if data == nil {
+	// CRLF and LF checkouts of the same file hash the same, so a PERMIT written on one
+	// runner verifies on another.
+	data := bytes.ReplaceAll(l.Raw, []byte{'\r', '\n'}, []byte{'\n'})
+	if l.Raw == nil {
 		// A Config holds only strings, numbers, bools, slices, maps and structs, so encoding
 		// cannot fail.
 		data, _ = json.Marshal(l.Config)

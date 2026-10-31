@@ -31,7 +31,7 @@ func (g *GitHub) Context() Context {
 		// GITHUB_BASE_REF is set only on pull request events.
 		BaseRef:         g.env("GITHUB_BASE_REF"),
 		TriggeringActor: g.env("GITHUB_TRIGGERING_ACTOR"),
-		Token:           g.env("GITHUB_TOKEN"),
+		Token:           firstSet(g.env("GITHUB_TOKEN"), g.env("GH_TOKEN")),
 	}
 	// Pull request refs look like refs/pull/<number>/merge.
 	if parts := strings.Split(c.Ref, "/"); len(parts) == 4 && parts[1] == "pull" {
@@ -73,4 +73,14 @@ func appendLine(path, line string) error {
 	defer f.Close()
 	_, err = fmt.Fprintln(f, line)
 	return err
+}
+
+// firstSet returns the first non-empty value.
+func firstSet(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
