@@ -1,0 +1,25 @@
+name: glassops deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  glassops:
+    uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    with:
+      environment: glassops-deploy
+    secrets:
+      SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+      SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+      SF_USERNAME: ${{ secrets.SF_USERNAME }}
+      SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+      SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+      SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}

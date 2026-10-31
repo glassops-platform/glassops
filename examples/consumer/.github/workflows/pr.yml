@@ -1,0 +1,24 @@
+name: glassops pr
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  glassops:
+    uses: glassops-platform/glassops/.github/workflows/glassops-pr.yml@v1
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    with:
+      targets: devhub
+    secrets:
+      SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+      SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+      SF_USERNAME: ${{ secrets.SF_USERNAME }}
+      SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+      SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
+      SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}

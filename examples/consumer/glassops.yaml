@@ -1,0 +1,44 @@
+# glassops.yaml for a Salesforce DX project.
+# Secrets are named with $VAR, so the values stay in the CI's secret store.
+version: 1
+provider: salesforce
+
+targets:
+  devhub:
+    id: $SF_DEVHUB_ORG_ID
+    tier: devhub
+    auth: { method: jwt, username: $SF_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+  prod:
+    id: $SF_PROD_ORG_ID
+    tier: prod
+    branch: main
+    auth: { method: jwt, username: $SF_PROD_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
+
+# The pr pipeline creates a short-lived scratch org named ephemeral through the Dev Hub.
+environments:
+  ephemeral:
+    devhub: devhub
+
+policy:
+  windows:
+    prod: [{ days: [tue, thu], from: "18:00", to: "22:00", tz: America/Chicago }]
+  rules:
+    coverage_min: 75
+
+pipelines:
+  pr:
+    - plan
+    - check
+    - analyze
+    - env create
+    - validate --target ephemeral --fallback-target prod
+    - test --target ephemeral
+    - report
+    - step: env delete
+      when: always
+  deploy:
+    - plan
+    - validate --target prod
+    - gate --target prod
+    - deploy --target prod
+    - report
