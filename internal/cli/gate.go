@@ -41,8 +41,8 @@ const evidencePrefix = "evidence."
 var (
 	gateRules   = policy.Default
 	gateSigner  = permit.NewHMAC
-	signPermit  = permit.Sign
-	writePermit = permit.Write
+	gateSign  = permit.Sign
+	gateWrite = permit.Write
 )
 
 type gateOptions struct {
@@ -222,11 +222,11 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	for _, ch := range checks {
 		res.AddCheck(ch.Rule, ruleStatus(ch), ch.Detail)
 	}
-	if err := signPermit(&p, signer); err != nil {
+	if err := gateSign(&p, signer); err != nil {
 		res.AddCheck("permit", run.StatusError, fmt.Sprintf("sign: %v", err))
 		return app.finish(res, c, g)
 	}
-	if err := writePermit(permitPath, p); err != nil {
+	if err := gateWrite(permitPath, p); err != nil {
 		res.AddCheck("permit", run.StatusError, fmt.Sprintf("write: %v", err))
 		return app.finish(res, c, g)
 	}

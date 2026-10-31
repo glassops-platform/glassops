@@ -76,11 +76,11 @@ func fakeCanonical(p permit.Permit) []byte {
 // installGateFakes swaps fake rules and a fake signer into gate and restores them after t.
 func installGateFakes(t *testing.T, rules ...policy.Rule) {
 	t.Helper()
-	oldRules, oldSigner, oldSign, oldWrite := gateRules, gateSigner, signPermit, writePermit
-	t.Cleanup(func() { gateRules, gateSigner, signPermit, writePermit = oldRules, oldSigner, oldSign, oldWrite })
+	oldRules, oldSigner, oldSign, oldWrite := gateRules, gateSigner, gateSign, gateWrite
+	t.Cleanup(func() { gateRules, gateSigner, gateSign, gateWrite = oldRules, oldSigner, oldSign, oldWrite })
 	gateRules = func() []policy.Rule { return rules }
 	gateSigner = func(key []byte) permit.Signer { return fakeSigner{key: key} }
-	signPermit = func(p *permit.Permit, s permit.Signer) error {
+	gateSign = func(p *permit.Permit, s permit.Signer) error {
 		// The algorithm is part of the signed bytes, and only the value is left out.
 		p.Signature = permit.Signature{Alg: s.Alg()}
 		v, err := s.Sign(fakeCanonical(*p))
@@ -90,7 +90,7 @@ func installGateFakes(t *testing.T, rules ...policy.Rule) {
 		p.Signature.Value = v
 		return nil
 	}
-	writePermit = func(path string, p permit.Permit) error {
+	gateWrite = func(path string, p permit.Permit) error {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return err
 		}
