@@ -65,6 +65,7 @@ func flagValues(args []string, flag string) []string {
 func TestAnalyzeRecordsCountsAndSarif(t *testing.T) {
 	h := newHarness(t)
 	h.write(t, "sfdx-project.json", "{}")
+	h.write(t, "glassops.yaml", analyzeOn)
 	var args []string
 	analyzerRunner(t, h, &args, nil, true)
 	if code := h.exec("analyze"); code != exitcode.OK {
@@ -140,6 +141,7 @@ func TestAnalyzeErrorsExit2(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t)
 			h.write(t, "sfdx-project.json", "{}")
+			h.write(t, "glassops.yaml", analyzeOn)
 			var args []string
 			analyzerRunner(t, h, &args, tc.fail, tc.write)
 			if code := h.exec("analyze"); code != exitcode.Error {
@@ -155,6 +157,7 @@ func TestAnalyzeErrorsExit2(t *testing.T) {
 func TestAnalyzeRejectsOutputWithoutCounts(t *testing.T) {
 	h := newHarness(t)
 	h.write(t, "sfdx-project.json", "{}")
+	h.write(t, "glassops.yaml", analyzeOn)
 	h.app.Run = func(_ string, name string, a ...string) ([]byte, error) {
 		if name == "sf" && a[0] == "code-analyzer" {
 			for i, v := range a {
@@ -202,4 +205,18 @@ func contains(list []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func TestAnalyzeUnsetIsSkippedAndSaysHow(t *testing.T) {
+	h := newHarness(t)
+	h.write(t, "sfdx-project.json", "{}")
+	var args []string
+	analyzerRunner(t, h, &args, nil, true)
+	if code := h.exec("analyze"); code != exitcode.OK || args != nil {
+		t.Fatalf("exit %d, args %v", code, args)
+	}
+	r := h.result(t, "analyze")
+	if r.Status != run.StatusEmpty || !strings.Contains(r.Checks[0].Detail, "analyze.enabled: true") || !strings.Contains(r.Checks[0].Detail, "glassops-analyzer") {
+		t.Fatalf("result %+v", r)
+	}
 }

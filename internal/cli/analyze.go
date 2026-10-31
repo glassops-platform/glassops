@@ -27,7 +27,7 @@ func newAnalyzeCommand(app *App, g *globals) *cobra.Command {
 		Long: "analyze runs the Salesforce Code Analyzer over the project and records the\n" +
 			"violations as facts analyze.total and analyze.sev1 to analyze.sev5, and keeps the\n" +
 			"SARIF file as an artifact. It exits 0 when the analyzer ran, whatever it found,\n" +
-			"and 2 when it could not run. Deciding what is too severe is the job of gate\n" +
+			"and 2 when it could not run. It runs only when analyze.enabled is true. Deciding what is too severe is the job of gate\n" +
 			"(analyzer_max_severity), not of this command.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -77,9 +77,9 @@ func (app *App) analyze(g *globals, o *analyzeOptions) error {
 	res := run.New("analyze", app.Now)
 	res.Provider = proj.provider.Name()
 
-	if e := proj.cfg.Analyze.Enabled; e != nil && !*e {
+	if e := proj.cfg.Analyze.Enabled; e == nil || !*e {
 		res.Status = run.StatusEmpty
-		res.AddCheck("analyze", run.StatusSkipped, "analyze.enabled is false")
+		res.AddCheck("analyze", run.StatusSkipped, "analyze is off. Set analyze.enabled: true and use the glassops-analyzer image to run it")
 		return app.finish(res, c, g)
 	}
 	if proj.provider.Name() != "salesforce" {
@@ -126,7 +126,7 @@ func (app *App) analyze(g *globals, o *analyzeOptions) error {
 		"--output-file", rawPath,
 		"--output-file", sarifPath)
 	if err != nil {
-		res.AddCheck("analyze", run.StatusError, fmt.Sprintf("sf code-analyzer run failed: %v", err))
+		res.AddCheck("analyze", run.StatusError, fmt.Sprintf("sf code-analyzer run failed: %v. The Code Analyzer needs Java 11 or newer and the plugin, which the glassops-analyzer image provides", err))
 		return app.finish(res, c, g)
 	}
 	data, err := os.ReadFile(rawPath)
