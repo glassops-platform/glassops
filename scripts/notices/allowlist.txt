@@ -1,0 +1,6 @@
+# Packages allowed to carry a copyleft license (T11). The format is in licenses.py. AGPL cannot be
+# listed here.
+#
+# The Java runtime of the analyzer image is the one package the design allows (GPLv2 with the
+# Classpath Exception). The exception lets software run on the runtime without taking its license.
+apk:openjdk17-jre-headless = GPL-2.0-with-classpath-exception
