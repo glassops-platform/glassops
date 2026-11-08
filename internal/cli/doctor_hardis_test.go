@@ -90,11 +90,37 @@ func TestDoctorHardis(t *testing.T) {
 // TestDoctorHardisNoSf covers sf itself failing: the check fails with the install steps.
 func TestDoctorHardisNoSf(t *testing.T) {
 	cfg := &config.Config{Salesforce: config.Salesforce{Engine: config.EngineHardis}}
+	rememberProjectDir(cfg, t.TempDir())
 	app := &App{Run: func(string, string, ...string) ([]byte, error) { return nil, errNoSf }}
 	checks := doctorHardis(app, cfg)
-	if len(checks) != 1 || checks[0].Name != "tool.sfdx-hardis" || checks[0].Status != run.StatusFail ||
+	if len(checks) != 2 || checks[0].Name != "tool.sfdx-hardis" || checks[0].Status != run.StatusFail ||
 		!strings.Contains(checks[0].Detail, "sf plugins install sfdx-hardis@") {
 		t.Fatalf("checks = %+v", checks)
+	}
+}
+
+// TestDoctorHardisCommands: doctor fails when the sfdx-hardis config defines deploy commands,
+// which engine hardis refuses, and passes without them.
+func TestDoctorHardisCommands(t *testing.T) {
+	h := newHarness(t)
+	h.write(t, "sfdx-project.json", "{}")
+	h.write(t, "glassops.yaml", hardisConfig)
+	h.tools["sf plugins --json"] = pluginsWithHardis
+	if code := h.exec("doctor"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if got := checkStatus(h.result(t, "doctor"), "salesforce.hardis.commands"); got != run.StatusPass {
+		t.Fatalf("salesforce.hardis.commands = %s", got)
+	}
+
+	h.write(t, "config/.sfdx-hardis.yml", "commandsPostDeploy:\n  - id: x\n    command: echo hi\n")
+	if code := h.exec("doctor"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "doctor")
+	if checkStatus(r, "salesforce.hardis.commands") != run.StatusFail ||
+		!strings.Contains(detailOf(r, "salesforce.hardis.commands"), "config/.sfdx-hardis.yml defines commandsPostDeploy") {
+		t.Fatalf("checks: %+v", r.Checks)
 	}
 }
 
