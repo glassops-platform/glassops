@@ -29,7 +29,7 @@ DOCKER
 check() { # tag extra-args...
   tag="$1"; shift
   "$here/sbom.sh" "glassops-planted:$tag" "$work/$tag.json"
-  "$py" -X utf8 "$here/licenses.py" check "$(native "$work/$tag.json")" --allow "$(native "$here/allowlist.txt")" "$(native "$here/allowlist-proposed.txt")" "$@"
+  "$py" -X utf8 "$here/licenses.py" check "$(native "$work/$tag.json")" --allow "$(native "$here/allowlist.txt")" "$@"
 }
 
 build agpl AGPL-3.0-only

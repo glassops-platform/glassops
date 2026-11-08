@@ -4,3 +4,5 @@
 !cmd/
 !internal/
 !schemas/
+!LICENSE
+!THIRD_PARTY_NOTICES

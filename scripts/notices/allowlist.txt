@@ -1,6 +1,41 @@
 # Packages allowed to carry a copyleft license (T11). The format is in licenses.py. AGPL cannot be
 # listed here.
 #
-# The Java runtime of the analyzer image is the one package the design allows (GPLv2 with the
-# Classpath Exception). The exception lets software run on the runtime without taking its license.
+# The Java runtime of the analyzer image is allowed (GPLv2 with the Classpath Exception). The
+# exception lets software run on the runtime without taking its license.
 apk:openjdk17-jre-headless = GPL-2.0-with-classpath-exception
+
+# Operating system packages of the Alpine base layer that declare GPL or LGPL (owner decision
+# 2026-11-08). Each line is a package the images ship today, matched by its declared license text,
+# so a new package or a changed license fails the scan and shows up in the report. These are
+# separate programs and shared libraries that the images contain and that glassops runs as
+# commands (git, coreutils, busybox). They are not linked into glassops. Review this list whenever
+# the base image changes.
+apk:acl-libs = LGPL-2.1-or-later AND GPL-2.0-or-later
+apk:alpine-baselayout = GPL-2.0-only
+apk:alpine-baselayout-data = GPL-2.0-only
+apk:apk-tools = GPL-2.0-only
+apk:busybox = GPL-2.0-only
+apk:busybox-binsh = GPL-2.0-only
+apk:coreutils = GPL-3.0-or-later
+apk:coreutils-env = GPL-3.0-or-later
+apk:coreutils-fmt = GPL-3.0-or-later
+apk:coreutils-sha512sum = GPL-3.0-or-later
+apk:gdbm = GPL-3.0-or-later
+apk:git = GPL-2.0-only
+apk:git-init-template = GPL-2.0-only
+apk:java-common = GPL-2.0-or-later
+apk:libapk = GPL-2.0-only
+apk:libattr = LGPL-2.1-or-later
+apk:libgcc = GPL-2.0-or-later AND LGPL-2.1-or-later
+apk:libidn2 = GPL-2.0-or-later OR LGPL-3.0-or-later
+apk:libstdc++ = GPL-2.0-or-later AND LGPL-2.1-or-later
+apk:libtasn1 = LGPL-2.1-or-later
+apk:libunistring = GPL-2.0-or-later OR LGPL-3.0-or-later
+apk:musl-utils = MIT AND BSD-2-Clause AND GPL-2.0-or-later
+apk:readline = GPL-3.0-or-later
+apk:scanelf = GPL-2.0-only
+apk:ssl_client = GPL-2.0-only
+apk:xz-libs = GPL-2.0-or-later
+apk:xz-libs = LGPL-2.1-or-later
+java-archive:jna = LGPL-2.1-only

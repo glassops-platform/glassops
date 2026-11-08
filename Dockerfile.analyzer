@@ -39,4 +39,5 @@ RUN npm install -g @salesforce/cli@${SF_CLI_VERSION} \
     && npm cache clean --force
 
 COPY --from=build /out/glassops /usr/local/bin/glassops
+COPY LICENSE THIRD_PARTY_NOTICES /usr/share/doc/glassops/
 ENTRYPOINT ["glassops"]

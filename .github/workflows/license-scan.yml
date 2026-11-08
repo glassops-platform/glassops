@@ -1,7 +1,7 @@
 name: License Scan
 
 # Builds both images, writes an SBOM of each with syft, and fails on any AGPL, GPL or LGPL package
-# that scripts/notices/allowlist.txt and allowlist-proposed.txt do not list. It also checks that
+# that scripts/notices/allowlist.txt does not list. It also checks that
 # THIRD_PARTY_NOTICES still matches what the images contain, and runs the tests of the release
 # scripts. release.yml calls this workflow and publishes no image unless it passes.
 #
@@ -71,7 +71,7 @@ jobs:
       - name: Check the licenses
         run: |
           python3 scripts/notices/licenses.py check ${{ matrix.image.name }}.sbom.json \
-            --allow scripts/notices/allowlist.txt scripts/notices/allowlist-proposed.txt
+            --allow scripts/notices/allowlist.txt
 
       - uses: actions/upload-artifact@v4
         if: always()
