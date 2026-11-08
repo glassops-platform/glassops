@@ -104,3 +104,25 @@ func TestRTWrongTypedEvidenceDoesNotPass(t *testing.T) {
 		})
 	}
 }
+
+// Finding F12, now refused: Outcome.Denies was true for "fail" only, so any outcome outside
+// the five known ones allowed. A Go rule with a typo, or a Rego evaluator that maps a policy
+// verdict to an outcome string, failed open on "FAIL", "deny" or "".
+func TestRTUnknownOutcomeDenies(t *testing.T) {
+	for _, o := range []Outcome{"FAIL", "Fail", "deny", "error", ""} {
+		evs := []Evaluator{rtEval{name: "go", results: []Result{{Rule: "rt", Outcome: o}}}}
+		if allow, _, _ := EvaluateAll(context.Background(), evs, Input{Facts: facts.New(), Now: rtNow}); allow {
+			t.Errorf("outcome %q allowed", o)
+		}
+	}
+}
+
+// Finding F13, now refused: an evaluator that returned no results and no error allowed. gate
+// refuses an empty rule list, but did not refuse a rule set that says nothing, such as a Rego
+// file with no rules.
+func TestRTEvaluatorWithNoResultsDenies(t *testing.T) {
+	evs := []Evaluator{rtEval{name: "go"}}
+	if allow, _, _ := EvaluateAll(context.Background(), evs, Input{Facts: facts.New(), Now: rtNow}); allow {
+		t.Fatal("an evaluator that returned nothing allowed")
+	}
+}
