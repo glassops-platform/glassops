@@ -102,6 +102,9 @@ Reads the change set, the earlier results in the results directory and the CI co
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | Where the PERMIT is written |
 | `--no-connect` | `false` | Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the `guard` check is `skipped` |
+| `--deploy-command` | | Provider `exec` only. The command `deploy --` will run, as a JSON array of strings, such as `'["./deploy.sh","--prod"]'`. The PERMIT binds its SHA-256, never the text. With any other provider it is an error |
+
+When the target's tier has deploy windows and the gate's clock is inside one, the PERMIT expires when that window closes, if that is before `policy.permit_ttl`. Windows that overlap or touch extend it. With no window for the tier, or a clock outside them, the PERMIT keeps the full TTL, and the window rule decides.
 
 Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
 
@@ -111,11 +114,11 @@ Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/pla
 | `1` | Policy denies the deploy. The signed PERMIT is still written |
 | `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
 
-Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id` and `gate.expires_at`.
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
 
 ### `glassops permit verify`
 
-Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, and that it matches the target, the commit, the plan and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
+Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, that its lifetime is sound, and that it matches the target, the commit, the plan, the change set and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -135,7 +138,7 @@ Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
 ### `glassops deploy`
 
-Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation.
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -143,29 +146,29 @@ Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and 
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
 | `--wait` | the provider's | How long to wait for the deploy, such as `30m`. The Salesforce provider waits 60 minutes |
-| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy |
+| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy. Accepted only when `.glassops/results/deploy.json` records that job timing out under the same PERMIT and target |
 
 With provider `exec`, a command after `--` runs instead of `exec.deploy`: `glassops deploy --target prod -- ./ci/deploy.sh`. See [the exec provider](exec-provider.md#deploying). A command after `--` with any other provider is an error.
 
-Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status `empty` and no login.
+Needs `GLASSOPS_PERMIT_KEY` and a git checkout. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. After the PERMIT verifies and before the login, `git rev-parse HEAD` must also be that commit and no tracked file may be modified or staged. Untracked files are allowed. With provider `exec`, a command after `--` runs only when the PERMIT binds exactly that command, from `gate --deploy-command`. An empty change set under a valid PERMIT ends with status `empty` and no login.
 
 | Exit | When |
 |---|---|
 | `0` | The deploy succeeded, or the change set was empty |
 | `1` | The deploy ran and the target reported failures, or `salesforce.deploy.quick` is `require` and the PERMIT holds no passed validation to quick deploy |
-| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
+| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, the working tree is not the PERMIT's commit or git cannot tell, `--resume` names a job the last deploy did not time out on, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
 
-Result facts: `deploy.permit_id`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts.
+Result facts: `deploy.permit_id`, `deploy.plan_sha256`, `deploy.test_level`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts. `deploy.plan_sha256` is the plan the deploy sent. `deploy.test_level` is the level the deploy was sent with, or for a quick deploy the level of the validation it reused.
 
 ### `glassops verify`
 
 Runs after `deploy` and checks that the target holds what the plan says. It never deploys. It is the last step of the default `deploy` pipeline, before `report`.
 
-Before it logs in, `verify` reads the deploy result and the change set. It stops with an error when the deploy result is for another target or provider, did not pass, did not finish (a timeout), or has no deploy Id, because there is no finished deploy to check. It checks that the plan files still match the plan digest. When the deploy result holds `deploy.plan_sha256`, it must equal the plan's digest, and the fact `verify.plan_bound_to_deploy` says whether that tie existed. An empty deploy ends `verify` with status `empty` and no login. Then it logs in, runs the [guard](#the-guard), and the provider runs these checks:
+Before it logs in, `verify` reads the deploy result and the change set. It stops with an error when the deploy result is for another target or provider, did not pass, did not finish (a timeout), or has no deploy Id, because there is no finished deploy to check. It checks that the plan files still match the plan digest. `deploy` always records `deploy.plan_sha256` and `deploy.test_level`, so `verify` always ties the plan to the deploy: the recorded digest must equal the plan's digest, and the fact `verify.plan_bound_to_deploy` is `true`. It is `false` only for a deploy result `deploy` did not write. An empty deploy ends `verify` with status `empty` and no login. Then it logs in, runs the [guard](#the-guard), and the provider runs these checks:
 
 | Check | Passes when |
 |---|---|
-| `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy shows the coverage warnings the report holds |
+| `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy lists the coverage warnings the report holds |
 | `verify.check_only` | The deploy was not a check-only run, so it changed something |
 | `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
 | `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
@@ -431,6 +434,8 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `0` | Pass |
 | `1` | A policy or check failed. The tool itself worked |
 | `2` | A tool or infrastructure error stopped the command, or the command line was invalid |
+
+A tool error is printed to stderr as `glassops: <message>` on one line. A line break inside the message is replaced, so output that a CI runner scans for commands cannot start a new line.
 
 ---
 

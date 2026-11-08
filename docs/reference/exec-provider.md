@@ -118,15 +118,14 @@ The guard compares the org Id the target reports with the Id in the config. The 
 
 `glassops deploy --target prod` verifies the PERMIT, runs the guard, then runs `exec.deploy`. The exec provider has no quick deploy and cannot resume. `--resume` is refused. Run the deploy again instead.
 
-You can name the command on the command line and leave `exec.deploy` out:
+You can name the command on the command line and leave `exec.deploy` out, but the PERMIT must bind it. Give `gate` the same command as a JSON array of strings, one element per argument:
 
 ```bash
+glassops gate --target prod --deploy-command '["./ci/deploy.sh","--region","eu-1"]'
 glassops deploy --target prod -- ./ci/deploy.sh --region eu-1
 ```
 
-Everything after `--` replaces `exec.deploy` for that run, and each argument is passed as one word. The result records `exec.deploy_override: true`. A command after `--` with any other provider is an error.
-
-The PERMIT binds the config file, not the command on the command line. See [PERMIT and rules](permit-and-rules.md) for what the PERMIT binds.
+`gate` stores only the SHA-256 of the array in the PERMIT, as `deploy_command_sha256`, and never the text. Everything after `--` replaces `exec.deploy` for that run, and each argument is passed as one word. `deploy` refuses any other command, and refuses a PERMIT with no command hash, with exit 2 and before it runs anything. `["a b"]` and `["a","b"]` hash differently. The result records `exec.deploy_override: true`. A command after `--` with any other provider is an error, and so is `--deploy-command`. Without a command after `--`, `exec.deploy` runs and the PERMIT binds the config file, which holds that command.
 
 ## Verifying
 
@@ -134,4 +133,4 @@ The PERMIT binds the config file, not the command on the command line. See [PERM
 
 ## Untested here
 
-The provider is covered by unit tests with a fake shell and by the script `scripts/e2e/exec-e2e.sh`, which runs the binary in a container with no network. No exec project has deployed to a production system through it yet.
+The provider is covered by unit tests with a fake shell and by the script `scripts/e2e/exec-e2e.sh`, which runs the binary in a container with no network. The script takes the binary's name or path as its one argument and defaults to `glassops`. It runs `plan`, `gate --deploy-command`, `permit verify`, a tampered PERMIT, a wrong describe Id, a command the PERMIT does not bind, a modified tracked file, and the deploy. No exec project has deployed to a production system through it yet.
