@@ -1,7 +1,6 @@
 package permit
 
 import (
-	"bytes"
 	"errors"
 	"strings"
 	"testing"
@@ -23,7 +22,7 @@ func TestMethod(t *testing.T) {
 }
 
 func TestSignerAndVerifierForHMAC(t *testing.T) {
-	key := bytes.Repeat([]byte{7}, MinKeyBytes)
+	key := []byte("select-test-key-0123456789abcdef")
 	calls := 0
 	k := Keys{HMACKey: func() ([]byte, error) { calls++; return key, nil }}
 	s, err := SignerFor(nil, k)

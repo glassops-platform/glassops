@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glassops-platform/glassops/internal/core/redact"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
 
@@ -38,6 +39,25 @@ type deployResultBody struct {
 	deployBody
 	Done                     *bool   `json:"done"`
 	NumberComponentsDeployed flexInt `json:"numberComponentsDeployed"`
+	// coverageWarnings is details.runTestResult.codeCoverageWarnings, read on its own by
+	// parseDeployBody because a second details field here would hide the embedded one.
+	coverageWarnings []deployCoverageWarning
+}
+
+// deployCoverageWarning is one entry of runTestResult.codeCoverageWarnings. name is null for the
+// org-wide average [confirmed: deploy-start-coverage-fail.json].
+type deployCoverageWarning struct {
+	Name    string `json:"name"`
+	Message string `json:"message"`
+}
+
+// coverageBody holds only the coverage warnings of a deploy body.
+type coverageBody struct {
+	Details struct {
+		RunTestResult struct {
+			CodeCoverageWarnings flexList[deployCoverageWarning] `json:"codeCoverageWarnings"`
+		} `json:"runTestResult"`
+	} `json:"details"`
 }
 
 // nativeDeploy deploys cs to the session's org. With opts.ValidatedID it quick deploys that
@@ -190,6 +210,10 @@ func parseDeployBody(raw json.RawMessage) (deployResultBody, bool) {
 	if b.ID != "" && b.Status == "" && b.Done != nil && !*b.Done {
 		b.Status = "InProgress"
 	}
+	var cov coverageBody
+	if json.Unmarshal(raw, &cov) == nil {
+		b.coverageWarnings = cov.Details.RunTestResult.CodeCoverageWarnings
+	}
 	return b, b.ID != "" && b.Status != ""
 }
 
@@ -266,8 +290,27 @@ func finished(status string) bool {
 	return false
 }
 
+// coverageProblems is one problem line per coverage warning, such as the org-wide average
+// below 75%, redacted like every other problem.
+func (b deployResultBody) coverageProblems() []string {
+	var out []string
+	for _, w := range b.coverageWarnings {
+		msg := oneLine(w.Message)
+		if msg == "" {
+			continue
+		}
+		if w.Name != "" {
+			msg = w.Name + ": " + msg
+		}
+		out = append(out, redact.Text("coverage: "+msg))
+	}
+	return out
+}
+
 // toDeployResult builds the neutral result from a deploy body. The problem lines and the test
-// and coverage facts come from the same reading validate uses.
+// and coverage facts come from the same reading validate uses: one line per component failure
+// (type, name and problem), per test failure (class.method and message) and, for a deploy that
+// did not succeed, per coverage warning. Every line is redacted.
 func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	v := b.deployBody.toResult(b.ID)
 	res := providers.DeployResult{
@@ -291,14 +334,22 @@ func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	// failure comes with the count at 0.
 	failures := len(b.Details.ComponentFailures) + len(b.Details.RunTestResult.Failures)
 	if failures > 0 {
-		res.Problems = v.Problems
+		for _, line := range v.Problems {
+			res.Problems = append(res.Problems, redact.Text(line))
+		}
+	}
+	// A coverage warning on a deploy that succeeded did not stop it, so it is not a problem.
+	var coverage []string
+	if b.Status != "Succeeded" {
+		coverage = b.coverageProblems()
+		res.Problems = append(res.Problems, coverage...)
 	}
 	testsFailed, _ := res.Facts["salesforce.tests_failed"].(int)
 	switch {
 	case b.Status == "SucceededPartial":
 		res.Problems = append(res.Problems, "deploy only partly succeeded, status SucceededPartial")
 	case b.Status != "Succeeded":
-		if failures == 0 {
+		if failures == 0 && len(coverage) == 0 {
 			res.Problems = append(res.Problems, "deploy did not succeed, status "+b.Status)
 		}
 	case b.CheckOnly == nil:
@@ -316,8 +367,9 @@ func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	return res
 }
 
-// checkPlanFiles checks that the manifests the deploy sends sit under the plan directory and
-// that the files there still hash to the change set's plan_sha256, the value a PERMIT binds.
+// checkPlanFiles checks that the manifests the deploy sends sit under the plan directory, that
+// each destructive entry is a destructiveChanges*.xml file other than the manifest, and that
+// the files there still hash to the change set's plan_sha256, the value a PERMIT binds.
 func checkPlanFiles(dir string, cs providers.ChangeSet) error {
 	if cs.Dir == "" || cs.Manifest == "" || cs.SHA256 == "" {
 		return errors.New("salesforce: the change set has no plan dir, manifest or plan_sha256")
@@ -329,6 +381,17 @@ func checkPlanFiles(dir string, cs providers.ChangeSet) error {
 	for _, f := range append([]string{cs.Manifest}, cs.Destructive...) {
 		if !strings.HasPrefix(path.Clean(f), planDir+"/") {
 			return fmt.Errorf("salesforce: manifest %q is not inside the plan dir %s", f, cs.Dir)
+		}
+	}
+	manifest := path.Clean(cs.Manifest)
+	for _, d := range cs.Destructive {
+		clean := path.Clean(d)
+		base := path.Base(clean)
+		switch {
+		case clean == manifest:
+			return fmt.Errorf("salesforce: destructive entry %q is the deploy manifest", d)
+		case !strings.HasPrefix(base, "destructiveChanges") || !strings.HasSuffix(base, ".xml"):
+			return fmt.Errorf("salesforce: destructive entry %q is not a destructiveChanges*.xml file", d)
 		}
 	}
 	sum, err := planDigest(dir, filepath.Join(dir, filepath.FromSlash(planDir)))

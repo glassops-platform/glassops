@@ -16,8 +16,14 @@ import (
 
 var testNow = time.Date(2026, 10, 31, 12, 0, 0, 0, time.UTC)
 
-// testKey is a synthetic key of 32 bytes, not a real one.
-func testKey(b byte) []byte { return bytes.Repeat([]byte{b}, 32) }
+// testKey is a synthetic key of 32 different bytes, not a real one. Keys for different b differ.
+func testKey(b byte) []byte {
+	k := make([]byte, 32)
+	for i := range k {
+		k[i] = b + byte(i)
+	}
+	return k
+}
 
 func canonID(id string) string {
 	if len(id) > 15 {
@@ -29,24 +35,25 @@ func canonID(id string) string {
 // syntheticPermit is a PERMIT built by the test. The Ids and hashes are made up.
 func syntheticPermit() Permit {
 	return Permit{
-		Schema:       Schema,
-		ID:           "0123456789abcdef",
-		Allow:        true,
-		IssuedAt:     testNow.Add(-time.Minute),
-		ExpiresAt:    testNow.Add(time.Hour),
-		Target:       Target{Name: "prod", Tier: "production", ID: "00D000000000001AAA", Kind: "production"},
-		Commit:       "c0ffee",
-		PlanSHA256:   "plan-hash",
-		ConfigSHA256: "config-hash",
-		Validation:   &Validation{DeployID: "0Af000000000001", TestLevel: "RunLocalTests", Passed: true},
-		Checks:       []policy.Result{{Rule: "plan_not_empty", Outcome: policy.Pass, Detail: "1 change"}},
+		Schema:          Schema,
+		ID:              "0123456789abcdef",
+		Allow:           true,
+		IssuedAt:        testNow.Add(-time.Minute),
+		ExpiresAt:       testNow.Add(time.Hour),
+		Target:          Target{Name: "prod", Tier: "production", ID: "00D000000000001AAA", Kind: "production"},
+		Commit:          "c0ffee",
+		PlanSHA256:      "plan-hash",
+		ConfigSHA256:    "config-hash",
+		ChangeSetSHA256: "change-set-hash",
+		Validation:      &Validation{DeployID: "0Af000000000001", TestLevel: "RunLocalTests", Passed: true},
+		Checks:          []policy.Result{{Rule: "plan_not_empty", Outcome: policy.Pass, Detail: "1 change"}},
 	}
 }
 
 func syntheticExpect() Expect {
 	return Expect{
 		TargetName: "prod", TargetID: "00D000000000001", Commit: "c0ffee",
-		PlanSHA256: "plan-hash", ConfigSHA256: "config-hash", Now: testNow, CanonicalID: canonID,
+		PlanSHA256: "plan-hash", ConfigSHA256: "config-hash", ChangeSetSHA256: "change-set-hash", Now: testNow, CanonicalID: canonID,
 	}
 }
 
@@ -100,7 +107,7 @@ func TestCanonicalIsStable(t *testing.T) {
 	}
 	generic["issued_at"] = a.IssuedAt.In(time.FixedZone("x", 2*3600)).Format(time.RFC3339Nano)
 	reordered := `{"signature":{"value":"zzz","alg":""},"checks":[{"detail":"1 change","outcome":"pass","rule":"plan_not_empty"}],`
-	for _, k := range []string{"validation", "target", "plan_sha256", "config_sha256", "commit", "expires_at", "issued_at", "allow", "id", "schema"} {
+	for _, k := range []string{"validation", "target", "plan_sha256", "config_sha256", "change_set_sha256", "commit", "expires_at", "issued_at", "allow", "id", "schema"} {
 		v, _ := json.Marshal(generic[k])
 		reordered += `"` + k + `":` + string(v) + `,`
 	}
@@ -319,7 +326,7 @@ func TestParseKey(t *testing.T) {
 		"padded":      good,
 		"unpadded":    strings.TrimRight(good, "="),
 		"whitespace":  " " + good + "\n",
-		"longer key":  base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{1}, 64)),
+		"longer key":  base64.StdEncoding.EncodeToString(append(testKey(1), testKey(40)...)),
 		"exactly 32b": good,
 	} {
 		if _, err := ParseKey(in); err != nil {

@@ -4,8 +4,9 @@
 #   sh scripts/e2e/exec-e2e.sh [path to glassops]
 #
 # It builds a git repository with two commits, then runs the real binary through plan, gate
-# with a throwaway PERMIT key, permit verify, a tampered PERMIT, a target whose describe Id is
-# wrong, and deploy -- sh scripts/e2e/exec-deploy.sh. It exits 0 only when every refusal
+# with a throwaway PERMIT key and --deploy-command, permit verify, a tampered PERMIT, a target
+# whose describe Id is wrong, a deploy command the PERMIT does not bind, a modified tracked
+# file, and deploy -- sh scripts/e2e/exec-deploy.sh. It exits 0 only when every refusal
 # refused, the deploy changed the target as the plan says, and the result records it. Needs
 # sh, git, base64, head and node on the PATH, which the glassops image has.
 set -eu
@@ -35,9 +36,11 @@ pass() {
   echo "ok: $*"
 }
 
-# glassops runs a glassops command against the repository with the local CI layer. Flags go
-# before any -- so a command after it gets nothing appended.
-glassops() {
+# gops runs a glassops command against the repository with the local CI layer. It is not
+# named glassops, so GLASSOPS=glassops runs the binary on the PATH and not this function,
+# which would call itself forever. Flags go before any -- so a command after it gets nothing
+# appended.
+gops() {
   sub=$1
   shift
   if [ "$sub" = permit ]; then
@@ -54,7 +57,7 @@ expect() {
   what=$2
   shift 2
   set +e
-  glassops "$@" > "$WORK/out.txt" 2>&1
+  gops "$@" > "$WORK/out.txt" 2>&1
   got=$?
   set -e
   if [ "$got" -eq "$want" ]; then
@@ -70,7 +73,7 @@ expect_refused() {
   what=$1
   shift
   set +e
-  glassops "$@" > "$WORK/out.txt" 2>&1
+  gops "$@" > "$WORK/out.txt" 2>&1
   got=$?
   set -e
   if [ "$got" -eq 0 ]; then
@@ -141,7 +144,12 @@ else
   fail "plan files are wrong"
 fi
 
-expect 0 "gate runs exec.describe and the guard, and allows" gate --target prod
+# The PERMIT binds the sha256 of this exact argv, as a JSON array.
+DEPLOY_COMMAND="[\"sh\",\"$SCRIPTS/exec-deploy.sh\"]"
+expect 0 "gate runs exec.describe and the guard, and allows" gate --target prod --deploy-command "$DEPLOY_COMMAND"
+if grep -q "exec-deploy.sh" "$REPO/.glassops/permit.json"; then
+  fail "the PERMIT holds the deploy command text, not only its hash"
+fi
 if [ "$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).allow)' "$REPO/.glassops/permit.json")" = true ]; then
   pass "the PERMIT allows"
 else
@@ -164,6 +172,15 @@ cp "$WORK/permit.json" "$REPO/.glassops/permit.json"
 echo exec-e2e-other > "$TARGET/.target-id"
 expect_refused "deploy to a target whose describe Id is wrong" deploy --target prod -- sh "$SCRIPTS/exec-deploy.sh"
 echo "$EXEC_E2E_PROD_ID" > "$TARGET/.target-id"
+
+# A command the PERMIT does not bind, including the bound one with an extra argument.
+expect_refused "deploy -- a command the PERMIT does not bind" deploy --target prod -- sh -c true
+expect_refused "deploy -- the bound command with an extra argument" deploy --target prod -- sh "$SCRIPTS/exec-deploy.sh" extra
+
+# A tracked file changed after gate: the tree is not the PERMIT's commit.
+echo changed > "$REPO/app/a.txt"
+expect_refused "deploy with a modified tracked file" deploy --target prod -- sh "$SCRIPTS/exec-deploy.sh"
+git -C "$REPO" checkout -q -- app/a.txt
 
 expect 0 "deploy -- sh scripts/e2e/exec-deploy.sh" deploy --target prod -- sh "$SCRIPTS/exec-deploy.sh"
 if [ "$(cat "$TARGET/app/a.txt" 2>/dev/null)" = two ] && [ "$(cat "$TARGET/app/b.txt" 2>/dev/null)" = new ] && [ ! -e "$TARGET/app/old.txt" ] && [ ! -e "$TARGET/other" ]; then

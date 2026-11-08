@@ -605,3 +605,59 @@ func TestDeployThinFailureWithFailingReportIsError(t *testing.T) {
 		t.Fatal("a failed report was read as a result")
 	}
 }
+
+// A deploy that fails on org-wide coverage says why: each coverage warning is a problem line
+// [confirmed: deploy-start-coverage-fail.json and deploy-report-coverage-fail.json, sf 2.156.8].
+func TestDeployCoverageFailureSaysWhy(t *testing.T) {
+	const want = "coverage: Average test coverage across all Apex Classes and Triggers is 50%, at least 75% test coverage is required."
+	for name, replies := range map[string]func(t *testing.T) map[string]fakeReply{
+		"from deploy start": func(t *testing.T) map[string]fakeReply {
+			return map[string]fakeReply{queryPrefix: sandboxOrg(t), startPrefix: {Stdout: fixture(t, "deploy-start-coverage-fail.json"), ExitCode: 1}}
+		},
+		"from deploy report": func(t *testing.T) map[string]fakeReply {
+			return map[string]fakeReply{
+				queryPrefix:  sandboxOrg(t),
+				startPrefix:  {Stdout: fixture(t, "deploy-start-lock-released.json"), ExitCode: 1},
+				reportPrefix: {Stdout: fixture(t, "deploy-report-coverage-fail.json")},
+			}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			p, f, s, dir, cs := deploySetup(t, nil)
+			f.replies = replies(t)
+			res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.Passed || len(res.Problems) != 1 || res.Problems[0] != want {
+				t.Fatalf("problems = %q", res.Problems)
+			}
+		})
+	}
+}
+
+// Synthetic bodies: coverage warnings on a deploy that succeeded are not problems, a named
+// warning keeps its name, and component and test failures still come first.
+func TestDeployCoverageWarningLines(t *testing.T) {
+	body := func(status string) deployResultBody {
+		raw := `{"id":"0Af000000000009AAA","status":"` + status + `","done":true,"checkOnly":false,"numberComponentsDeployed":1,
+			"details":{"componentFailures":[{"componentType":"ApexClass","fullName":"Foo","problem":"bad\nthing"}],
+			"runTestResult":{"failures":[{"name":"FooTest","methodName":"itWorks","message":"Assert failed"}],
+			"codeCoverageWarnings":[{"name":"Foo","message":"Test coverage of selected Apex Class is 0%"},{"name":null,"message":""}]}}}`
+		b, ok := parseDeployBody([]byte(raw))
+		if !ok {
+			t.Fatal("synthetic body did not parse")
+		}
+		return b
+	}
+	res := body("Failed").toDeployResult(false)
+	want := []string{"ApexClass Foo: bad thing", "FooTest.itWorks: Assert failed", "coverage: Foo: Test coverage of selected Apex Class is 0%"}
+	if strings.Join(res.Problems, "|") != strings.Join(want, "|") {
+		t.Fatalf("problems = %q", res.Problems)
+	}
+	ok := body("Succeeded")
+	ok.Details.ComponentFailures, ok.Details.RunTestResult.Failures = nil, nil
+	if res := ok.toDeployResult(false); !res.Passed || len(res.Problems) != 0 {
+		t.Fatalf("a passing deploy with a coverage warning: %+v", res)
+	}
+}

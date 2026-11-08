@@ -16,7 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/policy"
+	"github.com/glassops-platform/glassops/internal/providers"
 )
 
 // Schema identifies the PERMIT file.
@@ -27,6 +29,14 @@ const KeyEnv = "GLASSOPS_PERMIT_KEY"
 
 // MinKeyBytes is the shortest HMAC key accepted, after base64 decoding.
 const MinKeyBytes = 32
+
+// MinKeyDistinctBytes is the fewest different byte values an HMAC key must hold, so a
+// placeholder such as 32 zero bytes or one character repeated never signs.
+const MinKeyDistinctBytes = 8
+
+// MaxClockSkew is how far in the future a PERMIT's issued_at may be and still verify. It
+// allows for small clock differences between the gate and the deploy machines.
+const MaxClockSkew = 5 * time.Minute
 
 // Algorithm is the signature algorithm NewHMAC signs with.
 const Algorithm = "HMAC-SHA256"
@@ -43,6 +53,9 @@ var (
 	ErrSignature = errors.New("permit: the permit signature is not valid")
 	// ErrUnreadable means a file exists but is not a PERMIT this version can read.
 	ErrUnreadable = errors.New("permit: the file is not a readable permit")
+	// ErrLifetime means the PERMIT's issued_at is missing or in the future, or it lives longer
+	// than the maximum PERMIT lifetime.
+	ErrLifetime = errors.New("permit: the permit's lifetime is not valid")
 )
 
 // Permit is the signed record that a deploy of one plan to one target was allowed.
@@ -56,12 +69,19 @@ type Permit struct {
 	Target    Target    `json:"target"`
 	Commit    string    `json:"commit"`
 	// PlanSHA256 and ConfigSHA256 bind the PERMIT to one change set and one config.
-	PlanSHA256         string          `json:"plan_sha256"`
-	ConfigSHA256       string          `json:"config_sha256"`
-	Validation         *Validation     `json:"validation,omitempty"`
-	SeparationOfDuties *SoD            `json:"separation_of_duties,omitempty"`
-	Checks             []policy.Result `json:"checks"`
-	Signature          Signature       `json:"signature"`
+	PlanSHA256   string `json:"plan_sha256"`
+	ConfigSHA256 string `json:"config_sha256"`
+	// ChangeSetSHA256 binds the rest of the change set, which plan_sha256 does not cover: the
+	// provider, the plan dir, which file is the manifest and which are destructive, and the
+	// empty and full flags. See ChangeSetDigest.
+	ChangeSetSHA256 string `json:"change_set_sha256"`
+	// DeployCommandSHA256 is set when gate was given the deploy command for provider exec. It
+	// is DeployCommandDigest of that command, never the command itself.
+	DeployCommandSHA256 string          `json:"deploy_command_sha256,omitempty"`
+	Validation          *Validation     `json:"validation,omitempty"`
+	SeparationOfDuties  *SoD            `json:"separation_of_duties,omitempty"`
+	Checks              []policy.Result `json:"checks"`
+	Signature           Signature       `json:"signature"`
 }
 
 // Target is the target a PERMIT is for.
@@ -115,7 +135,16 @@ type KeyIdentifier interface {
 // Expect is what a PERMIT must match to be honoured.
 type Expect struct {
 	TargetName, TargetID, Commit, PlanSHA256, ConfigSHA256 string
-	Now                                                    time.Time
+	// ChangeSetSHA256 is ChangeSetDigest of the change set being deployed.
+	ChangeSetSHA256 string
+	// DeployCommandSHA256, when set, is DeployCommandDigest of the command deploy will run in
+	// place of exec.deploy. The PERMIT must carry the same value. When empty the PERMIT's
+	// command hash is not checked, because the command comes from the signed config.
+	DeployCommandSHA256 string
+	Now                 time.Time
+	// MaxTTL is the longest lifetime, expires_at minus issued_at, a PERMIT may have. Zero
+	// means config.MaxPermitTTL.
+	MaxTTL time.Duration
 	// CanonicalID, when set, is applied to the PERMIT's target Id before it is compared with
 	// TargetID. The caller passes its provider's canonical form for TargetID and sets this to
 	// the same function, so a 15 character and an 18 character Id compare equal. When nil the
@@ -174,11 +203,18 @@ func Sign(p *Permit, s Signer) error {
 }
 
 // Verify checks p's signature with s and that p allows a deploy matching want. It checks, in
-// order, the signature, allow, expiry, then the target, commit, plan and config. The error
-// wraps the matching sentinel and says which check failed, never any key material.
+// order, that p is signed and binds a change set, the signature, allow, expiry and the
+// lifetime, then the target, commit, plan, config and change set, and the deploy command when
+// want names one. The error wraps the matching sentinel and says which check failed, never
+// any key material.
 func Verify(p Permit, s Signer, want Expect) error {
 	if p.Signature.Value == "" {
 		return fmt.Errorf("%w: the permit is not signed", ErrSignature)
+	}
+	if p.ChangeSetSHA256 == "" {
+		// Checked before the signature so a PERMIT from an older gate gets this message rather
+		// than a signature error. A missing field can only refuse.
+		return fmt.Errorf("%w: the permit has no change_set_sha256, so an older gate wrote it and it does not bind the change set. Run gate again", ErrMismatch)
 	}
 	if p.Signature.Alg != s.Alg() {
 		return fmt.Errorf("%w: algorithm is %q, want %q", ErrSignature, p.Signature.Alg, s.Alg())
@@ -205,6 +241,9 @@ func Verify(p Permit, s Signer, want Expect) error {
 	if !want.Now.Before(p.ExpiresAt) {
 		return fmt.Errorf("%w: expired at %s", ErrExpired, p.ExpiresAt.UTC().Format(time.RFC3339))
 	}
+	if err := checkLifetime(p, want); err != nil {
+		return err
+	}
 	if p.Target.Name != want.TargetName {
 		return fmt.Errorf("%w: the permit is for target %q, not %q", ErrMismatch, p.Target.Name, want.TargetName)
 	}
@@ -219,17 +258,95 @@ func Verify(p Permit, s Signer, want Expect) error {
 		{"commit", p.Commit, want.Commit},
 		{"plan hash", p.PlanSHA256, want.PlanSHA256},
 		{"config hash", p.ConfigSHA256, want.ConfigSHA256},
+		{"change set hash", p.ChangeSetSHA256, want.ChangeSetSHA256},
 	} {
 		if c.want == "" || c.got != c.want {
 			return fmt.Errorf("%w: the %s differs", ErrMismatch, c.name)
 		}
 	}
+	if want.DeployCommandSHA256 != "" {
+		switch {
+		case p.DeployCommandSHA256 == "":
+			return fmt.Errorf("%w: the permit binds no deploy command. Run gate with --deploy-command to allow one", ErrMismatch)
+		case p.DeployCommandSHA256 != want.DeployCommandSHA256:
+			return fmt.Errorf("%w: the deploy command differs from the one the permit was issued for", ErrMismatch)
+		}
+	}
 	return nil
 }
 
+// checkLifetime refuses a PERMIT with no issued_at, one issued more than MaxClockSkew after
+// want.Now, one that expires before it was issued, and one that lives longer than want.MaxTTL.
+// gate never writes such a PERMIT, so each means a broken clock or another signer.
+func checkLifetime(p Permit, want Expect) error {
+	limit := want.MaxTTL
+	if limit <= 0 {
+		limit = config.MaxPermitTTL
+	}
+	life := p.ExpiresAt.Sub(p.IssuedAt)
+	switch {
+	case p.IssuedAt.IsZero():
+		return fmt.Errorf("%w: issued_at is not set", ErrLifetime)
+	case p.IssuedAt.After(want.Now.Add(MaxClockSkew)):
+		return fmt.Errorf("%w: issued at %s, more than %s after this clock (%s)", ErrLifetime,
+			p.IssuedAt.UTC().Format(time.RFC3339), MaxClockSkew, want.Now.UTC().Format(time.RFC3339))
+	case life <= 0:
+		return fmt.Errorf("%w: it expires before it was issued", ErrLifetime)
+	case life > limit:
+		return fmt.Errorf("%w: it lives %s, longer than the maximum %s", ErrLifetime, life, limit)
+	}
+	return nil
+}
+
+// ChangeSetDigest is the change_set_sha256 a PERMIT binds a change set by. It covers
+// plan_sha256 and the change set fields that say how the plan files are used: the provider,
+// the plan dir, the manifest, the destructive list in order, and the empty and full flags. It
+// is the sha256, in hex, of plan_sha256, a newline, and the canonical JSON of those fields.
+// The facts are not covered: gate reads them once, and the PERMIT records what it decided.
+func ChangeSetDigest(cs providers.ChangeSet) string {
+	destructive := cs.Destructive
+	if destructive == nil {
+		destructive = []string{}
+	}
+	fields := map[string]any{
+		"provider":    cs.Provider,
+		"dir":         cs.Dir,
+		"manifest":    cs.Manifest,
+		"destructive": destructive,
+		"empty":       cs.Empty,
+		"full":        cs.Full,
+	}
+	h := sha256.New()
+	h.Write([]byte(cs.SHA256))
+	h.Write([]byte{'\n'})
+	h.Write(canonicalJSON(fields))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// DeployCommandDigest is the deploy_command_sha256 a PERMIT binds a provider exec deploy
+// command by: the sha256, in hex, of the argv as a canonical JSON array of strings. Each
+// argument stays one element, so ["a b"] and ["a", "b"] differ. An empty argv gives "".
+func DeployCommandDigest(argv []string) string {
+	if len(argv) == 0 {
+		return ""
+	}
+	sum := sha256.Sum256(canonicalJSON(argv))
+	return hex.EncodeToString(sum[:])
+}
+
+// canonicalJSON encodes v with sorted map keys, no HTML escaping and no trailing newline. It
+// is only given maps and slices of strings and bools, which always encode.
+func canonicalJSON(v any) []byte {
+	var out bytes.Buffer
+	enc := json.NewEncoder(&out)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(v)
+	return bytes.TrimRight(out.Bytes(), "\n")
+}
+
 // ParseKey decodes a base64 key such as the one in GLASSOPS_PERMIT_KEY. It accepts standard
-// base64, with or without padding, and rejects a key shorter than MinKeyBytes. The error never
-// contains the key.
+// base64, with or without padding, and rejects a key shorter than MinKeyBytes or with fewer
+// than MinKeyDistinctBytes different byte values. The error never contains the key.
 func ParseKey(b64 string) ([]byte, error) {
 	b64 = strings.TrimSpace(b64)
 	key, err := base64.StdEncoding.DecodeString(b64)
@@ -239,10 +356,30 @@ func ParseKey(b64 string) ([]byte, error) {
 			return nil, errors.New("permit: the key is not valid base64")
 		}
 	}
-	if len(key) < MinKeyBytes {
-		return nil, fmt.Errorf("permit: the key is %d bytes, want at least %d", len(key), MinKeyBytes)
+	if err := checkKey(key); err != nil {
+		return nil, fmt.Errorf("permit: %w", err)
 	}
 	return key, nil
+}
+
+// checkKey refuses a key shorter than MinKeyBytes or with fewer than MinKeyDistinctBytes
+// different byte values. The error never contains the key.
+func checkKey(key []byte) error {
+	if len(key) < MinKeyBytes {
+		return fmt.Errorf("the key is %d bytes, want at least %d", len(key), MinKeyBytes)
+	}
+	var seen [256]bool
+	distinct := 0
+	for _, b := range key {
+		if !seen[b] {
+			seen[b] = true
+			distinct++
+		}
+	}
+	if distinct < MinKeyDistinctBytes {
+		return fmt.Errorf("the key has %d different byte values, want at least %d. Generate a random one, such as with openssl rand -base64 32", distinct, MinKeyDistinctBytes)
+	}
+	return nil
 }
 
 // hmacSigner signs with HMAC-SHA256.
@@ -251,8 +388,9 @@ type hmacSigner struct {
 	keyID string
 }
 
-// NewHMAC returns a signer that uses HMAC-SHA256 with key. A key shorter than MinKeyBytes
-// gives a signer whose Sign and Verify always return an error, so a weak key never signs.
+// NewHMAC returns a signer that uses HMAC-SHA256 with key. A key ParseKey refuses, too short
+// or with too few different byte values, gives a signer whose Sign and Verify always return
+// an error, so a weak key never signs.
 func NewHMAC(key []byte) Signer {
 	sum := sha256.Sum256(key)
 	return &hmacSigner{key: append([]byte(nil), key...), keyID: hex.EncodeToString(sum[:])[:8]}
@@ -262,8 +400,8 @@ func (h *hmacSigner) Alg() string   { return Algorithm }
 func (h *hmacSigner) KeyID() string { return h.keyID }
 
 func (h *hmacSigner) mac(canonical []byte) ([]byte, error) {
-	if len(h.key) < MinKeyBytes {
-		return nil, fmt.Errorf("the key is %d bytes, want at least %d", len(h.key), MinKeyBytes)
+	if err := checkKey(h.key); err != nil {
+		return nil, err
 	}
 	m := hmac.New(sha256.New, h.key)
 	m.Write(canonical)
@@ -279,8 +417,10 @@ func (h *hmacSigner) Sign(canonical []byte) (string, error) {
 }
 
 func (h *hmacSigner) Verify(canonical []byte, value string) error {
-	got, err := base64.StdEncoding.DecodeString(value)
-	if err != nil {
+	// Strict decoding, and the value must be exactly what Sign writes, so a signature has one
+	// spelling: no other padding bits, no line breaks, no missing padding.
+	got, err := base64.StdEncoding.Strict().DecodeString(value)
+	if err != nil || base64.StdEncoding.EncodeToString(got) != value {
 		return errors.New("the signature is not valid base64")
 	}
 	want, err := h.mac(canonical)

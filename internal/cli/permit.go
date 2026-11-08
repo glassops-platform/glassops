@@ -139,8 +139,11 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 		Commit:       commit,
 		PlanSHA256:   cs.SHA256,
 		ConfigSHA256: loaded.SHA256(),
-		Now:          app.Now(),
-		CanonicalID:  canon,
+		// The change set hash covers which plan files are destructive.
+		ChangeSetSHA256: permit.ChangeSetDigest(cs),
+		Now:             app.Now(),
+		MaxTTL:          proj.cfg.Policy.TTL(),
+		CanonicalID:     canon,
 	})
 	switch {
 	case err == nil:
@@ -155,7 +158,8 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 
 func isPermitRefusal(err error) bool {
 	return errors.Is(err, permit.ErrSignature) || errors.Is(err, permit.ErrDenied) ||
-		errors.Is(err, permit.ErrExpired) || errors.Is(err, permit.ErrMismatch)
+		errors.Is(err, permit.ErrExpired) || errors.Is(err, permit.ErrMismatch) ||
+		errors.Is(err, permit.ErrLifetime)
 }
 
 // permitKeyWarning reports whether the permit key is present where it should not be: in a

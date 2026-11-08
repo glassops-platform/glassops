@@ -62,7 +62,7 @@ func TestEvaluateAll(t *testing.T) {
 		wantRules []string
 		wantErr   bool
 	}{
-		{"none", nil, true, []string{}, false},
+		{"none fails closed", nil, false, []string{"policy"}, false},
 		{"pass", []Evaluator{pass}, true, []string{"a"}, false},
 		{"deny", []Evaluator{deny}, false, []string{"a"}, false},
 		{"broken fails closed", []Evaluator{pass, broken}, false, []string{"a", "rego"}, true},

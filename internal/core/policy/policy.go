@@ -31,8 +31,16 @@ type Result struct {
 	Approver  string `json:"approver,omitempty"`
 }
 
-// Denies reports whether the outcome blocks a deploy. Only Fail does.
-func (o Outcome) Denies() bool { return o == Fail }
+// Denies reports whether the outcome blocks a deploy. It is an allowlist: pass, skipped,
+// waived_by_config and satisfied_by_approval allow, and any other outcome, including fail, a
+// misspelled one or an empty one, denies.
+func (o Outcome) Denies() bool {
+	switch o {
+	case Pass, Skipped, WaivedByConfig, SatisfiedByApproval:
+		return false
+	}
+	return true
+}
 
 // Input is everything a rule may read.
 type Input struct {

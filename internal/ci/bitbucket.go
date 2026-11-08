@@ -119,8 +119,10 @@ func (b *Bitbucket) SetOutput(name, value string) error {
 	return writeOutput(fileTarget(b.env, OutputFileEnv, DefaultOutputFile, b.dir), name, value)
 }
 
-// Annotate prints a plain log line.
+// Annotate prints a plain log line. A line break in msg is written as \r or \n, so a
+// message never starts a line of its own.
 func (b *Bitbucket) Annotate(level Level, msg string) {
+	msg = strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(msg)
 	fmt.Fprintf(b.out, "%s: %s\n", level, msg)
 }
 
