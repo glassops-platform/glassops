@@ -1,0 +1,16 @@
+# The OpenTelemetry Collector config of the OTel end-to-end run (scripts/e2e/otel-e2e.sh). It
+# takes OTLP over http and writes every span to a file, one JSON document per export. The file
+# exporter is in the contrib build of the Collector, not the core one.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+exporters:
+  file:
+    path: /out/traces.jsonl
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [file]
