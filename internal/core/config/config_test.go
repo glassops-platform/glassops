@@ -112,6 +112,9 @@ func TestParseRejects(t *testing.T) {
 		{"permit ttl not a duration", "version: 1\npolicy:\n  permit_ttl: soon\n", "is not a duration"},
 		{"permit ttl too short", "version: 1\npolicy:\n  permit_ttl: 1m\n", "is outside"},
 		{"permit ttl too long", "version: 1\npolicy:\n  permit_ttl: 25h\n", "is outside"},
+		{"permit repository without owner", "version: 1\npolicy:\n  permit: { repository: app }\n", "/policy/permit/repository"},
+		{"permit repository as a URL", "version: 1\npolicy:\n  permit: { repository: \"https://github.com/acme/app\" }\n", "/policy/permit/repository"},
+		{"permit repository empty", "version: 1\npolicy:\n  permit: { repository: \"\" }\n", "/policy/permit/repository"},
 		{"approval without mechanism", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { tiers: [prod], approval: { approvers: [octocat] } }\n", "set environment or label"},
 		{"label without approvers", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { label: ok-to-deploy } }\n", "needs approvers"},
 		{"unknown approval key", "version: 1\npolicy:\n  rules:\n    separation_of_duties: { approval: { team: ops } }\n", "/policy/rules/separation_of_duties/approval"},
@@ -380,5 +383,20 @@ func TestDefaultPipelines(t *testing.T) {
 	got["pr"][0].Run = "changed"
 	if DefaultPipelines()["pr"][0].Run != "plan" {
 		t.Fatal("DefaultPipelines shares state between calls")
+	}
+}
+
+func TestPermitRepositoryParses(t *testing.T) {
+	cfg, err := Parse([]byte("version: 1\npolicy:\n  permit:\n    signing: sigstore\n    identity: https://github.com/glassops-platform/glassops/.github/workflows/glassops-deploy.yml@refs/tags/v1\n    issuer: https://token.actions.githubusercontent.com\n    repository: acme-corp/app.web_2\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := cfg.Policy.Permit.Repository; got != "acme-corp/app.web_2" {
+		t.Fatalf("repository = %q", got)
+	}
+	// The repository is optional in the config, because GitHub Actions supplies it.
+	cfg, err = Parse([]byte("version: 1\npolicy:\n  permit: { signing: sigstore, identity: me, issuer: you }\n"))
+	if err != nil || cfg.Policy.Permit.Repository != "" {
+		t.Fatalf("without repository: %+v, %v", cfg.Policy.Permit, err)
 	}
 }

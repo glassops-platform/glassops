@@ -1,0 +1,17 @@
+[
+  {
+    "name": "@salesforce/cli",
+    "version": "2.155.7",
+    "type": "core"
+  },
+  {
+    "name": "sfdx-git-delta",
+    "version": "6.45.1",
+    "type": "user"
+  },
+  {
+    "name": "sfdx-hardis",
+    "version": "8.20.1",
+    "type": "user"
+  }
+]
