@@ -52,13 +52,14 @@ pipelines:
     - validate --target prod
     - gate --target prod
     - deploy --target prod
+    - verify --target prod
     - step: report
       when: always
 ```
 
 **pr.** Plans the change, runs your project scripts (`check`), runs the Code Analyzer (`analyze`), creates a short-lived scratch org named `ephemeral` from the Dev Hub (`env create`), and runs a check-only validate there. `--fallback-target prod` makes `validate` use the `prod` target when no environment exists, for example when `environments.ephemeral` is not configured. `report` and `env delete` run even after a failure, so the run always leaves a summary and never leaves an org behind. `validate` runs the tests at the configured test level. To run the tests with coverage minimums as a separate step, add `test --target ephemeral` after `validate`.
 
-**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, and deploys under it. A denied gate exits 1 and the deploy step is skipped. `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
+**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, deploys under it, and then runs [`verify`](../reference/cli.md#glassops-verify) to check that the target holds what the plan says. A denied gate exits 1 and the deploy step is skipped. `verify` is not in v0.4.0, so a deploy pipeline written for that release has no such step. `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
 
 Two steps skip themselves when they have nothing to do. `check` does nothing without `check.scripts`, and `analyze` does nothing without `analyze.enabled: true`. Both end with the status `empty` and exit 0.
 

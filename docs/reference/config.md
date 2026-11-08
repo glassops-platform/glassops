@@ -15,6 +15,8 @@ Beyond the schema, these rules are checked:
 - A separation of duties approval sets `environment` or `label`, and a `label` needs `approvers`.
 - Every `environments.<name>.devhub` names a configured target.
 - No pipeline step is empty.
+- With provider `exec`, `exec.paths` lists at least one path.
+- The file stays inside the [YAML limits](verify-and-coverage-settings.md#yaml-limits): an alias that refers to itself is refused, and so are files nested deeper than 64 levels or expanding past 100000 values.
 
 Names (targets, tiers, environments, pipelines) are lowercase letters, digits, `_` and `-`, starting with a letter.
 
@@ -23,7 +25,7 @@ Names (targets, tiers, environments, pipelines) are lowercase letters, digits, `
 | Key | Required | What it holds |
 |---|---|---|
 | `version` | yes | The schema version. Always `1` |
-| `provider` | no | `salesforce`. Detected from the project files when absent |
+| `provider` | no | `salesforce` or `exec`. Detected from the project files when absent, except `exec`, which is never detected |
 | `targets` | no | Orgs that changes go to, with their login |
 | `policy` | no | Deploy windows, blackouts and the rules `gate` evaluates |
 | `salesforce` | no | Salesforce provider settings |
@@ -31,6 +33,8 @@ Names (targets, tiers, environments, pipelines) are lowercase letters, digits, `
 | `test` | no | Test levels and coverage minimums for `test` |
 | `check` | no | Project scripts that `check` runs |
 | `analyze` | no | Code Analyzer settings |
+| `verify` | no | Settings for `verify`. See [Verify, coverage and YAML settings](verify-and-coverage-settings.md) |
+| `exec` | no | The commands provider `exec` runs. See [The exec provider](exec-provider.md) |
 | `pipelines` | no | Named lists of steps for `run` |
 
 ### `version` and `provider`
@@ -138,6 +142,7 @@ Settings for [`glassops test`](cli.md#glassops-test).
 | `level` | Map of tier to test level, with a `default` key. The `--level` flag overrides it |
 | `coverage.org_min` | Minimum org-wide coverage, 0 to 100 |
 | `coverage.class_min` | Minimum coverage for each class the test run reports, 0 to 100 |
+| `coverage.class_scope` | Which classes no test touched count at 0%: `changed` (the default) or `all`. See [Verify, coverage and YAML settings](verify-and-coverage-settings.md#testcoverageclass_scope) |
 
 ```yaml
 test:

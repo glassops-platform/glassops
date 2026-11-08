@@ -1,6 +1,6 @@
 # PERMIT and Rules
 
-> **Early work.** v0.3.0 is released as a prerelease and includes `gate`, `permit verify` and `deploy`. This page covers them.
+> **Early work.** v0.3.0 and v0.4.0 are published prereleases ([releases page](https://github.com/glassops-platform/glassops/releases)), and v1.0.0 is not out yet. Both include `gate`, `permit verify` and `deploy`. This page covers them.
 
 A PERMIT is a signed file that records one decision: whether one plan may be deployed to one target. `glassops gate` makes the decision and writes the PERMIT. `glassops deploy` and `glassops permit verify` refuse to go on unless the PERMIT is genuine, still valid and about the thing being deployed. This page describes the PERMIT, the rules that feed it, and the evidence `gate` reads. The commands are in the [CLI reference](cli.md).
 

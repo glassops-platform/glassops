@@ -1,6 +1,6 @@
 # Deploy with GitHub
 
-> **Early work.** v0.3.0 is released as a prerelease. The reusable workflows, the `run` command and the other new commands this guide uses ship in the next release.
+> **Early work.** v0.3.0 and v0.4.0 are published prereleases ([releases page](https://github.com/glassops-platform/glassops/releases)), and v1.0.0 is not out yet. The reusable workflows and the `run` command this guide uses are in v0.4.0.
 
 This guide sets up pull request checks and a deploy to production on GitHub. Two reusable workflows in this repository run the `glassops` container image for you. Your repository calls them with a few lines each. [`examples/consumer/`](https://github.com/glassops-platform/glassops/tree/main/examples/consumer) is the smallest working layout, and `glassops init` writes a similar `glassops.yaml` and workflow into your project. For what a PERMIT is, see [PERMIT and rules](../reference/permit-and-rules.md).
 
@@ -117,7 +117,7 @@ jobs:
 1. Checks out full history. A shallow clone is an error, never an empty plan.
 2. Installs a `glassops` command on the runner that runs the image with `docker run --rm`, one container per command, with the workspace mounted at `/work`. The checkout, the tag push and the uploads run on the runner, not in the container.
 3. Logs in to each target in `targets`, when set, with `glassops doctor --auth --target <name>`.
-4. Runs `glassops run deploy`. With the default pipeline that is `plan --target prod`, `validate --target prod`, `gate --target prod`, `deploy --target prod` and `report`.
+4. Runs `glassops run deploy`. With the default pipeline that is `plan --target prod`, `validate --target prod`, `gate --target prod`, `deploy --target prod`, `verify --target prod` and `report`.
 5. **Pushes the deployed tag.** `deploy` moves the git tag `glassops/deployed/prod` inside the container, but the container has no git credentials, so its own push is only a warning. A runner step after the container exits pushes the `glassops/deployed/*` tags with the checkout's credentials. Without that tag, the next `plan` has no record of this deploy and starts from the merge base instead.
 6. Runs `glassops report` (also after a failure), and uploads `.glassops/results/`, `plan.json` and `permit.json` as the `glassops-deploy-evidence` artifact.
 
