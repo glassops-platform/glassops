@@ -109,13 +109,18 @@
           "minLength": 1
         },
         "permit": {
-          "description": "How PERMITs are signed. hmac (the default) uses GLASSOPS_PERMIT_KEY. sigstore needs identity and issuer.",
+          "description": "How PERMITs are signed. hmac (the default) uses GLASSOPS_PERMIT_KEY. sigstore needs identity and issuer, and repository when verifying off GitHub Actions.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "signing": { "enum": ["hmac", "sigstore"] },
             "identity": { "type": "string", "minLength": 1 },
-            "issuer": { "type": "string", "minLength": 1 }
+            "issuer": { "type": "string", "minLength": 1 },
+            "repository": {
+              "description": "The GitHub repository, as owner/name, a sigstore signature must come from. Defaults to GITHUB_REPOSITORY on GitHub Actions.",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$"
+            }
           }
         },
         "rego": {

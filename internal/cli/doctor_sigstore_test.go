@@ -2,7 +2,7 @@ package cli
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,16 +21,24 @@ import (
 
 // The cli test binary doubles as a fake cosign, as the permit package's does: copied onto PATH
 // as cosign and run with GLASSOPS_FAKE_COSIGN=1, it signs and verifies synthetic bundles. Each
-// bundle names the blob's SHA-256 and the identity and issuer in FAKE_COSIGN_IDENTITY and
-// FAKE_COSIGN_ISSUER. Real bundles differ [unverified, the orchestrator's probe captures one].
+// has the legacy shape cosign v2.5.3 writes, {base64Signature, cert, rekorBundle} [confirmed
+// by the orchestrator's probe, log P56L-023]. In the synthetic bundle base64Signature is the
+// blob's SHA-256 and cert is base64 JSON of FAKE_COSIGN_IDENTITY, FAKE_COSIGN_ISSUER and
+// FAKE_COSIGN_REPOSITORY, where a real cert is a PEM certificate.
 func init() {
 	if os.Getenv("GLASSOPS_FAKE_COSIGN") == "1" {
 		os.Exit(fakeCosignMain(os.Args[1:], os.Stderr))
 	}
 }
 
-type syntheticBundle struct {
-	SHA256, Identity, Issuer string
+type syntheticLegacyBundle struct {
+	Base64Signature string          `json:"base64Signature"`
+	Cert            string          `json:"cert"`
+	RekorBundle     json.RawMessage `json:"rekorBundle"`
+}
+
+type syntheticCert struct {
+	Identity, Issuer, Repository string
 }
 
 func fakeCosignMain(args []string, stderr io.Writer) int {
@@ -56,36 +64,49 @@ func fakeCosignMain(args []string, stderr io.Writer) int {
 		return fail(err.Error())
 	}
 	sum := sha256.Sum256(blob)
+	sig := base64.StdEncoding.EncodeToString(sum[:])
 	switch args[0] {
 	case "sign-blob":
 		if flags["--yes"] == "" || os.Getenv(permit.OIDCRequestTokenEnv) == "" {
 			return fail("cannot sign without --yes and an OIDC token")
 		}
-		b, _ := json.Marshal(syntheticBundle{hex.EncodeToString(sum[:]), os.Getenv("FAKE_COSIGN_IDENTITY"), os.Getenv("FAKE_COSIGN_ISSUER")})
+		cert, _ := json.Marshal(syntheticCert{os.Getenv("FAKE_COSIGN_IDENTITY"), os.Getenv("FAKE_COSIGN_ISSUER"), os.Getenv("FAKE_COSIGN_REPOSITORY")})
+		b, _ := json.Marshal(syntheticLegacyBundle{sig, base64.StdEncoding.EncodeToString(cert), json.RawMessage(`{"SignedEntryTimestamp":"c3ludGhldGlj","Payload":{"logIndex":1}}`)})
 		if err := os.WriteFile(flags["--bundle"], b, 0o600); err != nil {
 			return fail(err.Error())
 		}
 		return 0
 	case "verify-blob":
 		raw, err := os.ReadFile(flags["--bundle"])
-		var b syntheticBundle
+		var b syntheticLegacyBundle
+		var c syntheticCert
 		if err != nil || json.Unmarshal(raw, &b) != nil {
 			return fail("bundle could not be parsed")
 		}
+		if certJSON, err := base64.StdEncoding.DecodeString(b.Cert); err != nil || json.Unmarshal(certJSON, &c) != nil {
+			return fail("could not parse the certificate")
+		}
 		switch {
-		case b.SHA256 != hex.EncodeToString(sum[:]):
+		case flags["--certificate-github-workflow-repository"] == "":
+			return fail("verify-blob was not given --certificate-github-workflow-repository")
+		case b.Base64Signature != sig:
 			return fail("invalid signature when validating ASN.1 encoded signature")
-		case b.Identity != flags["--certificate-identity"]:
+		case c.Identity != flags["--certificate-identity"]:
 			return fail("none of the expected identities matched what was in the certificate")
-		case b.Issuer != flags["--certificate-oidc-issuer"]:
+		case c.Issuer != flags["--certificate-oidc-issuer"]:
 			return fail("expected oidc issuer not found in certificate")
+		case c.Repository != flags["--certificate-github-workflow-repository"]:
+			return fail("expected GitHub Workflow Repository not found in certificate")
 		}
 		return 0
 	}
 	return fail("unknown command " + args[0])
 }
 
-const sigstoreIdentity = "https://github.com/acme/app/.github/workflows/deploy.yml@refs/heads/main"
+const (
+	sigstoreIdentity = "https://github.com/acme/app/.github/workflows/deploy.yml@refs/heads/main"
+	sigstoreRepo     = "acme/app"
+)
 
 // fakeCosignOnPath copies the test binary onto a fresh PATH entry as cosign and makes this
 // process look like a GitHub Actions job with id-token: write. The PERMIT signer reads the
@@ -113,7 +134,9 @@ func fakeCosignOnPath(t *testing.T) {
 		"GLASSOPS_FAKE_COSIGN":     "1",
 		"FAKE_COSIGN_IDENTITY":     sigstoreIdentity,
 		"FAKE_COSIGN_ISSUER":       permit.GitHubIssuer,
+		"FAKE_COSIGN_REPOSITORY":   sigstoreRepo,
 		"GITHUB_ACTIONS":           "true",
+		permit.RepositoryEnv:       sigstoreRepo,
 		"BITBUCKET_BUILD_NUMBER":   "",
 		"GITLAB_CI":                "",
 		permit.OIDCRequestURLEnv:   "https://example.invalid/token",
@@ -191,6 +214,10 @@ func TestSigstorePermitRefused(t *testing.T) {
 			t.Setenv("FAKE_COSIGN_ISSUER", "https://accounts.example.com")
 			h.gate("--target", "prod")
 		}, "issuer"},
+		{"another repository, same reusable workflow identity", func(t *testing.T, h *harness) {
+			t.Setenv("FAKE_COSIGN_REPOSITORY", "evil/fork")
+			h.gate("--target", "prod")
+		}, "GitHub Workflow Repository"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -209,6 +236,58 @@ func TestSigstorePermitRefused(t *testing.T) {
 			Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"})
 			if fp.deployCalls != 0 {
 				t.Fatal("deploy reached the target with a refused PERMIT")
+			}
+		})
+	}
+}
+
+// withRepository is cfg with policy.permit.repository set to repo.
+func withRepository(t *testing.T, cfg, repo string) string {
+	t.Helper()
+	const issuer = "    issuer: https://token.actions.githubusercontent.com\n"
+	out := strings.Replace(cfg, issuer, issuer+"    repository: "+repo+"\n", 1)
+	if out == cfg {
+		t.Fatal("the config has no issuer line to add the repository after")
+	}
+	return out
+}
+
+func TestPermitVerifySigstoreRepositoryOffGitHub(t *testing.T) {
+	cases := []struct {
+		name string
+		cfg  string
+		want int
+		key  string
+	}{
+		// Off GitHub Actions, GITHUB_REPOSITORY is not trusted and the config names no repository.
+		{"no repository is a config error", sigstoreConfig, exitcode.Error, "policy.permit.repository"},
+		{"the right repository verifies", withRepository(t, sigstoreConfig, sigstoreRepo), exitcode.OK, ""},
+		{"another repository is refused", withRepository(t, sigstoreConfig, "acme/other"), exitcode.Fail, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fakeCosignOnPath(t)
+			old := gateRules
+			t.Cleanup(func() { gateRules = old })
+			gateRules = func() []policy.Rule { return []policy.Rule{fixedRule("plan_not_empty", policy.Pass)} }
+			h, _ := gateHarness(t, tc.cfg)
+			delete(h.env, permit.KeyEnv)
+			// gate signs on GitHub with the pinned repository, which the config may not match.
+			t.Setenv(permit.RepositoryEnv, sigstoreRepo)
+			if code := h.gate("--target", "prod"); code != exitcode.OK {
+				t.Fatalf("gate exit %d, output:\n%s", code, h.out)
+			}
+			t.Setenv("GITHUB_ACTIONS", "")
+			t.Setenv(permit.RepositoryEnv, "")
+			if code := h.permitVerify(); code != tc.want {
+				t.Fatalf("permit verify exit %d, want %d. output:\n%s", code, tc.want, h.out)
+			}
+			r := h.result(t, "permit-verify")
+			if d := detailOf(r, "key"); tc.key != "" && !strings.Contains(d, tc.key) {
+				t.Fatalf("key detail %q, want %q", d, tc.key)
+			}
+			if tc.want == exitcode.Fail && !strings.Contains(detailOf(r, "permit"), "GitHub Workflow Repository") {
+				t.Fatalf("permit detail %q", detailOf(r, "permit"))
 			}
 		})
 	}
@@ -262,7 +341,7 @@ func TestGateHMACUnchangedBySigstore(t *testing.T) {
 }
 
 func TestDoctorSigstore(t *testing.T) {
-	gh := map[string]string{"GITHUB_ACTIONS": "true", "GITHUB_EVENT_NAME": "push",
+	gh := map[string]string{"GITHUB_ACTIONS": "true", "GITHUB_EVENT_NAME": "push", permit.RepositoryEnv: sigstoreRepo,
 		permit.OIDCRequestURLEnv: "https://example.invalid/token", permit.OIDCRequestTokenEnv: "syntheticRequestToken"}
 	with := func(base map[string]string, kv ...string) map[string]string {
 		out := map[string]string{}
@@ -283,8 +362,20 @@ func TestDoctorSigstore(t *testing.T) {
 		contains map[string]string
 	}{
 		{"ready on GitHub", gh, true, sigstoreConfig,
-			map[string]run.Status{"tool.cosign": run.StatusPass, "permit.sigstore": run.StatusPass, "permit.identity": run.StatusPass},
-			map[string]string{"tool.cosign": "v2.4.1", "permit.identity": sigstoreIdentity}},
+			map[string]run.Status{"tool.cosign": run.StatusPass, "permit.sigstore": run.StatusPass, "permit.identity": run.StatusPass, "permit.repository": run.StatusPass},
+			map[string]string{"tool.cosign": "v2.4.1", "permit.identity": sigstoreIdentity, "permit.repository": "acme/app (from GITHUB_REPOSITORY)"}},
+		{"repository from the config", gh, true, withRepository(t, sigstoreConfig, sigstoreRepo),
+			map[string]run.Status{"permit.repository": run.StatusPass},
+			map[string]string{"permit.repository": "acme/app (from policy.permit.repository)"}},
+		{"configured repository is not this one", gh, true, withRepository(t, sigstoreConfig, "acme/other"),
+			map[string]run.Status{"permit.repository": run.StatusPass},
+			map[string]string{"permit.repository": "warning: policy.permit.repository is acme/other but this run is in acme/app"}},
+		{"local without a repository", map[string]string{permit.RepositoryEnv: sigstoreRepo}, true, sigstoreConfig,
+			map[string]run.Status{"permit.repository": run.StatusPass},
+			map[string]string{"permit.repository": "warning: no repository to pin"}},
+		{"local with a repository", map[string]string{}, true, withRepository(t, sigstoreConfig, sigstoreRepo),
+			map[string]run.Status{"permit.repository": run.StatusPass},
+			map[string]string{"permit.repository": "acme/app (from policy.permit.repository)"}},
 		{"no cosign", gh, false, sigstoreConfig,
 			map[string]run.Status{"tool.cosign": run.StatusFail},
 			map[string]string{"tool.cosign": "cosign not found"}},
@@ -306,7 +397,7 @@ func TestDoctorSigstore(t *testing.T) {
 		{"odd identity and issuer", gh, true, strings.NewReplacer(sigstoreIdentity, "deployer", permit.GitHubIssuer, "https://accounts.example.com").Replace(sigstoreConfig),
 			map[string]run.Status{"permit.identity": run.StatusPass},
 			map[string]string{"permit.identity": "warning: issuer is not https://token.actions.githubusercontent.com, identity is not shaped"}},
-		{"hmac is silent", gh, false, gateConfig, map[string]run.Status{"tool.cosign": "", "permit.sigstore": "", "permit.identity": ""}, nil},
+		{"hmac is silent", gh, false, gateConfig, map[string]run.Status{"tool.cosign": "", "permit.sigstore": "", "permit.identity": "", "permit.repository": ""}, nil},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -331,5 +422,73 @@ func TestDoctorSigstore(t *testing.T) {
 				t.Fatal("the OIDC request token reached output")
 			}
 		})
+	}
+}
+
+// syntheticCallerWorkflow is a consumer workflow that calls the reusable deploy workflow.
+const syntheticCallerWorkflow = `name: deploy
+on: { push: { branches: [main] } }
+jobs:
+  deploy:
+    uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1 # pinned
+    secrets: inherit
+`
+
+func TestDoctorSigstoreReusableWorkflowIdentity(t *testing.T) {
+	const reusable = "https://github.com/glassops-platform/glassops/.github/workflows/glassops-deploy.yml@"
+	cases := []struct {
+		name, identity, status, contain string
+	}{
+		{"caller's own workflow", sigstoreIdentity, "warning",
+			"this project calls glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1, and a PERMIT signed there carries the identity " + reusable + "<full ref>"},
+		{"reusable at the called tag", reusable + "refs/tags/v1", "ok", reusable + "refs/tags/v1"},
+		{"reusable at another tag", reusable + "refs/tags/v2", "warning", "identity names the reusable workflow at refs/tags/v2 but this project calls"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := gateHarness(t, strings.Replace(sigstoreConfig, sigstoreIdentity, tc.identity, 1))
+			h.write(t, ".github/workflows/deploy.yml", syntheticCallerWorkflow)
+			h.env = map[string]string{"GITHUB_ACTIONS": "true", permit.RepositoryEnv: sigstoreRepo}
+			h.tools["cosign version"] = "GitVersion:    v2.5.3\n"
+			h.exec("doctor")
+			d := detailOf(h.result(t, "doctor"), "permit.identity")
+			if !strings.Contains(d, tc.contain) || strings.HasPrefix(d, "warning:") != (tc.status == "warning") {
+				t.Fatalf("permit.identity detail %q, want %s containing %q", d, tc.status, tc.contain)
+			}
+		})
+	}
+}
+
+func TestReusableWorkflowRefs(t *testing.T) {
+	dir := t.TempDir()
+	wf := filepath.Join(dir, ".github", "workflows")
+	if err := os.MkdirAll(wf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{
+		"a.yml":  syntheticCallerWorkflow,
+		"b.yaml": "jobs:\n  x:\n    uses: \"glassops-platform/glassops/.github/workflows/glassops-deploy.yml@refs/heads/main\"\n  y:\n    uses: 'glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1'\n",
+		"c.yml":  "jobs:\n  z:\n    steps:\n      - uses: actions/checkout@v4\n      # uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@commented\n    uses: glassops-platform/glassops/.github/workflows/other.yml@v1\n",
+		"d.txt":  "uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@ignored\n",
+	}
+	for name, body := range files {
+		if err := os.WriteFile(filepath.Join(wf, name), []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got := reusableWorkflowRefs(dir)
+	if want := []string{"refs/heads/main", "v1"}; strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("refs = %v, want %v", got, want)
+	}
+	if got := reusableWorkflowRefs(filepath.Join(dir, "missing")); len(got) != 0 {
+		t.Fatalf("missing dir: %v", got)
+	}
+}
+
+func TestRefMatches(t *testing.T) {
+	for ref, want := range map[string]bool{"refs/tags/v1": true, "v1": true, "refs/tags/v10": false, "refs/heads/v1x": false} {
+		if got := refMatches(ref, []string{"v1"}); got != want {
+			t.Errorf("%s: %v", ref, got)
+		}
 	}
 }
