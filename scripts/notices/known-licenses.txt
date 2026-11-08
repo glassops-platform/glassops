@@ -1,0 +1,12 @@
+# Licenses for packages that declare none in the SBOM. Go modules carry no license metadata, so each
+# line below was read from the module's own LICENSE file (go mod cache, checked 2026-10-31).
+# Used only by the notices command, never by the check.
+go-module:github.com/glassops-platform/glassops = Apache-2.0
+go-module:github.com/spf13/cobra = Apache-2.0
+go-module:github.com/spf13/pflag = BSD-3-Clause
+go-module:github.com/santhosh-tekuri/jsonschema/v6 = Apache-2.0
+go-module:golang.org/x/text = BSD-3-Clause
+go-module:gopkg.in/yaml.v3 = MIT AND Apache-2.0
+# The Salesforce CLI package.json declares Apache-2.0 (read in the image), but syft finds no
+# license for the root package.
+npm:@salesforce/cli = Apache-2.0

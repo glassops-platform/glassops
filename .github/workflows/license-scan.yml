@@ -1,0 +1,98 @@
+name: License Scan
+
+# Builds both images, writes an SBOM of each with syft, and fails on any AGPL, GPL or LGPL package
+# that scripts/notices/allowlist.txt and allowlist-proposed.txt do not list. It also checks that
+# THIRD_PARTY_NOTICES still matches what the images contain, and runs the tests of the release
+# scripts. release.yml calls this workflow and publishes no image unless it passes.
+#
+# This is an ordinary check, not a required one. Making it required changes branch protection,
+# which is the owner's call.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Release Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: License check unit tests
+        run: python3 scripts/notices/test_licenses.py
+
+      - name: Release tag rules
+        run: scripts/release/test-tags.sh
+
+      - name: action.yml script, docker stubbed
+        run: scripts/release/test-action.sh
+
+      - name: Reusable workflow install step, git and docker stubbed
+        run: scripts/release/test-workflows.sh
+
+      - name: Planted AGPL package is caught
+        run: scripts/notices/test-planted.sh
+
+  scan:
+    name: License Scan ${{ matrix.image.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - { name: glassops, dockerfile: Dockerfile }
+          - { name: glassops-analyzer, dockerfile: Dockerfile.analyzer }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          push: false
+          load: true
+          tags: ${{ matrix.image.name }}:scan
+          build-args: VERSION=scan-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
+
+      - name: Write the SBOM
+        run: scripts/notices/sbom.sh ${{ matrix.image.name }}:scan ${{ matrix.image.name }}.sbom.json
+
+      - name: Check the licenses
+        run: |
+          python3 scripts/notices/licenses.py check ${{ matrix.image.name }}.sbom.json \
+            --allow scripts/notices/allowlist.txt scripts/notices/allowlist-proposed.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom-${{ matrix.image.name }}
+          path: ${{ matrix.image.name }}.sbom.json
+          if-no-files-found: warn
+
+  notices:
+    name: Notices Up To Date
+    needs: scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sbom-*
+          merge-multiple: true
+
+      - name: Compare THIRD_PARTY_NOTICES with the images
+        run: |
+          python3 scripts/notices/licenses.py notices glassops.sbom.json glassops-analyzer.sbom.json \
+            --licenses scripts/notices/known-licenses.txt --check THIRD_PARTY_NOTICES
