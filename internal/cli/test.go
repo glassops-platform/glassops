@@ -101,7 +101,7 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 	var unreported []string
 	if proj.cfg.Test.Coverage.ClassMin != nil {
 		var perr error
-		out, unreported, perr = addUncoveredClasses(g, out)
+		out, unreported, perr = addUncoveredClasses(g, proj.cfg.Test.Coverage.ClassScope, out)
 		if perr != nil {
 			res.AddCheck("coverage.plan", run.StatusFail, perr.Error())
 			res.Degrade(run.StatusFail)
@@ -154,30 +154,49 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 	return app.finish(res, c, g)
 }
 
-// addUncoveredClasses counts every changed Apex class in .glassops/plan.json that the run
-// reported no coverage for as 0%, because sf lists only classes a test touched. A class whose
-// name ends in Test or _Test is taken for a test class and skipped, the same reading the gate's
-// coverage_min uses. It returns the classes it added. No plan.json, or a plan with no class
-// list, adds nothing. A plan that exists and cannot be read is an error, so a broken plan never
-// weakens the check.
-func addUncoveredClasses(g *globals, out providers.TestResult) (providers.TestResult, []string, error) {
-	cs, err := providers.ReadChangeSet(filepath.Join(g.dir, ".glassops", "plan.json"))
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return out, nil, nil
-		}
-		return out, nil, fmt.Errorf("the changed classes could not be read, so unreported classes are not counted at 0%%: %w", err)
-	}
-	var classes []string
-	switch v := cs.Facts["salesforce.apex_classes"].(type) {
+// stringList reads a fact holding a list of strings, as a provider sets it ([]string) or as it
+// reads back from JSON ([]any).
+func stringList(v any) []string {
+	switch l := v.(type) {
+	case []string:
+		return l
 	case []any:
-		for _, e := range v {
+		var out []string
+		for _, e := range l {
 			if name, ok := e.(string); ok {
-				classes = append(classes, name)
+				out = append(out, name)
 			}
 		}
-	case []string:
-		classes = v
+		return out
+	}
+	return nil
+}
+
+// addUncoveredClasses counts every Apex class the run reported no coverage for as 0%, because
+// sf lists only classes a test touched. Which classes depends on scope. "changed" (the
+// default) takes the changed classes in .glassops/plan.json, and when there is no plan it takes
+// every class the provider found untouched in the org's coverage
+// aggregate (fact test.coverage_untouched), since without a plan nothing says which classes
+// changed. "all" takes the plan's classes and every untouched class. A class whose name ends in
+// Test or _Test is taken for a test class and skipped, the same reading the gate's coverage_min
+// uses. It returns the classes it added. A plan that exists and cannot be read is an error, and
+// so is an aggregate the provider could not read when the scope needs it, so a broken input
+// never weakens the check.
+func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (providers.TestResult, []string, error) {
+	var classes []string
+	cs, err := providers.ReadChangeSet(filepath.Join(g.dir, ".glassops", "plan.json"))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return out, nil, fmt.Errorf("the changed classes could not be read, so unreported classes are not counted at 0%%: %w", err)
+	}
+	havePlan := err == nil
+	if havePlan {
+		classes = stringList(cs.Facts["salesforce.apex_classes"])
+	}
+	if scope == "all" || !havePlan {
+		if why, ok := out.Facts["test.coverage_unavailable"]; ok {
+			return out, nil, fmt.Errorf("the org's coverage aggregate could not be read, so classes no test touched are not counted at 0%%: %v", why)
+		}
+		classes = append(append([]string(nil), classes...), stringList(out.Facts["test.coverage_untouched"])...)
 	}
 	reported := map[string]bool{}
 	for _, cl := range out.Classes {

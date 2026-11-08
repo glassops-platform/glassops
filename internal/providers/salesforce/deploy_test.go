@@ -455,11 +455,109 @@ func TestDeployNeedsOwnSession(t *testing.T) {
 	}
 }
 
-// The deploy wait timeout was never captured. These envelopes are synthetic, built from sf's
-// documented exit status 69 and the shape of deploy-start-async.json. [unverified] Capture with
-// `sf project deploy start --manifest <package.xml> --wait 1 --json --target-org <scratch>` on a
-// deploy that takes longer than a minute.
-func TestDeployWaitTimeoutShapes(t *testing.T) {
+// The deploy wait running out, on real captures. deploy start --wait 1 exits 1 with
+// ClientTimeoutError and the job Id only in data.id. deploy report right after says InProgress,
+// and the same report once the deploy finished says Succeeded. [confirmed: deploy-start-timeout.json,
+// deploy-report-inprogress.json and deploy-report-after-timeout-done.json, sf 2.156.8]
+func TestDeployWaitTimeoutOnRealCaptures(t *testing.T) {
+	p, f, s, dir, cs := deploySetup(t, nil)
+	f.replies = map[string]fakeReply{
+		queryPrefix:  sandboxOrg(t),
+		startPrefix:  {Stdout: fixture(t, "deploy-start-timeout.json"), ExitCode: 1},
+		reportPrefix: {Stdout: fixture(t, "deploy-report-inprogress.json")},
+	}
+	res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Passed || !res.TimedOut || res.ID != "0Af000000000001AAA" || res.Facts["salesforce.timed_out"] != true {
+		t.Fatalf("result: %+v", res)
+	}
+	cmds := f.commands()
+	if len(cmds) != 3 || !strings.HasPrefix(cmds[2], reportPrefix) || !strings.Contains(cmds[2], "--job-id 0Af000000000001AAA") {
+		t.Fatalf("commands: %v", cmds)
+	}
+
+	// The resume path reads the finished report as a pass.
+	p, f, s, dir, cs = deploySetup(t, nil)
+	f.replies = map[string]fakeReply{reportPrefix: {Stdout: fixture(t, "deploy-report-after-timeout-done.json")}}
+	res, err = p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir, ResumeID: "0Af000000000001AAA"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.Passed || res.TimedOut || res.ID != "0Af000000000001AAA" {
+		t.Fatalf("resumed result: %+v", res)
+	}
+}
+
+// An error from deploy start that names a job Id does not mean nothing was deployed. The
+// follow up report decides. [confirmed: deploy-start-lock-released.json said MetadataTransferError
+// while deploy-report-lock-released.json said Succeeded, sf 2.156.8]
+func TestDeployStartErrorWithJobIDFollowsReport(t *testing.T) {
+	t.Run("lock released then Succeeded", func(t *testing.T) {
+		p, f, s, dir, cs := deploySetup(t, nil)
+		f.replies = map[string]fakeReply{
+			queryPrefix:  sandboxOrg(t),
+			startPrefix:  {Stdout: fixture(t, "deploy-start-lock-released.json"), ExitCode: 1},
+			reportPrefix: {Stdout: fixture(t, "deploy-report-lock-released.json")},
+		}
+		res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !res.Passed || res.TimedOut || res.ID != "0Af000000000004AAA" || len(res.Problems) != 0 {
+			t.Fatalf("result: %+v", res)
+		}
+	})
+	t.Run("Failed report is a failure from the report body", func(t *testing.T) {
+		p, f, s, dir, cs := deploySetup(t, nil)
+		f.replies = map[string]fakeReply{
+			queryPrefix:  sandboxOrg(t),
+			startPrefix:  {Stdout: fixture(t, "deploy-start-lock-released.json"), ExitCode: 1},
+			reportPrefix: {Stdout: fixture(t, "deploy-report-coverage-fail.json")},
+		}
+		res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res.Passed || res.TimedOut || len(res.Problems) == 0 {
+			t.Fatalf("result: %+v", res)
+		}
+	})
+	t.Run("InProgress report is the resume path", func(t *testing.T) {
+		p, f, s, dir, cs := deploySetup(t, nil)
+		f.replies = map[string]fakeReply{
+			queryPrefix:  sandboxOrg(t),
+			startPrefix:  {Stdout: fixture(t, "deploy-start-lock-released.json"), ExitCode: 1},
+			reportPrefix: {Stdout: fixture(t, "deploy-report-inprogress.json")},
+		}
+		res, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res.Passed || !res.TimedOut {
+			t.Fatalf("result: %+v", res)
+		}
+	})
+	t.Run("report also fails is an error", func(t *testing.T) {
+		p, f, s, dir, cs := deploySetup(t, nil)
+		f.replies = map[string]fakeReply{
+			queryPrefix:  sandboxOrg(t),
+			startPrefix:  {Stdout: fixture(t, "deploy-start-lock-released.json"), ExitCode: 1},
+			reportPrefix: {Stdout: []byte(`{"status":1,"name":"Boom","message":"boom"}`), ExitCode: 1},
+		}
+		if _, err := p.Deploy(context.Background(), s, cs, providers.DeployOptions{Dir: dir}); err == nil {
+			t.Fatal("a failed report was read as a result")
+		}
+	})
+}
+
+// Timeout shapes real sf 2.156.8 did not produce. They stay because the code that reads them is
+// still reachable on other sf versions: the exit status 69 sf documents for a timeout, and a
+// timeout whose Id sits only in the message. The inputs are synthetic, built from the shape of
+// deploy-start-async.json. [unverified] against a real sf that emits them. The real shape
+// (ClientTimeoutError, Id in data.id) is covered by TestDeployWaitTimeoutOnRealCaptures.
+func TestDeployWaitTimeoutLegacyShapes(t *testing.T) {
 	var asyncEnv struct {
 		Result json.RawMessage `json:"result"`
 	}
@@ -474,8 +572,6 @@ func TestDeployWaitTimeoutShapes(t *testing.T) {
 		{"status 69 with the body in result", `{"status":69,"result":` + body + `,"warnings":[]}`, nil},
 		{"status 69 with the body in data", `{"status":69,"name":"SyntheticTimeout","message":"synthetic","data":` + body + `}`, nil},
 		{"body without a status and done false", `{"status":69,"result":{"id":"0Af000000000003AAA","done":false}}`, nil},
-		{"Id only in data, report says in progress", `{"status":69,"name":"SyntheticTimeout","message":"synthetic","data":{"jobId":"0Af000000000003AAA"}}`,
-			&fakeReply{Stdout: []byte(`{"status":0,"result":` + body + `}`)}},
 		{"Id only in the message, report fails", `{"status":69,"name":"SyntheticTimeout","message":"wait timed out, run sf project deploy resume --job-id 0Af000000000003AAA"}`,
 			&fakeReply{Stdout: []byte(`{"status":1,"name":"Boom","message":"boom"}`), ExitCode: 1}},
 	}

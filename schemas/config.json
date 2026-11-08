@@ -269,7 +269,8 @@
           "additionalProperties": false,
           "properties": {
             "org_min": { "$ref": "#/$defs/percent" },
-            "class_min": { "$ref": "#/$defs/percent" }
+            "class_min": { "$ref": "#/$defs/percent" },
+            "class_scope": { "enum": ["changed", "all"] }
           }
         }
       }

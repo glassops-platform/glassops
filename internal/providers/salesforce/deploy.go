@@ -125,8 +125,12 @@ func (p *Provider) nativeDeploy(ctx context.Context, s providers.Session, cs pro
 
 // readDeploy turns the envelope of deploy start, quick or resume into a result. sf puts the
 // full body in result on success and on a component or test failure, with a non-zero status
-// for the failure. A failure envelope with no body but a deploy Id in data is read again
-// with deploy report. Anything else is an error.
+// for the failure. A failure envelope with a deploy Id in data, whatever its error name, is
+// read again with deploy report and the report decides: Succeeded is a success, InProgress is
+// a timeout the caller can resume, Failed is the failure in the report body
+// [confirmed: deploy-start-lock-released.json was a MetadataTransferError on a deploy that
+// deploy-report-lock-released.json shows Succeeded]. Only a report that also fails is an
+// error.
 func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, env envelope, runErr error, quick bool, extra map[string]any) (providers.DeployResult, error) {
 	body, ok := parseDeployBody(env.Result)
 	if !ok {
@@ -166,9 +170,10 @@ func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, en
 	return res, nil
 }
 
-// waitTimeoutStatus is the exit status sf gives when --wait runs out before the deploy ends
-// [unverified: from sf's documented exit codes, no timeout was captured. Capture it with the
-// command in the log entry for the deploy timeout].
+// waitTimeoutStatus is the exit status sf documents for a wait that ran out. Real sf 2.156.8
+// did not use it: it exited 1 with name ClientTimeoutError and the Id in data.id
+// [confirmed: deploy-start-timeout.json]. The status stays as a second signal for other sf
+// versions [unverified].
 const waitTimeoutStatus = 69
 
 // deployIDPattern matches a deploy Id (the 0Af key prefix) in an sf message.
@@ -189,7 +194,8 @@ func parseDeployBody(raw json.RawMessage) (deployResultBody, bool) {
 }
 
 // bodyFromFailure reads a full deploy body from the data of a failure envelope, which is
-// where a wait timeout can carry it [unverified].
+// where a wait timeout could carry it. Real sf 2.156.8 carries only the Id there
+// [confirmed: deploy-start-timeout.json], so this is for other sf versions [unverified].
 func bodyFromFailure(err error) (deployResultBody, bool) {
 	var sfErr *SFError
 	if !errors.As(err, &sfErr) {
@@ -198,8 +204,9 @@ func bodyFromFailure(err error) (deployResultBody, bool) {
 	return parseDeployBody(sfErr.Data)
 }
 
-// isWaitTimeout reports whether err is sf giving up the wait on a deploy [unverified]: status
-// 69, or an error name or message that says the wait timed out.
+// isWaitTimeout reports whether err is sf giving up the wait on a deploy: status 69, or an
+// error name or message that says the wait timed out. The name ClientTimeoutError and its
+// message are [confirmed: deploy-start-timeout.json], status 69 is [unverified].
 func isWaitTimeout(err error) bool {
 	var sfErr *SFError
 	if !errors.As(err, &sfErr) {
@@ -241,7 +248,7 @@ func failureDeployID(err error) string {
 	case data.JobID != "":
 		return data.JobID
 	}
-	// A timeout can name the Id only in its message [unverified].
+	// A timeout could name the Id only in its message [unverified, real sf 2.156.8 uses data.id].
 	if isWaitTimeout(err) {
 		if m := deployIDPattern.FindStringSubmatch(sfErr.Message); m != nil {
 			return m[1]

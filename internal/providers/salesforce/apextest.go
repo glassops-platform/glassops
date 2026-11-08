@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -100,7 +101,62 @@ func (p *Provider) RunTests(ctx context.Context, s providers.Session, req provid
 			return providers.TestResult{}, err
 		}
 	}
-	return body.toResult(req.ResumeID)
+	res, err := body.toResult(req.ResumeID)
+	if err != nil || !res.Finished {
+		return res, err
+	}
+	p.addUntouchedClasses(ctx, sess, req.Dir, &res)
+	return res, nil
+}
+
+// coverageAggregateQuery lists the coverage the org holds for every class and trigger. Unlike the
+// per class list in the test output, it includes a class no test touched, with no covered lines.
+const coverageAggregateQuery = "SELECT ApexClassOrTriggerId, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverageAggregate"
+
+// coverageAggregateBody is the result of a Tooling query on ApexCodeCoverageAggregate.
+type coverageAggregateBody struct {
+	Records []struct {
+		ApexClassOrTrigger struct {
+			Name string `json:"Name"`
+		} `json:"ApexClassOrTrigger"`
+		NumLinesCovered   flexInt `json:"NumLinesCovered"`
+		NumLinesUncovered flexInt `json:"NumLinesUncovered"`
+	} `json:"records"`
+}
+
+// addUntouchedClasses reads ApexCodeCoverageAggregate after a finished run and records, in the
+// fact test.coverage_untouched, every class the run did not report that has lines and none
+// covered. A class like that is at 0%, and sf apex run test leaves it out of its list
+// [confirmed: apex-test-with-orphan.json and tooling-coverage-aggregate.json]. When the query
+// fails the fact test.coverage_unavailable says why, so the caller can fail closed rather
+// than read a missing list as full coverage.
+func (p *Provider) addUntouchedClasses(ctx context.Context, sess *session, dir string, res *providers.TestResult) {
+	env, err := p.sf(ctx, sess, dir, "data", "query", "--use-tooling-api", "--query", coverageAggregateQuery, "--target-org", sess.alias)
+	var agg coverageAggregateBody
+	if err == nil {
+		if jerr := json.Unmarshal(env.Result, &agg); jerr != nil {
+			err = fmt.Errorf("read the coverage aggregate: %w", jerr)
+		}
+	}
+	if err != nil {
+		res.Facts["test.coverage_unavailable"] = redact.Text(oneLine(err.Error()))
+		return
+	}
+	reported := map[string]bool{}
+	for _, c := range res.Classes {
+		reported[c.Name] = true
+	}
+	untouched := []string{}
+	for _, r := range agg.Records {
+		name := r.ApexClassOrTrigger.Name
+		if name == "" || reported[name] || r.NumLinesCovered > 0 || r.NumLinesUncovered+r.NumLinesCovered == 0 {
+			continue
+		}
+		reported[name] = true
+		untouched = append(untouched, name)
+	}
+	sort.Strings(untouched)
+	res.Facts["test.coverage_untouched"] = untouched
 }
 
 // apexRun runs one apex test command. Exit 100 means failing tests and still carries the body.
