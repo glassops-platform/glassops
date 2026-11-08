@@ -14,6 +14,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
+	"github.com/glassops-platform/glassops/internal/providers"
 )
 
 // The opa outputs below are synthetic, in the shape "opa eval --format json" printed for OPA
@@ -130,6 +131,66 @@ func TestGateRegoEmptyPasses(t *testing.T) {
 	}
 	if c, ok := findCheck(p.Checks, "rego"); !ok || c.Outcome != policy.Pass || !strings.Contains(c.Detail, "policy/deploy.rego") {
 		t.Fatalf("no passing rego check: %+v", p.Checks)
+	}
+}
+
+// TestGateRegoInputIsGatesOwnFacts pins that opa sees only the facts document gate built. ci.
+// and target. keys planted in an unsigned result file or in the plan's facts never reach the
+// Rego input, and change. keys from the plan's facts do not override what gate derived.
+func TestGateRegoInputIsGatesOwnFacts(t *testing.T) {
+	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
+	h := regoGateHarness(t)
+	calls := fakeGateOPA(t, syntheticOPAEmptyOut, nil)
+	planted := run.New("plan", nil)
+	planted.Facts["ci.actor"] = "someone-else"
+	planted.Facts["ci.pr_author"] = "someone-else"
+	planted.Facts["target.id"] = "00D0000000000EVILAA"
+	planted.Facts["target.tier"] = "sandbox"
+	writeResult(t, h, planted)
+	writeGatePlan(t, h, providers.ChangeSet{
+		Destructive: []string{},
+		Facts: map[string]any{
+			"ci.actor":                 "someone-else",
+			"target.kind":              "scratch",
+			"change.destructive_count": 7,
+			"change.empty":             true,
+		},
+	})
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if len(*calls) != 1 {
+		t.Fatalf("opa ran %d times", len(*calls))
+	}
+	in, _ := (*calls)[0].input["facts"].(map[string]any)
+	if in == nil {
+		t.Fatalf("opa input has no facts: %v", (*calls)[0].input)
+	}
+	for k, want := range map[string]any{
+		"ci.actor":                 "deployer",
+		"target.id":                "00D000000000001AAA",
+		"target.tier":              "prod",
+		"target.kind":              "production",
+		"change.destructive_count": float64(0),
+		"change.empty":             false,
+	} {
+		if in[k] != want {
+			t.Errorf("opa input %s = %v, want %v", k, in[k], want)
+		}
+	}
+	if v, ok := in["ci.pr_author"]; ok && v == "someone-else" {
+		t.Errorf("a planted ci.pr_author reached the opa input")
+	}
+	data, err := os.ReadFile(filepath.Join(h.dir, ".glassops", "facts.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var written map[string]any
+	if err := json.Unmarshal(data, &written); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual((*calls)[0].input, written) {
+		t.Fatalf("opa input differs from facts.json:\n%v\n%v", (*calls)[0].input, written)
 	}
 }
 

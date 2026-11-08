@@ -196,14 +196,14 @@ func sigstorePermit(now time.Time) Permit {
 		Schema: Schema, ID: "abc123", Allow: true, IssuedAt: now, ExpiresAt: now.Add(time.Hour),
 		Target:     Target{Name: "prod", Tier: "prod", ID: "00D000000000001AAA", Kind: "production"},
 		Commit:     "20459158b4f16da4cddc816ac7c1d695177af196",
-		PlanSHA256: "aa", ConfigSHA256: "bb",
+		PlanSHA256: "aa", ConfigSHA256: "bb", ChangeSetSHA256: "cs",
 		Checks: []policy.Result{{Rule: "plan_not_empty", Outcome: policy.Pass, Detail: "synthetic"}},
 	}
 }
 
 func sigstoreExpect(now time.Time) Expect {
 	return Expect{TargetName: "prod", TargetID: "00D000000000001AAA", Commit: "20459158b4f16da4cddc816ac7c1d695177af196",
-		PlanSHA256: "aa", ConfigSHA256: "bb", Now: now.Add(time.Minute)}
+		PlanSHA256: "aa", ConfigSHA256: "bb", ChangeSetSHA256: "cs", Now: now.Add(time.Minute)}
 }
 
 // signedPermit signs a synthetic PERMIT with the fake cosign through SignerFor.
@@ -384,7 +384,7 @@ func TestSigstoreRefusals(t *testing.T) {
 	tampered := p
 	tampered.PlanSHA256 = "cc"
 	hmacSigned := sigstorePermit(now)
-	if err := Sign(&hmacSigned, NewHMAC([]byte(strings.Repeat("k", MinKeyBytes)))); err != nil {
+	if err := Sign(&hmacSigned, NewHMAC(testKey(1))); err != nil {
 		t.Fatal(err)
 	}
 	notBase64, notBundle := p, p
@@ -403,13 +403,80 @@ func TestSigstoreRefusals(t *testing.T) {
 		{"HMAC PERMIT", hmacSigned, verifierFor(t, testIdentity, testIssuer), ErrSignature, "algorithm"},
 		{"value not base64", notBase64, verifierFor(t, testIdentity, testIssuer), ErrSignature, "base64"},
 		{"value not a bundle", notBundle, verifierFor(t, testIdentity, testIssuer), ErrSignature, "not a sigstore bundle"},
-		{"sigstore PERMIT, HMAC verifier", p, NewHMAC([]byte(strings.Repeat("k", MinKeyBytes))), ErrSignature, "algorithm"},
+		{"sigstore PERMIT, HMAC verifier", p, NewHMAC(testKey(1)), ErrSignature, "algorithm"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Verify(tc.p, tc.v, sigstoreExpect(now))
 			if !errors.Is(err, tc.want) || !strings.Contains(err.Error(), tc.contain) {
 				t.Fatalf("err = %v, want %v containing %q", err, tc.want, tc.contain)
+			}
+		})
+	}
+}
+
+// signedPermitWith signs sigstorePermit, changed by edit, with the fake cosign.
+func signedPermitWith(t *testing.T, now time.Time, edit func(*Permit)) Permit {
+	t.Helper()
+	s, err := SignerFor(&config.Config{Policy: config.Policy{Permit: sigstoreCfg(testIdentity, testIssuer)}}, noHMAC(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := sigstorePermit(now)
+	edit(&p)
+	if err := Sign(&p, s); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// TestSigstoreBindsLikeHMAC pins that a Sigstore PERMIT goes through the same hardened checks as
+// an HMAC one: the change set hash and the deploy command hash are signed and compared, and the
+// lifetime rules apply.
+func TestSigstoreBindsLikeHMAC(t *testing.T) {
+	onGitHub(t)
+	now := time.Date(2026, 10, 31, 12, 0, 0, 0, time.UTC)
+	argv := []string{"./deploy.sh", "--prod"}
+	bound := func(p *Permit) { p.DeployCommandSHA256 = DeployCommandDigest(argv) }
+	expect := func(edit func(*Expect)) Expect {
+		e := sigstoreExpect(now)
+		edit(&e)
+		return e
+	}
+	v := verifierFor(t, testIdentity, testIssuer)
+
+	if err := Verify(signedPermitWith(t, now, bound), v, expect(func(e *Expect) { e.DeployCommandSHA256 = DeployCommandDigest(argv) })); err != nil {
+		t.Fatalf("a bound deploy command was refused: %v", err)
+	}
+	tamperedCS := signedPermitWith(t, now, func(*Permit) {})
+	tamperedCS.ChangeSetSHA256 = "other"
+	tamperedCmd := signedPermitWith(t, now, bound)
+	tamperedCmd.DeployCommandSHA256 = DeployCommandDigest([]string{"./other.sh"})
+
+	cases := []struct {
+		name    string
+		p       Permit
+		want    Expect
+		err     error
+		contain string
+	}{
+		{"no change set hash", signedPermitWith(t, now, func(p *Permit) { p.ChangeSetSHA256 = "" }), sigstoreExpect(now), ErrMismatch, "no change_set_sha256"},
+		{"another change set", signedPermitWith(t, now, func(*Permit) {}), expect(func(e *Expect) { e.ChangeSetSHA256 = "other" }), ErrMismatch, "change set hash"},
+		{"expected change set hash empty", signedPermitWith(t, now, func(*Permit) {}), expect(func(e *Expect) { e.ChangeSetSHA256 = "" }), ErrMismatch, "change set hash"},
+		{"change set hash edited after signing", tamperedCS, sigstoreExpect(now), ErrSignature, "invalid signature"},
+		{"no deploy command bound", signedPermitWith(t, now, func(*Permit) {}), expect(func(e *Expect) { e.DeployCommandSHA256 = DeployCommandDigest(argv) }), ErrMismatch, "binds no deploy command"},
+		{"another deploy command", signedPermitWith(t, now, bound), expect(func(e *Expect) { e.DeployCommandSHA256 = DeployCommandDigest([]string{"./other.sh"}) }), ErrMismatch, "deploy command differs"},
+		{"deploy command hash edited after signing", tamperedCmd, expect(func(e *Expect) { e.DeployCommandSHA256 = DeployCommandDigest([]string{"./other.sh"}) }), ErrSignature, "invalid signature"},
+		{"lifetime over the maximum", signedPermitWith(t, now, func(p *Permit) { p.ExpiresAt = now.Add(3 * time.Hour) }), expect(func(e *Expect) { e.MaxTTL = 2 * time.Hour }), ErrLifetime, "longer than the maximum"},
+		{"issued in the future", signedPermitWith(t, now, func(p *Permit) { p.IssuedAt = now.Add(time.Hour); p.ExpiresAt = now.Add(2 * time.Hour) }), sigstoreExpect(now), ErrLifetime, "after this clock"},
+		{"no issued_at", signedPermitWith(t, now, func(p *Permit) { p.IssuedAt = time.Time{} }), sigstoreExpect(now), ErrLifetime, "issued_at is not set"},
+		{"expired", signedPermitWith(t, now, func(*Permit) {}), expect(func(e *Expect) { e.Now = now.Add(time.Hour) }), ErrExpired, "expired"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Verify(tc.p, v, tc.want)
+			if !errors.Is(err, tc.err) || !strings.Contains(err.Error(), tc.contain) {
+				t.Fatalf("err = %v, want %v containing %q", err, tc.err, tc.contain)
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -8,6 +9,8 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/run"
+	"github.com/glassops-platform/glassops/internal/providers"
+	"github.com/glassops-platform/glassops/internal/providers/salesforce"
 )
 
 // pluginsWithHardis keeps the name, version and type of each entry "sf plugins --json" printed
@@ -149,5 +152,57 @@ func TestDoctorHardisSilent(t *testing.T) {
 	}
 	if got := checkStatus(h.result(t, "doctor"), "tool.sfdx-hardis"); got != "" {
 		t.Fatalf("tool.sfdx-hardis ran on the native engine: %s", got)
+	}
+}
+
+// TestDeployHardisRunsBehindTheTreeCheck pins F2 for engine hardis: deploy checks the tree before
+// it logs in or runs any engine command, so a modified checkout never reaches sfdx-hardis. The
+// control, a clean tree, goes on to the Salesforce provider.
+func TestDeployHardisRunsBehindTheTreeCheck(t *testing.T) {
+	for _, dirty := range []bool{true, false} {
+		t.Run(map[bool]string{true: "modified tree", false: "clean tree"}[dirty], func(t *testing.T) {
+			cfg := strings.Replace(deployConfig, "version: 1\n", "version: 1\nprovider: salesforce\n", 1) + "  engine: hardis\n"
+			h := newDeployHarness(t, cfg, nil)
+			// Every program the provider would start is recorded and none runs, so no sf, login
+			// or sfdx-hardis process starts in either case.
+			var calls []string
+			record := func(name string, args []string) {
+				calls = append(calls, strings.Join(append([]string{name}, args...), " "))
+			}
+			h.app.Providers = providers.Registry{salesforce.NewWithOptions(salesforce.Options{
+				Run: func(name string, args ...string) ([]byte, error) {
+					record(name, args)
+					return nil, errors.New("synthetic: no program runs in this test")
+				},
+				Exec: func(_ context.Context, c salesforce.Cmd) (salesforce.Output, error) {
+					record(c.Name, c.Args)
+					return salesforce.Output{}, errors.New("synthetic: no program runs in this test")
+				},
+				LookupEnv: func(k string) (string, bool) {
+					if k == "SF_QA_AUTH_URL" {
+						return "force://synthetic", true
+					}
+					return "", false
+				},
+				TempDir: t.TempDir(),
+			})}
+			if dirty {
+				h.tools[deployStatusCmd] = " M force-app/main/default/classes/A.cls\n"
+			}
+			code := h.run()
+			r := h.result(t, "deploy")
+			if dirty {
+				if code != exitcode.Error || !strings.Contains(detailOf(r, "tree"), "A.cls") {
+					t.Fatalf("exit %d, checks %+v", code, r.Checks)
+				}
+				if len(calls) != 0 {
+					t.Fatalf("the provider ran %q from a modified tree", calls)
+				}
+				return
+			}
+			if checkStatus(r, "tree") != run.StatusPass || len(calls) == 0 {
+				t.Fatalf("a clean tree did not reach the provider: calls %q, checks %+v", calls, r.Checks)
+			}
+		})
 	}
 }

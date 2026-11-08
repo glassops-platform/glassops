@@ -182,9 +182,15 @@ func TestRegoEmptyDenyPasses(t *testing.T) {
 	if r.Rule != "rego" || r.Outcome != Pass || !strings.Contains(r.Detail, "policy/deploy.rego") || !strings.Contains(r.Detail, "sha256 ") {
 		t.Fatalf("result = %+v", r)
 	}
-	allow, _, err := EvaluateAll(context.Background(), []Evaluator{GoRules{}, NewRego(cfg)}, regoInput())
+	pass := GoRules{Rules: []Rule{fixed{"a", []Result{{Rule: "a", Outcome: Pass}}}}}
+	allow, _, err := EvaluateAll(context.Background(), []Evaluator{pass, NewRego(cfg)}, regoInput())
 	if !allow || err != nil {
 		t.Fatalf("allow %v, err %v", allow, err)
+	}
+	// The Rego pass cannot stand in for Go rules that decided nothing.
+	allow, all, err := EvaluateAll(context.Background(), []Evaluator{GoRules{}, NewRego(cfg)}, regoInput())
+	if allow || err != nil || len(all) != 2 || all[0].Rule != "go" || all[0].Outcome != Fail || all[1].Rule != "rego" || all[1].Outcome != Pass {
+		t.Fatalf("empty Go rules: allow %v, err %v, results %+v", allow, err, all)
 	}
 }
 

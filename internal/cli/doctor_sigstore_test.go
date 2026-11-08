@@ -8,15 +8,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
+	"github.com/glassops-platform/glassops/internal/providers"
 )
 
 // The cli test binary doubles as a fake cosign, as the permit package's does: copied onto PATH
@@ -155,16 +158,59 @@ func sigstoreGate(t *testing.T) (*harness, *fakeProvider) {
 	gateRules = func() []policy.Rule { return []policy.Rule{fixedRule("plan_not_empty", policy.Pass)} }
 	h, fp := gateHarness(t, sigstoreConfig)
 	delete(h.env, permit.KeyEnv)
+	passingDeploy(fp)
 	return h, fp
+}
+
+// passingDeploy makes fp's deploy pass as a full deploy.
+func passingDeploy(fp *fakeProvider) {
+	fp.deploy = func(providers.Session, providers.ChangeSet, providers.DeployOptions) (providers.DeployResult, error) {
+		return providers.DeployResult{Passed: true, ID: "0Af000000000009AAA", ComponentsDeployed: 1, Facts: map[string]any{}}, nil
+	}
 }
 
 func (h *harness) permitVerify() int {
 	return Execute(h.app, []string{"permit", "verify", "--target", "prod", "--dir", h.dir, "--ci", "github"})
 }
 
+// sigstoreTree makes the harness project a real git repository with everything but .glassops
+// committed, and points GITHUB_SHA at that commit, so gate signs the real HEAD and deploy's tree
+// check runs the real git rev-parse and git status. It returns the commit.
+func sigstoreTree(t *testing.T, h *harness) string {
+	t.Helper()
+	if _, err := osexec.LookPath("git"); err != nil {
+		t.Skip("git is not on the PATH")
+	}
+	h.write(t, ".gitignore", ".glassops/\n")
+	h.write(t, "src/a.txt", "one\n")
+	gitIn(t, h.dir, "init", "-q", "-b", "main")
+	gitIn(t, h.dir, "config", "user.email", "test@example.invalid")
+	gitIn(t, h.dir, "config", "user.name", "test")
+	gitIn(t, h.dir, "config", "core.autocrlf", "false")
+	gitIn(t, h.dir, "add", "-A")
+	gitIn(t, h.dir, "commit", "-q", "-m", "one")
+	head := gitIn(t, h.dir, "rev-parse", "HEAD")
+	h.env["GITHUB_SHA"] = head
+	fake := h.app.Run
+	h.app.Run = func(dir, name string, args ...string) ([]byte, error) {
+		if name == "git" && len(args) > 0 && (args[0] == "status" || (len(args) == 2 && args[0] == "rev-parse" && args[1] == "HEAD")) {
+			cmd := osexec.Command("git", args...)
+			cmd.Dir = dir
+			return cmd.Output()
+		}
+		return fake(dir, name, args...)
+	}
+	return head
+}
+
+func (h *harness) deployProd() int {
+	return Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"})
+}
+
 func TestGateSigstoreRoundTrip(t *testing.T) {
 	fakeCosignOnPath(t)
 	h, fp := sigstoreGate(t)
+	head := sigstoreTree(t, h)
 	if code := h.gate("--target", "prod"); code != exitcode.OK {
 		t.Fatalf("gate exit %d, output:\n%s", code, h.out)
 	}
@@ -172,19 +218,107 @@ func TestGateSigstoreRoundTrip(t *testing.T) {
 	if !p.Allow || p.Signature.Alg != permit.SigstoreAlgorithm || p.Signature.Value == "" {
 		t.Fatalf("PERMIT: allow %v, signature %+v", p.Allow, p.Signature.Alg)
 	}
+	// A Sigstore PERMIT binds the commit and the change set as an HMAC one does.
+	cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Commit != head || p.ChangeSetSHA256 == "" || p.ChangeSetSHA256 != permit.ChangeSetDigest(cs) {
+		t.Fatalf("PERMIT commit %q change_set_sha256 %q, want %q and %q", p.Commit, p.ChangeSetSHA256, head, permit.ChangeSetDigest(cs))
+	}
 	if code := h.permitVerify(); code != exitcode.OK {
 		t.Fatalf("permit verify exit %d, output:\n%s", code, h.out)
 	}
 	if r := h.result(t, "permit-verify"); checkStatus(r, "permit") != run.StatusPass {
 		t.Fatalf("permit verify: %+v", r.Checks)
 	}
-	// deploy checks the same signature before it reaches the target.
-	Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"})
-	if d := detailOf(h.result(t, "deploy"), "permit"); strings.Contains(d, "does not allow") {
-		t.Fatalf("deploy refused a good sigstore PERMIT: %s", d)
+	// deploy checks the same signature, then the tree, before it reaches the target.
+	if code := h.deployProd(); code != exitcode.OK {
+		t.Fatalf("deploy exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "deploy")
+	if checkStatus(r, "permit") != run.StatusPass || checkStatus(r, "tree") != run.StatusPass {
+		t.Fatalf("deploy checks: %+v", r.Checks)
 	}
 	if fp.deployCalls != 1 {
 		t.Fatalf("deploy calls %d, output:\n%s", fp.deployCalls, h.out)
+	}
+}
+
+// TestSigstoreDeployRefusesAnotherTree pins F2 for a Sigstore PERMIT: a good PERMIT verifies, and
+// deploy still refuses when the checkout is not its commit or a tracked file is modified.
+func TestSigstoreDeployRefusesAnotherTree(t *testing.T) {
+	cases := []struct {
+		name    string
+		change  func(t *testing.T, h *harness)
+		contain string
+	}{
+		{"modified tracked file", func(t *testing.T, h *harness) { h.write(t, "src/a.txt", "two\n") }, "src/a.txt"},
+		{"another commit", func(t *testing.T, h *harness) {
+			h.write(t, "src/a.txt", "two\n")
+			gitIn(t, h.dir, "commit", "-q", "-am", "two")
+		}, "git HEAD is"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fakeCosignOnPath(t)
+			h, fp := sigstoreGate(t)
+			sigstoreTree(t, h)
+			if code := h.gate("--target", "prod"); code != exitcode.OK {
+				t.Fatalf("gate exit %d, output:\n%s", code, h.out)
+			}
+			tc.change(t, h)
+			if code := h.deployProd(); code != exitcode.Error {
+				t.Fatalf("deploy exit %d, want 2. output:\n%s", code, h.out)
+			}
+			r := h.result(t, "deploy")
+			if checkStatus(r, "permit") != run.StatusPass || !strings.Contains(detailOf(r, "tree"), tc.contain) {
+				t.Fatalf("deploy checks: %+v", r.Checks)
+			}
+			if fp.deployCalls != 0 {
+				t.Fatal("deploy reached the target from another tree")
+			}
+		})
+	}
+}
+
+// TestSigstorePermitEndsWithTheWindow pins F7 for a Sigstore PERMIT: gate caps expires_at at the
+// window end, the signature covers it, and deploy after the window closes is refused.
+func TestSigstorePermitEndsWithTheWindow(t *testing.T) {
+	at := func(hh, mm int) func() time.Time {
+		return func() time.Time { return time.Date(2026, 10, 26, hh, mm, 0, 0, time.UTC) }
+	}
+	fakeCosignOnPath(t)
+	old := gateRules
+	t.Cleanup(func() { gateRules = old })
+	gateRules = func() []policy.Rule { return []policy.Rule{fixedRule("plan_not_empty", policy.Pass)} }
+	cfg := strings.Replace(sigstoreConfig, "  permit_ttl: 90m\n",
+		"  permit_ttl: 90m\n  windows:\n    prod:\n      - { days: [mon], from: \"09:00\", to: \"12:30\", tz: UTC }\n", 1)
+	if cfg == sigstoreConfig {
+		t.Fatal("no permit_ttl line to add the window after")
+	}
+	h, fp := gateHarness(t, cfg)
+	delete(h.env, permit.KeyEnv)
+	passingDeploy(fp)
+	sigstoreTree(t, h)
+	h.app.Now = at(12, 0)
+	if code := h.gate("--target", "prod"); code != exitcode.OK {
+		t.Fatalf("gate exit %d, output:\n%s", code, h.out)
+	}
+	p := readPermit(t, h)
+	if p.Signature.Alg != permit.SigstoreAlgorithm || !p.ExpiresAt.Equal(at(12, 30)()) {
+		t.Fatalf("PERMIT %s expires %s, want sigstore and 12:30", p.Signature.Alg, p.ExpiresAt.UTC().Format(time.RFC3339))
+	}
+	h.app.Now = at(12, 31)
+	if code := h.deployProd(); code == exitcode.OK || fp.deployCalls != 0 {
+		t.Fatalf("deploy after the window exit %d, calls %d. output:\n%s", code, fp.deployCalls, h.out)
+	}
+	if d := detailOf(h.result(t, "deploy"), "permit"); !strings.Contains(d, "expired") {
+		t.Fatalf("permit detail %q, want expired", d)
+	}
+	h.app.Now = at(12, 29)
+	if code := h.deployProd(); code != exitcode.OK || fp.deployCalls != 1 {
+		t.Fatalf("deploy inside the window exit %d, calls %d. output:\n%s", code, fp.deployCalls, h.out)
 	}
 }
 
@@ -223,6 +357,7 @@ func TestSigstorePermitRefused(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fakeCosignOnPath(t)
 			h, fp := sigstoreGate(t)
+			sigstoreTree(t, h)
 			if code := h.gate("--target", "prod"); code != exitcode.OK {
 				t.Fatalf("gate exit %d, output:\n%s", code, h.out)
 			}
@@ -233,9 +368,12 @@ func TestSigstorePermitRefused(t *testing.T) {
 			if d := detailOf(h.result(t, "permit-verify"), "permit"); !strings.Contains(d, tc.contain) {
 				t.Fatalf("permit detail %q, want %q", d, tc.contain)
 			}
-			Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"})
+			h.deployProd()
 			if fp.deployCalls != 0 {
 				t.Fatal("deploy reached the target with a refused PERMIT")
+			}
+			if r := h.result(t, "deploy"); checkStatus(r, "permit") == run.StatusPass || checkStatus(r, "tree") != "" {
+				t.Fatalf("deploy was not refused at the permit check: %+v", r.Checks)
 			}
 		})
 	}
