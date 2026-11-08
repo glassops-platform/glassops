@@ -18,6 +18,7 @@
 | `glassops gate` | Evaluates the policy rules for a target and writes a signed PERMIT |
 | `glassops permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
 | `glassops deploy` | Deploys the change set to a target, only under a valid PERMIT |
+| `glassops verify` | After a deploy, checks that the target holds what the plan says |
 | `glassops report` | Summarises every result for the CI and writes SARIF |
 
 Further commands are planned and not built yet.
@@ -138,6 +139,8 @@ Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and 
 | `--wait` | the provider's | How long to wait for the deploy, such as `30m`. The Salesforce provider waits 60 minutes |
 | `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy |
 
+With provider `exec`, a command after `--` runs instead of `exec.deploy`: `glassops deploy --target prod -- ./ci/deploy.sh`. See [the exec provider](exec-provider.md#deploying). A command after `--` with any other provider is an error.
+
 Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status `empty` and no login.
 
 | Exit | When |
@@ -147,6 +150,42 @@ Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev
 | `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
 
 Result facts: `deploy.permit_id`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts.
+
+### `glassops verify`
+
+Runs after `deploy` and checks that the target holds what the plan says. It never deploys. It is the last step of the default `deploy` pipeline, before `report`.
+
+Before it logs in, `verify` reads the deploy result and the change set. It stops with an error when the deploy result is for another target or provider, did not pass, did not finish (a timeout), or has no deploy Id, because there is no finished deploy to check. It checks that the plan files still match the plan digest. When the deploy result holds `deploy.plan_sha256`, it must equal the plan's digest, and the fact `verify.plan_bound_to_deploy` says whether that tie existed. An empty deploy ends `verify` with status `empty` and no login. Then it logs in, runs the [guard](#the-guard), and the provider runs these checks:
+
+| Check | Passes when |
+|---|---|
+| `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy shows the coverage warnings the report holds |
+| `verify.check_only` | The deploy was not a check-only run, so it changed something |
+| `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
+| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
+| `verify.flows` | Every Flow in the plan whose source says Active runs as its latest version in the target, and when the deploy changed it, that version was modified after the deploy started. A Flow whose source says Draft is not checked |
+| `verify.foreign_deploys` | No other deploy that is not check-only was created in the target between the deploy's start and now. Fails or warns according to the setting |
+| `verify.smoke` | The `verify.smoke` command exits 0. Skipped when it is not set |
+
+Anything the provider cannot read, such as a query that fails, is an error and never a pass. A warning is a passing check whose detail starts with `warning:`. It adds a CI warning annotation and its name to the fact `verify.warnings`. The smoke command runs even when an earlier check failed, but not after the provider returned an error.
+
+Settings `verify.smoke`, `verify.foreign_deploys` and `verify.flows` are in [Verify, coverage and YAML settings](verify-and-coverage-settings.md). With provider `exec`, the provider runs `exec.verify` instead of the checks above. See [the exec provider](exec-provider.md).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--deploy-result` | `<results-dir>/deploy.json` | Deploy result to verify |
+
+Reads the deploy result, the change set and the plan files. Writes `.glassops/results/verify.json`.
+
+| Exit | When |
+|---|---|
+| `0` | Every check passed. Warnings still exit 0 |
+| `1` | A check failed |
+| `2` | A tool error: the deploy result or the change set cannot be read or does not match, login or the guard failed, or the provider could not read the target |
+
+Result facts: `verify.passed`, `verify.deploy_id`, `verify.deploy_quick`, `verify.commit`, `verify.permit_id`, `verify.plan_sha256`, `verify.plan_bound_to_deploy`, `verify.warnings` and `verify.smoke_exit_code`, plus the provider's own facts.
 
 ### `glassops report`
 
@@ -214,7 +253,7 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `--dir` | `.` | Project root |
 | `--config` | `<dir>/glassops.yaml` | Config file |
 | `--results-dir` | `<dir>/.glassops/results` | Where results are written |
-| `--ci` | `auto` | CI system: `auto`, `github` or `local` |
+| `--ci` | `auto` | CI system: `auto`, `github`, `bitbucket`, `gitlab` or `local`. See [Bitbucket and GitLab](../guides/other-ci.md) |
 
 ---
 
@@ -262,6 +301,8 @@ On GitHub, each command also sets the step outputs `status` and `result` (the re
 - At most one target has tier `prod`.
 - Every policy window names a time zone that exists.
 - Every blackout ends on or after its start date.
+- With provider `exec`, `exec.paths` lists at least one path.
+- `glassops.yaml` stays inside the [YAML limits](verify-and-coverage-settings.md#yaml-limits): an alias that refers to itself is refused, and so are files nested deeper than 64 levels or expanding past 100000 values.
 
 Secrets are always named with `$VAR`, so values stay in your CI's secret store.
 
@@ -296,4 +337,4 @@ go build -o glassops ./cmd/glassops
 ./glassops doctor
 ```
 
-The container image adds Node 22, the Salesforce CLI and `sfdx-git-delta`. Build it with `docker build -t glassops .` from the repository root.
+The container image adds Node 22, the Salesforce CLI and `sfdx-git-delta`. Build it with `docker build -t glassops .` from the repository root. Release tags, image tags, the license scan and the third party notices are described in [Releases, images and licenses](releases-and-licenses.md).

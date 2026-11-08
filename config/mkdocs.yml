@@ -101,8 +101,13 @@ nav:
     - Reference:
           - "CLI Reference": docs/reference/cli.md
           - "PERMIT and Rules": docs/reference/permit-and-rules.md
+          - "Exec Provider": docs/reference/exec-provider.md
+          - "Verify, Coverage and YAML Settings": docs/reference/verify-and-coverage-settings.md
+          - "Releases, Images and Licenses": docs/reference/releases-and-licenses.md
           - "Platform Reference": docs/reference/platform-reference.md
           - "Examples": examples/README.md
 
     - Guides:
           - "Deploy with GitHub": docs/guides/deploy-with-github.md
+          - "Bitbucket and GitLab": docs/guides/other-ci.md
+          - "Scratch Org Settings": docs/guides/scratch-org-settings.md

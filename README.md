@@ -15,7 +15,7 @@ GlassOps is being rebuilt as a CI-agnostic command line tool that acts as the CI
 
 ### The `glassops` CLI
 
-The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command. Today these exist: `init`, `doctor`, `describe`, `plan`, `validate`, `gate`, `permit verify`, `deploy` and `report`. In order, they set up a project, check the environment, log in to a target and run the org Id guard, work out a change set, run a check-only validate, evaluate policy into a signed PERMIT, check that PERMIT, deploy only under it, and summarise the results as markdown and SARIF. Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every command except `report` writes a result file to `.glassops/results/`. See the [CLI reference](docs/reference/cli.md), [PERMIT and rules](docs/reference/permit-and-rules.md) and the [GitHub deploy guide](docs/guides/deploy-with-github.md).
+The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command. Today these exist: `init`, `doctor`, `describe`, `plan`, `validate`, `gate`, `permit verify`, `deploy`, `verify` and `report`. In order, they set up a project, check the environment, log in to a target and run the org Id guard, work out a change set, run a check-only validate, evaluate policy into a signed PERMIT, check that PERMIT, deploy only under it, check afterwards that the target holds what the plan says, and summarise the results as markdown and SARIF. Salesforce is the built-in provider. Provider `exec` runs your own commands for any other deploy tool. The CI layers are GitHub Actions, Bitbucket Pipelines and GitLab CI, and the last two have not run on a real runner yet. Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every command except `report` writes a result file to `.glassops/results/`. See the [CLI reference](docs/reference/cli.md), [PERMIT and rules](docs/reference/permit-and-rules.md) and the [GitHub deploy guide](docs/guides/deploy-with-github.md).
 
 ---
 
@@ -26,6 +26,11 @@ The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each ste
 - **CLI reference:** [`cli.md`](docs/reference/cli.md)
 - **PERMIT and rules:** [`permit-and-rules.md`](docs/reference/permit-and-rules.md)
 - **Deploy with GitHub:** [`deploy-with-github.md`](docs/guides/deploy-with-github.md)
+- **Bitbucket and GitLab:** [`other-ci.md`](docs/guides/other-ci.md)
+- **Scratch org definitions and settings:** [`scratch-org-settings.md`](docs/guides/scratch-org-settings.md)
+- **The exec provider:** [`exec-provider.md`](docs/reference/exec-provider.md)
+- **Verify, coverage and YAML settings:** [`verify-and-coverage-settings.md`](docs/reference/verify-and-coverage-settings.md)
+- **Releases, images and licenses:** [`releases-and-licenses.md`](docs/reference/releases-and-licenses.md)
 - **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
 - **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
 
