@@ -1,0 +1,177 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-11-08T19:46:06.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T19:46:05.000Z",
+    "details": {
+      "componentFailures": [
+        {
+          "changed": false,
+          "columnNumber": 35,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:05.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "lineNumber": 3,
+          "problem": "Missing closing quote character ' on string.",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 2,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:05.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "lineNumber": 5,
+          "problem": "Unexpected token '<EOF>'.",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 26,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:05.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "lineNumber": 2,
+          "problem": "Method must have a body",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 26,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:05.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "lineNumber": 2,
+          "problem": "Missing return statement required return type: String",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "columnNumber": 35,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:06.000Z",
+          "deleted": false,
+          "fileName": "classes/GreeterTest.cls",
+          "fullName": "GreeterTest",
+          "lineNumber": 3,
+          "problem": "Dependent class is invalid and needs recompilation:\n Class Greeter : Missing closing quote character ' on string.",
+          "problemType": "Error",
+          "success": false
+        }
+      ],
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T19:46:06.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      }
+    },
+    "done": true,
+    "id": "0Af000000000006AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T19:46:06.000Z",
+    "numberComponentErrors": 5,
+    "numberComponentsDeployed": 0,
+    "numberComponentsTotal": 5,
+    "numberFiles": "6",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-11-08T19:46:05.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": "899",
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/proj/force-app/main/default/classes/Greeter.cls",
+        "lineNumber": 2,
+        "columnNumber": 26,
+        "error": "Missing return statement required return type: String (2:26)"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/proj/force-app/main/default/classes/Greeter.cls",
+        "lineNumber": 2,
+        "columnNumber": 26,
+        "error": "Method must have a body (2:26)"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/proj/force-app/main/default/classes/Greeter.cls",
+        "lineNumber": 5,
+        "columnNumber": 2,
+        "error": "Unexpected token '<EOF>'. (5:2)"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/proj/force-app/main/default/classes/Greeter.cls",
+        "lineNumber": 3,
+        "columnNumber": 35,
+        "error": "Missing closing quote character ' on string. (3:35)"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "/proj/force-app/main/default/classes/GreeterTest.cls",
+        "lineNumber": 3,
+        "columnNumber": 35,
+        "error": "Dependent class is invalid and needs recompilation:\n Class Greeter : Missing closing quote character ' on string. (3:35)"
+      }
+    ]
+  },
+  "warnings": []
+}

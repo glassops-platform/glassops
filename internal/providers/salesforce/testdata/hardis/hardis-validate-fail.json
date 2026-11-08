@@ -1,0 +1,7 @@
+{
+  "status": 1,
+  "result": {
+    "outputstring": "Deployment summary for metadata-deployment\nStatus: Failed\nDeployment ID: 0Af000000000006AAA\nDeployment mode: FULL\nComponents: 0 deployed, 5 failed (5 total)\nApex tests: none run\nDuration: 0:00:01.000\nDefine NO_TRUNCATE_LOGS=true to display the full deployment JSON in the console again\n\n\n\u26d4 ApexClass Greeter: Missing closing quote character ' on string.\n\nNo tip found for error. Try asking ChatGPT, Google or a Release Manager \ud83d\ude0a\n\n\u26d4 ApexClass Greeter: Unexpected token '<EOF>'.\n\nNo tip found for error. Try asking ChatGPT, Google or a Release Manager \ud83d\ude0a\n\n\u26d4 ApexClass Greeter: Method must have a body\n\nNo tip found for error. Try asking ChatGPT, Google or a Release Manager \ud83d\ude0a\n\n\u26d4 ApexClass Greeter: Missing return statement required return type: String\n\nNo tip found for error. Try asking ChatGPT, Google or a Release Manager \ud83d\ude0a\n\n\u26d4 ApexClass GreeterTest: Dependent class is invalid and needs recompilation:\n Class Greeter : Missing closing quote character ' on string.\n\n\u270f\ufe0f Error Dependent class is invalid and needs recompilation:\nSolve the other errors and this one will disappear !\n\nDocumentation: https://sfdx-hardis.cloudity.com/sf-deployment-assistant/Dependent-class-is-invalid-and-needs-recompilation/\n"
+  },
+  "warnings": []
+}
