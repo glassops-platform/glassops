@@ -1,10 +1,11 @@
 package permit
 
 // Red team tests for PERMIT signing and verification. A test here passes when the attack is
-// refused. Attacks that currently succeed are in attack_open_test.go, behind the redteam_open
-// build tag.
+// refused. An attack that succeeds goes in attack_open_test.go, behind the redteam_open build
+// tag, until it is fixed. None is open now.
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -45,6 +46,7 @@ func rtPermit() Permit {
 		Commit:             strings.Repeat("6", 40),
 		PlanSHA256:         strings.Repeat("a", 64),
 		ConfigSHA256:       strings.Repeat("c", 64),
+		ChangeSetSHA256:    strings.Repeat("e", 64),
 		Validation:         &Validation{DeployID: "0Af00000000RT01AAA", TestLevel: "RunLocalTests", Passed: true},
 		SeparationOfDuties: &SoD{Mode: "enforced", Author: "author", Deployer: "deployer"},
 		Checks:             []policy.Result{{Rule: "rt_rule", Outcome: policy.Pass, Detail: "rt"}},
@@ -54,7 +56,7 @@ func rtPermit() Permit {
 func rtExpect() Expect {
 	return Expect{
 		TargetName: "qa", TargetID: rtCanon("00D000000000002AAA"),
-		Commit: strings.Repeat("6", 40), PlanSHA256: strings.Repeat("a", 64), ConfigSHA256: strings.Repeat("c", 64),
+		Commit: strings.Repeat("6", 40), PlanSHA256: strings.Repeat("a", 64), ConfigSHA256: strings.Repeat("c", 64), ChangeSetSHA256: strings.Repeat("e", 64),
 		Now: rtNow, CanonicalID: rtCanon,
 	}
 }
@@ -318,5 +320,66 @@ func TestRTReadRefusesSmuggledContent(t *testing.T) {
 			}
 			t.Logf("refused by Verify: %v", err)
 		})
+	}
+}
+
+// Finding F8, now refused: Verify never compared issued_at with the clock, so a PERMIT issued in the future,
+// by a gate with a skewed clock, verified for its whole lifetime plus the skew.
+func TestRTPermitIssuedInTheFuture(t *testing.T) {
+	p := rtPermit()
+	p.IssuedAt = rtNow.Add(6 * time.Hour)
+	p.ExpiresAt = p.IssuedAt.Add(2 * time.Hour)
+	if err := Sign(&p, NewHMAC(rtKeyA)); err != nil {
+		t.Fatal(err)
+	}
+	if err := Verify(p, NewHMAC(rtKeyA), rtExpect()); err == nil {
+		t.Fatal("a PERMIT issued six hours from now verified")
+	}
+}
+
+// Finding F9, now refused: Verify did not bound expires_at minus issued_at. gate keeps it within
+// config.MaxPermitTTL, but nothing on the verify side did, so a PERMIT signed by anything
+// else holding the key, or a gate with a broken TTL, could live for years.
+func TestRTPermitLifetimeIsBounded(t *testing.T) {
+	p := rtPermit()
+	p.ExpiresAt = p.IssuedAt.AddDate(5, 0, 0)
+	if err := Sign(&p, NewHMAC(rtKeyA)); err != nil {
+		t.Fatal(err)
+	}
+	if p.ExpiresAt.Sub(p.IssuedAt) <= config.MaxPermitTTL {
+		t.Fatal("setup: the lifetime is not over the maximum")
+	}
+	if err := Verify(p, NewHMAC(rtKeyA), rtExpect()); err == nil {
+		t.Fatal("a PERMIT valid for five years verified")
+	}
+}
+
+// Finding F10, now refused: ParseKey checked the length only. A key of 32 zero bytes, or one byte repeated, is
+// accepted, so a placeholder key copied from an example signed PERMITs.
+func TestRTLowEntropyKeyRefused(t *testing.T) {
+	for _, key := range [][]byte{make([]byte, 32), bytes.Repeat([]byte("A"), 32), []byte(strings.Repeat("ab", 16))} {
+		if _, err := ParseKey(base64.StdEncoding.EncodeToString(key)); err == nil {
+			t.Errorf("ParseKey accepted the low entropy key %q", key)
+		}
+	}
+}
+
+// Finding F11, now refused: the signature value was decoded with non-strict base64, so the
+// unused low bits of its last character could be changed and the PERMIT still verified. The
+// content stayed the same, so nothing the PERMIT allows changed, but two different files were
+// the same PERMIT.
+func TestRTSignatureEncodingIsStrict(t *testing.T) {
+	p := rtSigned(t, rtKeyA)
+	v := p.Signature.Value
+	// 32 bytes encode to 43 characters and one pad. The 43rd character carries 2 unused bits.
+	const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	i := strings.IndexByte(alphabet, v[42])
+	alt := alphabet[i^1]
+	p.Signature.Value = v[:42] + string(alt) + v[43:]
+	if p.Signature.Value == v {
+		t.Fatal("setup: the value did not change")
+	}
+	if err := Verify(p, NewHMAC(rtKeyA), rtExpect()); err == nil {
+		t.Fatalf("a signature value written differently (%s, signed %s) verified", p.Signature.Value, v)
 	}
 }

@@ -41,14 +41,23 @@ func Evaluators(rules []Rule, cfg *config.Config) []Evaluator {
 
 // EvaluateAll runs every evaluator in order and merges their results. allow is false when any
 // result Denies or any evaluator fails. A failed evaluator adds a Fail result named after it
-// and its error is returned, so the caller can fail closed. Every evaluator runs even after
-// one fails.
+// and its error is returned, so the caller can fail closed. An evaluator that returns no
+// results and no error has decided nothing, so it adds a Fail named after it too, and so does
+// an empty evaluator list. Every evaluator runs even after one fails.
 func EvaluateAll(ctx context.Context, evs []Evaluator, in Input) (allow bool, results []Result, err error) {
 	allow = true
 	results = []Result{}
+	if len(evs) == 0 {
+		return false, []Result{{Rule: "policy", Outcome: Fail, Detail: "no policy evaluators are configured"}}, nil
+	}
 	var errs []error
 	for _, ev := range evs {
 		out, evErr := ev.Evaluate(ctx, in)
+		if len(out) == 0 && evErr == nil {
+			allow = false
+			results = append(results, Result{Rule: ev.Name(), Outcome: Fail, Detail: "the evaluator returned no results, so it decided nothing"})
+			continue
+		}
 		for _, r := range out {
 			if r.Outcome.Denies() {
 				allow = false

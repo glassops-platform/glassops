@@ -62,3 +62,21 @@ func TestRTDotenvOutputRefusesInjectedLines(t *testing.T) {
 		t.Fatalf("the outputs file was written: %q", data)
 	}
 }
+
+// Finding F5, now refused: the Bitbucket and GitLab layers printed an annotation as it was,
+// so a line break in a message started a log line of its own.
+func TestRTPlainAnnotationStaysOneLine(t *testing.T) {
+	for name, mk := range map[string]func(*bytes.Buffer) CI{
+		"bitbucket": func(b *bytes.Buffer) CI { return newBitbucket(func(string) string { return "" }, b, t.TempDir()) },
+		"gitlab":    func(b *bytes.Buffer) CI { return newGitLab(func(string) string { return "" }, b, t.TempDir()) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			var buf bytes.Buffer
+			mk(&buf).Annotate(Errors, "rt\nerror: rt-forged\r\nwarning: x")
+			lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+			if len(lines) != 1 || !strings.Contains(lines[0], `rt\nerror: rt-forged\r\nwarning: x`) {
+				t.Fatalf("annotation output %q", buf.String())
+			}
+		})
+	}
+}

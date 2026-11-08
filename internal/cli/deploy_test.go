@@ -31,6 +31,7 @@ const (
 	deployNewID     = "0Af000000000005AAA"
 	deployTagCmd    = "git tag -f glassops/deployed/qa " + deployCommitSHA
 	deployPushCmd   = "git push -f origin refs/tags/glassops/deployed/qa"
+	deployStatusCmd = "git status --porcelain --untracked-files=no"
 )
 
 // deployKey is a synthetic 32 byte key, base64 as GLASSOPS_PERMIT_KEY holds it.
@@ -75,7 +76,7 @@ func deployFakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) erro
 	case !want.Now.Before(p.ExpiresAt):
 		return permit.ErrExpired
 	case p.Target.Name != want.TargetName, (&fakeProvider{}).CanonicalID(p.Target.ID) != want.TargetID, p.Commit != want.Commit,
-		p.PlanSHA256 != want.PlanSHA256, p.ConfigSHA256 != want.ConfigSHA256:
+		p.PlanSHA256 != want.PlanSHA256, p.ConfigSHA256 != want.ConfigSHA256, p.ChangeSetSHA256 != want.ChangeSetSHA256:
 		return permit.ErrMismatch
 	}
 	return nil
@@ -129,6 +130,9 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 	h.env[permit.KeyEnv] = deployKey
 	h.tools[deployTagCmd] = ""
 	h.tools[deployPushCmd] = ""
+	// A clean checkout of the PERMIT's commit.
+	h.tools["git rev-parse HEAD"] = deployCommitSHA + "\n"
+	h.tools[deployStatusCmd] = ""
 
 	h.fp = &fakeProvider{
 		detect: true,
@@ -152,6 +156,10 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 	if err != nil {
 		t.Fatal(err)
 	}
+	cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	p := permit.Permit{
 		Schema: permit.Schema, ID: "a1b2c3d4", Allow: true,
 		IssuedAt:     time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC),
@@ -162,6 +170,7 @@ func newDeployHarness(t *testing.T, cfg string, edit func(*permit.Permit)) *depl
 		ConfigSHA256: loaded.SHA256(),
 		Validation:   &permit.Validation{DeployID: deployValidated, TestLevel: "RunLocalTests", Passed: true},
 	}
+	p.ChangeSetSHA256 = permit.ChangeSetDigest(cs)
 	if edit != nil {
 		edit(&p)
 	}
@@ -383,8 +392,24 @@ func TestDeployTimeoutKeepsJobID(t *testing.T) {
 	}
 }
 
+// writeTimedOutDeploy writes the deploy result a run that timed out on job id under the
+// harness PERMIT leaves behind.
+func (h *deployHarness) writeTimedOutDeploy(t *testing.T, target, id, permitID string, timedOut bool) {
+	t.Helper()
+	r := run.New("deploy", h.app.Now)
+	r.Target = target
+	r.Facts["deploy.id"] = id
+	r.Facts["deploy.permit_id"] = permitID
+	r.Facts["deploy.timed_out"] = timedOut
+	r.Degrade(run.StatusError)
+	if _, err := r.Write(filepath.Join(h.dir, ".glassops", "results"), h.app.Now); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestDeployResumePassesJobID(t *testing.T) {
 	h := newDeployHarness(t, deployConfig+"  deploy: { quick: require }\n", nil)
+	h.writeTimedOutDeploy(t, "qa", "0Af000000000003AAA", "a1b2c3d4", true)
 	if code := h.run("--resume", "0Af000000000003AAA"); code != exitcode.OK {
 		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
@@ -499,6 +524,12 @@ func TestDeployGuardMismatchIsExit2(t *testing.T) {
 func TestDeployEmptyPlanSkipsLogin(t *testing.T) {
 	h := newDeployHarness(t, deployConfig, nil)
 	h.writeDeployPlan(t, true)
+	// The PERMIT binds the empty flag, so it is issued for the empty plan.
+	cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.rewritePermit(t, func(p *permit.Permit) { p.ChangeSetSHA256 = permit.ChangeSetDigest(cs) })
 	if code := h.run(); code != exitcode.OK {
 		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
@@ -674,6 +705,7 @@ func (p *execProject) signPermit(t *testing.T, cs providers.ChangeSet, name, id,
 		IssuedAt: now, ExpiresAt: now.Add(time.Hour),
 		Target: permit.Target{Name: name, ID: id, Tier: tier, Kind: string(providers.KindProduction)},
 		Commit: p.head, PlanSHA256: cs.SHA256, ConfigSHA256: loaded.SHA256(),
+		ChangeSetSHA256: permit.ChangeSetDigest(cs),
 	}
 	if err := permit.Sign(&pm, permit.NewHMAC(key)); err != nil {
 		t.Fatal(err)
@@ -693,7 +725,7 @@ func TestExecGatePermitVerifyAndDeployWithTheRealSigner(t *testing.T) {
 	}
 	cs := p.plan(t)
 
-	code := p.exec("gate", "--target", "qa", "--no-connect")
+	code := p.exec("gate", "--target", "qa", "--no-connect", "--deploy-command", `["./other.sh","two words","plain"]`)
 	pm, err := permit.Read(filepath.Join(p.dir, ".glassops", "permit.json"))
 	if err != nil {
 		t.Fatalf("gate exit %d, no PERMIT: %v: %s", code, err, p.out.String())
@@ -937,5 +969,158 @@ func TestShellQuote(t *testing.T) {
 		if got := shellQuote(in); got != want {
 			t.Errorf("shellQuote(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// deploy.json records the plan and the test level the deploy used, so verify can tie the
+// deploy to the plan.
+func TestDeployRecordsPlanAndTestLevel(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		cfg   string
+		level string
+	}{
+		{"full deploy at the configured level", deployConfig + "  deploy: { quick: off }\n", "RunLocalTests"},
+		{"quick deploy at the validation's level", strings.Replace(deployConfig, "{ qa: RunLocalTests }", "{ qa: NoTestRun }", 1), "RunLocalTests"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			h := newDeployHarness(t, c.cfg, nil)
+			if code := h.run(); code != exitcode.OK {
+				t.Fatalf("exit %d, output:\n%s", code, h.out)
+			}
+			cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := h.result(t, "deploy")
+			if r.Facts["deploy.plan_sha256"] != cs.SHA256 || r.Facts["deploy.test_level"] != c.level {
+				t.Fatalf("facts = %v", r.Facts)
+			}
+		})
+	}
+}
+
+// A failed deploy still records the plan and the level it was sent with.
+func TestDeployRecordsPlanAndTestLevelOnFailure(t *testing.T) {
+	h := newDeployHarness(t, deployConfig+"  deploy: { quick: off }\n", nil)
+	h.fp.deploy = func(_ providers.Session, _ providers.ChangeSet, o providers.DeployOptions) (providers.DeployResult, error) {
+		return providers.DeployResult{ID: deployNewID, Problems: []string{"rt"}, Facts: map[string]any{}}, nil
+	}
+	if code := h.run(); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "deploy")
+	if r.Facts["deploy.plan_sha256"] == nil || r.Facts["deploy.plan_sha256"] == "" || r.Facts["deploy.test_level"] != "RunLocalTests" {
+		t.Fatalf("facts = %v", r.Facts)
+	}
+}
+
+// The PERMIT binds the command deploy -- runs for provider exec, by its sha256 only. A command
+// it does not bind, or a PERMIT that binds none, is refused before the command runs. Without
+// --, exec.deploy from the signed config runs as before.
+func TestExecDeployCommandIsBound(t *testing.T) {
+	gate := func(t *testing.T, p *execProject, extra ...string) {
+		t.Helper()
+		if code := p.exec(append([]string{"gate", "--target", "qa", "--no-connect"}, extra...)...); code != exitcode.OK {
+			t.Fatalf("gate exit %d: %s", code, p.out.String())
+		}
+	}
+	setup := func(t *testing.T) *execProject {
+		p := newExecProject(t, execConfig)
+		for _, c := range []string{"./other.sh 'two words' plain", "./other.sh 'two words'", "./other.sh two words plain", "./deploy.sh"} {
+			p.sh.cmds[c] = func(map[string]string) int { return 0 }
+		}
+		p.plan(t)
+		return p
+	}
+	t.Run("control: the bound command", func(t *testing.T) {
+		p := setup(t)
+		gate(t, p, "--deploy-command", `["./other.sh","two words","plain"]`)
+		data, _ := os.ReadFile(filepath.Join(p.dir, ".glassops", "permit.json"))
+		if strings.Contains(string(data), "other.sh") || !strings.Contains(string(data), "deploy_command_sha256") {
+			t.Fatalf("PERMIT: %s", data)
+		}
+		if code := p.execDash("deploy", "--target", "qa", "--", "./other.sh", "two words", "plain"); code != exitcode.OK {
+			t.Fatalf("deploy exit %d: %s", code, p.out.String())
+		}
+	})
+	for name, argv := range map[string][]string{
+		"another argument":                 {"./other.sh", "two words", "other"},
+		"one argument fewer":               {"./other.sh", "two words"},
+		"the same words split another way": {"./other.sh", "two", "words", "plain"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			p := setup(t)
+			gate(t, p, "--deploy-command", `["./other.sh","two words","plain"]`)
+			if code := p.execDash(append([]string{"deploy", "--target", "qa", "--"}, argv...)...); code != exitcode.Error {
+				t.Fatalf("deploy exit %d, want 2: %s", code, p.out.String())
+			}
+			if len(p.sh.runs) != 0 {
+				t.Fatalf("a command ran: %+v", p.sh.runs)
+			}
+		})
+	}
+	t.Run("a PERMIT that binds no command", func(t *testing.T) {
+		p := setup(t)
+		gate(t, p)
+		if code := p.execDash("deploy", "--target", "qa", "--", "./other.sh", "two words", "plain"); code != exitcode.Error {
+			t.Fatalf("deploy exit %d, want 2: %s", code, p.out.String())
+		}
+		if len(p.sh.runs) != 0 || !strings.Contains(p.out.String(), "binds no deploy command") {
+			t.Fatalf("runs %+v, output: %s", p.sh.runs, p.out.String())
+		}
+	})
+	t.Run("without -- the config command runs", func(t *testing.T) {
+		p := setup(t)
+		gate(t, p, "--deploy-command", `["./other.sh","two words","plain"]`)
+		if code := p.exec("deploy", "--target", "qa"); code != exitcode.OK || !p.sh.ran("./deploy.sh") {
+			t.Fatalf("deploy exit %d, runs %+v: %s", code, p.sh.runs, p.out.String())
+		}
+	})
+	for name, value := range map[string]string{
+		"not JSON":      "./other.sh plain",
+		"an empty list": "[]",
+		"not strings":   `["./other.sh", 1]`,
+		"trailing data": `["./other.sh"] ["x"]`,
+		"empty command": `[""]`,
+	} {
+		t.Run("gate refuses "+name, func(t *testing.T) {
+			p := setup(t)
+			if code := p.exec("gate", "--target", "qa", "--no-connect", "--deploy-command", value); code != exitcode.Error {
+				t.Fatalf("gate exit %d, want 2: %s", code, p.out.String())
+			}
+			if _, err := os.Stat(filepath.Join(p.dir, ".glassops", "permit.json")); err == nil {
+				t.Fatal("gate wrote a PERMIT")
+			}
+		})
+	}
+}
+
+func TestGateDeployCommandNeedsExec(t *testing.T) {
+	h := newDeployHarness(t, deployConfig, nil)
+	if code := Execute(h.app, []string{"gate", "--target", "qa", "--no-connect", "--deploy-command", `["./x.sh"]`, "--dir", h.dir, "--ci", "github"}); code != exitcode.Error {
+		t.Fatalf("exit %d: %s", code, h.out.String())
+	}
+	if !strings.Contains(h.out.String(), "needs provider exec") {
+		t.Fatalf("output: %s", h.out.String())
+	}
+}
+
+// F2 with the real git and the real exec provider: a tracked file changed after gate is
+// refused, and the refusal names it.
+func TestExecDeployRefusesAModifiedTree(t *testing.T) {
+	p := newExecProject(t, execConfig)
+	p.sh.cmds["./deploy.sh"] = func(map[string]string) int { return 0 }
+	p.signPermit(t, p.plan(t), "qa", "acct-qa", "qa")
+	p.write(t, "other/c.txt", "changed after gate\n")
+	if code := p.exec("deploy", "--target", "qa"); code != exitcode.Error {
+		t.Fatalf("deploy exit %d, want 2: %s", code, p.out.String())
+	}
+	if p.sh.ran("./deploy.sh") || !strings.Contains(p.out.String(), "other/c.txt") || strings.Contains(p.out.String(), "changed after gate") {
+		t.Fatalf("runs %+v, output: %s", p.sh.runs, p.out.String())
+	}
+	gitIn(t, p.dir, "checkout", "-q", "--", "other/c.txt")
+	if code := p.exec("deploy", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("deploy of the clean tree exit %d: %s", code, p.out.String())
 	}
 }

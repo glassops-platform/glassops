@@ -46,12 +46,15 @@ func newDeployCommand(app *App, g *globals) *cobra.Command {
 			"and deploys the change set in .glassops/plan.json. When the PERMIT holds a\n" +
 			"validated deploy Id that the target still accepts, deploy quick deploys it.\n" +
 			"Success is read from the target's result body. When --wait runs out, the result\n" +
-			"keeps the job Id, and --resume picks the same deploy up again. After a deploy\n" +
-			"succeeds, the git tag glassops/deployed/<target> is moved to the deployed commit\n" +
-			"and pushed. A failed push is a warning, because the deploy has already happened.\n" +
+			"keeps the job Id, and --resume picks the same deploy up again, only when\n" +
+			"results/deploy.json records that job timing out under the same PERMIT. deploy\n" +
+			"refuses unless git HEAD is the PERMIT's commit and no tracked file is modified.\n" +
+			"After a deploy succeeds, the git tag glassops/deployed/<target> is moved to the\n" +
+			"deployed commit and pushed. A failed push is a warning, because the deploy has\n" +
+			"already happened.\n" +
 			"With provider exec, a command after -- runs instead of exec.deploy, with each\n" +
-			"argument passed as one word. The PERMIT binds the config, not this command, and the\n" +
-			"result records exec.deploy_override.",
+			"argument passed as one word. The PERMIT must bind that command, from gate\n" +
+			"--deploy-command, and the result records exec.deploy_override.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 && cmd.ArgsLenAtDash() != 0 {
 				return fmt.Errorf("deploy takes no arguments, except a command after --")
@@ -98,6 +101,8 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		res.AddCheck(check, run.StatusError, err.Error())
 		return app.finish(res, c, g)
 	}
+	// The earlier result is read before this run writes its own over it.
+	previous, hasPrevious, previousErr := readResult(filepath.Join(g.results(), "deploy.json"))
 
 	t, err := app.target(proj.cfg, o.target)
 	if err != nil {
@@ -122,6 +127,7 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	if err := providers.CheckDigest(g.dir, cs); err != nil {
 		return stop("plan", err)
 	}
+	res.Facts["deploy.plan_sha256"] = cs.SHA256
 
 	pm, err := app.verifyPermit(o, g, proj.cfg, permit.Expect{
 		TargetName:   t.Name,
@@ -129,8 +135,13 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		Commit:       commit,
 		PlanSHA256:   cs.SHA256,
 		ConfigSHA256: cfgSHA,
-		Now:          app.Now(),
-		CanonicalID:  proj.provider.CanonicalID,
+		// The change set hash covers which plan files are destructive, and the command hash
+		// is checked only when a command after -- replaces exec.deploy.
+		ChangeSetSHA256:     permit.ChangeSetDigest(cs),
+		DeployCommandSHA256: permit.DeployCommandDigest(o.command),
+		Now:                 app.Now(),
+		MaxTTL:              proj.cfg.Policy.TTL(),
+		CanonicalID:         proj.provider.CanonicalID,
 	})
 	if pm.ID != "" {
 		res.Facts["deploy.permit_id"] = pm.ID
@@ -139,6 +150,21 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		return stop("permit", err)
 	}
 	res.AddCheck("permit", run.StatusPass, fmt.Sprintf("PERMIT %s verified for %s at %s", pm.ID, t.Name, short(commit)))
+
+	// The PERMIT names a commit, and the source deployed is the working tree, so the tree
+	// must be that commit with no tracked file changed.
+	if err := app.checkTree(g, pm.Commit); err != nil {
+		return stop("tree", err)
+	}
+	res.AddCheck("tree", run.StatusPass, fmt.Sprintf("HEAD is %s and no tracked file is modified", short(pm.Commit)))
+	if o.resumeID != "" {
+		if previousErr == nil {
+			previousErr = checkResume(previous, hasPrevious, o.resumeID, pm.ID, t.Name)
+		}
+		if previousErr != nil {
+			return stop("resume", previousErr)
+		}
+	}
 
 	if cs.Empty && o.resumeID == "" {
 		res.Status = run.StatusEmpty
@@ -152,6 +178,7 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		Wait:      o.wait,
 		ResumeID:  o.resumeID,
 	}
+	res.Facts["deploy.test_level"] = opts.TestLevel
 	validated := ""
 	if pm.Validation != nil && pm.Validation.Passed {
 		validated = pm.Validation.DeployID
@@ -195,6 +222,10 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	res.Facts["deploy.quick"] = out.Quick
 	res.Facts["deploy.timed_out"] = out.TimedOut
 	res.Facts["deploy.commit"] = commit
+	if out.Quick && pm.Validation != nil && pm.Validation.TestLevel != "" {
+		// A quick deploy runs no tests of its own. Its tests ran in the validation.
+		res.Facts["deploy.test_level"] = pm.Validation.TestLevel
+	}
 
 	if out.TimedOut {
 		return stop("deploy", fmt.Errorf("deploy %s did not finish within the wait. Run glassops deploy --target %s --resume %s", out.ID, t.Name, out.ID))
@@ -214,6 +245,67 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 
 	app.moveDeployedTag(res, c, g, t.Name, commit)
 	return app.finish(res, c, g)
+}
+
+// maxTreePaths is how many modified paths a tree refusal names.
+const maxTreePaths = 10
+
+// checkTree refuses unless git HEAD in the project dir is commit and no tracked file is
+// modified, staged or not. Untracked files, such as .glassops itself, are not looked at. When
+// git is missing or the dir is not a repository it refuses, because the tree cannot be shown
+// to be the commit the PERMIT names. The error names the commit and the paths, never file
+// contents.
+func (app *App) checkTree(g *globals, commit string) error {
+	out, err := app.Run(g.dir, "git", "rev-parse", "HEAD")
+	head := strings.TrimSpace(string(out))
+	if err != nil || head == "" {
+		return errors.New("cannot read git HEAD, so the source cannot be shown to be the PERMIT's commit. deploy runs in a git checkout of that commit")
+	}
+	if head != commit {
+		return fmt.Errorf("git HEAD is %s, and the PERMIT is for commit %s", short(head), short(commit))
+	}
+	out, err = app.Run(g.dir, "git", "status", "--porcelain", "--untracked-files=no")
+	if err != nil {
+		return errors.New("git status failed, so the tracked files cannot be shown to be unchanged")
+	}
+	var paths []string
+	for _, line := range strings.Split(strings.TrimRight(string(out), "\r\n"), "\n") {
+		line = strings.TrimRight(line, "\r")
+		if len(line) > 3 {
+			paths = append(paths, line[3:])
+		}
+	}
+	if len(paths) == 0 {
+		return nil
+	}
+	more := ""
+	if len(paths) > maxTreePaths {
+		more = fmt.Sprintf(" and %d more", len(paths)-maxTreePaths)
+		paths = paths[:maxTreePaths]
+	}
+	return fmt.Errorf("tracked files differ from commit %s: %s%s", short(commit), strings.Join(paths, ", "), more)
+}
+
+// checkResume allows --resume only for the job the last deploy result names, when that run
+// timed out under the same PERMIT on the same target.
+func checkResume(prev run.Result, ok bool, jobID, permitID, target string) error {
+	if !ok {
+		return fmt.Errorf("--resume %s: there is no earlier deploy result, so no timed out job to resume", jobID)
+	}
+	id, _ := prev.Facts["deploy.id"].(string)
+	pid, _ := prev.Facts["deploy.permit_id"].(string)
+	timedOut, _ := prev.Facts["deploy.timed_out"].(bool)
+	switch {
+	case prev.Target != target:
+		return fmt.Errorf("--resume %s: the last deploy result is for target %q, not %q", jobID, prev.Target, target)
+	case id != jobID:
+		return fmt.Errorf("--resume %s: the last deploy result names job %q, not this one", jobID, id)
+	case pid != permitID:
+		return fmt.Errorf("--resume %s: the last deploy ran under another PERMIT", jobID)
+	case !timedOut:
+		return fmt.Errorf("--resume %s: the last deploy did not time out, so there is nothing to resume", jobID)
+	}
+	return nil
 }
 
 // deployOverrider is implemented by providers whose deploy command can be replaced from the
