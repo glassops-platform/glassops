@@ -48,15 +48,14 @@ func TestConfigureSelectsEngine(t *testing.T) {
 	}
 }
 
-func TestHardisEngineIsNotImplemented(t *testing.T) {
+// TestHardisEngineNeedsASession: engine hardis refuses validate and deploy without a session
+// from this provider. Its behaviour is tested in engine_hardis_test.go.
+func TestHardisEngineNeedsASession(t *testing.T) {
 	p := New()
 	if err := p.Configure(&config.Config{Salesforce: config.Salesforce{Engine: "hardis"}}); err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	if _, err := p.Plan(ctx, providers.PlanRequest{Dir: t.TempDir()}); err == nil || !strings.Contains(err.Error(), "not implemented") {
-		t.Fatalf("plan: %v", err)
-	}
 	if _, err := p.Validate(ctx, nil, providers.ChangeSet{}, providers.ValidateOptions{}); err == nil {
 		t.Fatal("validate did not fail")
 	}
