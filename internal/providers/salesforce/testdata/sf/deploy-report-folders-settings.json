@@ -1,0 +1,243 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": true,
+    "completedDate": "2026-11-08T20:25:02.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T20:18:55.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "CustomField",
+          "created": true,
+          "createdDate": "2026-11-08T20:19:10.000Z",
+          "deleted": false,
+          "fileName": "objects/Contact.object",
+          "fullName": "Contact.Is_Portfolio_Owner__c",
+          "id": "00N000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ReportFolder",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports-meta.xml",
+          "fullName": "Portfolio_Owner_Reports",
+          "id": "00l000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Report",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports/Contact_Form_Leads_by_Month.report",
+          "fullName": "Portfolio_Owner_Reports/Contact_Form_Leads_by_Month",
+          "id": "00O000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Report",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports/Evaluator_Token_Requests_by_Outcome.report",
+          "fullName": "Portfolio_Owner_Reports/Evaluator_Token_Requests_by_Outcome",
+          "id": "00O000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Report",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports/Site_Usage_Last_30_Days.report",
+          "fullName": "Portfolio_Owner_Reports/Site_Usage_Last_30_Days",
+          "id": "00O000000000003AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Report",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports/Testimonials_Waiting_Approval.report",
+          "fullName": "Portfolio_Owner_Reports/Testimonials_Waiting_Approval",
+          "id": "00O000000000004AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Report",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "reports/Portfolio_Owner_Reports/Usage_by_Month.report",
+          "fullName": "Portfolio_Owner_Reports/Usage_by_Month",
+          "id": "00O000000000005AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "DashboardFolder",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "dashboards/Portfolio_Owner_Dashboards-meta.xml",
+          "fullName": "Portfolio_Owner_Dashboards",
+          "id": "00l000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Dashboard",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "dashboards/Portfolio_Owner_Dashboards/Portfolio_Owner_Overview.dashboard",
+          "fullName": "Portfolio_Owner_Dashboards/Portfolio_Owner_Overview",
+          "id": "01Z000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailFolder",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Contact-meta.xml",
+          "fullName": "Portfolio_Contact",
+          "id": "00l000000000003AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailFolder",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Testimonial-meta.xml",
+          "fullName": "Portfolio_Testimonial",
+          "id": "00l000000000004AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailTemplate",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Contact/Portfolio_Contact_Auto_Response.email",
+          "fullName": "Portfolio_Contact/Portfolio_Contact_Auto_Response",
+          "id": "00X000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailTemplate",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Contact/Portfolio_Contact_Auto_Response_Html.email",
+          "fullName": "Portfolio_Contact/Portfolio_Contact_Auto_Response_Html",
+          "id": "00X000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailTemplate",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Contact/Portfolio_Contact_New_Lead.email",
+          "fullName": "Portfolio_Contact/Portfolio_Contact_New_Lead",
+          "id": "00X000000000003AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailTemplate",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "email/Portfolio_Testimonial/Portfolio_Testimonial_Approval_Request.email",
+          "fullName": "Portfolio_Testimonial/Portfolio_Testimonial_Approval_Request",
+          "id": "00X000000000004AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "CustomNotificationType",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "notificationtypes/Portfolio_Contact_Reminder.notiftype",
+          "fullName": "Portfolio_Contact_Reminder",
+          "id": "0ML000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "EmailAdministrationSettings",
+          "created": false,
+          "createdDate": "2026-11-08T20:20:13.000Z",
+          "deleted": false,
+          "fileName": "settings/EmailAdministration.settings",
+          "fullName": "EmailAdministration",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "GenAiPlugin",
+          "created": true,
+          "createdDate": "2026-11-08T20:20:27.000Z",
+          "deleted": false,
+          "fileName": "genAiPlugins/Portfolio_Contact.genAiPlugin",
+          "fullName": "Portfolio_Contact",
+          "id": "179000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T20:20:27.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000001AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T20:25:02.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 19,
+    "numberComponentsTotal": 19,
+    "numberFiles": "1449",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 1485,
+    "numberTestsTotal": 1485,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-11-08T20:18:55.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": "8219959"
+  },
+  "warnings": [
+    "ValidationRule, Decision_Criterion__mdt.Default_Weight_Between_0_And_10, returned from org, but not found in the local project",
+    "ValidationRule, Decision_Score__mdt.Score_Between_1_And_5, returned from org, but not found in the local project"
+  ]
+}
