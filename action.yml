@@ -7,7 +7,7 @@ inputs:
     description: The glassops arguments, for example "run pr" or "gate --target prod". Split on spaces, with no shell quoting.
     required: true
   image:
-    description: The container image to run. Empty means ghcr.io/glassops-platform/glassops at the tag this action was referenced by, or latest when the reference is a branch or a commit.
+    description: The container image to run. Empty means ghcr.io/glassops-platform/glassops at the tag this action was referenced by (v1 or v1.2.3), or latest when the reference is a branch or a commit. Pin a full version or a digest here for a reproducible run.
     required: false
     default: ''
   env:
@@ -53,8 +53,18 @@ runs:
         # The workspace is mounted at /work. The CI files (step summary, outputs) are mounted at
         # the same path they have on the runner, so the CLI writes to them directly.
         args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w "/work/$INPUT_WORKDIR")
-        for name in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_REF GITHUB_SHA GITHUB_EVENT_NAME \
-          GITHUB_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_TRIGGERING_ACTOR GITHUB_API_URL \n          GITHUB_SERVER_URL; do
+        for name in \
+          GITHUB_ACTIONS \
+          GITHUB_REPOSITORY \
+          GITHUB_REF \
+          GITHUB_SHA \
+          GITHUB_EVENT_NAME \
+          GITHUB_ACTOR \
+          GITHUB_RUN_ID \
+          GITHUB_BASE_REF \
+          GITHUB_TRIGGERING_ACTOR \
+          GITHUB_API_URL \
+          GITHUB_SERVER_URL; do
           args+=(-e "$name")
         done
         for file in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do

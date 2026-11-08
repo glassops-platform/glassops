@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/glassops-platform/glassops/internal/core/redact"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
 
@@ -37,6 +39,25 @@ type deployResultBody struct {
 	deployBody
 	Done                     *bool   `json:"done"`
 	NumberComponentsDeployed flexInt `json:"numberComponentsDeployed"`
+	// coverageWarnings is details.runTestResult.codeCoverageWarnings, read on its own by
+	// parseDeployBody because a second details field here would hide the embedded one.
+	coverageWarnings []deployCoverageWarning
+}
+
+// deployCoverageWarning is one entry of runTestResult.codeCoverageWarnings. name is null for the
+// org-wide average [confirmed: deploy-start-coverage-fail.json].
+type deployCoverageWarning struct {
+	Name    string `json:"name"`
+	Message string `json:"message"`
+}
+
+// coverageBody holds only the coverage warnings of a deploy body.
+type coverageBody struct {
+	Details struct {
+		RunTestResult struct {
+			CodeCoverageWarnings flexList[deployCoverageWarning] `json:"codeCoverageWarnings"`
+		} `json:"runTestResult"`
+	} `json:"details"`
 }
 
 // nativeDeploy deploys cs to the session's org. With opts.ValidatedID it quick deploys that
@@ -124,10 +145,17 @@ func (p *Provider) nativeDeploy(ctx context.Context, s providers.Session, cs pro
 
 // readDeploy turns the envelope of deploy start, quick or resume into a result. sf puts the
 // full body in result on success and on a component or test failure, with a non-zero status
-// for the failure. A failure envelope with no body but a deploy Id in data is read again
-// with deploy report. Anything else is an error.
+// for the failure. A failure envelope with a deploy Id in data, whatever its error name, is
+// read again with deploy report and the report decides: Succeeded is a success, InProgress is
+// a timeout the caller can resume, Failed is the failure in the report body
+// [confirmed: deploy-start-lock-released.json was a MetadataTransferError on a deploy that
+// deploy-report-lock-released.json shows Succeeded]. Only a report that also fails is an
+// error.
 func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, env envelope, runErr error, quick bool, extra map[string]any) (providers.DeployResult, error) {
 	body, ok := parseDeployBody(env.Result)
+	if !ok {
+		body, ok = bodyFromFailure(runErr)
+	}
 	if !ok {
 		id := failureDeployID(runErr)
 		if id == "" {
@@ -137,10 +165,18 @@ func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, en
 			return providers.DeployResult{}, errors.New("salesforce: deploy reported no result body")
 		}
 		rep, err := p.sf(ctx, sess, dir, "project", "deploy", "report", "--job-id", id, "--target-org", sess.alias)
-		if err != nil {
-			return providers.DeployResult{}, fmt.Errorf("salesforce: read deploy result %s: %w", id, err)
+		if err == nil || rep.Result != nil {
+			body, ok = parseDeployBody(rep.Result)
 		}
-		if body, ok = parseDeployBody(rep.Result); !ok {
+		if !ok {
+			if isWaitTimeout(runErr) {
+				// The wait ran out and the deploy is still running in the org. That is a
+				// timeout the caller can resume, not a tool failure.
+				return timedOutResult(id), nil
+			}
+			if err != nil {
+				return providers.DeployResult{}, fmt.Errorf("salesforce: read deploy result %s: %w", id, err)
+			}
 			return providers.DeployResult{}, fmt.Errorf("salesforce: deploy report for %s has no result body", id)
 		}
 	}
@@ -154,33 +190,95 @@ func (p *Provider) readDeploy(ctx context.Context, sess *session, dir string, en
 	return res, nil
 }
 
+// waitTimeoutStatus is the exit status sf documents for a wait that ran out. Real sf 2.156.8
+// did not use it: it exited 1 with name ClientTimeoutError and the Id in data.id
+// [confirmed: deploy-start-timeout.json]. The status stays as a second signal for other sf
+// versions [unverified].
+const waitTimeoutStatus = 69
+
+// deployIDPattern matches a deploy Id (the 0Af key prefix) in an sf message.
+var deployIDPattern = regexp.MustCompile(`(?:^|[^A-Za-z0-9])(0Af[A-Za-z0-9]{12}(?:[A-Za-z0-9]{3})?)(?:[^A-Za-z0-9]|$)`)
+
 // parseDeployBody reads a deploy body. ok is false when raw holds no body with an Id and a
-// status, such as an error envelope.
+// status, such as an error envelope. A body with an Id, no status and done false is an
+// unfinished deploy and reads as status InProgress.
 func parseDeployBody(raw json.RawMessage) (deployResultBody, bool) {
 	var b deployResultBody
 	if len(raw) == 0 || json.Unmarshal(raw, &b) != nil {
 		return b, false
 	}
+	if b.ID != "" && b.Status == "" && b.Done != nil && !*b.Done {
+		b.Status = "InProgress"
+	}
+	var cov coverageBody
+	if json.Unmarshal(raw, &cov) == nil {
+		b.coverageWarnings = cov.Details.RunTestResult.CodeCoverageWarnings
+	}
 	return b, b.ID != "" && b.Status != ""
+}
+
+// bodyFromFailure reads a full deploy body from the data of a failure envelope, which is
+// where a wait timeout could carry it. Real sf 2.156.8 carries only the Id there
+// [confirmed: deploy-start-timeout.json], so this is for other sf versions [unverified].
+func bodyFromFailure(err error) (deployResultBody, bool) {
+	var sfErr *SFError
+	if !errors.As(err, &sfErr) {
+		return deployResultBody{}, false
+	}
+	return parseDeployBody(sfErr.Data)
+}
+
+// isWaitTimeout reports whether err is sf giving up the wait on a deploy: status 69, or an
+// error name or message that says the wait timed out. The name ClientTimeoutError and its
+// message are [confirmed: deploy-start-timeout.json], status 69 is [unverified].
+func isWaitTimeout(err error) bool {
+	var sfErr *SFError
+	if !errors.As(err, &sfErr) {
+		return false
+	}
+	text := strings.ToLower(sfErr.Name + " " + sfErr.Message)
+	return sfErr.Status == waitTimeoutStatus || strings.Contains(text, "timeout") || strings.Contains(text, "timed out") ||
+		strings.Contains(text, "did not complete")
+}
+
+// timedOutResult is the result for a deploy that is still running after the wait.
+func timedOutResult(id string) providers.DeployResult {
+	return providers.DeployResult{
+		ID: id, TimedOut: true,
+		Problems: []string{fmt.Sprintf("deploy %s has not finished, the wait ran out", id)},
+		Facts:    map[string]any{"salesforce.timed_out": true, "salesforce.check_only": false},
+	}
 }
 
 // failureDeployID returns the deploy Id an sf failure carries in data, or "".
 func failureDeployID(err error) string {
 	var sfErr *SFError
-	if !errors.As(err, &sfErr) || len(sfErr.Data) == 0 {
+	if !errors.As(err, &sfErr) {
 		return ""
 	}
 	var data struct {
 		DeployID string `json:"deployId"`
 		ID       string `json:"id"`
+		JobID    string `json:"jobId"`
 	}
-	if json.Unmarshal(sfErr.Data, &data) != nil {
-		return ""
+	if len(sfErr.Data) > 0 {
+		_ = json.Unmarshal(sfErr.Data, &data) // data of another shape falls through to the message
 	}
-	if data.DeployID != "" {
+	switch {
+	case data.DeployID != "":
 		return data.DeployID
+	case data.ID != "":
+		return data.ID
+	case data.JobID != "":
+		return data.JobID
 	}
-	return data.ID
+	// A timeout could name the Id only in its message [unverified, real sf 2.156.8 uses data.id].
+	if isWaitTimeout(err) {
+		if m := deployIDPattern.FindStringSubmatch(sfErr.Message); m != nil {
+			return m[1]
+		}
+	}
+	return ""
 }
 
 // finished reports whether a deploy status is final.
@@ -192,8 +290,27 @@ func finished(status string) bool {
 	return false
 }
 
+// coverageProblems is one problem line per coverage warning, such as the org-wide average
+// below 75%, redacted like every other problem.
+func (b deployResultBody) coverageProblems() []string {
+	var out []string
+	for _, w := range b.coverageWarnings {
+		msg := oneLine(w.Message)
+		if msg == "" {
+			continue
+		}
+		if w.Name != "" {
+			msg = w.Name + ": " + msg
+		}
+		out = append(out, redact.Text("coverage: "+msg))
+	}
+	return out
+}
+
 // toDeployResult builds the neutral result from a deploy body. The problem lines and the test
-// and coverage facts come from the same reading validate uses.
+// and coverage facts come from the same reading validate uses: one line per component failure
+// (type, name and problem), per test failure (class.method and message) and, for a deploy that
+// did not succeed, per coverage warning. Every line is redacted.
 func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	v := b.deployBody.toResult(b.ID)
 	res := providers.DeployResult{
@@ -217,14 +334,22 @@ func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	// failure comes with the count at 0.
 	failures := len(b.Details.ComponentFailures) + len(b.Details.RunTestResult.Failures)
 	if failures > 0 {
-		res.Problems = v.Problems
+		for _, line := range v.Problems {
+			res.Problems = append(res.Problems, redact.Text(line))
+		}
+	}
+	// A coverage warning on a deploy that succeeded did not stop it, so it is not a problem.
+	var coverage []string
+	if b.Status != "Succeeded" {
+		coverage = b.coverageProblems()
+		res.Problems = append(res.Problems, coverage...)
 	}
 	testsFailed, _ := res.Facts["salesforce.tests_failed"].(int)
 	switch {
 	case b.Status == "SucceededPartial":
 		res.Problems = append(res.Problems, "deploy only partly succeeded, status SucceededPartial")
 	case b.Status != "Succeeded":
-		if failures == 0 {
+		if failures == 0 && len(coverage) == 0 {
 			res.Problems = append(res.Problems, "deploy did not succeed, status "+b.Status)
 		}
 	case b.CheckOnly == nil:
@@ -242,8 +367,9 @@ func (b deployResultBody) toDeployResult(quick bool) providers.DeployResult {
 	return res
 }
 
-// checkPlanFiles checks that the manifests the deploy sends sit under the plan directory and
-// that the files there still hash to the change set's plan_sha256, the value a PERMIT binds.
+// checkPlanFiles checks that the manifests the deploy sends sit under the plan directory, that
+// each destructive entry is a destructiveChanges*.xml file other than the manifest, and that
+// the files there still hash to the change set's plan_sha256, the value a PERMIT binds.
 func checkPlanFiles(dir string, cs providers.ChangeSet) error {
 	if cs.Dir == "" || cs.Manifest == "" || cs.SHA256 == "" {
 		return errors.New("salesforce: the change set has no plan dir, manifest or plan_sha256")
@@ -255,6 +381,17 @@ func checkPlanFiles(dir string, cs providers.ChangeSet) error {
 	for _, f := range append([]string{cs.Manifest}, cs.Destructive...) {
 		if !strings.HasPrefix(path.Clean(f), planDir+"/") {
 			return fmt.Errorf("salesforce: manifest %q is not inside the plan dir %s", f, cs.Dir)
+		}
+	}
+	manifest := path.Clean(cs.Manifest)
+	for _, d := range cs.Destructive {
+		clean := path.Clean(d)
+		base := path.Base(clean)
+		switch {
+		case clean == manifest:
+			return fmt.Errorf("salesforce: destructive entry %q is the deploy manifest", d)
+		case !strings.HasPrefix(base, "destructiveChanges") || !strings.HasSuffix(base, ".xml"):
+			return fmt.Errorf("salesforce: destructive entry %q is not a destructiveChanges*.xml file", d)
 		}
 	}
 	sum, err := planDigest(dir, filepath.Join(dir, filepath.FromSlash(planDir)))

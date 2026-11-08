@@ -199,6 +199,16 @@ func planHash(t *testing.T, h *harness) string {
 	return cs.SHA256
 }
 
+// changeSetHash is the change_set_sha256 gate binds for the harness plan.
+func changeSetHash(t *testing.T, h *harness) string {
+	t.Helper()
+	cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return permit.ChangeSetDigest(cs)
+}
+
 // githubServer serves the GitHub fixtures by path and counts requests.
 type githubServer struct {
 	*httptest.Server
@@ -890,6 +900,7 @@ func realVerify(t *testing.T, h *harness, fp *fakeProvider, target, id string) p
 	err = permit.Verify(p, permit.NewHMAC(key), permit.Expect{
 		TargetName: target, TargetID: fp.CanonicalID(id), CanonicalID: fp.CanonicalID,
 		Commit: h.env["GITHUB_SHA"], PlanSHA256: planHash(t, h), ConfigSHA256: loaded.SHA256(), Now: h.app.Now(),
+		ChangeSetSHA256: changeSetHash(t, h),
 	})
 	if err != nil {
 		t.Fatalf("permit.Verify: %v\noutput:\n%s", err, h.out)

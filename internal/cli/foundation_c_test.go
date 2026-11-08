@@ -28,7 +28,7 @@ func detailOf(r run.Result, name string) string {
 	return ""
 }
 
-func TestVerifyCommandIsAStub(t *testing.T) {
+func TestVerifyCommandIsRegistered(t *testing.T) {
 	h := newHarness(t)
 	c, _, err := NewRootCommand(h.app).Find([]string{"verify"})
 	if err != nil || c.Name() != "verify" {
@@ -41,9 +41,6 @@ func TestVerifyCommandIsAStub(t *testing.T) {
 	}
 	if code := h.exec("verify"); code != exitcode.Error {
 		t.Fatalf("verify without --target exit %d", code)
-	}
-	if code := h.exec("verify", "--target", "prod"); code != exitcode.Error || !strings.Contains(h.out.String(), "verify is not implemented yet") {
-		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
 }
 
@@ -192,18 +189,5 @@ func TestRunExportsTelemetryAndOnlyWarns(t *testing.T) {
 	}
 	if len(exported) != 0 {
 		t.Fatal("telemetry exported without telemetry configured")
-	}
-}
-
-func TestBitbucketAndGitLabLayersAreStubs(t *testing.T) {
-	for _, name := range []string{"bitbucket", "gitlab"} {
-		h := newHarness(t)
-		h.write(t, "sfdx-project.json", "{}")
-		if code := Execute(h.app, []string{"doctor", "--dir", h.dir, "--ci", name}); code != exitcode.Error {
-			t.Fatalf("%s: exit %d, output:\n%s", name, code, h.out)
-		}
-		if !strings.Contains(h.out.String(), "not implemented yet") {
-			t.Fatalf("%s output:\n%s", name, h.out)
-		}
 	}
 }

@@ -85,12 +85,38 @@ func schemaProblems(ve *jsonschema.ValidationError) []string {
 // keep their YAML type for ints, floats, bools and nulls. Everything else, including dates,
 // stays a string, so the schema sees what the user wrote.
 func toJSONValue(n *yaml.Node) (any, error) {
+	w := &yamlWalk{onPath: map[*yaml.Node]bool{}}
+	return w.value(n, 0)
+}
+
+// Limits for converting a config node tree. A config is a few hundred nodes, so these only stop
+// a hostile file: an alias that refers to itself, or aliases that expand into millions of nodes.
+const (
+	maxConfigDepth = 64
+	maxConfigNodes = 100000
+)
+
+// yamlWalk carries the alias nodes on the current path and the count of nodes visited, so a
+// cyclic or exploding config is an error instead of a crash.
+type yamlWalk struct {
+	onPath  map[*yaml.Node]bool
+	visited int
+}
+
+func (w *yamlWalk) value(n *yaml.Node, depth int) (any, error) {
+	if depth > maxConfigDepth {
+		return nil, fmt.Errorf("line %d: the config nests deeper than %d levels", n.Line, maxConfigDepth)
+	}
+	w.visited++
+	if w.visited > maxConfigNodes {
+		return nil, fmt.Errorf("line %d: the config expands to more than %d values, check its anchors and aliases", n.Line, maxConfigNodes)
+	}
 	switch n.Kind {
 	case yaml.DocumentNode:
 		if len(n.Content) == 0 {
 			return nil, nil
 		}
-		return toJSONValue(n.Content[0])
+		return w.value(n.Content[0], depth+1)
 	case yaml.MappingNode:
 		m := make(map[string]any, len(n.Content)/2)
 		for i := 0; i+1 < len(n.Content); i += 2 {
@@ -98,7 +124,7 @@ func toJSONValue(n *yaml.Node) (any, error) {
 			if k.Kind != yaml.ScalarNode {
 				return nil, fmt.Errorf("line %d: mapping keys must be plain strings", k.Line)
 			}
-			v, err := toJSONValue(n.Content[i+1])
+			v, err := w.value(n.Content[i+1], depth+1)
 			if err != nil {
 				return nil, err
 			}
@@ -108,7 +134,7 @@ func toJSONValue(n *yaml.Node) (any, error) {
 	case yaml.SequenceNode:
 		s := make([]any, 0, len(n.Content))
 		for _, c := range n.Content {
-			v, err := toJSONValue(c)
+			v, err := w.value(c, depth+1)
 			if err != nil {
 				return nil, err
 			}
@@ -116,7 +142,16 @@ func toJSONValue(n *yaml.Node) (any, error) {
 		}
 		return s, nil
 	case yaml.AliasNode:
-		return toJSONValue(n.Alias)
+		if n.Alias == nil {
+			return nil, fmt.Errorf("line %d: an alias that names no anchor", n.Line)
+		}
+		if w.onPath[n.Alias] {
+			return nil, fmt.Errorf("line %d: alias *%s refers to itself", n.Line, n.Value)
+		}
+		w.onPath[n.Alias] = true
+		v, err := w.value(n.Alias, depth+1)
+		delete(w.onPath, n.Alias)
+		return v, err
 	case yaml.ScalarNode:
 		switch n.ShortTag() {
 		case "!!int":

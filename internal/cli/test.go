@@ -2,10 +2,13 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -95,6 +98,19 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 		return app.finish(res, c, g)
 	}
 
+	var unreported []string
+	if proj.cfg.Test.Coverage.ClassMin != nil {
+		var perr error
+		out, unreported, perr = addUncoveredClasses(g, proj.cfg.Test.Coverage.ClassScope, out)
+		if perr != nil {
+			res.AddCheck("coverage.plan", run.StatusFail, perr.Error())
+			res.Degrade(run.StatusFail)
+		}
+	}
+	if len(unreported) > 0 {
+		res.Facts["test.coverage_unreported"] = unreported
+	}
+
 	for k, v := range out.Facts {
 		res.Facts[k] = v
 	}
@@ -136,6 +152,71 @@ func (app *App) test(ctx context.Context, g *globals, o *testOptions) error {
 
 	applyTestGate(res, proj.cfg.Test.Coverage.OrgMin, proj.cfg.Test.Coverage.ClassMin, out)
 	return app.finish(res, c, g)
+}
+
+// stringList reads a fact holding a list of strings, as a provider sets it ([]string) or as it
+// reads back from JSON ([]any).
+func stringList(v any) []string {
+	switch l := v.(type) {
+	case []string:
+		return l
+	case []any:
+		var out []string
+		for _, e := range l {
+			if name, ok := e.(string); ok {
+				out = append(out, name)
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+// addUncoveredClasses counts every Apex class the run reported no coverage for as 0%, because
+// sf lists only classes a test touched. Which classes depends on scope. "changed" (the
+// default) takes the changed classes in .glassops/plan.json, and when there is no plan it takes
+// every class the provider found untouched in the org's coverage
+// aggregate (fact test.coverage_untouched), since without a plan nothing says which classes
+// changed. "all" takes the plan's classes and every untouched class. A class whose name ends in
+// Test or _Test is taken for a test class and skipped, the same reading the gate's coverage_min
+// uses. It returns the classes it added. A plan that exists and cannot be read is an error, and
+// so is an aggregate the provider could not read when the scope needs it, so a broken input
+// never weakens the check.
+func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (providers.TestResult, []string, error) {
+	var classes []string
+	cs, err := providers.ReadChangeSet(filepath.Join(g.dir, ".glassops", "plan.json"))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return out, nil, fmt.Errorf("the changed classes could not be read, so unreported classes are not counted at 0%%: %w", err)
+	}
+	havePlan := err == nil
+	if havePlan {
+		classes = stringList(cs.Facts["salesforce.apex_classes"])
+	}
+	if scope == "all" || !havePlan {
+		if why, ok := out.Facts["test.coverage_unavailable"]; ok {
+			return out, nil, fmt.Errorf("the org's coverage aggregate could not be read, so classes no test touched are not counted at 0%%: %v", why)
+		}
+		classes = append(append([]string(nil), classes...), stringList(out.Facts["test.coverage_untouched"])...)
+	}
+	reported := map[string]bool{}
+	for _, cl := range out.Classes {
+		reported[cl.Name] = true
+	}
+	var added []string
+	for _, name := range classes {
+		if reported[name] || strings.HasSuffix(name, "Test") {
+			continue
+		}
+		reported[name] = true
+		added = append(added, name)
+	}
+	sort.Strings(added)
+	merged := append([]providers.ClassCoverage(nil), out.Classes...)
+	for _, name := range added {
+		merged = append(merged, providers.ClassCoverage{Name: name, Percent: 0})
+	}
+	out.Classes = merged
+	return out, added, nil
 }
 
 // applyTestGate adds the checks for a finished or unfinished test run.

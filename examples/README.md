@@ -17,6 +17,13 @@ Salesforce DX project, or run `glassops init` to generate a similar `glassops.ya
 The pr workflow never receives the permit key. Only a job in the protected environment can read it.
 The [GitHub deploy guide](../docs/guides/deploy-with-github.md) explains each part of the deploy job.
 
+## Other CI systems
+
+- [`bitbucket/`](bitbucket/README.md): `bitbucket-pipelines.yml` and `glassops.yaml` for Bitbucket Pipelines.
+- [`gitlab/`](gitlab/README.md): `.gitlab-ci.yml` and `glassops.yaml` for GitLab CI.
+
+Neither has run on a real runner yet, so treat the first run as a proof. The [Bitbucket and GitLab guide](../docs/guides/other-ci.md) explains what the CI layer reads and writes.
+
 ## Other commands in a workflow
 
 The `glassops-platform/glassops` action runs one command in the container, for steps that do not fit a pipeline:

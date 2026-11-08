@@ -1,0 +1,18 @@
+{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "ApexClass",
+          "url": "/services/data/v68.0/tooling/sobjects/ApexClass/01p000000000001AAA"
+        },
+        "Id": "01p000000000001AAA",
+        "Name": "GreeterTest"
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

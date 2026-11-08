@@ -1,6 +1,6 @@
 # CLI Reference
 
-> **Early work.** The `glassops` CLI is being built in phases and nothing is released yet. This page covers what exists today.
+> **Early work.** v0.3.0 and v0.4.0 are published prereleases and v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 `glassops` is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.
 
@@ -18,9 +18,15 @@
 | `glassops gate` | Evaluates the policy rules for a target and writes a signed PERMIT |
 | `glassops permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
 | `glassops deploy` | Deploys the change set to a target, only under a valid PERMIT |
+| `glassops verify` | After a deploy, checks that the target holds what the plan says |
 | `glassops report` | Summarises every result for the CI and writes SARIF |
-
-Further commands are planned and not built yet.
+| `glassops env create` | Creates the ephemeral environment (a scratch org) that later steps use |
+| `glassops env delete` | Deletes that environment |
+| `glassops env sweep` | Deletes old environments that a cancelled run left behind |
+| `glassops test` | Runs Apex tests with coverage on a target and writes JUnit XML |
+| `glassops run` | Runs a whole pipeline from `glassops.yaml` |
+| `glassops check` | Runs your own project scripts |
+| `glassops analyze` | Runs the Code Analyzer and records the violation counts |
 
 ### `glassops init`
 
@@ -29,6 +35,7 @@ Further commands are planned and not built yet.
 - Writes `glassops.yaml` with commented stub targets and the default `pr` and `deploy` pipelines.
 - For GitHub, also writes `.github/workflows/glassops.yml`, which runs `glassops doctor` on full git history. Other CI systems are detected but get no CI file yet.
 - Never overwrites a file unless you pass `--force`.
+- Does not touch `.gitignore`. Add `.glassops/` to it yourself. That directory holds the plan, the PERMIT, the results and the deployed-tag bookkeeping, and none of it belongs in git. Run `git status` after your first command to see it appear.
 
 ### `glassops doctor`
 
@@ -37,6 +44,7 @@ Runs these checks and fails if any of them fails:
 - `glassops.yaml`, when present, against the schema and its rules. Without the file, the defaults are used.
 - The provider: the config and the project files must agree.
 - The tools: `git` always, plus `sf` and the `sfdx-git-delta` plugin for Salesforce projects. Versions are recorded.
+- The analyzer, only when `analyze.enabled` is `true`: Java 11 or newer and the Code Analyzer plugin (`tool.java` and `tool.code-analyzer`). Both are in the `glassops-analyzer` image.
 - The checkout: a shallow clone fails, because it would make every change set empty. On GitHub, use `actions/checkout` with `fetch-depth: 0`.
 - The environment: every `$VAR` the config names must be set. Only presence is checked. Values are never printed or stored.
 - The PERMIT key: on a `pull_request` or `pull_request_target` run, `GLASSOPS_PERMIT_KEY` should not be set. If it is, `doctor` adds a `permit.key` check whose detail starts with `warning:` and a CI warning annotation. This never fails the command. Only presence is checked. See [PERMIT and rules](permit-and-rules.md#the-signing-key).
@@ -70,6 +78,12 @@ Works out the change set between two git refs. It writes the provider's manifest
 
 With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
 
+On a laptop, outside a pull request, there is no base: `--from auto` without `--target` stops with "--from auto needs a target or a pull request base branch. Pass --from." For a first run, name the base yourself:
+
+```bash
+glassops plan --from HEAD~1
+```
+
 First deploy rule: with `--target` and `--from auto`, a target that has no `glassops/deployed/<target>` tag has never received a deploy from glassops. `plan` then plans the whole source instead of a delta, prints a notice, and records the facts `plan.first_deploy` and `plan.from_source: first-deploy`. A shallow clone is still an error.
 
 ### `glassops validate`
@@ -95,6 +109,9 @@ Reads the change set, the earlier results in the results directory and the CI co
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | Where the PERMIT is written |
 | `--no-connect` | `false` | Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the `guard` check is `skipped` |
+| `--deploy-command` | | Provider `exec` only. The command `deploy --` will run, as a JSON array of strings, such as `'["./deploy.sh","--prod"]'`. The PERMIT binds its SHA-256, never the text. With any other provider it is an error |
+
+When the target's tier has deploy windows and the gate's clock is inside one, the PERMIT expires when that window closes, if that is before `policy.permit_ttl`. Windows that overlap or touch extend it. With no window for the tier, or a clock outside them, the PERMIT keeps the full TTL, and the window rule decides.
 
 Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
 
@@ -104,11 +121,11 @@ Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/pla
 | `1` | Policy denies the deploy. The signed PERMIT is still written |
 | `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
 
-Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id` and `gate.expires_at`.
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
 
 ### `glassops permit verify`
 
-Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, and that it matches the target, the commit, the plan and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
+Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, that its lifetime is sound, and that it matches the target, the commit, the plan, the change set and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -128,7 +145,13 @@ Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
 ### `glassops deploy`
 
-Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation.
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A checkout with no remote called `origin` gets that warning too, never a failure.
+
+**The local tag stays.** The tag is moved in your checkout before the push, so it stays there when the push fails. A rerun of `plan --target <target>` then starts from the deployed commit and finds nothing to deploy. If the push did not happen and you want the plan to start from the old base again, delete the local tag:
+
+```bash
+git tag -d glassops/deployed/prod
+``` A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -136,17 +159,55 @@ Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and 
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
 | `--wait` | the provider's | How long to wait for the deploy, such as `30m`. The Salesforce provider waits 60 minutes |
-| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy |
+| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy. Accepted only when `.glassops/results/deploy.json` records that job timing out under the same PERMIT and target |
 
-Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status `empty` and no login.
+With provider `exec`, a command after `--` runs instead of `exec.deploy`: `glassops deploy --target prod -- ./ci/deploy.sh`. See [the exec provider](exec-provider.md#deploying). A command after `--` with any other provider is an error.
+
+Needs `GLASSOPS_PERMIT_KEY` and a git checkout. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. After the PERMIT verifies and before the login, `git rev-parse HEAD` must also be that commit and no tracked file may be modified or staged. Untracked files are allowed. With provider `exec`, a command after `--` runs only when the PERMIT binds exactly that command, from `gate --deploy-command`. An empty change set under a valid PERMIT ends with status `empty` and no login.
 
 | Exit | When |
 |---|---|
 | `0` | The deploy succeeded, or the change set was empty |
 | `1` | The deploy ran and the target reported failures, or `salesforce.deploy.quick` is `require` and the PERMIT holds no passed validation to quick deploy |
-| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
+| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, the working tree is not the PERMIT's commit or git cannot tell, `--resume` names a job the last deploy did not time out on, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
 
-Result facts: `deploy.permit_id`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts.
+Result facts: `deploy.permit_id`, `deploy.plan_sha256`, `deploy.test_level`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts. `deploy.plan_sha256` is the plan the deploy sent. `deploy.test_level` is the level the deploy was sent with, or for a quick deploy the level of the validation it reused.
+
+### `glassops verify`
+
+Runs after `deploy` and checks that the target holds what the plan says. It never deploys. It is the last step of the default `deploy` pipeline, before `report`.
+
+Before it logs in, `verify` reads the deploy result and the change set. It stops with an error when the deploy result is for another target or provider, did not pass, did not finish (a timeout), or has no deploy Id, because there is no finished deploy to check. It checks that the plan files still match the plan digest. `deploy` always records `deploy.plan_sha256` and `deploy.test_level`, so `verify` always ties the plan to the deploy: the recorded digest must equal the plan's digest, and the fact `verify.plan_bound_to_deploy` is `true`. It is `false` only for a deploy result `deploy` did not write. An empty deploy ends `verify` with status `empty` and no login. Then it logs in, runs the [guard](#the-guard), and the provider runs these checks:
+
+| Check | Passes when |
+|---|---|
+| `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy lists the coverage warnings the report holds |
+| `verify.check_only` | The deploy was not a check-only run, so it changed something |
+| `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
+| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
+| `verify.flows` | Every Flow in the plan whose source says Active runs as its latest version in the target, and when the deploy changed it, that version was modified after the deploy started. A Flow whose source says Draft is not checked |
+| `verify.foreign_deploys` | No other deploy that is not check-only was created in the target between the deploy's start and now. Fails or warns according to the setting |
+| `verify.smoke` | The `verify.smoke` command exits 0. Skipped when it is not set |
+
+Anything the provider cannot read, such as a query that fails, is an error and never a pass. A warning is a passing check whose detail starts with `warning:`. It adds a CI warning annotation and its name to the fact `verify.warnings`. The smoke command runs even when an earlier check failed, but not after the provider returned an error.
+
+Settings `verify.smoke`, `verify.foreign_deploys` and `verify.flows` are in [Verify, coverage and YAML settings](verify-and-coverage-settings.md). With provider `exec`, the provider runs `exec.verify` instead of the checks above. See [the exec provider](exec-provider.md).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--deploy-result` | `<results-dir>/deploy.json` | Deploy result to verify |
+
+Reads the deploy result, the change set and the plan files. Writes `.glassops/results/verify.json`.
+
+| Exit | When |
+|---|---|
+| `0` | Every check passed. Warnings still exit 0 |
+| `1` | A check failed |
+| `2` | A tool error: the deploy result or the change set cannot be read or does not match, login or the guard failed, or the provider could not read the target |
+
+Result facts: `verify.passed`, `verify.deploy_id`, `verify.deploy_quick`, `verify.commit`, `verify.permit_id`, `verify.plan_sha256`, `verify.plan_bound_to_deploy`, `verify.warnings` and `verify.smoke_exit_code`, plus the provider's own facts.
 
 ### `glassops report`
 
@@ -158,6 +219,167 @@ Reads every result in the results directory. It writes a markdown summary to the
 | `--summary` | | Also write the markdown summary to this file |
 
 `report` exits with the worst status among the results: `0` when all pass, `1` when any failed, `2` when any errored. That lets a CI run it after a failed step with `if: always()` and still fail the job. It also exits `2` when there are no results or one cannot be read.
+
+### `glassops env create`
+
+Creates the ephemeral environment named under `environments` in `glassops.yaml`, from its Dev Hub target, for later steps to use. It logs in to the hub and runs the [guard](#the-guard) on it. The default pr pipeline runs it before `validate`.
+
+For Salesforce it does not run `sf org create scratch`. It creates a `ScratchOrgInfo` record in the Dev Hub (a signup), polls until the record is `Active` for up to 15 minutes, and exchanges the record's auth code for a login. A signup refused for capacity or a transient error is retried up to three times. A signup that is still not active after 15 minutes is not retried, because it could still become active. The scratch definition file (`environments.<target>.definition`) supports the keys `edition`, `features`, `hasSampleData`, `language`, `country`, `description`, `release` and `sourceOrg`. Any other key, including `settings`, is an error, so an org is never created without something the file asks for. `orgName` is replaced by the environment name.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | `ephemeral` | Environment name from the `environments` section |
+| `--name` | `<prefix>-<repo>-<pr or branch>-<run>` | Environment name. The prefix is `environments.<target>.prefix`, default `glassops`. Outside CI the repo is the project directory and the run is a UTC timestamp |
+| `--ttl-days` | `environments.<target>.ttl_days`, else `1` | Days the environment lives |
+| `--shape` | `environments.<target>.shape` | Source org Id for an org shape. A `$VAR` is read from the environment |
+| `--env-file` | `<dir>/.glassops/env/<target>/env.json` | Where to write `env.json` |
+
+**How later steps use the org.** `env create` writes `env.json` and a login file. `env.json` records the environment name, Id, expiry and the path of the login file, and holds no secret. The login file holds an `sfdx-url` login, is readable only by the current user, and lives in the operating system's temporary directory. When each command runs in its own container, set `TMPDIR` to a mount they share. A later command that resolves a target named under `environments`, such as `validate --target ephemeral`, finds `env.json` and logs in with that file instead of the `$VAR` settings. With no `env.json`, the target falls back to its `targets` entry, and `--fallback-target` applies if that is not configured. An `env.json` that records a failed create (`ready: false`) counts as not configured. On GitHub, `env create` also sets the step outputs `env_id`, `env_file` and `auth_file`.
+
+`env create` refuses to run when `env.json` already exists, so run `env delete` first. If the create fails after the signup was requested, `env.json` is still written so `env delete` can remove the org.
+
+Writes `.glassops/results/env-create.json` with the facts `env.file`, `env.id`, `env.record_id`, `env.name`, `env.auth_file` and `env.expires_at`, plus the provider's own.
+
+| Exit | When |
+|---|---|
+| `0` | The environment is active |
+| `2` | `environments.<target>` is not configured, `env.json` already exists, the hub login or guard failed, or the signup failed or timed out |
+
+### `glassops env delete`
+
+Deletes the environment from its hub. It reads `env.json`, or finds the environment by `--name`. With neither, nothing is recorded to delete: the `delete` check is `skipped` and the command exits 0. Deleting an environment that is already gone passes. After a delete from `env.json`, it removes the login file and `env.json`, so later steps fall back to the config. The default pr pipeline runs it with `when: always`.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | `ephemeral` | Environment name from the `environments` section |
+| `--name` | the one `env create` made | Delete by name instead of from `env.json` |
+| `--env-file` | `<dir>/.glassops/env/<target>/env.json` | `env.json` to read |
+
+Writes `.glassops/results/env-delete.json`. Exit `0` when the environment is deleted, already gone, or nothing is recorded. Exit `2` when the config, the hub login or `env.json` (for another target or hub) is wrong, or the delete fails.
+
+### `glassops env sweep`
+
+Deletes every environment on the hub whose name starts with `<prefix>-` and that is older than `--max-age`, and lists what it deleted. It never matches the bare prefix. Run it on a schedule to remove environments that a cancelled run left behind.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | `ephemeral` | Environment name from the `environments` section, which supplies the hub and the prefix |
+| `--max-age` | `environments.<target>.ttl_days` as a duration | Delete environments older than this, such as `24h`. Must be above zero |
+
+Writes `.glassops/results/env-sweep.json` with the facts `env.prefix`, `env.max_age`, `env.deleted` and `env.deleted_count`. Exit `0` when the sweep finished, `2` when the config, the hub login or a delete failed.
+
+### `glassops test`
+
+Logs in to the target, runs the guard, and runs the target's Apex tests with code coverage. It never deploys. It writes JUnit XML and checks the result against `test.coverage`.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--level` | `test.level` for the target's tier, then `test.level.default` | Test level, such as `RunLocalTests` |
+| `--tests` | | Comma separated tests to run, for a level that names them |
+| `--wait` | the provider's | How long to wait for the run, such as `30m` |
+| `--resume` | | Run Id of an earlier run to wait on again, instead of starting a new one |
+| `--junit` | `<results-dir>/test.junit.xml` | JUnit XML file to write |
+
+**Coverage.** Percentages are rounded down, so a rounded-up value never passes a minimum. Both settings are optional:
+
+- `test.coverage.org_min` compares against the org-wide coverage that `sf` reports. That figure counts every class in the org, so it catches classes that no test touches.
+- `test.coverage.class_min` compares each class that the test run reports. `test` sees per-class coverage only for the classes in that report, so a class that no test ran against can be missing from it. Set `org_min` as well to catch those.
+
+If a minimum is set and its figure is not reported, that is a failure, never a pass. A run that does not finish within `--wait` fails and names the run Id, and `--resume` waits on it again.
+
+**No tests found.** When `sf` reports that no Apex tests were found, `test` records the fact `test.none_found`. It fails when `org_min` or `class_min` is set, because coverage cannot be checked. When neither is set, the status is `empty`, the `tests` check is `skipped`, and it exits 0.
+
+Writes `.glassops/results/test.json` and the JUnit file (listed as an artifact). Facts: `test.ran`, `test.failed`, `test.finished`, `test.run_id`, `test.org_coverage` (a whole percent, absent when unknown), `test.coverage.<Class>.percent` and `target.source`.
+
+| Exit | When |
+|---|---|
+| `0` | The tests passed and every set minimum is met, or no tests were found and no minimum is set |
+| `1` | A test failed, the run did not finish, coverage is below a minimum or was not reported, or no tests ran while a minimum is set |
+| `2` | The target could not be resolved, the login or guard failed, or the tests could not be run |
+
+### `glassops run`
+
+Runs the steps of one pipeline from `glassops.yaml`, in order, in one process. See [Run a pipeline](../guides/run-a-pipeline.md) for the default pipelines.
+
+```bash
+glassops run pr
+glassops run deploy --dry-run
+```
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--dry-run` | `false` | Print the steps and the global flags each one gets. Runs nothing and removes nothing |
+
+A step is a glassops command line such as `validate --target prod`, or a map with `step`, `when` and, for an `exec` step, `run`.
+
+**When a step runs.** `when` decides what happens after an earlier step failed.
+
+| `when` | The step runs |
+|---|---|
+| `success` (the default) | Only when no earlier step failed |
+| `failure` | Only when an earlier step failed |
+| `always` | Every time, including after a failure or a cancel |
+
+A step has failed when its exit code is not 0. After a `plan` step that exits 0, `run` reads `.glassops/plan.json`. An empty plan skips every later step that is not `when: always`, with the reason "the plan is empty". A plan that cannot be read is an error (exit 2), and later `success` steps are skipped, so it is never read as an empty plan. A cancel (Ctrl+C or SIGTERM) stops the current step and skips the rest except `when: always` steps, which still run with up to 2 minutes each. A cancelled run exits at least 2.
+
+**Exec steps.** A step named `exec` runs its `run` command with `sh -c` in the project directory. The command inherits the environment and gets `GLASSOPS_RESULTS_DIR`, the absolute path of the results directory. Its output goes straight to the run's output. A zero exit passes and any other exit is a fail (exit 1). A command that cannot start, is stopped by a signal or is cancelled is an error (exit 2). Each exec step writes `exec.<n>.json`, where `n` counts exec steps from 1, with one `command` check and the facts `exec.run`, `exec.index` and `exec.exit_code`.
+
+**Global flags.** Every glassops step receives this run's `--dir`, `--config`, `--results-dir` and `--ci`, so all steps read one project and write to one results directory.
+
+**Stale results.** Before the first step, a real run removes `run.json` and every top-level `*.json` file in the results directory whose `schema` is `glassops.result/v1`. It does not recurse and keeps every other file, such as SARIF and JUnit files. This stops an earlier run from reading as evidence for this one. The count is the fact `run.stale_removed`. A removal failure exits 2 before any step runs.
+
+**Exit code.** The worst exit code of all steps. Any code other than 0 and 1 ranks as 2.
+
+Writes `.glassops/results/run.json` with the facts `run.pipeline`, `run.steps` (index, step, `when`, argv, result, exit code, duration, skip reason), `run.exit_code`, `run.empty_plan`, `run.cancelled` and `run.stale_removed`, and one check per step. A pipeline that is not in the config, or a step that does not parse, exits 2 before anything runs.
+
+### `glassops check`
+
+Runs your own project scripts, such as lint or unit test commands, and records the outcome. It does not replace those tools.
+
+Scripts come from `check.scripts` in `glassops.yaml`, a list of `name` and `run` entries. Each runs with `sh -c` in the project directory, in order, and every script runs even after an earlier one failed. A script's output goes to the log and never into the result.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--script` | | Run only the script with this name. An unknown name is an error |
+
+Writes `.glassops/results/check.json` with one check per script named `script.<name>` and the facts `check.scripts`, `check.passed` and `check.failed`. With no scripts configured the status is `empty` and the exit code is 0.
+
+| Exit | When |
+|---|---|
+| `0` | Every script exited 0, or none are configured |
+| `1` | A script exited non-zero |
+| `2` | `sh` could not start, or `--script` names no entry |
+
+### `glassops analyze`
+
+Runs the Salesforce Code Analyzer over the project and records how many violations it found. It runs only when `analyze.enabled: true` is set in `glassops.yaml`. Without that, it records a `skipped` check, the status `empty`, and exits 0.
+
+The analyzer needs Java 11 or newer and the Code Analyzer plugin of the Salesforce CLI. The standard `glassops` image has neither, so run `analyze` in the separate `glassops-analyzer` image, which adds them. `glassops doctor` checks for Java and the plugin when `analyze.enabled` is true. Only the Salesforce provider is supported.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--rule-selector` | `analyze.rule_selector`, else `Recommended` | Rules to run |
+| `--sarif` | `<results-dir>/analyze.sarif` | SARIF file to write |
+
+`analyze` does not decide what is too severe. It exits 0 whatever it found, so long as the analyzer ran. The `gate` rule `analyzer_max_severity` reads the counts and decides. It writes `.glassops/results/analyze.json` with the facts `analyze.rule_selector`, `analyze.total` and `analyze.sev1` to `analyze.sev5`. The SARIF file and the analyzer's own JSON (`.glassops/analyze/code-analyzer.json`, beside the results directory) are listed as artifacts, and `report` merges the SARIF file into its output.
+
+| Exit | When |
+|---|---|
+| `0` | The analyzer ran, or `analyze` is off |
+| `2` | The analyzer could not run, its output could not be read, or the provider is not Salesforce |
+
+### The smart seed
+
+A destructive change, such as a deleted field, cannot be validated on a fresh scratch org, because the component it deletes was never there. When `validate` runs against a scratch org and the change set has destructive members, it first deploys the base state they need. The base ref is the plan's `from` ref. `salesforce.ephemeral.seed` chooses how:
+
+| Mode | What it deploys |
+|---|---|
+| `minimal` (the default) | Only the destructive members, from the base ref, plus the parent object of any child component (field, record type, validation rule and similar) whose parent is a custom object (`__c`, `__mdt` or `__e`) |
+| `full` | The whole source at the base ref |
+| `off` | Nothing. The destructive change is validated against the org as it is |
+
+If a minimal seed fails because something else is missing (an error such as `Entity 'Widget__c' not found`), the seed falls back to the full seed, records `validate.seed.fallback: true` and raises a CI warning. A failed seed stops `validate` before it runs. The seed applies to scratch targets only. `validate` records `validate.seed.mode`, `validate.seed.fallback` and `validate.seed.members`.
 
 ---
 
@@ -214,7 +436,7 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `--dir` | `.` | Project root |
 | `--config` | `<dir>/glassops.yaml` | Config file |
 | `--results-dir` | `<dir>/.glassops/results` | Where results are written |
-| `--ci` | `auto` | CI system: `auto`, `github` or `local` |
+| `--ci` | `auto` | CI system: `auto`, `github`, `bitbucket`, `gitlab` or `local`. See [Bitbucket and GitLab](../guides/other-ci.md) |
 
 ---
 
@@ -225,6 +447,8 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `0` | Pass |
 | `1` | A policy or check failed. The tool itself worked |
 | `2` | A tool or infrastructure error stopped the command, or the command line was invalid |
+
+A tool error is printed to stderr as `glassops: <message>` on one line. A line break inside the message is replaced, so output that a CI runner scans for commands cannot start a new line.
 
 ---
 
@@ -255,29 +479,7 @@ On GitHub, each command also sets the step outputs `status` and `result` (the re
 
 ## Configuration
 
-`glassops.yaml` is optional. Its schema is [`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json). Beyond the schema, these rules are checked:
-
-- Org Ids look like Salesforce org Ids, unless written as a `$VAR`.
-- No two targets share an org Id.
-- At most one target has tier `prod`.
-- Every policy window names a time zone that exists.
-- Every blackout ends on or after its start date.
-
-Secrets are always named with `$VAR`, so values stay in your CI's secret store.
-
-```yaml
-version: 1
-provider: salesforce
-targets:
-  prod:
-    id: 00D000000000000
-    tier: prod
-    branch: main
-    auth: { method: jwt, username: $SF_PROD_USERNAME, client_id: $SF_CLIENT_ID, key: $SF_JWT_KEY }
-policy:
-  windows:
-    prod: [{ days: [tue, thu], from: "18:00", to: "22:00", tz: America/Chicago }]
-```
+`glassops.yaml` is optional. Every key, with an example, is in the [configuration reference](config.md). The schema is [`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json).
 
 ---
 
@@ -289,11 +491,24 @@ The workflow [`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/
 
 ## Install
 
-There is no release yet. To try it, build from a checkout with Go 1.27.3 or later:
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. **`verify`, provider `exec`, the Bitbucket and GitLab layers and the other changes listed under "Not yet in a release" in [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) are not in a published release yet.** To use them, build from this repository.
+
+| Route | What you get | What you need |
+|---|---|---|
+| Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
+| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.3 or later, and the host tools below |
+| `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
+
+A built Linux binary also runs inside the published image. Mount it over the image's own:
 
 ```bash
-go build -o glassops ./cmd/glassops
-./glassops doctor
+docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:0.4.0 doctor
 ```
 
-The container image adds Node 22, the Salesforce CLI and `sfdx-git-delta`. Build it with `docker build -t glassops .` from the repository root.
+**Host prerequisites for `go build`.** `git` always. For a Salesforce project also the Salesforce CLI `sf` and its `sfdx-git-delta` plugin:
+
+```bash
+sf plugins install sfdx-git-delta
+```
+
+Provider `exec` needs only `git` and `sh`. `./glassops doctor` checks the tools and says which one is missing. Release tags, image tags, the license scan and the third party notices are described in [Releases, images and licenses](releases-and-licenses.md).

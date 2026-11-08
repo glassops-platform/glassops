@@ -156,8 +156,12 @@ func (a *GitHubAPI) LabelAdder(ctx context.Context, repo string, number int, lab
 			return "", fmt.Errorf("github api: GET %s: the next page is outside the API root", path)
 		}
 		var events []apiEvent
-		_, next, err := a.fetch(ctx, url, path, &events)
+		status, next, err := a.fetch(ctx, url, path, &events)
 		if err != nil {
+			if status == http.StatusForbidden {
+				// GitHub also answers 403 for a rate limit, so the hint says "if".
+				return "", fmt.Errorf("%w. If the token lacks the permission, grant issues: read to the job (permissions: issues: read), because reading who added a label needs it", err)
+			}
 			return "", err
 		}
 		all = append(all, events...)

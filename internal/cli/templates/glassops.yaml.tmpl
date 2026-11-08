@@ -51,5 +51,6 @@ pipelines:
     - validate --target prod
     - gate --target prod
     - deploy --target prod
+    - verify --target prod
     - step: report
       when: always

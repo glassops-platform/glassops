@@ -22,9 +22,19 @@ const testCommit = "0123456789abcdef0123456789abcdef01234567"
 // writes the same bytes at the same path, so the digest is the same each time.
 var testPlanHash string
 
-// testPermitKey is a synthetic key of 32 bytes, not a real one.
+// testPermitKeyBytes is a synthetic key of 32 different bytes, not a real one. Keys for
+// different b differ.
+func testPermitKeyBytes(b byte) []byte {
+	k := make([]byte, 32)
+	for i := range k {
+		k[i] = b + byte(i)
+	}
+	return k
+}
+
+// testPermitKey is testPermitKeyBytes in base64, as GLASSOPS_PERMIT_KEY holds it.
 func testPermitKey(b byte) string {
-	return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{b}, 32))
+	return base64.StdEncoding.EncodeToString(testPermitKeyBytes(b))
 }
 
 // permitHarness has a config, a plan with a known hash, and the CI environment of a push
@@ -81,10 +91,13 @@ func writePermit(t *testing.T, h *harness, keyByte byte, edit func(p *permit.Per
 		Target: permit.Target{Name: "qa", Tier: "qa", ID: "00D000000000002AAA", Kind: "sandbox"},
 		Commit: testCommit, PlanSHA256: testPlanHash, ConfigSHA256: configHash(t, h),
 	}
+	if cs, err := providers.ReadChangeSet(filepath.Join(h.dir, ".glassops", "plan.json")); err == nil {
+		p.ChangeSetSHA256 = permit.ChangeSetDigest(cs)
+	}
 	if edit != nil {
 		edit(&p)
 	}
-	if err := permit.Sign(&p, permit.NewHMAC(bytes.Repeat([]byte{keyByte}, 32))); err != nil {
+	if err := permit.Sign(&p, permit.NewHMAC(testPermitKeyBytes(keyByte))); err != nil {
 		t.Fatal(err)
 	}
 	if err := permit.Write(filepath.Join(h.dir, ".glassops", "permit.json"), p); err != nil {

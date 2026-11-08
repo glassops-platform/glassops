@@ -175,6 +175,10 @@ type Test struct {
 type Coverage struct {
 	OrgMin   *int `yaml:"org_min,omitempty" json:"org_min,omitempty"`
 	ClassMin *int `yaml:"class_min,omitempty" json:"class_min,omitempty"`
+	// ClassScope picks which classes class_min applies to when a class has no covered lines:
+	// "changed" (the default) counts the classes in the plan, or every untouched class when
+	// there is no plan, and "all" counts every class the org reports.
+	ClassScope string `yaml:"class_scope,omitempty" json:"class_scope,omitempty"`
 }
 
 // Checks holds the scripts the check step runs.
@@ -571,6 +575,7 @@ func DefaultPipelines() map[string][]Step {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
+			{Run: "verify --target prod"},
 			{Run: "report", When: "always"},
 		},
 	}

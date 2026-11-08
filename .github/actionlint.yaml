@@ -1,0 +1,7 @@
+# actionlint 1.7.12 does not know the job context properties workflow_sha and workflow_ref yet.
+# GitHub documents both in the job context (docs.github.com, contexts reference). The glassops
+# reusable workflows read job.workflow_sha to find the release they were called at.
+paths:
+  .github/workflows/glassops-*.yml:
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'

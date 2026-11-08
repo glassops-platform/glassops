@@ -1,0 +1,43 @@
+# Pull requests run the pr pipeline. A push to main runs the deploy pipeline in the production
+# deployment environment. Set GLASSOPS_PERMIT_KEY as a secured deployment variable of that
+# environment only (Repository settings, Deployments), never as a repository variable, and
+# restrict the environment to main. Generate the key with: openssl rand -base64 32
+# Add the variables that glassops.yaml names with $VAR as secured repository variables.
+# This file has not been run on a real Bitbucket runner yet.
+image:
+  name: ghcr.io/glassops-platform/glassops:v1
+
+# Full history, so change sets between commits are complete.
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: glassops run pr
+          script:
+            - glassops doctor
+            - glassops run pr
+          after-script:
+            - glassops report
+          artifacts:
+            - .glassops/**
+  branches:
+    main:
+      - step:
+          name: glassops run deploy
+          deployment: production
+          script:
+            - glassops doctor
+            - glassops run deploy
+            # glassops moves the glassops/deployed/* tag in the checkout. Push it so the next
+            # plan knows what production last received.
+            - |
+              if [ -n "$(git tag -l 'glassops/deployed/*')" ]; then
+                git push --force origin 'refs/tags/glassops/deployed/*:refs/tags/glassops/deployed/*'
+              fi
+          after-script:
+            - glassops report
+          artifacts:
+            - .glassops/**

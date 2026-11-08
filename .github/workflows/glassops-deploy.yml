@@ -17,9 +17,9 @@ on:
   workflow_call:
     inputs:
       image:
-        description: The GlassOps container image.
+        description: The GlassOps container image. Empty means the image of the release this workflow is called at, for example ghcr.io/glassops-platform/glassops:v1.2.3 for @v1 when v1.2.3 is the current release. Pass a digest for a fully pinned run.
         type: string
-        default: ghcr.io/glassops-platform/glassops:v1
+        default: ''
       environment:
         description: The protected GitHub environment that holds the permit key and the required reviewers.
         type: string
@@ -73,8 +73,34 @@ jobs:
 
       - name: Install the glassops command
         env:
-          GLASSOPS_IMAGE: ${{ inputs.image }}
+          INPUT_IMAGE: ${{ inputs.image }}
+          WORKFLOW_SHA: ${{ job.workflow_sha }}
         run: |
+          # The image: the input when it is set. Otherwise the image of the release this workflow
+          # file comes from. job.workflow_sha is the commit of this file, a release tag such as
+          # v1 or v1.2.3 points at that same commit, so the full version tag on it names the image.
+          image="$INPUT_IMAGE"
+          if [ -z "$image" ]; then
+            tags="$(git ls-remote --tags "$GITHUB_SERVER_URL/glassops-platform/glassops.git" 2>/dev/null |
+              awk -v sha="$WORKFLOW_SHA" '$1 == sha {
+                n = $2
+                sub("^refs/tags/", "", n)
+                if (substr(n, length(n) - 2) == "^{}") n = substr(n, 1, length(n) - 3)
+                print n
+              }' || true)"
+            # A final release wins over a prerelease tag on the same commit.
+            tag="$(echo "$tags" | grep -E '^v[0-9]+[.][0-9]+[.][0-9]+$' | sort -V | tail -n 1 || true)"
+            if [ -z "$tag" ]; then
+              tag="$(echo "$tags" | grep -E '^v[0-9]+[.][0-9]+[.][0-9]+-[0-9A-Za-z.-]+$' | sort -V | tail -n 1 || true)"
+            fi
+            if [ -z "$tag" ]; then
+              echo "::error::This workflow file is not at a glassops release, so it has no default image. Call it at a release tag (@v1 or @v1.2.3) or pass the image input."
+              exit 1
+            fi
+            image="ghcr.io/glassops-platform/glassops:$tag"
+          fi
+          echo "glassops image: $image"
+
           # glassops runs in its image, one container per command, with the workspace mounted.
           # The runner keeps the JavaScript actions (checkout, uploads), because the Alpine
           # image cannot run them.
@@ -82,8 +108,28 @@ jobs:
           cat > "$RUNNER_TEMP/glassops-bin/glassops" <<'WRAPPER'
           #!/usr/bin/env bash
           set -u
+          names=(
+            GITHUB_ACTIONS
+            GITHUB_REPOSITORY
+            GITHUB_SHA
+            GITHUB_REF
+            GITHUB_EVENT_NAME
+            GITHUB_ACTOR
+            GITHUB_TRIGGERING_ACTOR
+            GITHUB_RUN_ID
+            GITHUB_BASE_REF
+            GITHUB_API_URL
+            GITHUB_SERVER_URL
+            GITHUB_TOKEN
+            SF_JWT_KEY
+            SF_CLIENT_ID
+            SF_USERNAME
+            SF_DEVHUB_ORG_ID
+            SF_PROD_USERNAME
+            SF_PROD_ORG_ID
+          )
           args=(run --rm -v "$GITHUB_WORKSPACE:/work" -w /work)
-          for n in GITHUB_ACTIONS GITHUB_REPOSITORY GITHUB_SHA GITHUB_REF GITHUB_EVENT_NAME             GITHUB_ACTOR GITHUB_TRIGGERING_ACTOR GITHUB_RUN_ID GITHUB_BASE_REF GITHUB_API_URL             GITHUB_SERVER_URL GITHUB_TOKEN SF_JWT_KEY SF_CLIENT_ID SF_USERNAME SF_DEVHUB_ORG_ID             SF_PROD_USERNAME SF_PROD_ORG_ID ${GLASSOPS_PASS_ENV:-}; do
+          for n in "${names[@]}" ${GLASSOPS_PASS_ENV:-}; do
             args+=(-e "$n")
           done
           for f in GITHUB_OUTPUT GITHUB_STEP_SUMMARY; do
@@ -94,7 +140,7 @@ jobs:
           WRAPPER
           chmod +x "$RUNNER_TEMP/glassops-bin/glassops"
           echo "$RUNNER_TEMP/glassops-bin" >> "$GITHUB_PATH"
-          echo "GLASSOPS_IMAGE=$GLASSOPS_IMAGE" >> "$GITHUB_ENV"
+          echo "GLASSOPS_IMAGE=$image" >> "$GITHUB_ENV"
 
       - name: Log in to each target
         if: inputs.targets != ''

@@ -9,10 +9,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/glassops-platform/glassops/internal/ci"
+	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/gitref"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 type planOptions struct {
@@ -129,6 +131,8 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 		res.Facts["plan.from_source"] = refs.FromSource
 	}
 
+	planPath := filepath.Join(g.dir, ".glassops", "plan.json")
+	app.bindWorkspace(proj.provider, g, "", "")
 	cs, err := proj.provider.Plan(ctx, req)
 	if err != nil {
 		res.AddCheck("plan", run.StatusError, err.Error())
@@ -136,7 +140,6 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 		return app.finish(res, c, g)
 	}
 
-	planPath := filepath.Join(g.dir, ".glassops", "plan.json")
 	if err := providers.WriteChangeSet(planPath, cs); err != nil {
 		res.AddCheck("plan", run.StatusError, err.Error())
 		res.Errors = append(res.Errors, err.Error())
@@ -161,6 +164,41 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 		res.AddCheck("plan", run.StatusPass, fmt.Sprintf("manifest %s, %d destructive", cs.Manifest, len(cs.Destructive)))
 	}
 	return app.finish(res, c, g)
+}
+
+// workspaceBinder is implemented by providers that run commands of their own, such as exec,
+// and need to know the run's dirs and files.
+type workspaceBinder interface {
+	Bind(execprovider.Workspace)
+}
+
+// bindWorkspace tells a provider that runs commands where the project, the results, the plan
+// and the PERMIT are, and where the commands' output goes. Empty planPath and permitPath mean
+// the default paths. Other providers are left alone.
+func (app *App) bindWorkspace(p providers.Provider, g *globals, planPath, permitPath string) {
+	if b, ok := p.(workspaceBinder); ok {
+		b.Bind(execprovider.Workspace{
+			Dir:        g.dir,
+			ResultsDir: g.results(),
+			PlanPath:   planPath,
+			PermitPath: permitPath,
+			Stdout:     app.Stdout,
+			Stderr:     app.Stderr,
+		})
+	}
+}
+
+// The exec provider finds the project dir of a config loadProject returned, so commands that
+// never bind a workspace, such as gate, run exec.describe in the project dir.
+func init() {
+	execprovider.ProjectDir = func(cfg *config.Config) string {
+		if v, ok := projectDirs.Load(cfg); ok {
+			if dir, ok := v.(string); ok {
+				return dir
+			}
+		}
+		return ""
+	}
 }
 
 func short(sha string) string {

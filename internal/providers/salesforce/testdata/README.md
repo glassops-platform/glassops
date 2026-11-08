@@ -91,3 +91,34 @@ with three low severity violations.
 - `ActiveScratchOrg` has no `Status` field. Its `ScratchOrg` is the 15-character org Id.
 - Code Analyzer exits 0 when it finds violations. Only `--severity-threshold` changes the exit
   code.
+
+## `sf/`, verify and timeout captures
+
+Captured with `sf` 2.156.8 against a one-day Developer Edition scratch org, from a project with
+`Greeter`, `GreeterTest`, a class no test touches (`Orphan`), a slow test class (`SlowTest`) and an
+autolaunched Flow (`Glassops_Probe`). Scrubbed the same way as the files above.
+
+| File | Command |
+|---|---|
+| `deploy-start-coverage-fail.json`, `deploy-report-coverage-fail.json` | `sf project deploy start --test-level RunLocalTests` with `Orphan` in the deploy. Exit 1, `Failed`, `numberComponentErrors` 0, and every component still listed in `componentSuccesses`. The reason is only in `runTestResult.codeCoverageWarnings`: org-wide coverage 50%, 75% required. Nothing was deployed |
+| `tooling-deployrequest-coverage-fail.json` | Tooling `DeployRequest` by Id for that deploy: `Status` Failed, `NumberComponentsDeployed` 4 of 4 |
+| `deploy-start-flow-pass.json`, `deploy-report-flow-pass.json` | the same without `Orphan`. Exit 0, `Succeeded`, 3 of 3, one test |
+| `tooling-deployrequest-pass.json` | Tooling `DeployRequest` by Id: `Status`, `CheckOnly`, `NumberComponentsDeployed`, `NumberComponentsTotal`, `NumberComponentErrors`, `NumberTestsCompleted`, `NumberTestErrors`, `NumberTestsTotal`, `RunTestsEnabled`, `StartDate`, `CompletedDate`, `CreatedById` |
+| `tooling-flowdefinition-active.json`, `tooling-flow-active.json` | Tooling `FlowDefinition` (`ActiveVersionId`, `LatestVersionId`) and `Flow` (`VersionNumber`, `Status`, `LastModifiedDate`, `DefinitionId`) after the Flow deployed as Active. Both version Ids are the same |
+| `deploy-start-flow-draft.json` | the same Flow deployed again with `<status>Draft</status>`. Exit 0, `Succeeded` |
+| `tooling-flowdefinition-draft.json`, `tooling-flow-draft.json` | after that deploy. `ActiveVersionId` is still version 1, `LatestVersionId` is the new version 2 with `Status` Draft. A deploy can succeed and leave the deployed Flow inactive |
+| `deploy-start-foreign.json`, `tooling-deployrequest-window.json` | a second deploy (`Orphan`, NoTestRun), then Tooling `DeployRequest` filtered on `CreatedDate` from the start of the window. Four deploys, ordered by `CreatedDate` |
+| `apex-test-with-orphan.json` | `sf apex run test --code-coverage` with `Orphan` deployed. The per-class list leaves `Orphan` out |
+| `tooling-coverage-aggregate.json` | Tooling `ApexCodeCoverageAggregate` after that run. It lists `Orphan` with `NumLinesCovered` 0 and `NumLinesUncovered` 2. The aggregate catches the class the test output leaves out |
+| `tooling-classes-without-aggregate.json` | Tooling `ApexClass` with no aggregate row. Only the test class |
+| `deploy-start-timeout.json` | `sf project deploy start --wait 1` with tests that take longer. Exit 1, `ClientTimeoutError`, and the job Id only in `data.id` |
+| `deploy-report-inprogress.json` | `sf project deploy report --job-id <id>` right after. Exit 0, `InProgress`, `done` false, 9 of 12 tests |
+| `deploy-report-after-timeout-done.json` | the same report after the deploy finished. `Succeeded`, 12 tests |
+| `deploy-validate-for-checkonly.json`, `tooling-deployrequest-checkonly.json` | `sf project deploy validate`, then Tooling `DeployRequest` by Id. `CheckOnly` true, `RunTestsEnabled` true |
+| `deploy-start-notestrun.json`, `tooling-deployrequest-notestrun.json` | `sf project deploy start --test-level NoTestRun`, then Tooling `DeployRequest`. `RunTestsEnabled` false, `NumberTestsTotal` 0 |
+| `deploy-start-lock-released.json`, `deploy-report-lock-released.json` | a transient platform error. `sf project deploy start` exited 1 with `MetadataTransferError` "Lock is already released" and the job Id in `data.id`, and `sf project deploy report` on that Id said `Succeeded`. An error from `deploy start` does not mean nothing was deployed |
+| `deploy-settings-two.json` | the T8 conversion of the portfolio AI definition's `lightningExperienceSettings` and `mobileSettings`, deployed to a plain Developer scratch org. Exit 0, 2 of 2. Retrieved afterwards, both files equal the ones `sf org create scratch` applied from the same definition, and `enableS1EncryptedStoragePref2` went from true to false |
+| `deploy-settings-full-refused.json` | all five converted Settings to the same org, which lacks the definition's features. Exit 1, `Failed`, component failures on `AgentPlatform` and `EinsteinGpt`: "Not available for deploy for this organization" |
+| `deploy-report-folders-settings.json`, `package-folders-settings.xml` | trimmed from a real full-source deploy of a larger project (1167 components) into a scratch org, keeping the 19 successes and manifest members that show folder and Settings naming. The manifest names a dashboard or report folder as `Dashboard` or `Report` with a trailing slash (`Portfolio_Owner_Dashboards/`) and an email folder as `EmailTemplate` without one (`Portfolio_Contact`). The deploy reports them as `DashboardFolder`, `ReportFolder` and `EmailFolder` with the bare name. The manifest names `Settings` `EmailAdministration`, and the deploy reports `EmailAdministrationSettings` `EmailAdministration`. The `files` list and the test results were removed |
+
+Also seen, not saved: `sf project deploy resume` refuses `--target-org` ("Nonexistent flag"). The portfolio AI definition, with `Einstein1AIPlatform` and `Communities`, signs up on a Developer Edition Dev Hub, and `Settings:AgentPlatform` does not come back from a retrieve there.

@@ -77,8 +77,8 @@ nav:
           - "The 8/10 Constraint": docs/adr/009-8-10-vs-10-10-bridge-strategy.md
           - "Compliance":
                 - "Contributing": CONTRIBUTING.md
-                - "Code License": LICENSE.md
-                - "Docs License": docs/LICENSE.md
+                - "Code License": https://github.com/glassops-platform/glassops/blob/main/LICENSE
+                - "Docs License": https://github.com/glassops-platform/glassops/blob/main/docs/LICENSE
 
     - Protocol (The Law):
           - "Identity Contract": docs/adr/010-identity-contract.md
@@ -100,9 +100,16 @@ nav:
 
     - Reference:
           - "CLI Reference": docs/reference/cli.md
+          - "Configuration Reference": docs/reference/config.md
           - "PERMIT and Rules": docs/reference/permit-and-rules.md
+          - "Exec Provider": docs/reference/exec-provider.md
+          - "Verify, Coverage and YAML Settings": docs/reference/verify-and-coverage-settings.md
+          - "Releases, Images and Licenses": docs/reference/releases-and-licenses.md
           - "Platform Reference": docs/reference/platform-reference.md
           - "Examples": examples/README.md
 
     - Guides:
+          - "Run a Pipeline": docs/guides/run-a-pipeline.md
           - "Deploy with GitHub": docs/guides/deploy-with-github.md
+          - "Bitbucket and GitLab": docs/guides/other-ci.md
+          - "Scratch Org Settings": docs/guides/scratch-org-settings.md
