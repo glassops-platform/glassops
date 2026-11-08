@@ -20,7 +20,7 @@ These documents live here (`docs/`) and guide you through the system.
 
 | Component          | Documentation Authority                                                                                                                 |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **CLI**            | [`cli.md`](reference/cli.md) <br/> [`permit-and-rules.md`](reference/permit-and-rules.md) <br/> [`exec-provider.md`](reference/exec-provider.md) <br/> [`verify-and-coverage-settings.md`](reference/verify-and-coverage-settings.md) <br/> [`releases-and-licenses.md`](reference/releases-and-licenses.md)                                               |
+| **CLI**            | [`cli.md`](reference/cli.md) <br/> [`permit-and-rules.md`](reference/permit-and-rules.md) <br/> [`exec-provider.md`](reference/exec-provider.md) <br/> [`verify-and-coverage-settings.md`](reference/verify-and-coverage-settings.md) <br/> [`releases-and-licenses.md`](reference/releases-and-licenses.md) <br/> [`sigstore-signing.md`](reference/sigstore-signing.md) <br/> [`rego-rules.md`](reference/rego-rules.md) <br/> [`pr-comment-and-telemetry.md`](reference/pr-comment-and-telemetry.md) <br/> [`hardis-engine.md`](reference/hardis-engine.md) (experimental)                                               |
 
 ---
 
