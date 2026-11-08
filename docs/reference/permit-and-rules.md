@@ -14,23 +14,25 @@ The PERMIT is JSON in `.glassops/permit.json`, with the schema name `glassops.pe
 |---|---|
 | `id` | A random identifier, in hex |
 | `allow` | `true` or `false`. A deny is recorded as a PERMIT too |
-| `issued_at`, `expires_at` | When it was made and when it stops being valid. The lifetime is `policy.permit_ttl` |
+| `issued_at`, `expires_at` | When it was made and when it stops being valid. The lifetime is `policy.permit_ttl`, or less when the target's tier has deploy windows: the PERMIT then expires when the window that held the gate's clock closes |
 | `target` | The target `name`, `tier`, `id` and `kind`. The Id and kind are what the login reported, unless `--no-connect` was used |
 | `commit` | The commit the CI reported |
 | `plan_sha256` | The hash of the plan files |
 | `config_sha256` | The hash of `glassops.yaml` |
+| `change_set_sha256` | The hash of `plan_sha256` and the change set fields that say how the plan files are used: `provider`, `dir`, `manifest`, the `destructive` list in order, `empty` and `full` |
+| `deploy_command_sha256` | Provider exec only, when `gate` ran with `--deploy-command`. The SHA-256 of the command as a JSON array of strings. The command text is never stored |
 | `validation` | Optional. The deploy Id of a passed check-only validation, its test level and `passed` |
 | `separation_of_duties` | How the separation of duties rule was met. See below |
 | `checks` | Every rule result, each with its rule name, outcome and detail |
 | `signature` | The algorithm, the key id and the signature value |
 
-A PERMIT binds to a specific target, commit, plan and config. Change any of them after `gate` ran and the PERMIT no longer matches.
+A PERMIT binds to a specific target, commit, plan, change set and config. Change any of them after `gate` ran and the PERMIT no longer matches. A PERMIT with no `change_set_sha256` was written by an older `gate` and is refused with a message saying so. Run `gate` again.
 
 ---
 
 ## The signing key
 
-The PERMIT is signed with HMAC-SHA256. The key comes from the environment variable `GLASSOPS_PERMIT_KEY`, which holds base64 text that decodes to at least 32 bytes. Standard base64 is accepted with or without padding. A shorter key is refused, and the error never contains the key. One way to make a key:
+The PERMIT is signed with HMAC-SHA256. The key comes from the environment variable `GLASSOPS_PERMIT_KEY`, which holds base64 text that decodes to at least 32 bytes with at least 8 different byte values. Standard base64 is accepted with or without padding. A shorter key, or a placeholder such as one character repeated, is refused, and the error never contains the key. One way to make a key:
 
 ```bash
 openssl rand -base64 48
@@ -38,7 +40,7 @@ openssl rand -base64 48
 
 The `key_id` in the signature is the first eight hex characters of the SHA-256 of the key. It names the key without revealing it. `permit verify` and `deploy` refuse a PERMIT whose `key_id` differs from their own key's, with the message that it was signed with a different key.
 
-The signature covers the whole PERMIT, with the signature value left out: keys sorted, no extra whitespace, times in UTC. A PERMIT file with a field the format does not know, or with trailing data, is refused as unreadable, because such a field would not be covered by the signature.
+The signature covers the whole PERMIT, with the signature value left out: keys sorted, no extra whitespace, times in UTC. The signature value must be standard padded base64, exactly as `gate` writes it. A PERMIT file with a field the format does not know, or with trailing data, is refused as unreadable, because such a field would not be covered by the signature.
 
 **The key must never be available to pull request jobs.** Anyone who can run a job with the key can sign an allow. Put it in a protected CI environment that only the deploy job uses. `glassops doctor` adds a warning when `GLASSOPS_PERMIT_KEY` is set on a `pull_request` or `pull_request_target` run. See [Deploy with GitHub](../guides/deploy-with-github.md).
 
@@ -60,7 +62,9 @@ Missing evidence is never a pass.
 
 - A rule that needs a fact that is not there fails, or says so in its detail.
 - A tool or infrastructure problem while gathering evidence adds a failing `evidence.<name>` check. The PERMIT denies, is still signed and written, and `gate` exits 2 instead of 1. Examples: the guard refusing the target, a GitHub API call that fails, a result file that exists but cannot be read, a missing commit or plan hash, and plan files that no longer match the plan hash.
-- A rule set with no rules is a defect, never a pass.
+- A rule set with no rules is a defect, never a pass. So is a rule source that returns no results.
+- Only the outcomes `pass`, `skipped`, `waived_by_config` and `satisfied_by_approval` allow. Any other outcome denies, including a misspelled or empty one.
+- `gate` owns the facts under `change.`, `ci.` and `target.`. The change set file and earlier result files can never set them. From the earlier results in the results directory, `gate` reads only facts under `validate.`, `plan.`, `analyze.`, `test.`, `check.` and the provider's own prefix, such as `salesforce.`. `change.destructive_count` is the larger of the provider's count and the number of destructive manifests.
 
 ### The ephemeral automatic PERMIT
 
@@ -83,17 +87,25 @@ Both use the same verification, in this order. The first failure is the one repo
 
 The PERMIT checks, shared by both:
 
-1. The signature: it exists, the algorithm is `HMAC-SHA256`, the key id matches, and the value verifies.
-2. The schema is `glassops.permit/v1`.
-3. `allow` is true.
-4. It has not expired.
-5. The target name matches.
-6. The target Id matches. Ids compare on their canonical form, so a 15 and an 18 character form of one Id are equal.
-7. The commit matches.
-8. The plan hash matches.
-9. The config hash matches.
+1. It is signed and has a `change_set_sha256`.
+2. The signature: the algorithm is `HMAC-SHA256`, the key id matches, and the value verifies.
+3. The schema is `glassops.permit/v1`.
+4. `allow` is true.
+5. It has not expired.
+6. Its lifetime is sound: `issued_at` is set and not more than 5 minutes ahead of this clock, `expires_at` is after `issued_at`, and the lifetime is no longer than `policy.permit_ttl`.
+7. The target name matches.
+8. The target Id matches. Ids compare on their canonical form, so a 15 and an 18 character form of one Id are equal.
+9. The commit matches.
+10. The plan hash matches.
+11. The config hash matches.
+12. The change set hash matches.
+13. For `deploy -- <command>` with provider exec, the PERMIT binds that exact command. A PERMIT with no `deploy_command_sha256`, or a different one, is refused.
 
 Checking the signature first means a forged or damaged PERMIT is rejected before any of its contents are trusted. `deploy` additionally compares the PERMIT against the deployed commit, which is the CI's commit, or `git rev-parse HEAD` when the CI reports none.
+
+After the PERMIT verifies and before it logs in, `deploy` checks the working tree. `git rev-parse HEAD` must be the PERMIT's commit, and `git status --porcelain --untracked-files=no` must be empty, so no tracked file is modified or staged. Untracked files, such as `.glassops` itself, are not looked at. The refusal is exit 2 and names the commit and up to 10 modified paths, never file contents. When git is missing or the directory is not a repository, `deploy` refuses too.
+
+`deploy --resume <job>` is accepted only when `.glassops/results/deploy.json` names that job, the same PERMIT Id and target, and records `deploy.timed_out` as true. Anything else is exit 2.
 
 ---
 
