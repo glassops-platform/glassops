@@ -9,7 +9,7 @@
 
 GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in a published release yet, so build from a checkout to use them.
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in a published release yet, so build from a checkout to use them. The same is true of the opt-in Sigstore signing, Rego rules, pull request comment and OpenTelemetry export, which are planned for v1.1.0.
 
 ---
 
@@ -53,6 +53,9 @@ Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every co
 - **Bitbucket and GitLab:** [`other-ci.md`](docs/guides/other-ci.md)
 - **Scratch org definitions and settings:** [`scratch-org-settings.md`](docs/guides/scratch-org-settings.md)
 - **The exec provider:** [`exec-provider.md`](docs/reference/exec-provider.md)
+- **Sigstore signing (opt-in):** [`sigstore-signing.md`](docs/reference/sigstore-signing.md)
+- **Rego rules (opt-in):** [`rego-rules.md`](docs/reference/rego-rules.md)
+- **Pull request comment and OpenTelemetry export (opt-in):** [`pr-comment-and-telemetry.md`](docs/reference/pr-comment-and-telemetry.md)
 - **Verify, coverage and YAML settings:** [`verify-and-coverage-settings.md`](docs/reference/verify-and-coverage-settings.md)
 - **Releases, images and licenses:** [`releases-and-licenses.md`](docs/reference/releases-and-licenses.md)
 - **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)

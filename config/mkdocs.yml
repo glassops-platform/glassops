@@ -103,6 +103,10 @@ nav:
           - "Configuration Reference": docs/reference/config.md
           - "PERMIT and Rules": docs/reference/permit-and-rules.md
           - "Exec Provider": docs/reference/exec-provider.md
+          - "Sigstore Signing": docs/reference/sigstore-signing.md
+          - "Rego Rules": docs/reference/rego-rules.md
+          - "PR Comment and OpenTelemetry": docs/reference/pr-comment-and-telemetry.md
+          - "Engine hardis (experimental)": docs/reference/hardis-engine.md
           - "Verify, Coverage and YAML Settings": docs/reference/verify-and-coverage-settings.md
           - "Releases, Images and Licenses": docs/reference/releases-and-licenses.md
           - "Platform Reference": docs/reference/platform-reference.md
