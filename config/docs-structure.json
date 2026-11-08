@@ -56,103 +56,133 @@
         "original": "[CLI reference](docs/reference/cli.md)",
         "text": "CLI reference",
         "url": "docs/reference/cli.md",
-        "lineNo": 18
+        "lineNo": 39
+      },
+      {
+        "original": "[configuration reference](docs/reference/config.md)",
+        "text": "configuration reference",
+        "url": "docs/reference/config.md",
+        "lineNo": 39
       },
       {
         "original": "[PERMIT and rules](docs/reference/permit-and-rules.md)",
         "text": "PERMIT and rules",
         "url": "docs/reference/permit-and-rules.md",
-        "lineNo": 18
+        "lineNo": 39
+      },
+      {
+        "original": "[Run a pipeline](docs/guides/run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "docs/guides/run-a-pipeline.md",
+        "lineNo": 39
       },
       {
         "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
         "text": "GitHub deploy guide",
         "url": "docs/guides/deploy-with-github.md",
-        "lineNo": 18
+        "lineNo": 39
       },
       {
         "original": "[`overview.md`](docs/architecture/overview.md)",
         "text": "`overview.md`",
         "url": "docs/architecture/overview.md",
-        "lineNo": 24
+        "lineNo": 45
       },
       {
         "original": "[`vision.md`](docs/vision.md)",
         "text": "`vision.md`",
         "url": "docs/vision.md",
-        "lineNo": 25
+        "lineNo": 46
       },
       {
         "original": "[`cli.md`](docs/reference/cli.md)",
         "text": "`cli.md`",
         "url": "docs/reference/cli.md",
-        "lineNo": 26
+        "lineNo": 47
+      },
+      {
+        "original": "[`config.md`](docs/reference/config.md)",
+        "text": "`config.md`",
+        "url": "docs/reference/config.md",
+        "lineNo": 48
       },
       {
         "original": "[`permit-and-rules.md`](docs/reference/permit-and-rules.md)",
         "text": "`permit-and-rules.md`",
         "url": "docs/reference/permit-and-rules.md",
-        "lineNo": 27
+        "lineNo": 49
+      },
+      {
+        "original": "[`run-a-pipeline.md`](docs/guides/run-a-pipeline.md)",
+        "text": "`run-a-pipeline.md`",
+        "url": "docs/guides/run-a-pipeline.md",
+        "lineNo": 50
       },
       {
         "original": "[`deploy-with-github.md`](docs/guides/deploy-with-github.md)",
         "text": "`deploy-with-github.md`",
         "url": "docs/guides/deploy-with-github.md",
-        "lineNo": 28
+        "lineNo": 51
       },
       {
         "original": "[`whitepaper.md`](docs/whitepaper.md)",
         "text": "`whitepaper.md`",
         "url": "docs/whitepaper.md",
-        "lineNo": 29
+        "lineNo": 52
       },
       {
         "original": "[earlier design decisions](docs/adr/README.md)",
         "text": "earlier design decisions",
         "url": "docs/adr/README.md",
-        "lineNo": 30
+        "lineNo": 53
       },
       {
-        "original": "[`examples/workflows/glassops-deploy.yml`](examples/workflows/glassops-deploy.yml)",
-        "text": "`examples/workflows/glassops-deploy.yml`",
-        "url": "examples/workflows/glassops-deploy.yml",
-        "lineNo": 46
+        "original": "[`examples/consumer/`](examples/consumer/)",
+        "text": "`examples/consumer/`",
+        "url": "examples/consumer/",
+        "lineNo": 71
+      },
+      {
+        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
+        "text": "GitHub deploy guide",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 71
       },
       {
         "original": "[`CONTRIBUTING.md`](CONTRIBUTING.md)",
         "text": "`CONTRIBUTING.md`",
         "url": "CONTRIBUTING.md",
-        "lineNo": 54
+        "lineNo": 79
       },
       {
         "original": "[LICENSE](LICENSE)",
         "text": "LICENSE",
         "url": "LICENSE",
-        "lineNo": 60
+        "lineNo": 85
       },
       {
         "original": "[docs/LICENSE](docs/LICENSE)",
         "text": "docs/LICENSE",
         "url": "docs/LICENSE",
-        "lineNo": 61
+        "lineNo": 86
       },
       {
         "original": "[GitHub Issues](https://github.com/glassops-platform/glassops/issues)",
         "text": "GitHub Issues",
         "url": "https://github.com/glassops-platform/glassops/issues",
-        "lineNo": 67
+        "lineNo": 92
       },
       {
         "original": "[@rdbumstead](https://github.com/rdbumstead)",
         "text": "@rdbumstead",
         "url": "https://github.com/rdbumstead",
-        "lineNo": 68
+        "lineNo": 93
       },
       {
         "original": "[@rdbumstead](https://github.com/rdbumstead)",
         "text": "@rdbumstead",
         "url": "https://github.com/rdbumstead",
-        "lineNo": 69
+        "lineNo": 94
       }
     ]
   },
@@ -162,15 +192,6 @@
       "permitted-uses",
       "restricted-uses",
       "commercial-licensing"
-    ],
-    "links": []
-  },
-  ".github/pull_request_template.md": {
-    "anchors": [
-      "description",
-      "type-of-change",
-      "how-has-this-been-tested",
-      "checklist"
     ],
     "links": []
   },
@@ -189,6 +210,15 @@
         "lineNo": 18
       }
     ]
+  },
+  ".github/pull_request_template.md": {
+    "anchors": [
+      "description",
+      "type-of-change",
+      "how-has-this-been-tested",
+      "checklist"
+    ],
+    "links": []
   },
   "docs/adr-index.md": {
     "anchors": [
@@ -477,26 +507,33 @@
   "examples/README.md": {
     "anchors": [
       "glassops-examples",
-      "current-examples"
+      "set-up-the-environment",
+      "other-commands-in-a-workflow"
     ],
     "links": [
       {
-        "original": "[Deployment Workflow](workflows/glassops-deploy.yml)",
-        "text": "Deployment Workflow",
-        "url": "workflows/glassops-deploy.yml",
+        "original": "[`glassops.yaml`](consumer/glassops.yaml)",
+        "text": "`glassops.yaml`",
+        "url": "consumer/glassops.yaml",
+        "lineNo": 6
+      },
+      {
+        "original": "[`.github/workflows/pr.yml`](consumer/.github/workflows/pr.yml)",
+        "text": "`.github/workflows/pr.yml`",
+        "url": "consumer/.github/workflows/pr.yml",
         "lineNo": 7
+      },
+      {
+        "original": "[`.github/workflows/deploy.yml`](consumer/.github/workflows/deploy.yml)",
+        "text": "`.github/workflows/deploy.yml`",
+        "url": "consumer/.github/workflows/deploy.yml",
+        "lineNo": 8
       },
       {
         "original": "[GitHub deploy guide](../docs/guides/deploy-with-github.md)",
         "text": "GitHub deploy guide",
         "url": "../docs/guides/deploy-with-github.md",
-        "lineNo": 7
-      },
-      {
-        "original": "[MegaLinter sketch](workflows/glassops-scanner-megalinter.yml)",
-        "text": "MegaLinter sketch",
-        "url": "workflows/glassops-scanner-megalinter.yml",
-        "lineNo": 8
+        "lineNo": 18
       }
     ]
   },
@@ -510,6 +547,17 @@
   },
   ".github/ISSUE_TEMPLATE/documentation_improvement.md": {
     "anchors": [],
+    "links": []
+  },
+  "docs/adr/002-github-execution-authority.md": {
+    "anchors": [
+      "adr-002-github-as-execution-authority",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
     "links": []
   },
   "docs/adr/001-system-api-primitive.md": {
@@ -527,31 +575,6 @@
   "docs/adr/003-additive-governance.md": {
     "anchors": [
       "adr-003-additive-governance-model",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/002-github-execution-authority.md": {
-    "anchors": [
-      "adr-002-github-as-execution-authority",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/005-control-plane-architecture.md": {
-    "anchors": [
-      "adr-005-control-plane-architecture-reference-console",
-      "overview",
-      "components",
-      "data-flow",
       "context",
       "decision",
       "consequences",
@@ -612,6 +635,31 @@
         "lineNo": 163
       }
     ]
+  },
+  "docs/adr/005-control-plane-architecture.md": {
+    "anchors": [
+      "adr-005-control-plane-architecture-reference-console",
+      "overview",
+      "components",
+      "data-flow",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/004-schema-contract-config.md": {
+    "anchors": [
+      "adr-004-schema-contract-over-yaml-parsing",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
   },
   "docs/adr/006-documentation-as-governed-artifact.md": {
     "anchors": [
@@ -691,6 +739,62 @@
         "text": "MkDocs",
         "url": "https://www.mkdocs.org/",
         "lineNo": 367
+      }
+    ]
+  },
+  "docs/adr/008-federated-documentation-structure.md": {
+    "anchors": [
+      "adr-008-federated-documentation-structure",
+      "context",
+      "decision",
+      "7-tier-hierarchy",
+      "rationale",
+      "why-federated-structure",
+      "why-federated",
+      "implementation",
+      "phase-1-core-restructure-completed",
+      "phase-2-large-file-splitting-future",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "design-principles",
+      "1-clear-ownership",
+      "2-no-duplication",
+      "3-protocol-supremacy",
+      "4-audience-first",
+      "alternatives-considered",
+      "alternative-1-keep-flat-structure",
+      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
+      "alternative-3-single-mega-document",
+      "alternative-4-wiki-style-with-heavy-cross-linking",
+      "validation-checklist",
+      "migration-path",
+      "future-enhancements",
+      "potential-additions",
+      "automation-opportunities",
+      "related-adrs",
+      "references",
+      "alternatives"
+    ],
+    "links": [
+      {
+        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
+        "text": "ADR-006: Documentation as Governed Artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 254
+      },
+      {
+        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
+        "text": "ADR-007: Protocol Supremacy Enforcement",
+        "url": "007-protocol-supremacy-enforcement.md",
+        "lineNo": 255
+      },
+      {
+        "original": "[Divio Documentation System](https://documentation.divio.com/)",
+        "text": "Divio Documentation System",
+        "url": "https://documentation.divio.com/",
+        "lineNo": 261
       }
     ]
   },
@@ -778,6 +882,21 @@
       }
     ]
   },
+  "docs/adr/011-monorepo-strategy.md": {
+    "anchors": [
+      "adr-011-monorepo-strategy-for-protocol-ecosystem",
+      "context",
+      "the-problem-with-polyrepos-separate-repos",
+      "decision",
+      "the-structure",
+      "the-publisher-pattern-for-distribution",
+      "rationale",
+      "strategic-extensibility",
+      "consequences",
+      "alternatives"
+    ],
+    "links": []
+  },
   "docs/adr/010-identity-contract.md": {
     "anchors": [
       "adr-010-identity-contract",
@@ -847,6 +966,69 @@
         "text": "NIST SP 800-63B: Digital Identity Guidelines",
         "url": "https://pages.nist.gov/800-63-3/sp800-63b.html",
         "lineNo": 485
+      }
+    ]
+  },
+  "docs/guides/run-a-pipeline.md": {
+    "anchors": [
+      "run-a-pipeline",
+      "run-it-locally",
+      "run-it-in-ci",
+      "the-default-pipelines",
+      "write-your-own"
+    ],
+    "links": [
+      {
+        "original": "[CLI reference](../reference/cli.md#glassops-run)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md#glassops-run",
+        "lineNo": 3
+      },
+      {
+        "original": "[Deploy with GitHub](deploy-with-github.md)",
+        "text": "Deploy with GitHub",
+        "url": "deploy-with-github.md",
+        "lineNo": 30
+      },
+      {
+        "original": "[Deploy with GitHub](deploy-with-github.md)",
+        "text": "Deploy with GitHub",
+        "url": "deploy-with-github.md",
+        "lineNo": 61
+      },
+      {
+        "original": "[`env create`](../reference/cli.md#glassops-env-create)",
+        "text": "`env create`",
+        "url": "../reference/cli.md#glassops-env-create",
+        "lineNo": 101
+      }
+    ]
+  },
+  "docs/architecture/overview.md": {
+    "anchors": [
+      "glassops-architecture-design",
+      "1-high-level-architecture",
+      "the-control-loop",
+      "component-breakdown",
+      "2-governance-flow-the-pipeline",
+      "3-security-model",
+      "confused-deputy-protection",
+      "secrets-management",
+      "4-failure-modes-recovery",
+      "5-directory-structure"
+    ],
+    "links": [
+      {
+        "original": "[CLI reference](../reference/cli.md)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md",
+        "lineNo": 24
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md",
+        "lineNo": 39
       }
     ]
   },
@@ -923,59 +1105,22 @@
       }
     ]
   },
-  "docs/adr/004-schema-contract-config.md": {
-    "anchors": [
-      "adr-004-schema-contract-over-yaml-parsing",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/architecture/overview.md": {
-    "anchors": [
-      "glassops-architecture-design",
-      "1-high-level-architecture",
-      "the-control-loop",
-      "component-breakdown",
-      "2-governance-flow-the-pipeline",
-      "3-security-model",
-      "confused-deputy-protection",
-      "secrets-management",
-      "4-failure-modes-recovery",
-      "5-directory-structure"
-    ],
-    "links": [
-      {
-        "original": "[CLI reference](../reference/cli.md)",
-        "text": "CLI reference",
-        "url": "../reference/cli.md",
-        "lineNo": 24
-      },
-      {
-        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
-        "text": "PERMIT and rules",
-        "url": "../reference/permit-and-rules.md",
-        "lineNo": 39
-      }
-    ]
-  },
   "docs/guides/deploy-with-github.md": {
     "anchors": [
       "deploy-with-github",
       "prerequisites",
-      "installation",
-      "usage",
+      "pull-requests",
+      "deploy",
+      "what-the-deploy-job-does",
       "how-the-steps-fit-together",
-      "notes"
+      "notes",
+      "other-ci-systems-and-single-commands"
     ],
     "links": [
       {
-        "original": "[end-to-end workflow](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
-        "text": "end-to-end workflow",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
+        "original": "[`examples/consumer/`](https://github.com/glassops-platform/glassops/tree/main/examples/consumer)",
+        "text": "`examples/consumer/`",
+        "url": "https://github.com/glassops-platform/glassops/tree/main/examples/consumer",
         "lineNo": 5
       },
       {
@@ -985,22 +1130,123 @@
         "lineNo": 5
       },
       {
-        "original": "[CLI reference](../reference/cli.md#authentication)",
-        "text": "CLI reference",
-        "url": "../reference/cli.md#authentication",
-        "lineNo": 11
+        "original": "[Run a pipeline](run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "run-a-pipeline.md",
+        "lineNo": 12
       },
       {
-        "original": "[`examples/workflows/glassops-deploy.yml`](https://github.com/glassops-platform/glassops/blob/main/examples/workflows/glassops-deploy.yml)",
-        "text": "`examples/workflows/glassops-deploy.yml`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/examples/workflows/glassops-deploy.yml",
-        "lineNo": 34
+        "original": "[configuration reference](../reference/config.md)",
+        "text": "configuration reference",
+        "url": "../reference/config.md",
+        "lineNo": 18
+      },
+      {
+        "original": "[Authentication](../reference/cli.md#authentication)",
+        "text": "Authentication",
+        "url": "../reference/cli.md#authentication",
+        "lineNo": 18
       },
       {
         "original": "[PERMIT and rules](../reference/permit-and-rules.md#separation_of_duties)",
         "text": "PERMIT and rules",
         "url": "../reference/permit-and-rules.md#separation_of_duties",
-        "lineNo": 129
+        "lineNo": 137
+      }
+    ]
+  },
+  "docs/reference/config.md": {
+    "anchors": [
+      "configuration-reference",
+      "top-level-keys",
+      "version-and-provider",
+      "targets",
+      "policy",
+      "salesforce",
+      "environments",
+      "test",
+      "check",
+      "analyze",
+      "pipelines"
+    ],
+    "links": [
+      {
+        "original": "[pipelines](../guides/run-a-pipeline.md#the-default-pipelines)",
+        "text": "pipelines",
+        "url": "../guides/run-a-pipeline.md#the-default-pipelines",
+        "lineNo": 3
+      },
+      {
+        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
+        "text": "`schemas/config.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
+        "lineNo": 3
+      },
+      {
+        "original": "[guard](cli.md#the-guard)",
+        "text": "guard",
+        "url": "cli.md#the-guard",
+        "lineNo": 49
+      },
+      {
+        "original": "[Authentication](cli.md#authentication)",
+        "text": "Authentication",
+        "url": "cli.md#authentication",
+        "lineNo": 52
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md#the-v1-rules)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md#the-v1-rules",
+        "lineNo": 69
+      },
+      {
+        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
+        "text": "validation binding",
+        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
+        "lineNo": 101
+      },
+      {
+        "original": "[the smart seed](cli.md#the-smart-seed)",
+        "text": "the smart seed",
+        "url": "cli.md#the-smart-seed",
+        "lineNo": 102
+      },
+      {
+        "original": "[`env create`](cli.md#glassops-env-create)",
+        "text": "`env create`",
+        "url": "cli.md#glassops-env-create",
+        "lineNo": 114
+      },
+      {
+        "original": "[`glassops test`](cli.md#glassops-test)",
+        "text": "`glassops test`",
+        "url": "cli.md#glassops-test",
+        "lineNo": 134
+      },
+      {
+        "original": "[`glassops check`](cli.md#glassops-check)",
+        "text": "`glassops check`",
+        "url": "cli.md#glassops-check",
+        "lineNo": 150
+      },
+      {
+        "original": "[`glassops analyze`](cli.md#glassops-analyze)",
+        "text": "`glassops analyze`",
+        "url": "cli.md#glassops-analyze",
+        "lineNo": 161
+      },
+      {
+        "original": "[`glassops run`](cli.md#glassops-run)",
+        "text": "`glassops run`",
+        "url": "cli.md#glassops-run",
+        "lineNo": 178
+      },
+      {
+        "original": "[Run a pipeline](../guides/run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "../guides/run-a-pipeline.md",
+        "lineNo": 191
       }
     ]
   },
@@ -1018,6 +1264,14 @@
       "glassops-permit-verify",
       "glassops-deploy",
       "glassops-report",
+      "glassops-env-create",
+      "glassops-env-delete",
+      "glassops-env-sweep",
+      "glassops-test",
+      "glassops-run",
+      "glassops-check",
+      "glassops-analyze",
+      "the-smart-seed",
       "authentication",
       "isolated-salesforce-cli-state",
       "the-guard",
@@ -1035,79 +1289,97 @@
         "original": "[PERMIT and rules](permit-and-rules.md#the-signing-key)",
         "text": "PERMIT and rules",
         "url": "permit-and-rules.md#the-signing-key",
-        "lineNo": 42
+        "lineNo": 48
       },
       {
         "original": "[guard](#the-guard)",
         "text": "guard",
         "url": "#the-guard",
-        "lineNo": 46
+        "lineNo": 52
       },
       {
         "original": "[Validate is check-only](#validate-is-check-only)",
         "text": "Validate is check-only",
         "url": "#validate-is-check-only",
-        "lineNo": 77
+        "lineNo": 83
       },
       {
         "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
         "text": "validation binding",
         "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
-        "lineNo": 86
+        "lineNo": 92
       },
       {
         "original": "[guard](#the-guard)",
         "text": "guard",
         "url": "#the-guard",
-        "lineNo": 90
+        "lineNo": 96
       },
       {
         "original": "[PERMIT and rules](permit-and-rules.md)",
         "text": "PERMIT and rules",
         "url": "permit-and-rules.md",
-        "lineNo": 90
+        "lineNo": 96
       },
       {
         "original": "[PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check)",
         "text": "PERMIT and rules",
         "url": "permit-and-rules.md#what-permit-verify-and-deploy-check",
-        "lineNo": 111
+        "lineNo": 117
       },
       {
         "original": "[guard](#the-guard)",
         "text": "guard",
         "url": "#the-guard",
-        "lineNo": 131
+        "lineNo": 137
       },
       {
         "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
         "text": "validation binding",
         "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
-        "lineNo": 131
+        "lineNo": 137
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 170
+      },
+      {
+        "original": "[Run a pipeline](../guides/run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "../guides/run-a-pipeline.md",
+        "lineNo": 248
       },
       {
         "original": "[`schemas/result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/result.json)",
         "text": "`schemas/result.json`",
         "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/result.json",
-        "lineNo": 233
+        "lineNo": 400
+      },
+      {
+        "original": "[configuration reference](config.md)",
+        "text": "configuration reference",
+        "url": "config.md",
+        "lineNo": 425
       },
       {
         "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
         "text": "`schemas/config.json`",
         "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
-        "lineNo": 258
+        "lineNo": 425
       },
       {
         "original": "[`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
         "text": "`cli-e2e.yml`",
         "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
-        "lineNo": 286
+        "lineNo": 431
       },
       {
         "original": "[`scripts/e2e`](https://github.com/glassops-platform/glassops/tree/main/scripts/e2e)",
         "text": "`scripts/e2e`",
         "url": "https://github.com/glassops-platform/glassops/tree/main/scripts/e2e",
-        "lineNo": 286
+        "lineNo": 431
       }
     ]
   },
@@ -1135,6 +1407,12 @@
         "lineNo": 5
       }
     ]
+  },
+  "testdata/sfdx/README.md": {
+    "anchors": [
+      "test-salesforce-project"
+    ],
+    "links": []
   },
   "docs/reference/permit-and-rules.md": {
     "anchors": [
@@ -1177,86 +1455,15 @@
       }
     ]
   },
-  "testdata/sfdx/README.md": {
-    "anchors": [
-      "test-salesforce-project"
-    ],
-    "links": []
-  },
-  "docs/adr/011-monorepo-strategy.md": {
-    "anchors": [
-      "adr-011-monorepo-strategy-for-protocol-ecosystem",
-      "context",
-      "the-problem-with-polyrepos-separate-repos",
-      "decision",
-      "the-structure",
-      "the-publisher-pattern-for-distribution",
-      "rationale",
-      "strategic-extensibility",
-      "consequences",
-      "alternatives"
-    ],
-    "links": []
-  },
-  "docs/adr/008-federated-documentation-structure.md": {
-    "anchors": [
-      "adr-008-federated-documentation-structure",
-      "context",
-      "decision",
-      "7-tier-hierarchy",
-      "rationale",
-      "why-federated-structure",
-      "why-federated",
-      "implementation",
-      "phase-1-core-restructure-completed",
-      "phase-2-large-file-splitting-future",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "design-principles",
-      "1-clear-ownership",
-      "2-no-duplication",
-      "3-protocol-supremacy",
-      "4-audience-first",
-      "alternatives-considered",
-      "alternative-1-keep-flat-structure",
-      "alternative-2-split-by-topic-eg-governance-deployment-monitoring",
-      "alternative-3-single-mega-document",
-      "alternative-4-wiki-style-with-heavy-cross-linking",
-      "validation-checklist",
-      "migration-path",
-      "future-enhancements",
-      "potential-additions",
-      "automation-opportunities",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
-        "text": "ADR-006: Documentation as Governed Artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 254
-      },
-      {
-        "original": "[ADR-007: Protocol Supremacy Enforcement](007-protocol-supremacy-enforcement.md)",
-        "text": "ADR-007: Protocol Supremacy Enforcement",
-        "url": "007-protocol-supremacy-enforcement.md",
-        "lineNo": 255
-      },
-      {
-        "original": "[Divio Documentation System](https://documentation.divio.com/)",
-        "text": "Divio Documentation System",
-        "url": "https://documentation.divio.com/",
-        "lineNo": 261
-      }
-    ]
-  },
   "internal/ci/testdata/github/README.md": {
     "anchors": [
       "github-api-fixtures"
+    ],
+    "links": []
+  },
+  "internal/core/report/testdata/summary-pass.md": {
+    "anchors": [
+      "glassops-report-pass"
     ],
     "links": []
   },
@@ -1271,17 +1478,12 @@
     ],
     "links": []
   },
-  "internal/core/report/testdata/summary-pass.md": {
-    "anchors": [
-      "glassops-report-pass"
-    ],
-    "links": []
-  },
   "internal/providers/salesforce/testdata/README.md": {
     "anchors": [
       "salesforce-provider-fixtures",
       "sf",
       "sgd",
+      "codeanalyzer",
       "facts-the-fixtures-show"
     ],
     "links": []

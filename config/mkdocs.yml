@@ -100,9 +100,11 @@ nav:
 
     - Reference:
           - "CLI Reference": docs/reference/cli.md
+          - "Configuration Reference": docs/reference/config.md
           - "PERMIT and Rules": docs/reference/permit-and-rules.md
           - "Platform Reference": docs/reference/platform-reference.md
           - "Examples": examples/README.md
 
     - Guides:
+          - "Run a Pipeline": docs/guides/run-a-pipeline.md
           - "Deploy with GitHub": docs/guides/deploy-with-github.md
