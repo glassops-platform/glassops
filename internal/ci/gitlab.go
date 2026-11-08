@@ -3,6 +3,7 @@ package ci
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 // GitLab is the GitLab CI layer. It reads the CI_* predefined variables, appends outputs to a
@@ -66,8 +67,10 @@ func (g *GitLab) SetOutput(name, value string) error {
 	return writeOutput(fileTarget(g.env, OutputFileEnv, DefaultOutputFile, g.dir), name, value)
 }
 
-// Annotate prints a plain log line.
+// Annotate prints a plain log line. A line break in msg is written as \r or \n, so a
+// message never starts a line of its own.
 func (g *GitLab) Annotate(level Level, msg string) {
+	msg = strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(msg)
 	fmt.Fprintf(g.out, "%s: %s\n", level, msg)
 }
 
