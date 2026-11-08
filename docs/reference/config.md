@@ -50,7 +50,7 @@ One entry per org. The key is the target name that `--target` takes.
 
 | Field | Meaning |
 |---|---|
-| `id` | The org Id the login must land on (the [guard](cli.md#the-guard)), or a `$VAR` holding it |
+| `id` | What the login must land on (the [guard](cli.md#the-guard)), or a `$VAR` holding it. For Salesforce it is an org Id, 15 or 18 characters. For provider `exec` it is a plain Id that your `exec.describe` prints: letters, digits and `. _ : / -`, starting with a letter or digit, compared exactly |
 | `tier` | A name that policy windows, rules and test levels key on. `prod`, `devhub` and `ephemeral` have fixed meaning in the guard |
 | `branch` | The git branch that deploys to this target. `plan --from auto` uses its merge base when the target has no deployed tag |
 | `auth` | The login. See [Authentication](cli.md#authentication) |

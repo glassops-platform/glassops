@@ -1,6 +1,6 @@
 # CLI Reference
 
-> **Early work.** v0.3.0 and v0.4.0 are published prereleases ([releases page](https://github.com/glassops-platform/glassops/releases)), and v1.0.0 is not out yet. v0.4.0 has every command here except `verify`. `verify`, provider `exec` and the Bitbucket and GitLab layers are in the repository and ship in the next release.
+> **Early work.** v0.3.0 and v0.4.0 are published prereleases and v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 `glassops` is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.
 
@@ -35,6 +35,7 @@
 - Writes `glassops.yaml` with commented stub targets and the default `pr` and `deploy` pipelines.
 - For GitHub, also writes `.github/workflows/glassops.yml`, which runs `glassops doctor` on full git history. Other CI systems are detected but get no CI file yet.
 - Never overwrites a file unless you pass `--force`.
+- Does not touch `.gitignore`. Add `.glassops/` to it yourself. That directory holds the plan, the PERMIT, the results and the deployed-tag bookkeeping, and none of it belongs in git. Run `git status` after your first command to see it appear.
 
 ### `glassops doctor`
 
@@ -76,6 +77,12 @@ Works out the change set between two git refs. It writes the provider's manifest
 | `--target` | | Target the plan is for, used by `--from auto` |
 
 With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
+
+On a laptop, outside a pull request, there is no base: `--from auto` without `--target` stops with "--from auto needs a target or a pull request base branch. Pass --from." For a first run, name the base yourself:
+
+```bash
+glassops plan --from HEAD~1
+```
 
 First deploy rule: with `--target` and `--from auto`, a target that has no `glassops/deployed/<target>` tag has never received a deploy from glassops. `plan` then plans the whole source instead of a delta, prints a notice, and records the facts `plan.first_deploy` and `plan.from_source: first-deploy`. A shallow clone is still an error.
 
@@ -138,7 +145,13 @@ Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
 ### `glassops deploy`
 
-Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A checkout with no remote called `origin` gets that warning too, never a failure.
+
+**The local tag stays.** The tag is moved in your checkout before the push, so it stays there when the push fails. A rerun of `plan --target <target>` then starts from the deployed commit and finds nothing to deploy. If the push did not happen and you want the plan to start from the old base again, delete the local tag:
+
+```bash
+git tag -d glassops/deployed/prod
+``` A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -478,11 +491,24 @@ The workflow [`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/
 
 ## Install
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. The latest prerelease image is `ghcr.io/glassops-platform/glassops:0.4.0`. It adds Node 22, the Salesforce CLI and `sfdx-git-delta`. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in v0.4.0. To use them now, build from a checkout with Go 1.27.3 or later:
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. **`verify`, provider `exec`, the Bitbucket and GitLab layers and the other changes listed under "Not yet in a release" in [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) are not in a published release yet.** To use them, build from this repository.
+
+| Route | What you get | What you need |
+|---|---|---|
+| Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
+| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.3 or later, and the host tools below |
+| `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
+
+A built Linux binary also runs inside the published image. Mount it over the image's own:
 
 ```bash
-go build -o glassops ./cmd/glassops
-./glassops doctor
+docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:0.4.0 doctor
 ```
 
-Or build the container image with `docker build -t glassops .` from the repository root. The `analyze` command needs the separate `glassops-analyzer` image, which adds Java and the Code Analyzer plugin. Build it with `docker build -f Dockerfile.analyzer -t glassops-analyzer .`. Release tags, image tags, the license scan and the third party notices are described in [Releases, images and licenses](releases-and-licenses.md).
+**Host prerequisites for `go build`.** `git` always. For a Salesforce project also the Salesforce CLI `sf` and its `sfdx-git-delta` plugin:
+
+```bash
+sf plugins install sfdx-git-delta
+```
+
+Provider `exec` needs only `git` and `sh`. `./glassops doctor` checks the tools and says which one is missing. Release tags, image tags, the license scan and the third party notices are described in [Releases, images and licenses](releases-and-licenses.md).
