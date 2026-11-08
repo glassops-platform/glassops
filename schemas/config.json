@@ -43,11 +43,12 @@
     "name": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
     "envRef": { "type": "string", "pattern": "^\\$[A-Z_][A-Z0-9_]*$" },
     "orgId": { "type": "string", "pattern": "^00D[a-zA-Z0-9]{12}([a-zA-Z0-9]{3})?$" },
+    "targetId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$" },
     "target": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }] },
+        "id": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }, { "$ref": "#/$defs/targetId" }] },
         "tier": { "$ref": "#/$defs/name" },
         "branch": { "type": "string", "minLength": 1 },
         "auth": { "$ref": "#/$defs/auth" }
