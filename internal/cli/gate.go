@@ -25,6 +25,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 // sodRule is the rule whose result fills the PERMIT's separation_of_duties block.
@@ -373,6 +374,10 @@ func (r *gateRun) targetFacts(ctx context.Context, t providers.Target, noConnect
 		case errors.As(err, &mm):
 			check = policy.Result{Rule: "guard", Outcome: policy.Fail, Detail: err.Error()}
 			r.evidenceFail("target", "the guard refused the target")
+		case errors.Is(err, execprovider.ErrNoDescribe):
+			// A provider exec target below prod with no exec.describe cannot report its Id,
+			// so the configured Id and kind are recorded, as --no-connect does.
+			check = policy.Result{Rule: "guard", Outcome: policy.Skipped, Detail: fmt.Sprintf("tier %s: %s, so the configured Id and kind are recorded", t.Tier, execprovider.ErrNoDescribe)}
 		case err != nil:
 			check = policy.Result{Rule: "guard", Outcome: policy.Fail, Detail: "the guard could not run"}
 			r.evidenceFail("target", err.Error())
