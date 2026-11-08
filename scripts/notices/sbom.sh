@@ -13,4 +13,6 @@ if docker image inspect "$image" >/dev/null 2>&1; then
 else
   source="registry:$image"
 fi
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$SYFT_IMAGE" "$source" -o syft-json -q > "$out"
+# Go binaries carry no license metadata, so syft looks each module's license up from the Go
+# module proxy. That needs network access to proxy.golang.org.
+docker run --rm -e SYFT_GOLANG_SEARCH_REMOTE_LICENSES=true -v /var/run/docker.sock:/var/run/docker.sock "$SYFT_IMAGE" "$source" -o syft-json -q > "$out"

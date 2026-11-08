@@ -10,3 +10,8 @@ go-module:gopkg.in/yaml.v3 = MIT AND Apache-2.0
 # The Salesforce CLI package.json declares Apache-2.0 (read in the image), but syft finds no
 # license for the root package.
 npm:@salesforce/cli = Apache-2.0
+# The cosign and opa binaries are copied in from their official images. Their own main modules
+# have no license in the SBOM. Read from each GitHub repository's license on 2026-11-08.
+go-module:github.com/sigstore/cosign/v2 = Apache-2.0
+go-module:github.com/open-policy-agent/opa = Apache-2.0
+go-module:github.com/alibabacloud-go/cr-20160607 = Apache-2.0
