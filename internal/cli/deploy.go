@@ -17,6 +17,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 type deployOptions struct {
@@ -25,6 +26,8 @@ type deployOptions struct {
 	permitPath string
 	wait       time.Duration
 	resumeID   string
+	// command is what follows --, which replaces exec.deploy for provider exec.
+	command []string
 }
 
 // permitFuncs is how deploy reads and checks a PERMIT. Tests replace it.
@@ -37,7 +40,7 @@ var permitFuncs = struct {
 func newDeployCommand(app *App, g *globals) *cobra.Command {
 	o := &deployOptions{}
 	cmd := &cobra.Command{
-		Use:   "deploy",
+		Use:   "deploy [-- command...]",
 		Short: "Deploy the plan to a target under a verified PERMIT",
 		Long: "deploy verifies the PERMIT before it logs in, then runs the org Id and tier guard\n" +
 			"and deploys the change set in .glassops/plan.json. When the PERMIT holds a\n" +
@@ -45,9 +48,18 @@ func newDeployCommand(app *App, g *globals) *cobra.Command {
 			"Success is read from the target's result body. When --wait runs out, the result\n" +
 			"keeps the job Id, and --resume picks the same deploy up again. After a deploy\n" +
 			"succeeds, the git tag glassops/deployed/<target> is moved to the deployed commit\n" +
-			"and pushed. A failed push is a warning, because the deploy has already happened.",
-		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+			"and pushed. A failed push is a warning, because the deploy has already happened.\n" +
+			"With provider exec, a command after -- runs instead of exec.deploy, with each\n" +
+			"argument passed as one word. The PERMIT binds the config, not this command, and the\n" +
+			"result records exec.deploy_override.",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && cmd.ArgsLenAtDash() != 0 {
+				return fmt.Errorf("deploy takes no arguments, except a command after --")
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			o.command = args
 			return app.deploy(cmd.Context(), g, o)
 		},
 	}
@@ -71,6 +83,13 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	proj, err := app.loadProject(g)
 	if err != nil {
 		return err
+	}
+	if len(o.command) > 0 {
+		ov, ok := proj.provider.(deployOverrider)
+		if !ok {
+			return &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("a command after -- needs provider exec, and this project uses %s", proj.provider.Name())}
+		}
+		ov.OverrideDeploy(shellJoin(o.command))
 	}
 	res := run.New("deploy", app.Now)
 	res.Provider = proj.provider.Name()
@@ -154,7 +173,12 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 		}
 	}
 
-	sess, _, err := app.connect(ctx, proj.provider, t)
+	permitPath := o.permitPath
+	if permitPath == "" {
+		permitPath = filepath.Join(g.dir, ".glassops", "permit.json")
+	}
+	app.bindWorkspace(proj.provider, g, planPath, permitPath)
+	sess, err := app.deployConnect(ctx, res, proj.provider, t)
 	if err != nil {
 		return stop("target", err)
 	}
@@ -190,6 +214,50 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 
 	app.moveDeployedTag(res, c, g, t.Name, commit)
 	return app.finish(res, c, g)
+}
+
+// deployOverrider is implemented by providers whose deploy command can be replaced from the
+// command line, which is provider exec.
+type deployOverrider interface {
+	OverrideDeploy(command string)
+}
+
+// deployConnect logs in and runs the guard. A provider exec target whose tier does not need
+// exec.describe has no way to report its Id, so the guard is recorded as skipped with the
+// reason, as gate --no-connect does. Every other describe or guard failure stops the deploy.
+func (app *App) deployConnect(ctx context.Context, res *run.Result, p providers.Provider, t providers.Target) (providers.Session, error) {
+	sess, _, err := app.connect(ctx, p, t)
+	if err == nil {
+		return sess, nil
+	}
+	if !errors.Is(err, execprovider.ErrNoDescribe) {
+		return nil, err
+	}
+	sess, aerr := p.Authenticate(ctx, t)
+	if aerr != nil {
+		return nil, fmt.Errorf("%w: target %s: %w", ErrLogin, t.Name, aerr)
+	}
+	res.AddCheck("guard", run.StatusSkipped, fmt.Sprintf("target %s, tier %s: %s", t.Name, t.Tier, execprovider.ErrNoDescribe))
+	res.Facts["deploy.guard"] = "skipped"
+	return sess, nil
+}
+
+// shellJoin quotes each argument for sh, so the command runs exactly the words given.
+func shellJoin(args []string) string {
+	quoted := make([]string, len(args))
+	for i, a := range args {
+		quoted[i] = shellQuote(a)
+	}
+	return strings.Join(quoted, " ")
+}
+
+// shellQuote leaves a word of plain characters as it is and puts anything else in single
+// quotes, with each single quote written as '"'"'.
+func shellQuote(s string) string {
+	if s != "" && strings.Trim(s, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@%+=:,./-") == "" {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'"
 }
 
 // verifyPermit reads the PERMIT and checks it against want with the verifier
