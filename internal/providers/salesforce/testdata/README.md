@@ -91,3 +91,28 @@ with three low severity violations.
 - `ActiveScratchOrg` has no `Status` field. Its `ScratchOrg` is the 15-character org Id.
 - Code Analyzer exits 0 when it finds violations. Only `--severity-threshold` changes the exit
   code.
+
+## `sf/`, verify and timeout captures
+
+Captured with `sf` 2.156.8 against a one-day Developer Edition scratch org, from a project with
+`Greeter`, `GreeterTest`, a class no test touches (`Orphan`), a slow test class (`SlowTest`) and an
+autolaunched Flow (`Glassops_Probe`). Scrubbed the same way as the files above.
+
+| File | Command |
+|---|---|
+| `deploy-start-coverage-fail.json`, `deploy-report-coverage-fail.json` | `sf project deploy start --test-level RunLocalTests` with `Orphan` in the deploy. Exit 1, `Failed`, `numberComponentErrors` 0, and every component still listed in `componentSuccesses`. The reason is only in `runTestResult.codeCoverageWarnings`: org-wide coverage 50%, 75% required. Nothing was deployed |
+| `tooling-deployrequest-coverage-fail.json` | Tooling `DeployRequest` by Id for that deploy: `Status` Failed, `NumberComponentsDeployed` 4 of 4 |
+| `deploy-start-flow-pass.json`, `deploy-report-flow-pass.json` | the same without `Orphan`. Exit 0, `Succeeded`, 3 of 3, one test |
+| `tooling-deployrequest-pass.json` | Tooling `DeployRequest` by Id: `Status`, `CheckOnly`, `NumberComponentsDeployed`, `NumberComponentsTotal`, `NumberComponentErrors`, `NumberTestsCompleted`, `NumberTestErrors`, `NumberTestsTotal`, `RunTestsEnabled`, `StartDate`, `CompletedDate`, `CreatedById` |
+| `tooling-flowdefinition-active.json`, `tooling-flow-active.json` | Tooling `FlowDefinition` (`ActiveVersionId`, `LatestVersionId`) and `Flow` (`VersionNumber`, `Status`, `LastModifiedDate`, `DefinitionId`) after the Flow deployed as Active. Both version Ids are the same |
+| `deploy-start-flow-draft.json` | the same Flow deployed again with `<status>Draft</status>`. Exit 0, `Succeeded` |
+| `tooling-flowdefinition-draft.json`, `tooling-flow-draft.json` | after that deploy. `ActiveVersionId` is still version 1, `LatestVersionId` is the new version 2 with `Status` Draft. A deploy can succeed and leave the deployed Flow inactive |
+| `deploy-start-foreign.json`, `tooling-deployrequest-window.json` | a second deploy (`Orphan`, NoTestRun), then Tooling `DeployRequest` filtered on `CreatedDate` from the start of the window. Four deploys, ordered by `CreatedDate` |
+| `apex-test-with-orphan.json` | `sf apex run test --code-coverage` with `Orphan` deployed. The per-class list leaves `Orphan` out |
+| `tooling-coverage-aggregate.json` | Tooling `ApexCodeCoverageAggregate` after that run. It lists `Orphan` with `NumLinesCovered` 0 and `NumLinesUncovered` 2. The aggregate catches the class the test output leaves out |
+| `tooling-classes-without-aggregate.json` | Tooling `ApexClass` with no aggregate row. Only the test class |
+| `deploy-start-timeout.json` | `sf project deploy start --wait 1` with tests that take longer. Exit 1, `ClientTimeoutError`, and the job Id only in `data.id` |
+| `deploy-report-inprogress.json` | `sf project deploy report --job-id <id>` right after. Exit 0, `InProgress`, `done` false, 9 of 12 tests |
+| `deploy-report-after-timeout-done.json` | the same report after the deploy finished. `Succeeded`, 12 tests |
+
+Also seen, not saved: `sf project deploy resume` refuses `--target-org` ("Nonexistent flag").

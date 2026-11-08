@@ -1,0 +1,42 @@
+{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "ApexCodeCoverageAggregate",
+          "url": "/services/data/v68.0/tooling/sobjects/ApexCodeCoverageAggregate/715000000000001AAA"
+        },
+        "ApexClassOrTriggerId": "01p000000000002AAA",
+        "ApexClassOrTrigger": {
+          "attributes": {
+            "type": "Name",
+            "url": "/services/data/v68.0/tooling/sobjects/ApexClass/01p000000000002AAA"
+          },
+          "Name": "Greeter"
+        },
+        "NumLinesCovered": 2,
+        "NumLinesUncovered": 0
+      },
+      {
+        "attributes": {
+          "type": "ApexCodeCoverageAggregate",
+          "url": "/services/data/v68.0/tooling/sobjects/ApexCodeCoverageAggregate/715000000000002AAA"
+        },
+        "ApexClassOrTriggerId": "01p000000000007AAA",
+        "ApexClassOrTrigger": {
+          "attributes": {
+            "type": "Name",
+            "url": "/services/data/v68.0/tooling/sobjects/ApexClass/01p000000000007AAA"
+          },
+          "Name": "Orphan"
+        },
+        "NumLinesCovered": 0,
+        "NumLinesUncovered": 2
+      }
+    ],
+    "totalSize": 2,
+    "done": true
+  },
+  "warnings": []
+}

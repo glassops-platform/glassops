@@ -1,0 +1,14 @@
+{
+  "name": "ClientTimeoutError",
+  "message": "The command has timed out, although the deployment is still running. Use \"sf project deploy resume\" to resume watching the deployment.",
+  "exitCode": 1,
+  "context": "DeployMetadata",
+  "data": {
+    "id": "0Af000000000001AAA"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "ClientTimeoutError",
+  "status": 1,
+  "commandName": "DeployMetadata"
+}

@@ -1,0 +1,223 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-11-08T18:32:28.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T18:32:26.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-11-08T18:32:28.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "id": "01p000000000004AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-11-08T18:32:28.000Z",
+          "deleted": false,
+          "fileName": "classes/GreeterTest.cls",
+          "fullName": "GreeterTest",
+          "id": "01p000000000005AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-11-08T18:32:28.000Z",
+          "deleted": false,
+          "fileName": "classes/Orphan.cls",
+          "fullName": "Orphan",
+          "id": "01p000000000006AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "Flow",
+          "created": true,
+          "createdDate": "2026-11-08T18:32:28.000Z",
+          "deleted": false,
+          "fileName": "flows/Glassops_Probe.flow",
+          "fullName": "Glassops_Probe",
+          "id": "301000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T18:32:28.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "codeCoverage": [
+          {
+            "id": "01p000000000006AAA",
+            "locationsNotCovered": [
+              {
+                "column": 0,
+                "line": 2,
+                "numExecutions": 0,
+                "time": -1
+              },
+              {
+                "column": 0,
+                "line": 3,
+                "numExecutions": 0,
+                "time": -1
+              }
+            ],
+            "name": "Orphan",
+            "namespace": null,
+            "numLocations": 2,
+            "numLocationsNotCovered": 2,
+            "type": "Class",
+            "dmlInfo": [],
+            "methodInfo": [],
+            "soqlInfo": [],
+            "soslInfo": []
+          },
+          {
+            "id": "01p000000000004AAA",
+            "locationsCovered": [
+              {
+                "column": "0",
+                "line": "2",
+                "numExecutions": "0",
+                "time": "-1.0"
+              },
+              {
+                "column": "0",
+                "line": "3",
+                "numExecutions": "0",
+                "time": "-1.0"
+              }
+            ],
+            "name": "Greeter",
+            "namespace": null,
+            "numLocations": 2,
+            "numLocationsNotCovered": 0,
+            "type": "Class",
+            "dmlInfo": [],
+            "locationsNotCovered": [],
+            "methodInfo": [],
+            "soqlInfo": [],
+            "soslInfo": []
+          }
+        ],
+        "codeCoverageWarnings": [
+          {
+            "id": "01p000000000006AAA",
+            "message": "Average test coverage across all Apex Classes and Triggers is 50%, at least 75% test coverage is required.",
+            "name": null,
+            "namespace": ""
+          }
+        ],
+        "flowCoverage": [
+          {
+            "elementsNotCovered": [
+              "set_greeting"
+            ],
+            "flowId": "301000000000002",
+            "flowName": "Glassops_Probe",
+            "flowNamespace": null,
+            "numElements": 1,
+            "numElementsNotCovered": 1,
+            "processType": "AutoLaunchedFlow"
+          }
+        ],
+        "numFailures": 0,
+        "numTestsRun": 1,
+        "successes": [
+          {
+            "id": "01p000000000005AAA",
+            "methodName": "greetsByName",
+            "name": "GreeterTest",
+            "namespace": null,
+            "time": 35
+          }
+        ],
+        "totalTime": 56,
+        "failures": [],
+        "flowCoverageWarnings": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000002AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T18:32:28.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 4,
+    "numberComponentsTotal": 4,
+    "numberFiles": "10",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 1,
+    "numberTestsTotal": 1,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-11-08T18:32:26.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": "2377",
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\Greeter.cls"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\Greeter.cls-meta.xml"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\GreeterTest.cls"
+      },
+      {
+        "fullName": "GreeterTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\GreeterTest.cls-meta.xml"
+      },
+      {
+        "fullName": "Orphan",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\Orphan.cls"
+      },
+      {
+        "fullName": "Orphan",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\Orphan.cls-meta.xml"
+      },
+      {
+        "fullName": "Glassops_Probe",
+        "type": "Flow",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\flows\\Glassops_Probe.flow-meta.xml"
+      }
+    ]
+  },
+  "warnings": []
+}
