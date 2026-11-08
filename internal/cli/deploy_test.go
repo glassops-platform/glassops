@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -8,7 +9,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,6 +22,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 const (
@@ -503,5 +507,435 @@ func TestDeployEmptyPlanSkipsLogin(t *testing.T) {
 	}
 	if r := h.result(t, "deploy"); r.Status != run.StatusEmpty {
 		t.Fatalf("status = %s", r.Status)
+	}
+}
+
+// The exec provider through the real commands, the real git, the real PERMIT signer and the
+// real verifier. Only the exec commands themselves are faked, by execShell.
+
+// execShell stands in for sh -c. It records each command with its environment and runs the
+// Go function registered for it. An unknown command cannot start.
+type execShell struct {
+	cmds map[string]func(env map[string]string) int
+	runs []execRun
+}
+
+type execRun struct {
+	command string
+	dir     string
+	env     map[string]string
+}
+
+func (s *execShell) run(_ context.Context, dir string, env []string, command string, stdout, _ io.Writer) (int, error) {
+	m := map[string]string{}
+	for _, kv := range env {
+		k, v, _ := strings.Cut(kv, "=")
+		m[k] = v
+	}
+	s.runs = append(s.runs, execRun{command: command, dir: dir, env: m})
+	c, ok := s.cmds[command]
+	if !ok {
+		return -1, errors.New("cannot start")
+	}
+	if command == "./describe.sh" {
+		_, _ = io.WriteString(stdout, m["DESCRIBE_OUT"])
+	}
+	return c(m), nil
+}
+
+func (s *execShell) ran(command string) bool {
+	for _, r := range s.runs {
+		if r.command == command {
+			return true
+		}
+	}
+	return false
+}
+
+const execConfig = `version: 1
+provider: exec
+exec:
+  paths: [app]
+  deploy: ./deploy.sh
+targets:
+  qa:
+    id: $QA_TARGET_ID
+    tier: qa
+  prod:
+    id: $PROD_TARGET_ID
+    tier: prod
+`
+
+// execKey is a synthetic 32 byte key, base64 as GLASSOPS_PERMIT_KEY holds it.
+var execKey = base64.StdEncoding.EncodeToString([]byte("synthetic-exec-key-32-bytes-long"))
+
+type execProject struct {
+	*harness
+	sh   *execShell
+	base string
+	head string
+}
+
+func gitIn(t *testing.T, dir string, args ...string) string {
+	t.Helper()
+	cmd := osexec.Command("git", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %s: %v: %s", strings.Join(args, " "), err, out)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// newExecProject makes a git repository with two commits. The second changes app/a.txt,
+// adds app/b.txt, deletes app/old.txt and changes other/c.txt, which is outside exec.paths.
+func newExecProject(t *testing.T, cfg string) *execProject {
+	t.Helper()
+	if _, err := osexec.LookPath("git"); err != nil {
+		t.Skip("git is not on the PATH")
+	}
+	h := newHarness(t)
+	p := &execProject{harness: h, sh: &execShell{cmds: map[string]func(map[string]string) int{}}}
+	gitIn(t, h.dir, "init", "-q", "-b", "main")
+	gitIn(t, h.dir, "config", "user.email", "test@example.invalid")
+	gitIn(t, h.dir, "config", "user.name", "test")
+	gitIn(t, h.dir, "config", "core.autocrlf", "false")
+	h.write(t, "app/a.txt", "one\n")
+	h.write(t, "app/old.txt", "old\n")
+	h.write(t, "other/c.txt", "one\n")
+	h.write(t, ".gitignore", ".glassops/\n")
+	gitIn(t, h.dir, "add", "-A")
+	gitIn(t, h.dir, "commit", "-q", "-m", "one")
+	p.base = gitIn(t, h.dir, "rev-parse", "HEAD")
+	h.write(t, "app/a.txt", "two\n")
+	h.write(t, "app/b.txt", "new\n")
+	h.write(t, "other/c.txt", "two\n")
+	if err := os.Remove(filepath.Join(h.dir, "app", "old.txt")); err != nil {
+		t.Fatal(err)
+	}
+	h.write(t, "glassops.yaml", cfg)
+	gitIn(t, h.dir, "add", "-A")
+	gitIn(t, h.dir, "commit", "-q", "-m", "two")
+	p.head = gitIn(t, h.dir, "rev-parse", "HEAD")
+
+	h.app.Run = func(dir, name string, args ...string) ([]byte, error) {
+		// The deployed tag push has no remote to go to, which deploy reports as a warning.
+		cmd := osexec.Command(name, args...)
+		cmd.Dir = dir
+		return cmd.Output()
+	}
+	realGit := func(ctx context.Context, dir string, args ...string) ([]byte, error) {
+		cmd := osexec.CommandContext(ctx, "git", args...)
+		cmd.Dir = dir
+		return cmd.Output()
+	}
+	base := []string{"PATH=/bin", permit.KeyEnv + "=" + execKey, "TOOL_TOKEN=tool"}
+	h.app.Providers = providers.Registry{execprovider.NewWithRunners(p.sh.run, realGit, base)}
+	h.env[permit.KeyEnv] = execKey
+	// schemas/config.json takes only a Salesforce org Id or a $VAR as a target id, so the
+	// exec targets' own Ids come in through the environment.
+	h.env["QA_TARGET_ID"] = "acct-qa"
+	h.env["PROD_TARGET_ID"] = "acct-prod"
+	return p
+}
+
+// execDash runs glassops with the harness flags before args, so a command after -- gets
+// nothing appended to it.
+func (h *harness) execDash(args ...string) int {
+	return Execute(h.app, append([]string{args[0], "--dir", h.dir, "--ci", "local"}, args[1:]...))
+}
+
+func (p *execProject) plan(t *testing.T) providers.ChangeSet {
+	t.Helper()
+	if code := p.exec("plan", "--from", p.base, "--to", p.head); code != exitcode.OK {
+		t.Fatalf("plan exit %d: %s", code, p.out.String())
+	}
+	cs, err := providers.ReadChangeSet(filepath.Join(p.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cs
+}
+
+// signPermit writes a PERMIT that allows cs to target, signed with the real HMAC signer.
+func (p *execProject) signPermit(t *testing.T, cs providers.ChangeSet, name, id, tier string) permit.Permit {
+	t.Helper()
+	loaded, err := config.Load(p.dir, "", "exec")
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := permit.ParseKey(execKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := p.app.Now()
+	pm := permit.Permit{
+		Schema: permit.Schema, ID: "synthetic-permit", Allow: true,
+		IssuedAt: now, ExpiresAt: now.Add(time.Hour),
+		Target: permit.Target{Name: name, ID: id, Tier: tier, Kind: string(providers.KindProduction)},
+		Commit: p.head, PlanSHA256: cs.SHA256, ConfigSHA256: loaded.SHA256(),
+	}
+	if err := permit.Sign(&pm, permit.NewHMAC(key)); err != nil {
+		t.Fatal(err)
+	}
+	if err := permit.Write(filepath.Join(p.dir, ".glassops", "permit.json"), pm); err != nil {
+		t.Fatal(err)
+	}
+	return pm
+}
+
+func TestExecGatePermitVerifyAndDeployWithTheRealSigner(t *testing.T) {
+	p := newExecProject(t, execConfig)
+	p.sh.cmds["./other.sh 'two words' plain"] = func(env map[string]string) int {
+		body := `{"schema":"glassops.engine-result/v1","step":"deploy","passed":true,"id":"dep-1","components_deployed":2,"facts":{"exec.tool":"other"}}`
+		_ = os.WriteFile(filepath.Join(env[execprovider.EnvResultsDir], "exec-deploy.json"), []byte(body), 0o644)
+		return 0
+	}
+	cs := p.plan(t)
+
+	code := p.exec("gate", "--target", "qa", "--no-connect")
+	pm, err := permit.Read(filepath.Join(p.dir, ".glassops", "permit.json"))
+	if err != nil {
+		t.Fatalf("gate exit %d, no PERMIT: %v: %s", code, err, p.out.String())
+	}
+	if pm.PlanSHA256 != cs.SHA256 || pm.Commit != p.head || pm.Target.ID != "acct-qa" || pm.Signature.Alg != permit.Algorithm {
+		t.Fatalf("PERMIT = %+v", pm)
+	}
+	if code != exitcode.OK || !pm.Allow {
+		t.Fatalf("gate exit %d, allow %v: %s", code, pm.Allow, p.out.String())
+	}
+	if code := p.exec("permit", "verify", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("permit verify exit %d: %s", code, p.out.String())
+	}
+
+	if code := p.execDash("deploy", "--target", "qa", "--", "./other.sh", "two words", "plain"); code != exitcode.OK {
+		t.Fatalf("deploy exit %d: %s", code, p.out.String())
+	}
+	if p.sh.ran("./deploy.sh") || !p.sh.ran("./other.sh 'two words' plain") {
+		t.Fatalf("runs = %+v", p.sh.runs)
+	}
+	env := p.sh.runs[len(p.sh.runs)-1].env
+	abs := func(parts ...string) string {
+		a, _ := filepath.Abs(filepath.Join(append([]string{p.dir}, parts...)...))
+		return a
+	}
+	for k, v := range map[string]string{
+		execprovider.EnvPermit:     abs(".glassops", "permit.json"),
+		execprovider.EnvPlan:       abs(".glassops", "plan.json"),
+		execprovider.EnvPlanDir:    abs(".glassops", "plan"),
+		execprovider.EnvTarget:     "qa",
+		execprovider.EnvTargetID:   "acct-qa",
+		execprovider.EnvResultsDir: abs(".glassops", "results"),
+		"TOOL_TOKEN":               "tool",
+	} {
+		if env[k] != v {
+			t.Errorf("%s = %q, want %q", k, env[k], v)
+		}
+	}
+	if _, ok := env[permit.KeyEnv]; ok {
+		t.Fatal("the PERMIT key reached the deploy command")
+	}
+	r := p.result(t, "deploy")
+	if r.Facts["deploy.id"] != "dep-1" || r.Facts["exec.result_file"] != true || r.Facts["exec.deploy_override"] != true ||
+		r.Facts["exec.tool"] != "other" || r.Facts["deploy.guard"] != "skipped" || r.Facts["deploy.permit_id"] != pm.ID {
+		t.Fatalf("facts = %v", r.Facts)
+	}
+	if checkStatus(r, "guard") != run.StatusSkipped || checkStatus(r, "deploy") != run.StatusPass {
+		t.Fatalf("checks = %+v", r.Checks)
+	}
+}
+
+func TestExecDeployWithoutResultFileUsesExitCode(t *testing.T) {
+	for _, c := range []struct {
+		exit int
+		want int
+	}{{0, exitcode.OK}, {5, exitcode.Fail}} {
+		t.Run(fmt.Sprint(c.exit), func(t *testing.T) {
+			p := newExecProject(t, execConfig)
+			p.sh.cmds["./deploy.sh"] = func(map[string]string) int { return c.exit }
+			p.signPermit(t, p.plan(t), "qa", "acct-qa", "qa")
+			if code := p.exec("deploy", "--target", "qa"); code != c.want {
+				t.Fatalf("deploy exit %d, want %d: %s", code, c.want, p.out.String())
+			}
+			r := p.result(t, "deploy")
+			if r.Facts["exec.result_file"] != false || r.Facts["exec.exit_code"] != float64(c.exit) || r.Facts["exec.deploy_override"] != false {
+				t.Fatalf("facts = %v", r.Facts)
+			}
+		})
+	}
+}
+
+func TestExecProdGuard(t *testing.T) {
+	withDescribe := strings.Replace(execConfig, "  deploy: ./deploy.sh\n", "  deploy: ./deploy.sh\n  describe: ./describe.sh\n", 1)
+	cases := []struct {
+		name     string
+		cfg      string
+		describe string
+		want     int
+		detail   string
+	}{
+		{"prod without describe refuses", execConfig, "", exitcode.Error, "exec.describe is required for a prod tier target"},
+		{"wrong describe id refuses", withDescribe, `{"id":"acct-other","kind":"production"}`, exitcode.Error, "Id does not match"},
+		{"prod on a sandbox refuses", withDescribe, `{"id":"acct-prod","kind":"sandbox"}`, exitcode.Error, "needs a production target"},
+		{"right describe deploys", withDescribe, `{"id":"acct-prod","kind":"production"}`, exitcode.OK, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := newExecProject(t, c.cfg)
+			p.sh.cmds["./deploy.sh"] = func(map[string]string) int { return 0 }
+			p.sh.cmds["./describe.sh"] = func(map[string]string) int { return 0 }
+			p.signPermit(t, p.plan(t), "prod", "acct-prod", "prod")
+			// The fake shell prints DESCRIBE_OUT for ./describe.sh. It comes from the
+			// provider's base environment, so it is set through a provider rebuilt here.
+			p.setDescribe(c.describe)
+			code := p.exec("deploy", "--target", "prod")
+			if code != c.want {
+				t.Fatalf("deploy exit %d, want %d: %s", code, c.want, p.out.String())
+			}
+			if c.want != exitcode.OK {
+				if p.sh.ran("./deploy.sh") {
+					t.Fatal("the deploy command ran on a refused target")
+				}
+				if !strings.Contains(p.out.String(), c.detail) {
+					t.Fatalf("output lacks %q: %s", c.detail, p.out.String())
+				}
+				return
+			}
+			if !p.sh.ran("./deploy.sh") {
+				t.Fatal("the deploy command did not run")
+			}
+			if checkStatus(p.result(t, "deploy"), "guard") != "" {
+				t.Fatal("the guard ran, so it must not be recorded as skipped")
+			}
+		})
+	}
+}
+
+// gate never binds a workspace, so exec.describe must still find the project dir through the
+// config. The guard runs in the project dir, never the process's working dir, and the PERMIT
+// records what the target reported.
+func TestExecGateRunsDescribeInTheProjectDir(t *testing.T) {
+	withDescribe := strings.Replace(execConfig, "  deploy: ./deploy.sh\n", "  deploy: ./deploy.sh\n  describe: ./describe.sh\n", 1)
+	for _, c := range []struct {
+		name     string
+		describe string
+		allow    bool
+	}{
+		{"right id", `{"id":"acct-prod","kind":"production"}`, true},
+		{"wrong id", `{"id":"acct-other","kind":"production"}`, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			p := newExecProject(t, withDescribe)
+			p.sh.cmds["./describe.sh"] = func(map[string]string) int { return 0 }
+			p.plan(t)
+			p.setDescribe(c.describe)
+			code := p.exec("gate", "--target", "prod")
+			pm, err := permit.Read(filepath.Join(p.dir, ".glassops", "permit.json"))
+			if err != nil {
+				t.Fatalf("gate exit %d, no PERMIT: %v: %s", code, err, p.out.String())
+			}
+			if pm.Allow != c.allow {
+				t.Fatalf("gate exit %d, allow %v, want %v: %s", code, pm.Allow, c.allow, p.out.String())
+			}
+			if !p.sh.ran("./describe.sh") {
+				t.Fatal("gate did not run exec.describe")
+			}
+			for _, r := range p.sh.runs {
+				if r.command == "./describe.sh" && r.dir != p.dir {
+					t.Fatalf("exec.describe ran in %q, want the project dir %q", r.dir, p.dir)
+				}
+			}
+			if c.allow && (pm.Target.ID != "acct-prod" || pm.Target.Kind != string(providers.KindProduction)) {
+				t.Fatalf("PERMIT target = %+v", pm.Target)
+			}
+		})
+	}
+}
+
+// setDescribe rebuilds the exec provider with DESCRIBE_OUT in its base environment.
+func (p *execProject) setDescribe(out string) {
+	realGit := func(ctx context.Context, dir string, args ...string) ([]byte, error) {
+		cmd := osexec.CommandContext(ctx, "git", args...)
+		cmd.Dir = dir
+		return cmd.Output()
+	}
+	base := []string{"PATH=/bin", "DESCRIBE_OUT=" + out}
+	p.app.Providers = providers.Registry{execprovider.NewWithRunners(p.sh.run, realGit, base)}
+}
+
+func TestExecTamperedPermitIsRefused(t *testing.T) {
+	cases := []struct {
+		name string
+		edit func(t *testing.T, path string)
+	}{
+		{"target edited", func(t *testing.T, path string) { editPermitJSON(t, path, `"acct-qa"`, `"acct-prod"`) }},
+		{"allow flipped", func(t *testing.T, path string) { editPermitJSON(t, path, `"allow": true`, `"allow": false`) }},
+		{"plan edited after gate", func(t *testing.T, path string) {
+			changes := filepath.Join(filepath.Dir(path), "plan", "changes.txt")
+			if err := os.WriteFile(changes, []byte("app/a.txt\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := newExecProject(t, execConfig)
+			p.sh.cmds["./deploy.sh"] = func(map[string]string) int { return 0 }
+			p.signPermit(t, p.plan(t), "qa", "acct-qa", "qa")
+			c.edit(t, filepath.Join(p.dir, ".glassops", "permit.json"))
+			if code := p.exec("permit", "verify", "--target", "qa"); code == exitcode.OK {
+				t.Fatalf("permit verify passed a tampered PERMIT: %s", p.out.String())
+			}
+			if code := p.exec("deploy", "--target", "qa"); code != exitcode.Error {
+				t.Fatalf("deploy exit %d, want 2: %s", code, p.out.String())
+			}
+			if p.sh.ran("./deploy.sh") {
+				t.Fatal("the deploy command ran under a tampered PERMIT")
+			}
+		})
+	}
+}
+
+func editPermitJSON(t *testing.T, path, from, to string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), from) {
+		t.Fatalf("PERMIT has no %s: %s", from, data)
+	}
+	if err := os.WriteFile(path, []byte(strings.Replace(string(data), from, to, 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDeployCommandNeedsExecAndADash(t *testing.T) {
+	h := newDeployHarness(t, deployConfig, nil)
+	if code := h.execDash("deploy", "--target", "qa", "--", "./x.sh"); code != exitcode.Error || h.authCalls != 0 {
+		t.Fatalf("exit %d, logins %d: %s", code, h.authCalls, h.out.String())
+	}
+	if !strings.Contains(h.out.String(), "needs provider exec") {
+		t.Fatalf("output: %s", h.out.String())
+	}
+	if code := h.run("deploy", "--target", "qa", "./x.sh"); code != exitcode.Error || h.authCalls != 0 {
+		t.Fatalf("an argument without -- must be refused: exit %d", code)
+	}
+}
+
+func TestShellQuote(t *testing.T) {
+	cases := map[string]string{
+		"./deploy.sh": "./deploy.sh",
+		"--env=prod":  "--env=prod",
+		"two words":   "'two words'",
+		"it's":        `'it'"'"'s'`,
+		"":            "''",
+		"$HOME":       "'$HOME'",
+		"a;b":         "'a;b'",
+	}
+	for in, want := range cases {
+		if got := shellQuote(in); got != want {
+			t.Errorf("shellQuote(%q) = %q, want %q", in, got, want)
+		}
 	}
 }
