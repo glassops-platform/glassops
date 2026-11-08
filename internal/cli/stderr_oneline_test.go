@@ -5,21 +5,20 @@ import (
 	"errors"
 	"strings"
 	"testing"
-
-	"github.com/glassops-platform/glassops/internal/core/exitcode"
 )
 
 // An error printed to stderr stays one line, so a message holding a line break and a
 // workflow command cannot start a new line that a CI runner would read as a command.
-func TestStderrErrorStaysOneLine(t *testing.T) {
-	msg := "bad target\n::warning title=x::forged"
-	for _, err := range []error{errors.New(msg), &exitcode.ExitError{Code: exitcode.Error, Err: errors.New(msg)}} {
+func TestPrintErrStaysOneLine(t *testing.T) {
+	for _, msg := range []string{"bad\n::warning title=x::forged", "bad\r\n::error::forged", "plain"} {
 		var buf bytes.Buffer
-		app := &App{Stderr: &buf}
-		finishCode(app, err)
+		printErr(&buf, errors.New(msg))
 		out := buf.String()
-		if strings.Count(out, "\n") != 1 || strings.Contains(out, "\n::") {
-			t.Fatalf("stderr is not one line: %q", out)
+		if strings.Count(out, "\n") != 1 || !strings.HasSuffix(out, "\n") {
+			t.Fatalf("%q: not exactly one line: %q", msg, out)
+		}
+		if strings.Contains(out, "\r") || !strings.HasPrefix(out, "glassops: ") {
+			t.Fatalf("%q: unexpected output %q", msg, out)
 		}
 	}
 }

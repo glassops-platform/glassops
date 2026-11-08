@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -109,11 +110,17 @@ func ExecuteContext(ctx context.Context, app *App, args []string) int {
 	var ee *exitcode.ExitError
 	if errors.As(err, &ee) {
 		if ee.Err != nil {
-			fmt.Fprintln(app.Stderr, "glassops:", oneLine(ee.Err.Error()))
+			printErr(app.Stderr, ee.Err)
 		}
 		return ee.Code
 	}
 	// Flag and argument errors from cobra are usage problems, not check failures.
-	fmt.Fprintln(app.Stderr, "glassops:", oneLine(err.Error()))
+	printErr(app.Stderr, err)
 	return exitcode.Error
+}
+
+// printErr prints err to w on one line, so a line break in an error message cannot start a
+// new line that a CI runner reads as a workflow command.
+func printErr(w io.Writer, err error) {
+	fmt.Fprintln(w, "glassops:", oneLine(err.Error()))
 }
