@@ -241,3 +241,103 @@ func TestTestNoneFoundWithoutMinimumIsEmpty(t *testing.T) {
 		t.Fatalf("result %+v", r)
 	}
 }
+
+// syntheticPlan is a Go literal plan.json holding only what test reads. It is not captured.
+const syntheticPlan = `{"schema":"glassops.plan/v1","provider":"salesforce","full":false,"dir":".glassops/plan","manifest":".glassops/plan/package.xml","destructive":[],"empty":false,"plan_sha256":"x","facts":{"salesforce.apex_classes":["Greeter","Orphan","GreeterTest"]}}`
+
+// T10: a changed class the run reports nothing for counts as 0% against class_min.
+func TestTestUncoveredChangedClassFailsClassMin(t *testing.T) {
+	h, _ := testHarness(t, "  coverage: { class_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", syntheticPlan)
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, want 1. output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if checkStatus(r, "coverage.class.Orphan") != run.StatusFail {
+		t.Fatalf("checks: %+v", r.Checks)
+	}
+	if checkStatus(r, "coverage.class.GreeterTest") != "" {
+		t.Fatal("a test class was counted")
+	}
+	if r.Facts["test.coverage.Orphan.percent"] != float64(0) {
+		t.Fatalf("facts: %v", r.Facts)
+	}
+}
+
+func TestTestUncoveredClassIgnoredWithoutClassMinOrPlan(t *testing.T) {
+	h, _ := testHarness(t, "  coverage: { org_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", syntheticPlan)
+	if code := h.exec("test", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("no class_min: exit %d, output:\n%s", code, h.out)
+	}
+	h2, _ := testHarness(t, "  coverage: { class_min: 50 }\n")
+	if code := h2.exec("test", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("no plan: exit %d, output:\n%s", code, h2.out)
+	}
+}
+
+func TestTestBrokenPlanFailsClosed(t *testing.T) {
+	h, _ := testHarness(t, "  coverage: { class_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", "{not json")
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if checkStatus(h.result(t, "test"), "coverage.plan") != run.StatusFail {
+		t.Fatal("no coverage.plan failure")
+	}
+}
+
+// untouchedResult is a run whose provider found Orphan untouched in the coverage aggregate. The
+// fact is the provider's shape, set here as a Go literal. The real aggregate and run output are
+// read by the provider tests from tooling-coverage-aggregate.json and apex-test-with-orphan.json.
+func untouchedResult(facts map[string]any) func(providers.Session, providers.TestRequest) (providers.TestResult, error) {
+	return func(providers.Session, providers.TestRequest) (providers.TestResult, error) {
+		r := goodTestResult()
+		r.Facts = facts
+		return r, nil
+	}
+}
+
+// T10 class_scope: with no plan.json, a class no test touches fails class_min.
+func TestTestUntouchedClassFailsWithoutPlan(t *testing.T) {
+	h, fp := testHarness(t, "  coverage: { class_min: 50 }\n")
+	fp.runTests = untouchedResult(map[string]any{"test.coverage_untouched": []string{"Orphan", "OrphanTest"}})
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if checkStatus(r, "coverage.class.Orphan") != run.StatusFail || checkStatus(r, "coverage.class.OrphanTest") != "" {
+		t.Fatalf("checks: %+v", r.Checks)
+	}
+}
+
+func TestTestClassScopeChangedIgnoresUntouchedOutsideThePlan(t *testing.T) {
+	h, fp := testHarness(t, "  coverage: { class_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", `{"schema":"glassops.plan/v1","provider":"salesforce","full":false,"dir":".glassops/plan","manifest":".glassops/plan/package.xml","destructive":[],"empty":false,"plan_sha256":"x","facts":{"salesforce.apex_classes":["Greeter"]}}`)
+	fp.runTests = untouchedResult(map[string]any{"test.coverage_untouched": []string{"Orphan"}})
+	if code := h.exec("test", "--target", "qa"); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+}
+
+func TestTestClassScopeAllCountsUntouchedOutsideThePlan(t *testing.T) {
+	h, fp := testHarness(t, "  coverage: { class_min: 50, class_scope: all }\n")
+	h.write(t, ".glassops/plan.json", `{"schema":"glassops.plan/v1","provider":"salesforce","full":false,"dir":".glassops/plan","manifest":".glassops/plan/package.xml","destructive":[],"empty":false,"plan_sha256":"x","facts":{"salesforce.apex_classes":["Greeter"]}}`)
+	fp.runTests = untouchedResult(map[string]any{"test.coverage_untouched": []string{"Orphan"}})
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	if checkStatus(h.result(t, "test"), "coverage.class.Orphan") != run.StatusFail {
+		t.Fatal("Orphan was not failed")
+	}
+}
+
+func TestTestUnreadableAggregateFailsClosed(t *testing.T) {
+	for _, scope := range []string{"", ", class_scope: all"} {
+		h, fp := testHarness(t, "  coverage: { class_min: 50"+scope+" }\n")
+		fp.runTests = untouchedResult(map[string]any{"test.coverage_unavailable": "boom"})
+		if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+			t.Fatalf("scope %q: exit %d, output:\n%s", scope, code, h.out)
+		}
+	}
+}

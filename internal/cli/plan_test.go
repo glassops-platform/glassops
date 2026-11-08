@@ -10,6 +10,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 const (
@@ -296,5 +297,58 @@ func TestPlanFullModeWithoutGitStillPlans(t *testing.T) {
 	}
 	if req.To != "" {
 		t.Fatalf("To = %q, want empty when HEAD cannot be read", req.To)
+	}
+}
+
+func TestExecPlanListsChangedFilesUnderPaths(t *testing.T) {
+	p := newExecProject(t, execConfig)
+	cs := p.plan(t)
+	if cs.Provider != "exec" || cs.Empty || cs.Manifest != ".glassops/plan/changes.txt" {
+		t.Fatalf("cs = %+v", cs)
+	}
+	changes, _ := os.ReadFile(filepath.Join(p.dir, ".glassops", "plan", "changes.txt"))
+	deleted, _ := os.ReadFile(filepath.Join(p.dir, ".glassops", "plan", "deleted.txt"))
+	if string(changes) != "app/a.txt\napp/b.txt\n" || string(deleted) != "app/old.txt\n" {
+		t.Fatalf("changes = %q, deleted = %q", changes, deleted)
+	}
+	r := p.result(t, "plan")
+	if r.Facts["exec.destructive_count"] != float64(1) || r.Facts["plan.sha256"] != cs.SHA256 {
+		t.Fatalf("facts = %v", r.Facts)
+	}
+	again := p.plan(t)
+	if again.SHA256 != cs.SHA256 {
+		t.Fatalf("the digest moved between two plans of the same refs: %s then %s", cs.SHA256, again.SHA256)
+	}
+}
+
+func TestExecPlanCommandGetsTheRunsDirs(t *testing.T) {
+	cfg := strings.Replace(execConfig, "  deploy: ./deploy.sh\n", "  deploy: ./deploy.sh\n  plan: ./plan.sh\n", 1)
+	p := newExecProject(t, cfg)
+	var seen map[string]string
+	p.sh.cmds["./plan.sh"] = func(env map[string]string) int {
+		seen = env
+		if err := os.WriteFile(filepath.Join(env[execprovider.EnvPlanDir], "bundle.json"), []byte("{}"), 0o644); err != nil {
+			return 1
+		}
+		return 0
+	}
+	results := filepath.Join(t.TempDir(), "results")
+	if code := Execute(p.app, []string{"plan", "--dir", p.dir, "--ci", "local", "--results-dir", results, "--from", p.base, "--to", p.head}); code != exitcode.OK {
+		t.Fatalf("plan exit %d: %s", code, p.out.String())
+	}
+	planDir, _ := filepath.Abs(filepath.Join(p.dir, ".glassops", "plan"))
+	if seen[execprovider.EnvResultsDir] != results || seen[execprovider.EnvPlanDir] != planDir ||
+		seen[execprovider.EnvFrom] != p.base || seen[execprovider.EnvTo] != p.head {
+		t.Fatalf("env = %v", seen)
+	}
+	cs, err := providers.ReadChangeSet(filepath.Join(p.dir, ".glassops", "plan.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cs.Facts["exec.plan_files"] != float64(1) {
+		t.Fatalf("facts = %v", cs.Facts)
+	}
+	if err := providers.CheckDigest(p.dir, cs); err != nil {
+		t.Fatalf("the file exec.plan wrote is not bound by the digest: %v", err)
 	}
 }

@@ -31,6 +31,8 @@ type Provider struct {
 	lookupEnv func(string) (string, bool)
 	// tempDir is where session dirs are created. Empty means the OS temp dir.
 	tempDir string
+	// engine runs plan, validate and deploy. Nil means the native engine. See engine.go.
+	engine Engine
 }
 
 // New returns the provider using the real command runner.

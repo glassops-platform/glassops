@@ -8,7 +8,7 @@
   "required": ["version"],
   "properties": {
     "version": { "const": 1 },
-    "provider": { "enum": ["salesforce"] },
+    "provider": { "enum": ["salesforce", "exec"] },
     "targets": {
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/name" },
@@ -33,17 +33,22 @@
     },
     "test": { "$ref": "#/$defs/test" },
     "check": { "$ref": "#/$defs/check" },
-    "analyze": { "$ref": "#/$defs/analyze" }
+    "analyze": { "$ref": "#/$defs/analyze" },
+    "verify": { "$ref": "#/$defs/verify" },
+    "exec": { "$ref": "#/$defs/exec" },
+    "telemetry": { "$ref": "#/$defs/telemetry" },
+    "report": { "$ref": "#/$defs/report" }
   },
   "$defs": {
     "name": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
     "envRef": { "type": "string", "pattern": "^\\$[A-Z_][A-Z0-9_]*$" },
     "orgId": { "type": "string", "pattern": "^00D[a-zA-Z0-9]{12}([a-zA-Z0-9]{3})?$" },
+    "targetId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$" },
     "target": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }] },
+        "id": { "anyOf": [{ "$ref": "#/$defs/orgId" }, { "$ref": "#/$defs/envRef" }, { "$ref": "#/$defs/targetId" }] },
         "tier": { "$ref": "#/$defs/name" },
         "branch": { "type": "string", "minLength": 1 },
         "auth": { "$ref": "#/$defs/auth" }
@@ -103,6 +108,28 @@
           "description": "How long a PERMIT stays valid, as a Go duration between 5m and 24h. Default 2h.",
           "type": "string",
           "minLength": 1
+        },
+        "permit": {
+          "description": "How PERMITs are signed. hmac (the default) uses GLASSOPS_PERMIT_KEY. sigstore needs identity and issuer.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "signing": { "enum": ["hmac", "sigstore"] },
+            "identity": { "type": "string", "minLength": 1 },
+            "issuer": { "type": "string", "minLength": 1 }
+          }
+        },
+        "rego": {
+          "description": "Rego policy files gate evaluates after the built-in rules.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
         }
       }
     },
@@ -177,7 +204,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "engine": { "enum": ["native"] },
+        "engine": { "enum": ["native", "hardis"] },
+        "hardis": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_version": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+){0,2}$" }
+          }
+        },
         "api_version": {
           "anyOf": [{ "const": "auto" }, { "type": "string", "pattern": "^[0-9]{2,3}\\.0$" }]
         },
@@ -236,7 +270,8 @@
           "additionalProperties": false,
           "properties": {
             "org_min": { "$ref": "#/$defs/percent" },
-            "class_min": { "$ref": "#/$defs/percent" }
+            "class_min": { "$ref": "#/$defs/percent" },
+            "class_scope": { "enum": ["changed", "all"] }
           }
         }
       }
@@ -257,6 +292,59 @@
             }
           }
         }
+      }
+    },
+    "verifyMode": { "enum": ["fail", "warn", "off"] },
+    "verify": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "smoke": { "type": "string", "minLength": 1 },
+        "foreign_deploys": { "$ref": "#/$defs/verifyMode" },
+        "flows": { "$ref": "#/$defs/verifyMode" }
+      }
+    },
+    "command": { "type": "string", "minLength": 1 },
+    "exec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "plan": { "$ref": "#/$defs/command" },
+        "describe": { "$ref": "#/$defs/command" },
+        "validate": { "$ref": "#/$defs/command" },
+        "deploy": { "$ref": "#/$defs/command" },
+        "verify": { "$ref": "#/$defs/command" }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "otlp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["endpoint"],
+          "properties": {
+            "endpoint": { "type": "string", "format": "uri" },
+            "headers": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/envRef" }
+            },
+            "service_name": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pr_comment": { "type": "boolean" }
       }
     },
     "analyze": {

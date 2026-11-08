@@ -50,6 +50,13 @@ func (app *App) loadProject(g *globals) (*project, error) {
 	if p == nil {
 		return nil, &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("unknown provider %q", cfg.Provider)}
 	}
+	// A provider that reads its own config section, such as the Salesforce engine, gets it
+	// before any other call.
+	if c, ok := p.(providers.Configurable); ok {
+		if err := c.Configure(cfg); err != nil {
+			return nil, &exitcode.ExitError{Code: exitcode.Error, Err: err}
+		}
+	}
 	rememberProjectDir(cfg, g.dir)
 	return &project{cfg: cfg, provider: p}, nil
 }

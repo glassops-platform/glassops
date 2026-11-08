@@ -1,6 +1,6 @@
 # CLI Reference
 
-> **Early work.** v0.3.0 is released as a prerelease. It has `init`, `doctor`, `describe`, `plan`, `validate`, `gate`, `permit verify`, `deploy` and `report`. The commands `env`, `test`, `run`, `check` and `analyze` are in the repository and ship in the next release.
+> **Early work.** v0.3.0 and v0.4.0 are published prereleases and v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 `glassops` is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.
 
@@ -18,6 +18,7 @@
 | `glassops gate` | Evaluates the policy rules for a target and writes a signed PERMIT |
 | `glassops permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
 | `glassops deploy` | Deploys the change set to a target, only under a valid PERMIT |
+| `glassops verify` | After a deploy, checks that the target holds what the plan says |
 | `glassops report` | Summarises every result for the CI and writes SARIF |
 | `glassops env create` | Creates the ephemeral environment (a scratch org) that later steps use |
 | `glassops env delete` | Deletes that environment |
@@ -34,6 +35,7 @@
 - Writes `glassops.yaml` with commented stub targets and the default `pr` and `deploy` pipelines.
 - For GitHub, also writes `.github/workflows/glassops.yml`, which runs `glassops doctor` on full git history. Other CI systems are detected but get no CI file yet.
 - Never overwrites a file unless you pass `--force`.
+- Does not touch `.gitignore`. Add `.glassops/` to it yourself. That directory holds the plan, the PERMIT, the results and the deployed-tag bookkeeping, and none of it belongs in git. Run `git status` after your first command to see it appear.
 
 ### `glassops doctor`
 
@@ -76,6 +78,12 @@ Works out the change set between two git refs. It writes the provider's manifest
 
 With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
 
+On a laptop, outside a pull request, there is no base: `--from auto` without `--target` stops with "--from auto needs a target or a pull request base branch. Pass --from." For a first run, name the base yourself:
+
+```bash
+glassops plan --from HEAD~1
+```
+
 First deploy rule: with `--target` and `--from auto`, a target that has no `glassops/deployed/<target>` tag has never received a deploy from glassops. `plan` then plans the whole source instead of a delta, prints a notice, and records the facts `plan.first_deploy` and `plan.from_source: first-deploy`. A shallow clone is still an error.
 
 ### `glassops validate`
@@ -101,6 +109,9 @@ Reads the change set, the earlier results in the results directory and the CI co
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | Where the PERMIT is written |
 | `--no-connect` | `false` | Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the `guard` check is `skipped` |
+| `--deploy-command` | | Provider `exec` only. The command `deploy --` will run, as a JSON array of strings, such as `'["./deploy.sh","--prod"]'`. The PERMIT binds its SHA-256, never the text. With any other provider it is an error |
+
+When the target's tier has deploy windows and the gate's clock is inside one, the PERMIT expires when that window closes, if that is before `policy.permit_ttl`. Windows that overlap or touch extend it. With no window for the tier, or a clock outside them, the PERMIT keeps the full TTL, and the window rule decides.
 
 Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
 
@@ -110,11 +121,11 @@ Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/pla
 | `1` | Policy denies the deploy. The signed PERMIT is still written |
 | `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
 
-Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id` and `gate.expires_at`.
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
 
 ### `glassops permit verify`
 
-Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, and that it matches the target, the commit, the plan and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
+Checks a PERMIT without logging in to the target, so any deploy tool can honour it. It checks the key, the signature, that the PERMIT allows, that it has not expired, that its lifetime is sound, and that it matches the target, the commit, the plan, the change set and the config. The order is in [PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check).
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -134,7 +145,13 @@ Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
 ### `glassops deploy`
 
-Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation.
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A checkout with no remote called `origin` gets that warning too, never a failure.
+
+**The local tag stays.** The tag is moved in your checkout before the push, so it stays there when the push fails. A rerun of `plan --target <target>` then starts from the deployed commit and finds nothing to deploy. If the push did not happen and you want the plan to start from the old base again, delete the local tag:
+
+```bash
+git tag -d glassops/deployed/prod
+``` A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -142,17 +159,55 @@ Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and 
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
 | `--wait` | the provider's | How long to wait for the deploy, such as `30m`. The Salesforce provider waits 60 minutes |
-| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy |
+| `--resume` | | Job Id of an earlier deploy to wait on again. Skips quick deploy. Accepted only when `.glassops/results/deploy.json` records that job timing out under the same PERMIT and target |
 
-Needs `GLASSOPS_PERMIT_KEY`. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. An empty change set under a valid PERMIT ends with status `empty` and no login.
+With provider `exec`, a command after `--` runs instead of `exec.deploy`: `glassops deploy --target prod -- ./ci/deploy.sh`. See [the exec provider](exec-provider.md#deploying). A command after `--` with any other provider is an error.
+
+Needs `GLASSOPS_PERMIT_KEY` and a git checkout. The deployed commit is the CI's commit, or `git rev-parse HEAD` when the CI reports none. It must be the commit the PERMIT names. After the PERMIT verifies and before the login, `git rev-parse HEAD` must also be that commit and no tracked file may be modified or staged. Untracked files are allowed. With provider `exec`, a command after `--` runs only when the PERMIT binds exactly that command, from `gate --deploy-command`. An empty change set under a valid PERMIT ends with status `empty` and no login.
 
 | Exit | When |
 |---|---|
 | `0` | The deploy succeeded, or the change set was empty |
 | `1` | The deploy ran and the target reported failures, or `salesforce.deploy.quick` is `require` and the PERMIT holds no passed validation to quick deploy |
-| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
+| `2` | The PERMIT is missing, unreadable, denied, expired or does not match, the plan files changed, the working tree is not the PERMIT's commit or git cannot tell, `--resume` names a job the last deploy did not time out on, login or the guard failed, or the deploy did not finish within `--wait`. A timeout keeps the job Id and prints the `--resume` command, and does not move the tag |
 
-Result facts: `deploy.permit_id`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts.
+Result facts: `deploy.permit_id`, `deploy.plan_sha256`, `deploy.test_level`, `deploy.quick_mode`, `deploy.id`, `deploy.quick`, `deploy.timed_out`, `deploy.commit`, `deploy.tag` and `deploy.tag_pushed`, plus the provider's own facts. `deploy.plan_sha256` is the plan the deploy sent. `deploy.test_level` is the level the deploy was sent with, or for a quick deploy the level of the validation it reused.
+
+### `glassops verify`
+
+Runs after `deploy` and checks that the target holds what the plan says. It never deploys. It is the last step of the default `deploy` pipeline, before `report`.
+
+Before it logs in, `verify` reads the deploy result and the change set. It stops with an error when the deploy result is for another target or provider, did not pass, did not finish (a timeout), or has no deploy Id, because there is no finished deploy to check. It checks that the plan files still match the plan digest. `deploy` always records `deploy.plan_sha256` and `deploy.test_level`, so `verify` always ties the plan to the deploy: the recorded digest must equal the plan's digest, and the fact `verify.plan_bound_to_deploy` is `true`. It is `false` only for a deploy result `deploy` did not write. An empty deploy ends `verify` with status `empty` and no login. Then it logs in, runs the [guard](#the-guard), and the provider runs these checks:
+
+| Check | Passes when |
+|---|---|
+| `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy lists the coverage warnings the report holds |
+| `verify.check_only` | The deploy was not a check-only run, so it changed something |
+| `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
+| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
+| `verify.flows` | Every Flow in the plan whose source says Active runs as its latest version in the target, and when the deploy changed it, that version was modified after the deploy started. A Flow whose source says Draft is not checked |
+| `verify.foreign_deploys` | No other deploy that is not check-only was created in the target between the deploy's start and now. Fails or warns according to the setting |
+| `verify.smoke` | The `verify.smoke` command exits 0. Skipped when it is not set |
+
+Anything the provider cannot read, such as a query that fails, is an error and never a pass. A warning is a passing check whose detail starts with `warning:`. It adds a CI warning annotation and its name to the fact `verify.warnings`. The smoke command runs even when an earlier check failed, but not after the provider returned an error.
+
+Settings `verify.smoke`, `verify.foreign_deploys` and `verify.flows` are in [Verify, coverage and YAML settings](verify-and-coverage-settings.md). With provider `exec`, the provider runs `exec.verify` instead of the checks above. See [the exec provider](exec-provider.md).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--target` | | Target name from `glassops.yaml` (required) |
+| `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--deploy-result` | `<results-dir>/deploy.json` | Deploy result to verify |
+
+Reads the deploy result, the change set and the plan files. Writes `.glassops/results/verify.json`.
+
+| Exit | When |
+|---|---|
+| `0` | Every check passed. Warnings still exit 0 |
+| `1` | A check failed |
+| `2` | A tool error: the deploy result or the change set cannot be read or does not match, login or the guard failed, or the provider could not read the target |
+
+Result facts: `verify.passed`, `verify.deploy_id`, `verify.deploy_quick`, `verify.commit`, `verify.permit_id`, `verify.plan_sha256`, `verify.plan_bound_to_deploy`, `verify.warnings` and `verify.smoke_exit_code`, plus the provider's own facts.
 
 ### `glassops report`
 
@@ -381,7 +436,7 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `--dir` | `.` | Project root |
 | `--config` | `<dir>/glassops.yaml` | Config file |
 | `--results-dir` | `<dir>/.glassops/results` | Where results are written |
-| `--ci` | `auto` | CI system: `auto`, `github` or `local` |
+| `--ci` | `auto` | CI system: `auto`, `github`, `bitbucket`, `gitlab` or `local`. See [Bitbucket and GitLab](../guides/other-ci.md) |
 
 ---
 
@@ -392,6 +447,8 @@ Results, step outputs, CI annotations and error messages never contain the org's
 | `0` | Pass |
 | `1` | A policy or check failed. The tool itself worked |
 | `2` | A tool or infrastructure error stopped the command, or the command line was invalid |
+
+A tool error is printed to stderr as `glassops: <message>` on one line. A line break inside the message is replaced, so output that a CI runner scans for commands cannot start a new line.
 
 ---
 
@@ -434,11 +491,24 @@ The workflow [`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/
 
 ## Install
 
-v0.3.0 is released as a prerelease, with a container image at `ghcr.io/glassops-platform/glassops:0.3.0`. The image adds Node 22, the Salesforce CLI and `sfdx-git-delta`. The commands `env`, `test`, `run`, `check` and `analyze` are not in v0.3.0. To use them now, build from a checkout with Go 1.27.3 or later:
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. **`verify`, provider `exec`, the Bitbucket and GitLab layers and the other changes listed under "Not yet in a release" in [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) are not in a published release yet.** To use them, build from this repository.
+
+| Route | What you get | What you need |
+|---|---|---|
+| Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
+| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.3 or later, and the host tools below |
+| `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
+
+A built Linux binary also runs inside the published image. Mount it over the image's own:
 
 ```bash
-go build -o glassops ./cmd/glassops
-./glassops doctor
+docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:0.4.0 doctor
 ```
 
-Or build the container image with `docker build -t glassops .` from the repository root. The `analyze` command needs the separate `glassops-analyzer` image, which adds Java and the Code Analyzer plugin. Build it with `docker build -f Dockerfile.analyzer -t glassops-analyzer .`.
+**Host prerequisites for `go build`.** `git` always. For a Salesforce project also the Salesforce CLI `sf` and its `sfdx-git-delta` plugin:
+
+```bash
+sf plugins install sfdx-git-delta
+```
+
+Provider `exec` needs only `git` and `sh`. `./glassops doctor` checks the tools and says which one is missing. Release tags, image tags, the license scan and the third party notices are described in [Releases, images and licenses](releases-and-licenses.md).

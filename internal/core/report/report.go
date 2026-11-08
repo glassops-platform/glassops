@@ -121,10 +121,18 @@ func (b *Bundle) loadJSON(path string) {
 			return
 		}
 		b.Permit = &p
+	case EngineResultSchema:
+		// An exec command's own result file. The step result that read it already carries
+		// what it says, so the report skips it.
 	default:
 		b.Problems = append(b.Problems, fmt.Sprintf("%s: unknown schema %q", name, head.Schema))
 	}
 }
+
+// EngineResultSchema is the schema of the result file an exec provider command writes
+// (schemas/engine-result.json). It names the same string as exec.ResultSchema, kept here so
+// report does not import a provider.
+const EngineResultSchema = "glassops.engine-result/v1"
 
 // Worst is the status the report as a whole exits with: error beats fail beats the rest.
 // Unreadable evidence counts as an error.

@@ -1,0 +1,91 @@
+name: E2E Nightly
+
+# Runs the full deploy pipeline once a day against one real Salesforce scratch org, the same
+# steps as the pipeline part of cli-e2e.yml: plan, env create from a definition with settings,
+# the settings check, validate, gate, deploy, verify, test, report, env delete. It fails red
+# when anything fails and posts nothing: no issue, no comment, no notification step. Look at
+# the run list to see the result.
+#
+# One scratch org per run, and the concurrency group keeps two nights from overlapping. The Dev
+# Hub allows 6 signups a day, so this is the only workflow that creates one on a schedule.
+on:
+  schedule:
+    # 06:17 UTC, an off-peak hour for GitHub's scheduler (not on the hour).
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-nightly
+  cancel-in-progress: false
+
+env:
+  SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+  SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
+  SF_USERNAME: ${{ secrets.SF_USERNAME }}
+  SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
+
+jobs:
+  nightly:
+    name: Nightly scratch org pipeline
+    # A fork has no secrets and no Dev Hub, so it never runs this.
+    if: github.repository == 'glassops-platform/glassops'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=nightly-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # A throwaway PERMIT key made in this job, never the deploy environment's key.
+      - name: Make a throwaway PERMIT key
+        run: |
+          key=$(openssl rand -base64 32)
+          echo "::add-mask::$key"
+          echo "GLASSOPS_PERMIT_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Run the pipeline
+        run: |
+          set +e
+          sh scripts/e2e/scratch-pipeline-run.sh "$RUNNER_TEMP/repo" glassops:e2e
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/repo/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+          sh scripts/e2e/scratch-pipeline-check.sh "$RUNNER_TEMP/repo/.glassops/results"
+          exit $code
+
+      # env delete is the last pipeline step and runs even after a failure. This sweep catches
+      # a run that was cancelled or killed before it got there, so no org outlives the night.
+      - name: Sweep any scratch org the pipeline left
+        if: always()
+        run: |
+          [ -f "$RUNNER_TEMP/repo/glassops.yaml" ] || exit 0
+          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID \
+            -v "$RUNNER_TEMP/repo:/work" -w /work \
+            glassops:e2e env sweep --max-age 1s --ci local
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: glassops-e2e-nightly
+          path: |
+            ${{ runner.temp }}/repo/.glassops/results/
+            ${{ runner.temp }}/repo/.glassops/plan.json
+            ${{ runner.temp }}/repo/.glassops/permit.json
+            ${{ runner.temp }}/repo/.glassops/facts.json
+            ${{ runner.temp }}/repo/.glassops/summary.md
+          if-no-files-found: warn

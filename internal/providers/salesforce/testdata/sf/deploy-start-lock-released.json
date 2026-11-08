@@ -1,0 +1,14 @@
+{
+  "name": "MetadataTransferError",
+  "message": "Metadata API request failed: Lock is already released",
+  "exitCode": 1,
+  "context": "DeployMetadata",
+  "data": {
+    "id": "0Af000000000004AAA"
+  },
+  "cause": "undefined",
+  "warnings": [],
+  "code": "MetadataTransferError",
+  "status": 1,
+  "commandName": "DeployMetadata"
+}

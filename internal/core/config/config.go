@@ -33,6 +33,99 @@ type Config struct {
 	Test         Test                   `yaml:"test,omitempty" json:"test,omitempty"`
 	Check        Checks                 `yaml:"check,omitempty" json:"check,omitempty"`
 	Analyze      Analyze                `yaml:"analyze,omitempty" json:"analyze,omitempty"`
+	Verify       Verify                 `yaml:"verify,omitempty" json:"verify,omitempty"`
+	// Exec configures provider exec. Other providers ignore it.
+	Exec      Exec      `yaml:"exec,omitempty" json:"exec,omitempty"`
+	Telemetry Telemetry `yaml:"telemetry,omitempty" json:"telemetry,omitempty"`
+	Report    Report    `yaml:"report,omitempty" json:"report,omitempty"`
+}
+
+// Modes for verify.foreign_deploys and verify.flows.
+const (
+	VerifyFail = "fail"
+	VerifyWarn = "warn"
+	VerifyOff  = "off"
+)
+
+// Verify holds the post-deploy checks verify runs.
+type Verify struct {
+	// Smoke is an optional shell command verify runs after its own checks, like an exec step.
+	Smoke string `yaml:"smoke,omitempty" json:"smoke,omitempty"`
+	// ForeignDeploys is what another deploy to the target during the deploy window does: fail,
+	// warn or off. Use ForeignDeploysMode to read it with the default, warn.
+	ForeignDeploys string `yaml:"foreign_deploys,omitempty" json:"foreign_deploys,omitempty"`
+	// Flows is what an active Flow in the plan that the target does not run as its latest
+	// version does: fail, warn or off. Use FlowsMode to read it with the default, fail.
+	Flows string `yaml:"flows,omitempty" json:"flows,omitempty"`
+}
+
+// ForeignDeploysMode returns ForeignDeploys, or VerifyWarn when it is not set.
+func (v Verify) ForeignDeploysMode() string {
+	if v.ForeignDeploys == "" {
+		return VerifyWarn
+	}
+	return v.ForeignDeploys
+}
+
+// FlowsMode returns Flows, or VerifyFail when it is not set.
+func (v Verify) FlowsMode() string {
+	if v.Flows == "" {
+		return VerifyFail
+	}
+	return v.Flows
+}
+
+// ExecProvider is the provider name that runs configured commands instead of a built-in
+// provider.
+const ExecProvider = "exec"
+
+// Exec holds the commands provider exec runs. Each is a shell command run with sh -c in the
+// project dir.
+type Exec struct {
+	// Paths are the project paths whose changed files make up the plan.
+	Paths []string `yaml:"paths,omitempty" json:"paths,omitempty"`
+	// Plan may write more plan files into $GLASSOPS_PLAN_DIR.
+	Plan string `yaml:"plan,omitempty" json:"plan,omitempty"`
+	// Describe prints {"id": "...", "kind": "..."} for the target.
+	Describe string `yaml:"describe,omitempty" json:"describe,omitempty"`
+	Validate string `yaml:"validate,omitempty" json:"validate,omitempty"`
+	// Deploy is the deploy command. deploy -- <cmd> overrides it.
+	Deploy string `yaml:"deploy,omitempty" json:"deploy,omitempty"`
+	Verify string `yaml:"verify,omitempty" json:"verify,omitempty"`
+}
+
+// DefaultServiceName is the OTLP service name when telemetry.otlp.service_name is not set.
+const DefaultServiceName = "glassops"
+
+// Telemetry holds the optional export of run records.
+type Telemetry struct {
+	OTLP OTLP `yaml:"otlp,omitempty" json:"otlp,omitempty"`
+}
+
+// Enabled reports whether telemetry export is configured.
+func (t Telemetry) Enabled() bool { return t.OTLP.Endpoint != "" }
+
+// OTLP configures export over OTLP/HTTP. Export is on only when Endpoint is set.
+type OTLP struct {
+	Endpoint string `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	// Headers are sent with every export. Each value is a $VAR reference, never a literal.
+	Headers map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
+	// ServiceName names the service in the spans. Use Service to read it with the default.
+	ServiceName string `yaml:"service_name,omitempty" json:"service_name,omitempty"`
+}
+
+// Service returns ServiceName, or DefaultServiceName when it is not set.
+func (o OTLP) Service() string {
+	if o.ServiceName == "" {
+		return DefaultServiceName
+	}
+	return o.ServiceName
+}
+
+// Report holds the report step settings.
+type Report struct {
+	// PRComment makes report post its summary as one pull request comment.
+	PRComment bool `yaml:"pr_comment,omitempty" json:"pr_comment,omitempty"`
 }
 
 // Defaults for the environments section.
@@ -82,6 +175,10 @@ type Test struct {
 type Coverage struct {
 	OrgMin   *int `yaml:"org_min,omitempty" json:"org_min,omitempty"`
 	ClassMin *int `yaml:"class_min,omitempty" json:"class_min,omitempty"`
+	// ClassScope picks which classes class_min applies to when a class has no covered lines:
+	// "changed" (the default) counts the classes in the plan, or every untouched class when
+	// there is no plan, and "all" counts every class the org reports.
+	ClassScope string `yaml:"class_scope,omitempty" json:"class_scope,omitempty"`
 }
 
 // Checks holds the scripts the check step runs.
@@ -155,7 +252,43 @@ type Policy struct {
 	// PermitTTL is how long a PERMIT stays valid, as a Go duration such as "2h". Use TTL to
 	// read it with the default applied.
 	PermitTTL string `yaml:"permit_ttl,omitempty" json:"permit_ttl,omitempty"`
+	// Permit chooses how PERMITs are signed.
+	Permit PermitSigning `yaml:"permit,omitempty" json:"permit,omitempty"`
+	// Rego adds Rego rules that run after the built-in rules.
+	Rego Rego `yaml:"rego,omitempty" json:"rego,omitempty"`
 }
+
+// PERMIT signing methods for policy.permit.signing.
+const (
+	SigningHMAC     = "hmac"
+	SigningSigstore = "sigstore"
+)
+
+// PermitSigning chooses how PERMITs are signed and checked.
+type PermitSigning struct {
+	// Signing is hmac or sigstore. Use Method to read it with the default, hmac.
+	Signing string `yaml:"signing,omitempty" json:"signing,omitempty"`
+	// Identity and Issuer are the certificate identity and OIDC issuer a sigstore signature
+	// must carry. Both are required for sigstore.
+	Identity string `yaml:"identity,omitempty" json:"identity,omitempty"`
+	Issuer   string `yaml:"issuer,omitempty" json:"issuer,omitempty"`
+}
+
+// Method returns Signing, or SigningHMAC when it is not set.
+func (p PermitSigning) Method() string {
+	if p.Signing == "" {
+		return SigningHMAC
+	}
+	return p.Signing
+}
+
+// Rego lists the Rego policy files gate evaluates.
+type Rego struct {
+	Files []string `yaml:"files,omitempty" json:"files,omitempty"`
+}
+
+// Enabled reports whether any Rego files are configured.
+func (r Rego) Enabled() bool { return len(r.Files) > 0 }
 
 // DefaultPermitTTL is the PERMIT lifetime when policy.permit_ttl is not set.
 const DefaultPermitTTL = 2 * time.Hour
@@ -224,14 +357,37 @@ type DestructiveLabelRule struct {
 	Tiers []string `yaml:"tiers,omitempty" json:"tiers,omitempty"`
 }
 
+// Salesforce engines for salesforce.engine.
+const (
+	EngineNative = "native"
+	EngineHardis = "hardis"
+)
+
 // Salesforce holds provider settings.
 type Salesforce struct {
+	// Engine is native or hardis. Use EngineName to read it with the default, native.
 	Engine     string              `yaml:"engine,omitempty" json:"engine,omitempty"`
+	Hardis     Hardis              `yaml:"hardis,omitempty" json:"hardis,omitempty"`
 	APIVersion string              `yaml:"api_version,omitempty" json:"api_version,omitempty"`
 	TestLevel  map[string]string   `yaml:"test_level,omitempty" json:"test_level,omitempty"`
 	Delta      Delta               `yaml:"delta,omitempty" json:"delta,omitempty"`
 	Deploy     SalesforceDeploy    `yaml:"deploy,omitempty" json:"deploy,omitempty"`
 	Ephemeral  SalesforceEphemeral `yaml:"ephemeral,omitempty" json:"ephemeral,omitempty"`
+}
+
+// EngineName returns Engine, or EngineNative when it is not set.
+func (s Salesforce) EngineName() string {
+	if s.Engine == "" {
+		return EngineNative
+	}
+	return s.Engine
+}
+
+// Hardis holds the settings for engine hardis. The user installs sfdx-hardis. GlassOps never
+// ships it.
+type Hardis struct {
+	// MinVersion is the oldest sfdx-hardis version doctor accepts.
+	MinVersion string `yaml:"min_version,omitempty" json:"min_version,omitempty"`
 }
 
 // Seed modes for salesforce.ephemeral.seed.
@@ -414,6 +570,7 @@ func DefaultPipelines() map[string][]Step {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
+			{Run: "verify --target prod"},
 			{Run: "report", When: "always"},
 		},
 	}

@@ -1,6 +1,6 @@
 # Deploy with GitHub
 
-> **Early work.** v0.3.0 is released as a prerelease. The reusable workflows, the `run` command and the other new commands this guide uses ship in the next release.
+> **Early work.** v1.0.0 is not out yet. See [what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release).
 
 This guide sets up pull request checks and a deploy to production on GitHub. Two reusable workflows in this repository run the `glassops` container image for you. Your repository calls them with a few lines each. [`examples/consumer/`](https://github.com/glassops-platform/glassops/tree/main/examples/consumer) is the smallest working layout, and `glassops init` writes a similar `glassops.yaml` and workflow into your project. For what a PERMIT is, see [PERMIT and rules](../reference/permit-and-rules.md).
 
@@ -16,9 +16,21 @@ The pipelines are the ones in your `glassops.yaml`. See [Run a pipeline](run-a-p
 ## Prerequisites
 
 - A `glassops.yaml` with a Dev Hub target and a target named `prod` with tier `prod`, each with a login. See the [configuration reference](../reference/config.md) and [Authentication](../reference/cli.md#authentication).
-- The Salesforce secrets your targets name, such as `SF_JWT_KEY`, `SF_CLIENT_ID`, `SF_USERNAME`, `SF_DEVHUB_ORG_ID`, `SF_PROD_USERNAME` and `SF_PROD_ORG_ID`, as repository secrets.
 - A GitHub environment named `glassops-deploy`. Give it required reviewers if you want an approval before the deploy job runs, and a deployment branch rule that allows `main` only. The run's approval is read as evidence for the separation of duties rule.
-- The signing key `GLASSOPS_PERMIT_KEY` as a secret **of that environment**, not of the repository. Make one with `openssl rand -base64 48`. It must decode to at least 32 bytes.
+- The variables in the table below.
+- A Salesforce connected app that allows the JWT bearer flow, for the logins. Salesforce describes it in [Authorize an org using the JWT bearer flow](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm). You get the consumer key (`SF_CLIENT_ID`) from the connected app, and you keep the private key that matches its certificate (`SF_JWT_KEY`).
+
+| Variable | Used by | Where it lives |
+|---|---|---|
+| `SF_JWT_KEY` | The JWT login of every target: the private key, as PEM text | Repository secret |
+| `SF_CLIENT_ID` | The JWT login of every target: the connected app's consumer key | Repository secret |
+| `SF_USERNAME` | The Dev Hub target's login | Repository secret |
+| `SF_DEVHUB_ORG_ID` | The Dev Hub target's `id`, which the [guard](../reference/cli.md#the-guard) checks the login against | Repository secret |
+| `SF_PROD_USERNAME` | The `prod` target's login | Repository secret |
+| `SF_PROD_ORG_ID` | The `prod` target's `id`, checked by the guard | Repository secret |
+| `GLASSOPS_PERMIT_KEY` | `gate` signs the PERMIT with it, `deploy` verifies it. Make one with `openssl rand -base64 48`. It must decode to at least 32 bytes | Secret **of the `glassops-deploy` environment**, never of the repository |
+
+The names are the ones in the `glassops.yaml` that `glassops init` writes. If your `auth` and `id` fields name other variables, use those names instead.
 
 **The key must never be available to pull request jobs.** Anyone who can run a job with the key can sign an allow PERMIT. A secret held only in the `glassops-deploy` environment reaches only jobs that name that environment, and you control which branches may use it. `glassops doctor` warns when `GLASSOPS_PERMIT_KEY` is set on a `pull_request` or `pull_request_target` run.
 
@@ -117,7 +129,7 @@ jobs:
 1. Checks out full history. A shallow clone is an error, never an empty plan.
 2. Installs a `glassops` command on the runner that runs the image with `docker run --rm`, one container per command, with the workspace mounted at `/work`. The checkout, the tag push and the uploads run on the runner, not in the container.
 3. Logs in to each target in `targets`, when set, with `glassops doctor --auth --target <name>`.
-4. Runs `glassops run deploy`. With the default pipeline that is `plan --target prod`, `validate --target prod`, `gate --target prod`, `deploy --target prod` and `report`.
+4. Runs `glassops run deploy`. With the default pipeline that is `plan --target prod`, `validate --target prod`, `gate --target prod`, `deploy --target prod`, `verify --target prod` and `report`.
 5. **Pushes the deployed tag.** `deploy` moves the git tag `glassops/deployed/prod` inside the container, but the container has no git credentials, so its own push is only a warning. A runner step after the container exits pushes the `glassops/deployed/*` tags with the checkout's credentials. Without that tag, the next `plan` has no record of this deploy and starts from the merge base instead.
 6. Runs `glassops report` (also after a failure), and uploads `.glassops/results/`, `plan.json` and `permit.json` as the `glassops-deploy-evidence` artifact.
 

@@ -1,19 +1,52 @@
 name: Release
 
-# Runs only when a version tag such as v1.2.3 is pushed. Binaries go to a draft GitHub
-# release, so publishing it stays a deliberate step. The image goes to GHCR.
+# Runs only when a version tag such as v1.2.3 is pushed. Binaries go to a draft GitHub release, so
+# publishing it stays a deliberate step. The images go to GHCR, and only when the license scan
+# passes (T11).
+#
+# Tag rules (T12), decided by scripts/release/tags.sh and tested in license-scan.yml:
+#   v1.2.3-rc1 or v0.4.0  a prerelease. It gets only its full version image tags (1.2.3-rc1 and
+#                         v1.2.3-rc1) and its GitHub release is marked as a prerelease.
+#   v1.2.3                a final release. It also gets the image tags v1 and latest, and the git
+#                         tag v1 moves to the release commit.
+# The reusable workflows and action.yml pick their default image from the tag they are called at,
+# so @v1 runs the image of the current v1.x.y release and @v1.2.3 runs the image of v1.2.3.
 on:
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
+  plan:
+    name: Plan the Release
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.tags.outputs.prerelease }}
+      version: ${{ steps.tags.outputs.version }}
+      major_tag: ${{ steps.tags.outputs.major_tag }}
+      image_tags: ${{ steps.tags.outputs.image_tags }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: tags
+        name: Decide the tags
+        env:
+          TAG: ${{ github.ref_name }}
+        run: scripts/release/tags.sh "$TAG" | tee -a "$GITHUB_OUTPUT"
+
+  license-scan:
+    name: License Scan
+    needs: plan
+    uses: ./.github/workflows/license-scan.yml
+
   binaries:
     name: Release Binaries
+    needs: plan
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -30,12 +63,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # goreleaser creates the release as a draft. Tags with a prerelease suffix (-rc1) or a 0.x
-  # version are marked as prereleases, so a 1.0 line starts clean.
+  # goreleaser creates the release as a draft. A prerelease tag (-rc1) or a 0.x version is marked
+  # as a prerelease, so a 1.0 line starts clean.
   prerelease:
     name: Mark Prerelease
-    needs: binaries
-    if: contains(github.ref_name, '-') || startsWith(github.ref_name, 'v0.')
+    needs: [plan, binaries]
+    if: needs.plan.outputs.prerelease == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -55,6 +88,7 @@ jobs:
 
   image:
     name: Release ${{ matrix.image.name }} Image
+    needs: [plan, license-scan]
     strategy:
       fail-fast: false
       matrix:
@@ -62,6 +96,9 @@ jobs:
           - { name: glassops, dockerfile: Dockerfile }
           - { name: glassops-analyzer, dockerfile: Dockerfile.analyzer }
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v7
 
@@ -75,18 +112,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ghcr.io/glassops-platform/${{ matrix.image.name }}
-          # A prerelease tag such as v1.2.0-rc1 gets only its own version tag. The major tag
-          # (v1) and latest move only on a final release, and metadata-action leaves v0 out.
-          # Both 1.2.3 and v1.2.3 are pushed, because action.yml maps a reference of v1.2.3 to the
-          # image tag v1.2.3. The moving major v1 is pushed for final releases only.
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}},enable=${{ !contains(github.ref_name, '-') }}
+      - id: refs
+        name: List the image references
+        env:
+          IMAGE: ghcr.io/glassops-platform/${{ matrix.image.name }}
+          TAGS: ${{ needs.plan.outputs.image_tags }}
+        run: |
+          {
+            echo "tags<<EOF"
+            while read -r t; do
+              if [ -n "$t" ]; then echo "$IMAGE:$t"; fi
+            done <<< "$TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
         with:
@@ -94,6 +132,33 @@ jobs:
           file: ${{ matrix.image.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.refs.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.plan.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
           build-args: VERSION=${{ github.ref_name }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+
+  # The moving major tag. It is created after both images and the binaries exist, so a caller of
+  # @v1 never gets a workflow whose image is missing. A tag pushed with the workflow token does
+  # not start another run of this workflow [documented by GitHub, unverified here].
+  major-tag:
+    name: Move the Major Tag
+    needs: [plan, binaries, image]
+    if: needs.plan.outputs.major_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Point the major tag at the release commit
+        env:
+          MAJOR_TAG: ${{ needs.plan.outputs.major_tag }}
+        run: |
+          commit="$(git rev-parse "$GITHUB_REF_NAME^{commit}")"
+          git tag -f "$MAJOR_TAG" "$commit"
+          git push --force origin "refs/tags/$MAJOR_TAG:refs/tags/$MAJOR_TAG"
+          echo "$MAJOR_TAG now points at $commit" >> "$GITHUB_STEP_SUMMARY"

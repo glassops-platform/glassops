@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	orgIDPattern  = regexp.MustCompile(`^00D[a-zA-Z0-9]{12}([a-zA-Z0-9]{3})?$`)
-	envRefPattern = regexp.MustCompile(`^\$([A-Z_][A-Z0-9_]*)$`)
+	orgIDPattern    = regexp.MustCompile(`^00D[a-zA-Z0-9]{12}([a-zA-Z0-9]{3})?$`)
+	targetIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`)
+	envRefPattern   = regexp.MustCompile(`^\$([A-Z_][A-Z0-9_]*)$`)
 )
 
 // ProdTier is the tier name the design gives special treatment: at most one target may use it.
@@ -30,8 +31,18 @@ func Check(c *Config) []string {
 	for _, name := range names {
 		t := c.Targets[name]
 		if t.ID != "" && !envRefPattern.MatchString(t.ID) {
-			if !orgIDPattern.MatchString(t.ID) {
-				add("targets.%s.id: %q does not look like an org Id", name, t.ID)
+			if c.Provider == ExecProvider {
+				// An exec target names its own Id, so any plain identifier is allowed and two
+				// targets compare exactly.
+				if !targetIDPattern.MatchString(t.ID) {
+					add("targets.%s.id: %q must be letters, digits and . _ : / -, starting with a letter or digit", name, t.ID)
+				} else if other, ok := idOwner[t.ID]; ok {
+					add("targets.%s.id: same Id as targets.%s", name, other)
+				} else {
+					idOwner[t.ID] = name
+				}
+			} else if !orgIDPattern.MatchString(t.ID) {
+				add("targets.%s.id: %q does not look like an org Id. Write a Salesforce org Id or a $VAR", name, t.ID)
 			} else {
 				key := canonicalOrgID(t.ID)
 				if other, ok := idOwner[key]; ok {
@@ -94,6 +105,16 @@ func Check(c *Config) []string {
 		}
 	}
 
+	if c.Policy.Permit.Method() == SigningSigstore {
+		if c.Policy.Permit.Identity == "" || c.Policy.Permit.Issuer == "" {
+			add("policy.permit: sigstore signing needs both identity and issuer")
+		}
+	}
+
+	if c.Provider == ExecProvider && len(c.Exec.Paths) == 0 {
+		add("exec.paths: provider exec needs at least one path to plan from")
+	}
+
 	for _, name := range sortedKeys(c.Environments) {
 		e := c.Environments[name]
 		if _, ok := c.Targets[e.DevHub]; !ok {
@@ -135,6 +156,9 @@ func EnvRefs(c *Config) []string {
 	}
 	for _, e := range c.Environments {
 		note(e.Shape)
+	}
+	for _, v := range c.Telemetry.OTLP.Headers {
+		note(v)
 	}
 	out := make([]string, 0, len(set))
 	for k := range set {

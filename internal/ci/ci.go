@@ -59,24 +59,34 @@ type CI interface {
 // Env reads environment variables. It is a function so tests can supply their own.
 type Env func(string) string
 
-// Detect picks the CI from the environment. name forces one: "github" or "local".
-// An empty name or "auto" detects.
+// Detect picks the CI from the environment. name forces one: "github", "bitbucket",
+// "gitlab" or "local". An empty name or "auto" detects: GitHub Actions sets GITHUB_ACTIONS,
+// Bitbucket Pipelines sets BITBUCKET_BUILD_NUMBER and GitLab CI sets GITLAB_CI.
 func Detect(name string, env Env, out io.Writer, dir string) (CI, error) {
 	if env == nil {
 		env = os.Getenv
 	}
 	switch strings.ToLower(name) {
 	case "", "auto":
-		if env("GITHUB_ACTIONS") == "true" {
+		switch {
+		case env("GITHUB_ACTIONS") == "true":
 			return newGitHub(env, out), nil
+		case env("BITBUCKET_BUILD_NUMBER") != "":
+			return newBitbucket(env, out, dir), nil
+		case env("GITLAB_CI") == "true":
+			return newGitLab(env, out, dir), nil
 		}
 		return newLocal(out, dir), nil
 	case "github":
 		return newGitHub(env, out), nil
+	case "bitbucket":
+		return newBitbucket(env, out, dir), nil
+	case "gitlab":
+		return newGitLab(env, out, dir), nil
 	case "local":
 		return newLocal(out, dir), nil
 	default:
-		return nil, fmt.Errorf("unknown CI %q (want auto, github or local)", name)
+		return nil, fmt.Errorf("unknown CI %q (want auto, github, bitbucket, gitlab or local)", name)
 	}
 }
 

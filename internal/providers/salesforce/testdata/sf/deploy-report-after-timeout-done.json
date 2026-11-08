@@ -1,0 +1,227 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-11-08T18:37:29.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T18:35:35.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": false,
+          "componentType": "ApexClass",
+          "created": false,
+          "createdDate": "2026-11-08T18:35:36.000Z",
+          "deleted": false,
+          "fileName": "classes/Greeter.cls",
+          "fullName": "Greeter",
+          "id": "01p000000000002AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-11-08T18:35:36.000Z",
+          "deleted": false,
+          "fileName": "classes/SlowTest.cls",
+          "fullName": "SlowTest",
+          "id": "01p000000000003AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T18:35:36.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "codeCoverage": [
+          {
+            "id": "01p000000000002AAA",
+            "locationsCovered": [
+              {
+                "column": "0",
+                "line": "2",
+                "numExecutions": "0",
+                "time": "-1.0"
+              },
+              {
+                "column": "0",
+                "line": "3",
+                "numExecutions": "0",
+                "time": "-1.0"
+              }
+            ],
+            "name": "Greeter",
+            "namespace": null,
+            "numLocations": 2,
+            "numLocationsNotCovered": 0,
+            "type": "Class",
+            "dmlInfo": [],
+            "locationsNotCovered": [],
+            "methodInfo": [],
+            "soqlInfo": [],
+            "soslInfo": []
+          }
+        ],
+        "flowCoverage": [
+          {
+            "elementsNotCovered": [
+              "set_greeting"
+            ],
+            "flowId": "301000000000001",
+            "flowName": "Glassops_Probe",
+            "flowNamespace": null,
+            "numElements": 1,
+            "numElementsNotCovered": 1,
+            "processType": "AutoLaunchedFlow"
+          }
+        ],
+        "numFailures": 0,
+        "numTestsRun": 12,
+        "successes": [
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn1",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9243
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn10",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9253
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn11",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9272
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn12",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 10236
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn2",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9313
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn3",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9301
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn4",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9203
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn5",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9272
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn6",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9403
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn7",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 10059
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn8",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9309
+          },
+          {
+            "id": "01p000000000003AAA",
+            "methodName": "burn9",
+            "name": "SlowTest",
+            "namespace": null,
+            "time": 9202
+          }
+        ],
+        "totalTime": 113134,
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverageWarnings": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000001AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T18:37:29.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 2,
+    "numberComponentsTotal": 2,
+    "numberFiles": "6",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 12,
+    "numberTestsTotal": 12,
+    "rollbackOnError": true,
+    "runTestsEnabled": true,
+    "startDate": "2026-11-08T18:35:35.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": "2367",
+    "files": [
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Unchanged",
+        "filePath": "force-app\\main\\default\\classes\\Greeter.cls"
+      },
+      {
+        "fullName": "Greeter",
+        "type": "ApexClass",
+        "state": "Unchanged",
+        "filePath": "force-app\\main\\default\\classes\\Greeter.cls-meta.xml"
+      },
+      {
+        "fullName": "SlowTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\SlowTest.cls"
+      },
+      {
+        "fullName": "SlowTest",
+        "type": "ApexClass",
+        "state": "Created",
+        "filePath": "force-app\\main\\default\\classes\\SlowTest.cls-meta.xml"
+      }
+    ]
+  },
+  "warnings": []
+}

@@ -49,6 +49,13 @@ type envSweepOptions struct {
 	maxAge time.Duration
 }
 
+// checkFailure is a create error that a provider marks as a failure of the definition, such
+// as Salesforce settings the new org refused, once the provider has removed the
+// environment. env create exits 1 for it, and 2 for any other error.
+type checkFailure interface {
+	CheckFailed() bool
+}
+
 // EnvState is env.json: what env create made, so env delete and later steps can find it.
 // It never holds login material, only the path of the file that does.
 type EnvState struct {
@@ -91,7 +98,9 @@ func newEnvCreateCommand(app *App, g *globals) *cobra.Command {
 		Long: "env create creates the ephemeral environment for --target from its hub. The login\n" +
 			"material is kept in a file only the current user can read, never in a result.\n" +
 			"env.json records the environment and that file's path. When the create fails after\n" +
-			"the environment was requested, env.json is still written, so env delete can remove it.",
+			"the environment was requested, env.json is still written, so env delete can remove it.\n" +
+			"Settings in the definition are applied before env create reports the environment\n" +
+			"ready. If they do not apply, the environment is deleted and env create fails.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.envCreate(cmd.Context(), g, o)
@@ -290,10 +299,19 @@ func (app *App) envCreate(ctx context.Context, g *globals, o *envCreateOptions) 
 	}
 	if cerr != nil {
 		detail := cerr.Error()
-		if env.ID != "" || env.RecordID != "" {
+		status := run.StatusError
+		var cf checkFailure
+		if errors.As(cerr, &cf) && cf.CheckFailed() {
+			// The environment refused what the definition asks for and the provider has
+			// already removed it: a failure of the definition, not of the tooling.
+			status = run.StatusFail
+			if env.ID != "" || env.RecordID != "" {
+				detail += ". env.json records the attempt"
+			}
+		} else if env.ID != "" || env.RecordID != "" {
 			detail += ". The request is recorded in env.json, so env delete can remove it"
 		}
-		res.AddCheck("create", run.StatusError, detail)
+		res.AddCheck("create", status, detail)
 		return app.finish(res, s.ci, g)
 	}
 	detail := fmt.Sprintf("created %s (%s)", env.Name, env.ID)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -50,7 +51,7 @@ func NewRootCommand(app *App) *cobra.Command {
 	pf.StringVar(&g.dir, "dir", ".", "project root")
 	pf.StringVar(&g.configPath, "config", "", "config file (default <dir>/glassops.yaml)")
 	pf.StringVar(&g.resultsDir, "results-dir", "", "where results are written (default <dir>/.glassops/results)")
-	pf.StringVar(&g.ciName, "ci", "auto", "CI system: auto, github or local")
+	pf.StringVar(&g.ciName, "ci", "auto", "CI system: auto, github, bitbucket, gitlab or local")
 
 	root.AddCommand(
 		newDoctorCommand(app, g),
@@ -67,6 +68,7 @@ func NewRootCommand(app *App) *cobra.Command {
 		newRunCommand(app, g),
 		newCheckCommand(app, g),
 		newAnalyzeCommand(app, g),
+		newVerifyCommand(app, g),
 	)
 	return root
 }
@@ -108,11 +110,17 @@ func ExecuteContext(ctx context.Context, app *App, args []string) int {
 	var ee *exitcode.ExitError
 	if errors.As(err, &ee) {
 		if ee.Err != nil {
-			fmt.Fprintln(app.Stderr, "glassops:", ee.Err)
+			printErr(app.Stderr, ee.Err)
 		}
 		return ee.Code
 	}
 	// Flag and argument errors from cobra are usage problems, not check failures.
-	fmt.Fprintln(app.Stderr, "glassops:", err)
+	printErr(app.Stderr, err)
 	return exitcode.Error
+}
+
+// printErr prints err to w on one line, so a line break in an error message cannot start a
+// new line that a CI runner reads as a workflow command.
+func printErr(w io.Writer, err error) {
+	fmt.Fprintln(w, "glassops:", oneLine(err.Error()))
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 	"github.com/glassops-platform/glassops/internal/providers/salesforce"
 )
 
@@ -41,7 +42,8 @@ func NewApp(version string) *App {
 			cmd.Dir = dir
 			return cmd.Output()
 		},
-		Providers: providers.Registry{salesforce.New()},
+		// exec comes after Salesforce and is never detected, only chosen by provider: exec.
+		Providers: providers.Registry{salesforce.New(), execprovider.New()},
 		Version:   version,
 	}
 }

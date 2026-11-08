@@ -26,172 +26,21 @@
       }
     ]
   },
-  "README.md": {
-    "anchors": [
-      "glassops",
-      "status",
-      "what-exists-today",
-      "the-glassops-cli",
-      "learn-more",
-      "who-this-is-for",
-      "quick-start",
-      "contributing",
-      "license",
-      "contact"
-    ],
-    "links": [
-      {
-        "original": "[![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)",
-        "text": "![Docs Governance & Build",
-        "url": "https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg",
-        "lineNo": 3
-      },
-      {
-        "original": "[![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)",
-        "text": "![Pages Deployment",
-        "url": "https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg",
-        "lineNo": 4
-      },
-      {
-        "original": "[CLI reference](docs/reference/cli.md)",
-        "text": "CLI reference",
-        "url": "docs/reference/cli.md",
-        "lineNo": 39
-      },
-      {
-        "original": "[configuration reference](docs/reference/config.md)",
-        "text": "configuration reference",
-        "url": "docs/reference/config.md",
-        "lineNo": 39
-      },
-      {
-        "original": "[PERMIT and rules](docs/reference/permit-and-rules.md)",
-        "text": "PERMIT and rules",
-        "url": "docs/reference/permit-and-rules.md",
-        "lineNo": 39
-      },
-      {
-        "original": "[Run a pipeline](docs/guides/run-a-pipeline.md)",
-        "text": "Run a pipeline",
-        "url": "docs/guides/run-a-pipeline.md",
-        "lineNo": 39
-      },
-      {
-        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
-        "text": "GitHub deploy guide",
-        "url": "docs/guides/deploy-with-github.md",
-        "lineNo": 39
-      },
-      {
-        "original": "[`overview.md`](docs/architecture/overview.md)",
-        "text": "`overview.md`",
-        "url": "docs/architecture/overview.md",
-        "lineNo": 45
-      },
-      {
-        "original": "[`vision.md`](docs/vision.md)",
-        "text": "`vision.md`",
-        "url": "docs/vision.md",
-        "lineNo": 46
-      },
-      {
-        "original": "[`cli.md`](docs/reference/cli.md)",
-        "text": "`cli.md`",
-        "url": "docs/reference/cli.md",
-        "lineNo": 47
-      },
-      {
-        "original": "[`config.md`](docs/reference/config.md)",
-        "text": "`config.md`",
-        "url": "docs/reference/config.md",
-        "lineNo": 48
-      },
-      {
-        "original": "[`permit-and-rules.md`](docs/reference/permit-and-rules.md)",
-        "text": "`permit-and-rules.md`",
-        "url": "docs/reference/permit-and-rules.md",
-        "lineNo": 49
-      },
-      {
-        "original": "[`run-a-pipeline.md`](docs/guides/run-a-pipeline.md)",
-        "text": "`run-a-pipeline.md`",
-        "url": "docs/guides/run-a-pipeline.md",
-        "lineNo": 50
-      },
-      {
-        "original": "[`deploy-with-github.md`](docs/guides/deploy-with-github.md)",
-        "text": "`deploy-with-github.md`",
-        "url": "docs/guides/deploy-with-github.md",
-        "lineNo": 51
-      },
-      {
-        "original": "[`whitepaper.md`](docs/whitepaper.md)",
-        "text": "`whitepaper.md`",
-        "url": "docs/whitepaper.md",
-        "lineNo": 52
-      },
-      {
-        "original": "[earlier design decisions](docs/adr/README.md)",
-        "text": "earlier design decisions",
-        "url": "docs/adr/README.md",
-        "lineNo": 53
-      },
-      {
-        "original": "[`examples/consumer/`](examples/consumer/)",
-        "text": "`examples/consumer/`",
-        "url": "examples/consumer/",
-        "lineNo": 71
-      },
-      {
-        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
-        "text": "GitHub deploy guide",
-        "url": "docs/guides/deploy-with-github.md",
-        "lineNo": 71
-      },
-      {
-        "original": "[`CONTRIBUTING.md`](CONTRIBUTING.md)",
-        "text": "`CONTRIBUTING.md`",
-        "url": "CONTRIBUTING.md",
-        "lineNo": 79
-      },
-      {
-        "original": "[LICENSE](LICENSE)",
-        "text": "LICENSE",
-        "url": "LICENSE",
-        "lineNo": 85
-      },
-      {
-        "original": "[docs/LICENSE](docs/LICENSE)",
-        "text": "docs/LICENSE",
-        "url": "docs/LICENSE",
-        "lineNo": 86
-      },
-      {
-        "original": "[GitHub Issues](https://github.com/glassops-platform/glassops/issues)",
-        "text": "GitHub Issues",
-        "url": "https://github.com/glassops-platform/glassops/issues",
-        "lineNo": 92
-      },
-      {
-        "original": "[@rdbumstead](https://github.com/rdbumstead)",
-        "text": "@rdbumstead",
-        "url": "https://github.com/rdbumstead",
-        "lineNo": 93
-      },
-      {
-        "original": "[@rdbumstead](https://github.com/rdbumstead)",
-        "text": "@rdbumstead",
-        "url": "https://github.com/rdbumstead",
-        "lineNo": 94
-      }
-    ]
-  },
   "TRADEMARK.md": {
     "anchors": [
       "glassops-trademark-policy",
       "permitted-uses",
       "restricted-uses",
       "commercial-licensing"
+    ],
+    "links": []
+  },
+  ".github/pull_request_template.md": {
+    "anchors": [
+      "description",
+      "type-of-change",
+      "how-has-this-been-tested",
+      "checklist"
     ],
     "links": []
   },
@@ -211,14 +60,75 @@
       }
     ]
   },
-  ".github/pull_request_template.md": {
+  "docs/doc-map.md": {
     "anchors": [
-      "description",
-      "type-of-change",
-      "how-has-this-been-tested",
-      "checklist"
+      "documentation-map",
+      "-discovery-central",
+      "-implementation-federated",
+      "-quick-links"
     ],
-    "links": []
+    "links": [
+      {
+        "original": "[Vision](vision.md)",
+        "text": "Vision",
+        "url": "vision.md",
+        "lineNo": 13
+      },
+      {
+        "original": "[Architecture](architecture/overview.md)",
+        "text": "Architecture",
+        "url": "architecture/overview.md",
+        "lineNo": 14
+      },
+      {
+        "original": "[Platform Reference](reference/platform-reference.md)",
+        "text": "Platform Reference",
+        "url": "reference/platform-reference.md",
+        "lineNo": 15
+      },
+      {
+        "original": "[`cli.md`](reference/cli.md)",
+        "text": "`cli.md`",
+        "url": "reference/cli.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`permit-and-rules.md`](reference/permit-and-rules.md)",
+        "text": "`permit-and-rules.md`",
+        "url": "reference/permit-and-rules.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`exec-provider.md`](reference/exec-provider.md)",
+        "text": "`exec-provider.md`",
+        "url": "reference/exec-provider.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`verify-and-coverage-settings.md`](reference/verify-and-coverage-settings.md)",
+        "text": "`verify-and-coverage-settings.md`",
+        "url": "reference/verify-and-coverage-settings.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[`releases-and-licenses.md`](reference/releases-and-licenses.md)",
+        "text": "`releases-and-licenses.md`",
+        "url": "reference/releases-and-licenses.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
+        "text": "GitHub Repo",
+        "url": "https://github.com/glassops-platform/glassops",
+        "lineNo": 29
+      },
+      {
+        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
+        "text": "Discussions",
+        "url": "https://github.com/glassops-platform/glassops/discussions",
+        "lineNo": 30
+      }
+    ]
   },
   "docs/adr-index.md": {
     "anchors": [
@@ -399,58 +309,6 @@
       }
     ]
   },
-  "docs/doc-map.md": {
-    "anchors": [
-      "documentation-map",
-      "-discovery-central",
-      "-implementation-federated",
-      "-quick-links"
-    ],
-    "links": [
-      {
-        "original": "[Vision](vision.md)",
-        "text": "Vision",
-        "url": "vision.md",
-        "lineNo": 13
-      },
-      {
-        "original": "[Architecture](architecture/overview.md)",
-        "text": "Architecture",
-        "url": "architecture/overview.md",
-        "lineNo": 14
-      },
-      {
-        "original": "[Platform Reference](reference/platform-reference.md)",
-        "text": "Platform Reference",
-        "url": "reference/platform-reference.md",
-        "lineNo": 15
-      },
-      {
-        "original": "[`cli.md`](reference/cli.md)",
-        "text": "`cli.md`",
-        "url": "reference/cli.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[`permit-and-rules.md`](reference/permit-and-rules.md)",
-        "text": "`permit-and-rules.md`",
-        "url": "reference/permit-and-rules.md",
-        "lineNo": 23
-      },
-      {
-        "original": "[GitHub Repo](https://github.com/glassops-platform/glassops)",
-        "text": "GitHub Repo",
-        "url": "https://github.com/glassops-platform/glassops",
-        "lineNo": 29
-      },
-      {
-        "original": "[Discussions](https://github.com/glassops-platform/glassops/discussions)",
-        "text": "Discussions",
-        "url": "https://github.com/glassops-platform/glassops/discussions",
-        "lineNo": 30
-      }
-    ]
-  },
   "docs/vision.md": {
     "anchors": [
       "glassops-vision",
@@ -508,6 +366,7 @@
     "anchors": [
       "glassops-examples",
       "set-up-the-environment",
+      "other-ci-systems",
       "other-commands-in-a-workflow"
     ],
     "links": [
@@ -534,6 +393,24 @@
         "text": "GitHub deploy guide",
         "url": "../docs/guides/deploy-with-github.md",
         "lineNo": 18
+      },
+      {
+        "original": "[`bitbucket/`](bitbucket/README.md)",
+        "text": "`bitbucket/`",
+        "url": "bitbucket/README.md",
+        "lineNo": 22
+      },
+      {
+        "original": "[`gitlab/`](gitlab/README.md)",
+        "text": "`gitlab/`",
+        "url": "gitlab/README.md",
+        "lineNo": 23
+      },
+      {
+        "original": "[Bitbucket and GitLab guide](../docs/guides/other-ci.md)",
+        "text": "Bitbucket and GitLab guide",
+        "url": "../docs/guides/other-ci.md",
+        "lineNo": 25
       }
     ]
   },
@@ -547,17 +424,6 @@
   },
   ".github/ISSUE_TEMPLATE/documentation_improvement.md": {
     "anchors": [],
-    "links": []
-  },
-  "docs/adr/002-github-execution-authority.md": {
-    "anchors": [
-      "adr-002-github-as-execution-authority",
-      "context",
-      "decision",
-      "consequences",
-      "mitigation",
-      "alternatives"
-    ],
     "links": []
   },
   "docs/adr/001-system-api-primitive.md": {
@@ -583,65 +449,9 @@
     ],
     "links": []
   },
-  "docs/adr/007-protocol-supremacy-enforcement.md": {
+  "docs/adr/002-github-execution-authority.md": {
     "anchors": [
-      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
-      "context",
-      "the-strategic-gap",
-      "decision",
-      "protocol-supremacy-hierarchy",
-      "rationale",
-      "why-this-matters",
-      "why-custom-schemas-are-dangerous",
-      "implementation",
-      "changes-made-to-adapter-developmentmd",
-      "consequences",
-      "positive",
-      "negative",
-      "neutral",
-      "validation",
-      "how-to-verify-compliance",
-      "validate-sarif-schema",
-      "validate-structure",
-      "future-considerations",
-      "potential-next-steps",
-      "related-adrs",
-      "references",
-      "alternatives"
-    ],
-    "links": [
-      {
-        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
-        "text": "ADR-001: System API Primitive",
-        "url": "001-system-api-primitive.md",
-        "lineNo": 155
-      },
-      {
-        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
-        "text": "ADR-004: Schema Contract Config",
-        "url": "004-schema-contract-config.md",
-        "lineNo": 156
-      },
-      {
-        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
-        "text": "ADR-006: Documentation as Governed Artifact",
-        "url": "006-documentation-as-governed-artifact.md",
-        "lineNo": 157
-      },
-      {
-        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
-        "text": "OASIS SARIF 2.1.0 Specification",
-        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
-        "lineNo": 163
-      }
-    ]
-  },
-  "docs/adr/005-control-plane-architecture.md": {
-    "anchors": [
-      "adr-005-control-plane-architecture-reference-console",
-      "overview",
-      "components",
-      "data-flow",
+      "adr-002-github-as-execution-authority",
       "context",
       "decision",
       "consequences",
@@ -650,9 +460,225 @@
     ],
     "links": []
   },
+  "README.md": {
+    "anchors": [
+      "glassops",
+      "status",
+      "what-exists-today",
+      "the-glassops-cli",
+      "learn-more",
+      "who-this-is-for",
+      "quick-start",
+      "contributing",
+      "license",
+      "contact"
+    ],
+    "links": [
+      {
+        "original": "[![Docs Governance & Build](https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg)",
+        "text": "![Docs Governance & Build",
+        "url": "https://github.com/glassops-platform/glassops/actions/workflows/docs-governance-deploy.yml/badge.svg",
+        "lineNo": 3
+      },
+      {
+        "original": "[![Pages Deployment](https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg)",
+        "text": "![Pages Deployment",
+        "url": "https://github.com/glassops-platform/glassops/actions/workflows/pages/pages-build-deployment/badge.svg",
+        "lineNo": 4
+      },
+      {
+        "original": "[releases page](https://github.com/glassops-platform/glassops/releases)",
+        "text": "releases page",
+        "url": "https://github.com/glassops-platform/glassops/releases",
+        "lineNo": 12
+      },
+      {
+        "original": "[What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release)",
+        "text": "What is in which release",
+        "url": "docs/reference/releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 12
+      },
+      {
+        "original": "[CLI reference](docs/reference/cli.md)",
+        "text": "CLI reference",
+        "url": "docs/reference/cli.md",
+        "lineNo": 40
+      },
+      {
+        "original": "[configuration reference](docs/reference/config.md)",
+        "text": "configuration reference",
+        "url": "docs/reference/config.md",
+        "lineNo": 40
+      },
+      {
+        "original": "[PERMIT and rules](docs/reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "docs/reference/permit-and-rules.md",
+        "lineNo": 40
+      },
+      {
+        "original": "[Run a pipeline](docs/guides/run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "docs/guides/run-a-pipeline.md",
+        "lineNo": 40
+      },
+      {
+        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
+        "text": "GitHub deploy guide",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 40
+      },
+      {
+        "original": "[`overview.md`](docs/architecture/overview.md)",
+        "text": "`overview.md`",
+        "url": "docs/architecture/overview.md",
+        "lineNo": 46
+      },
+      {
+        "original": "[`vision.md`](docs/vision.md)",
+        "text": "`vision.md`",
+        "url": "docs/vision.md",
+        "lineNo": 47
+      },
+      {
+        "original": "[`cli.md`](docs/reference/cli.md)",
+        "text": "`cli.md`",
+        "url": "docs/reference/cli.md",
+        "lineNo": 48
+      },
+      {
+        "original": "[`config.md`](docs/reference/config.md)",
+        "text": "`config.md`",
+        "url": "docs/reference/config.md",
+        "lineNo": 49
+      },
+      {
+        "original": "[`permit-and-rules.md`](docs/reference/permit-and-rules.md)",
+        "text": "`permit-and-rules.md`",
+        "url": "docs/reference/permit-and-rules.md",
+        "lineNo": 50
+      },
+      {
+        "original": "[`run-a-pipeline.md`](docs/guides/run-a-pipeline.md)",
+        "text": "`run-a-pipeline.md`",
+        "url": "docs/guides/run-a-pipeline.md",
+        "lineNo": 51
+      },
+      {
+        "original": "[`deploy-with-github.md`](docs/guides/deploy-with-github.md)",
+        "text": "`deploy-with-github.md`",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 52
+      },
+      {
+        "original": "[`other-ci.md`](docs/guides/other-ci.md)",
+        "text": "`other-ci.md`",
+        "url": "docs/guides/other-ci.md",
+        "lineNo": 53
+      },
+      {
+        "original": "[`scratch-org-settings.md`](docs/guides/scratch-org-settings.md)",
+        "text": "`scratch-org-settings.md`",
+        "url": "docs/guides/scratch-org-settings.md",
+        "lineNo": 54
+      },
+      {
+        "original": "[`exec-provider.md`](docs/reference/exec-provider.md)",
+        "text": "`exec-provider.md`",
+        "url": "docs/reference/exec-provider.md",
+        "lineNo": 55
+      },
+      {
+        "original": "[`verify-and-coverage-settings.md`](docs/reference/verify-and-coverage-settings.md)",
+        "text": "`verify-and-coverage-settings.md`",
+        "url": "docs/reference/verify-and-coverage-settings.md",
+        "lineNo": 56
+      },
+      {
+        "original": "[`releases-and-licenses.md`](docs/reference/releases-and-licenses.md)",
+        "text": "`releases-and-licenses.md`",
+        "url": "docs/reference/releases-and-licenses.md",
+        "lineNo": 57
+      },
+      {
+        "original": "[`whitepaper.md`](docs/whitepaper.md)",
+        "text": "`whitepaper.md`",
+        "url": "docs/whitepaper.md",
+        "lineNo": 58
+      },
+      {
+        "original": "[earlier design decisions](docs/adr/README.md)",
+        "text": "earlier design decisions",
+        "url": "docs/adr/README.md",
+        "lineNo": 59
+      },
+      {
+        "original": "[`examples/consumer/`](examples/consumer/)",
+        "text": "`examples/consumer/`",
+        "url": "examples/consumer/",
+        "lineNo": 77
+      },
+      {
+        "original": "[GitHub deploy guide](docs/guides/deploy-with-github.md)",
+        "text": "GitHub deploy guide",
+        "url": "docs/guides/deploy-with-github.md",
+        "lineNo": 77
+      },
+      {
+        "original": "[`CONTRIBUTING.md`](CONTRIBUTING.md)",
+        "text": "`CONTRIBUTING.md`",
+        "url": "CONTRIBUTING.md",
+        "lineNo": 85
+      },
+      {
+        "original": "[LICENSE](LICENSE)",
+        "text": "LICENSE",
+        "url": "LICENSE",
+        "lineNo": 91
+      },
+      {
+        "original": "[docs/LICENSE](docs/LICENSE)",
+        "text": "docs/LICENSE",
+        "url": "docs/LICENSE",
+        "lineNo": 92
+      },
+      {
+        "original": "[GitHub Issues](https://github.com/glassops-platform/glassops/issues)",
+        "text": "GitHub Issues",
+        "url": "https://github.com/glassops-platform/glassops/issues",
+        "lineNo": 98
+      },
+      {
+        "original": "[@rdbumstead](https://github.com/rdbumstead)",
+        "text": "@rdbumstead",
+        "url": "https://github.com/rdbumstead",
+        "lineNo": 99
+      },
+      {
+        "original": "[@rdbumstead](https://github.com/rdbumstead)",
+        "text": "@rdbumstead",
+        "url": "https://github.com/rdbumstead",
+        "lineNo": 100
+      }
+    ]
+  },
   "docs/adr/004-schema-contract-config.md": {
     "anchors": [
       "adr-004-schema-contract-over-yaml-parsing",
+      "context",
+      "decision",
+      "consequences",
+      "mitigation",
+      "alternatives"
+    ],
+    "links": []
+  },
+  "docs/adr/005-control-plane-architecture.md": {
+    "anchors": [
+      "adr-005-control-plane-architecture-reference-console",
+      "overview",
+      "components",
+      "data-flow",
       "context",
       "decision",
       "consequences",
@@ -739,6 +765,59 @@
         "text": "MkDocs",
         "url": "https://www.mkdocs.org/",
         "lineNo": 367
+      }
+    ]
+  },
+  "docs/adr/007-protocol-supremacy-enforcement.md": {
+    "anchors": [
+      "adr-007-protocol-supremacy-enforcement-in-adapter-development",
+      "context",
+      "the-strategic-gap",
+      "decision",
+      "protocol-supremacy-hierarchy",
+      "rationale",
+      "why-this-matters",
+      "why-custom-schemas-are-dangerous",
+      "implementation",
+      "changes-made-to-adapter-developmentmd",
+      "consequences",
+      "positive",
+      "negative",
+      "neutral",
+      "validation",
+      "how-to-verify-compliance",
+      "validate-sarif-schema",
+      "validate-structure",
+      "future-considerations",
+      "potential-next-steps",
+      "related-adrs",
+      "references",
+      "alternatives"
+    ],
+    "links": [
+      {
+        "original": "[ADR-001: System API Primitive](001-system-api-primitive.md)",
+        "text": "ADR-001: System API Primitive",
+        "url": "001-system-api-primitive.md",
+        "lineNo": 155
+      },
+      {
+        "original": "[ADR-004: Schema Contract Config](004-schema-contract-config.md)",
+        "text": "ADR-004: Schema Contract Config",
+        "url": "004-schema-contract-config.md",
+        "lineNo": 156
+      },
+      {
+        "original": "[ADR-006: Documentation as Governed Artifact](006-documentation-as-governed-artifact.md)",
+        "text": "ADR-006: Documentation as Governed Artifact",
+        "url": "006-documentation-as-governed-artifact.md",
+        "lineNo": 157
+      },
+      {
+        "original": "[OASIS SARIF 2.1.0 Specification](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)",
+        "text": "OASIS SARIF 2.1.0 Specification",
+        "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html",
+        "lineNo": 163
       }
     ]
   },
@@ -969,69 +1048,6 @@
       }
     ]
   },
-  "docs/guides/run-a-pipeline.md": {
-    "anchors": [
-      "run-a-pipeline",
-      "run-it-locally",
-      "run-it-in-ci",
-      "the-default-pipelines",
-      "write-your-own"
-    ],
-    "links": [
-      {
-        "original": "[CLI reference](../reference/cli.md#glassops-run)",
-        "text": "CLI reference",
-        "url": "../reference/cli.md#glassops-run",
-        "lineNo": 3
-      },
-      {
-        "original": "[Deploy with GitHub](deploy-with-github.md)",
-        "text": "Deploy with GitHub",
-        "url": "deploy-with-github.md",
-        "lineNo": 30
-      },
-      {
-        "original": "[Deploy with GitHub](deploy-with-github.md)",
-        "text": "Deploy with GitHub",
-        "url": "deploy-with-github.md",
-        "lineNo": 61
-      },
-      {
-        "original": "[`env create`](../reference/cli.md#glassops-env-create)",
-        "text": "`env create`",
-        "url": "../reference/cli.md#glassops-env-create",
-        "lineNo": 101
-      }
-    ]
-  },
-  "docs/architecture/overview.md": {
-    "anchors": [
-      "glassops-architecture-design",
-      "1-high-level-architecture",
-      "the-control-loop",
-      "component-breakdown",
-      "2-governance-flow-the-pipeline",
-      "3-security-model",
-      "confused-deputy-protection",
-      "secrets-management",
-      "4-failure-modes-recovery",
-      "5-directory-structure"
-    ],
-    "links": [
-      {
-        "original": "[CLI reference](../reference/cli.md)",
-        "text": "CLI reference",
-        "url": "../reference/cli.md",
-        "lineNo": 24
-      },
-      {
-        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
-        "text": "PERMIT and rules",
-        "url": "../reference/permit-and-rules.md",
-        "lineNo": 39
-      }
-    ]
-  },
   "docs/adr/README.md": {
     "anchors": [
       "platform-adrs"
@@ -1105,6 +1121,34 @@
       }
     ]
   },
+  "docs/architecture/overview.md": {
+    "anchors": [
+      "glassops-architecture-design",
+      "1-high-level-architecture",
+      "the-control-loop",
+      "component-breakdown",
+      "2-governance-flow-the-pipeline",
+      "3-security-model",
+      "confused-deputy-protection",
+      "secrets-management",
+      "4-failure-modes-recovery",
+      "5-directory-structure"
+    ],
+    "links": [
+      {
+        "original": "[CLI reference](../reference/cli.md)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md",
+        "lineNo": 24
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md",
+        "lineNo": 39
+      }
+    ]
+  },
   "docs/guides/deploy-with-github.md": {
     "anchors": [
       "deploy-with-github",
@@ -1117,6 +1161,12 @@
       "other-ci-systems-and-single-commands"
     ],
     "links": [
+      {
+        "original": "[what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release)",
+        "text": "what is in which release",
+        "url": "../reference/releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 3
+      },
       {
         "original": "[`examples/consumer/`](https://github.com/glassops-platform/glassops/tree/main/examples/consumer)",
         "text": "`examples/consumer/`",
@@ -1148,10 +1198,75 @@
         "lineNo": 18
       },
       {
+        "original": "[Authorize an org using the JWT bearer flow](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm)",
+        "text": "Authorize an org using the JWT bearer flow",
+        "url": "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm",
+        "lineNo": 21
+      },
+      {
+        "original": "[guard](../reference/cli.md#the-guard)",
+        "text": "guard",
+        "url": "../reference/cli.md#the-guard",
+        "lineNo": 28
+      },
+      {
         "original": "[PERMIT and rules](../reference/permit-and-rules.md#separation_of_duties)",
         "text": "PERMIT and rules",
         "url": "../reference/permit-and-rules.md#separation_of_duties",
-        "lineNo": 137
+        "lineNo": 149
+      }
+    ]
+  },
+  "docs/guides/scratch-org-settings.md": {
+    "anchors": [
+      "scratch-org-definitions-and-settings",
+      "prerequisites",
+      "installation",
+      "usage",
+      "what-the-definition-may-hold",
+      "how-settings-are-applied",
+      "when-the-org-refuses-a-setting",
+      "what-was-tested"
+    ],
+    "links": []
+  },
+  "docs/guides/other-ci.md": {
+    "anchors": [
+      "run-glassops-on-bitbucket-or-gitlab",
+      "prerequisites",
+      "installation",
+      "what-the-ci-layer-does",
+      "outputs-and-the-summary",
+      "what-is-not-read",
+      "usage-on-bitbucket",
+      "usage-on-gitlab",
+      "moving-the-deployed-tag",
+      "what-you-can-check-without-a-runner"
+    ],
+    "links": [
+      {
+        "original": "[`examples/bitbucket`](https://github.com/glassops-platform/glassops/tree/main/examples/bitbucket)",
+        "text": "`examples/bitbucket`",
+        "url": "https://github.com/glassops-platform/glassops/tree/main/examples/bitbucket",
+        "lineNo": 7
+      },
+      {
+        "original": "[`examples/gitlab`](https://github.com/glassops-platform/glassops/tree/main/examples/gitlab)",
+        "text": "`examples/gitlab`",
+        "url": "https://github.com/glassops-platform/glassops/tree/main/examples/gitlab",
+        "lineNo": 7
+      },
+      {
+        "original": "[Releases, images and licenses](../reference/releases-and-licenses.md)",
+        "text": "Releases, images and licenses",
+        "url": "../reference/releases-and-licenses.md",
+        "lineNo": 19
+      },
+      {
+        "original": "[PERMIT and rules](../reference/permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "../reference/permit-and-rules.md",
+        "lineNo": 52
       }
     ]
   },
@@ -1183,203 +1298,153 @@
         "lineNo": 3
       },
       {
+        "original": "[YAML limits](verify-and-coverage-settings.md#yaml-limits)",
+        "text": "YAML limits",
+        "url": "verify-and-coverage-settings.md#yaml-limits",
+        "lineNo": 19
+      },
+      {
+        "original": "[Verify, coverage and YAML settings](verify-and-coverage-settings.md)",
+        "text": "Verify, coverage and YAML settings",
+        "url": "verify-and-coverage-settings.md",
+        "lineNo": 36
+      },
+      {
+        "original": "[The exec provider](exec-provider.md)",
+        "text": "The exec provider",
+        "url": "exec-provider.md",
+        "lineNo": 37
+      },
+      {
         "original": "[guard](cli.md#the-guard)",
         "text": "guard",
         "url": "cli.md#the-guard",
-        "lineNo": 49
+        "lineNo": 53
       },
       {
         "original": "[Authentication](cli.md#authentication)",
         "text": "Authentication",
         "url": "cli.md#authentication",
-        "lineNo": 52
+        "lineNo": 56
       },
       {
         "original": "[PERMIT and rules](permit-and-rules.md#the-v1-rules)",
         "text": "PERMIT and rules",
         "url": "permit-and-rules.md#the-v1-rules",
-        "lineNo": 69
+        "lineNo": 73
       },
       {
         "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
         "text": "validation binding",
         "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
-        "lineNo": 101
+        "lineNo": 105
       },
       {
         "original": "[the smart seed](cli.md#the-smart-seed)",
         "text": "the smart seed",
         "url": "cli.md#the-smart-seed",
-        "lineNo": 102
+        "lineNo": 106
       },
       {
         "original": "[`env create`](cli.md#glassops-env-create)",
         "text": "`env create`",
         "url": "cli.md#glassops-env-create",
-        "lineNo": 114
+        "lineNo": 118
       },
       {
         "original": "[`glassops test`](cli.md#glassops-test)",
         "text": "`glassops test`",
         "url": "cli.md#glassops-test",
-        "lineNo": 134
+        "lineNo": 138
+      },
+      {
+        "original": "[Verify, coverage and YAML settings](verify-and-coverage-settings.md#testcoverageclass_scope)",
+        "text": "Verify, coverage and YAML settings",
+        "url": "verify-and-coverage-settings.md#testcoverageclass_scope",
+        "lineNo": 145
       },
       {
         "original": "[`glassops check`](cli.md#glassops-check)",
         "text": "`glassops check`",
         "url": "cli.md#glassops-check",
-        "lineNo": 150
+        "lineNo": 155
       },
       {
         "original": "[`glassops analyze`](cli.md#glassops-analyze)",
         "text": "`glassops analyze`",
         "url": "cli.md#glassops-analyze",
-        "lineNo": 161
+        "lineNo": 166
       },
       {
         "original": "[`glassops run`](cli.md#glassops-run)",
         "text": "`glassops run`",
         "url": "cli.md#glassops-run",
-        "lineNo": 178
+        "lineNo": 183
       },
       {
         "original": "[Run a pipeline](../guides/run-a-pipeline.md)",
         "text": "Run a pipeline",
         "url": "../guides/run-a-pipeline.md",
-        "lineNo": 191
+        "lineNo": 196
       }
     ]
   },
-  "docs/reference/cli.md": {
+  "docs/guides/run-a-pipeline.md": {
     "anchors": [
-      "cli-reference",
-      "commands",
-      "glassops-init",
-      "glassops-doctor",
-      "glassops-doctor---auth",
-      "glassops-describe",
-      "glassops-plan",
-      "glassops-validate",
-      "glassops-gate",
-      "glassops-permit-verify",
-      "glassops-deploy",
-      "glassops-report",
-      "glassops-env-create",
-      "glassops-env-delete",
-      "glassops-env-sweep",
-      "glassops-test",
-      "glassops-run",
-      "glassops-check",
-      "glassops-analyze",
-      "the-smart-seed",
-      "authentication",
-      "isolated-salesforce-cli-state",
-      "the-guard",
-      "what-is-never-logged",
-      "validate-is-check-only",
-      "global-flags",
-      "exit-codes",
-      "results",
-      "configuration",
-      "end-to-end-check",
-      "install"
+      "run-a-pipeline",
+      "run-it-locally",
+      "run-it-in-ci",
+      "the-default-pipelines",
+      "write-your-own"
     ],
     "links": [
       {
-        "original": "[PERMIT and rules](permit-and-rules.md#the-signing-key)",
-        "text": "PERMIT and rules",
-        "url": "permit-and-rules.md#the-signing-key",
-        "lineNo": 48
+        "original": "[CLI reference](../reference/cli.md#glassops-run)",
+        "text": "CLI reference",
+        "url": "../reference/cli.md#glassops-run",
+        "lineNo": 3
       },
       {
-        "original": "[guard](#the-guard)",
-        "text": "guard",
-        "url": "#the-guard",
-        "lineNo": 52
+        "original": "[`environments`](../reference/config.md#environments)",
+        "text": "`environments`",
+        "url": "../reference/config.md#environments",
+        "lineNo": 20
       },
       {
-        "original": "[Validate is check-only](#validate-is-check-only)",
-        "text": "Validate is check-only",
-        "url": "#validate-is-check-only",
+        "original": "[Install](../reference/cli.md#install)",
+        "text": "Install",
+        "url": "../reference/cli.md#install",
+        "lineNo": 49
+      },
+      {
+        "original": "[Deploy with GitHub](deploy-with-github.md)",
+        "text": "Deploy with GitHub",
+        "url": "deploy-with-github.md",
+        "lineNo": 51
+      },
+      {
+        "original": "[`verify`](../reference/cli.md#glassops-verify)",
+        "text": "`verify`",
+        "url": "../reference/cli.md#glassops-verify",
         "lineNo": 83
       },
       {
-        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
-        "text": "validation binding",
-        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
-        "lineNo": 92
+        "original": "[what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release)",
+        "text": "what is in which release",
+        "url": "../reference/releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 83
       },
       {
-        "original": "[guard](#the-guard)",
-        "text": "guard",
-        "url": "#the-guard",
-        "lineNo": 96
+        "original": "[Deploy with GitHub](deploy-with-github.md)",
+        "text": "Deploy with GitHub",
+        "url": "deploy-with-github.md",
+        "lineNo": 83
       },
       {
-        "original": "[PERMIT and rules](permit-and-rules.md)",
-        "text": "PERMIT and rules",
-        "url": "permit-and-rules.md",
-        "lineNo": 96
-      },
-      {
-        "original": "[PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check)",
-        "text": "PERMIT and rules",
-        "url": "permit-and-rules.md#what-permit-verify-and-deploy-check",
-        "lineNo": 117
-      },
-      {
-        "original": "[guard](#the-guard)",
-        "text": "guard",
-        "url": "#the-guard",
-        "lineNo": 137
-      },
-      {
-        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
-        "text": "validation binding",
-        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
-        "lineNo": 137
-      },
-      {
-        "original": "[guard](#the-guard)",
-        "text": "guard",
-        "url": "#the-guard",
-        "lineNo": 170
-      },
-      {
-        "original": "[Run a pipeline](../guides/run-a-pipeline.md)",
-        "text": "Run a pipeline",
-        "url": "../guides/run-a-pipeline.md",
-        "lineNo": 248
-      },
-      {
-        "original": "[`schemas/result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/result.json)",
-        "text": "`schemas/result.json`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/result.json",
-        "lineNo": 400
-      },
-      {
-        "original": "[configuration reference](config.md)",
-        "text": "configuration reference",
-        "url": "config.md",
-        "lineNo": 425
-      },
-      {
-        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
-        "text": "`schemas/config.json`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
-        "lineNo": 425
-      },
-      {
-        "original": "[`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
-        "text": "`cli-e2e.yml`",
-        "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
-        "lineNo": 431
-      },
-      {
-        "original": "[`scripts/e2e`](https://github.com/glassops-platform/glassops/tree/main/scripts/e2e)",
-        "text": "`scripts/e2e`",
-        "url": "https://github.com/glassops-platform/glassops/tree/main/scripts/e2e",
-        "lineNo": 431
+        "original": "[`env create`](../reference/cli.md#glassops-env-create)",
+        "text": "`env create`",
+        "url": "../reference/cli.md#glassops-env-create",
+        "lineNo": 123
       }
     ]
   },
@@ -1405,6 +1470,316 @@
         "text": "overview.md",
         "url": "../architecture/overview.md",
         "lineNo": 5
+      }
+    ]
+  },
+  "docs/reference/verify-and-coverage-settings.md": {
+    "anchors": [
+      "verify-coverage-and-yaml-settings",
+      "verify",
+      "testcoverageclass_scope",
+      "yaml-limits"
+    ],
+    "links": [
+      {
+        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
+        "text": "`schemas/config.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
+        "lineNo": 3
+      },
+      {
+        "original": "[the exec provider page](exec-provider.md)",
+        "text": "the exec provider page",
+        "url": "exec-provider.md",
+        "lineNo": 3
+      },
+      {
+        "original": "[`glassops verify`](cli.md#glassops-verify)",
+        "text": "`glassops verify`",
+        "url": "cli.md#glassops-verify",
+        "lineNo": 7
+      }
+    ]
+  },
+  "examples/bitbucket/README.md": {
+    "anchors": [
+      "glassops-on-bitbucket-pipelines",
+      "set-up",
+      "how-it-behaves"
+    ],
+    "links": []
+  },
+  "docs/reference/cli.md": {
+    "anchors": [
+      "cli-reference",
+      "commands",
+      "glassops-init",
+      "glassops-doctor",
+      "glassops-doctor---auth",
+      "glassops-describe",
+      "glassops-plan",
+      "glassops-validate",
+      "glassops-gate",
+      "glassops-permit-verify",
+      "glassops-deploy",
+      "glassops-verify",
+      "glassops-report",
+      "glassops-env-create",
+      "glassops-env-delete",
+      "glassops-env-sweep",
+      "glassops-test",
+      "glassops-run",
+      "glassops-check",
+      "glassops-analyze",
+      "the-smart-seed",
+      "authentication",
+      "isolated-salesforce-cli-state",
+      "the-guard",
+      "what-is-never-logged",
+      "validate-is-check-only",
+      "global-flags",
+      "exit-codes",
+      "results",
+      "configuration",
+      "end-to-end-check",
+      "install"
+    ],
+    "links": [
+      {
+        "original": "[what is in which release](releases-and-licenses.md#what-is-in-which-release)",
+        "text": "what is in which release",
+        "url": "releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 3
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md#the-signing-key)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md#the-signing-key",
+        "lineNo": 50
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 54
+      },
+      {
+        "original": "[Validate is check-only](#validate-is-check-only)",
+        "text": "Validate is check-only",
+        "url": "#validate-is-check-only",
+        "lineNo": 91
+      },
+      {
+        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
+        "text": "validation binding",
+        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
+        "lineNo": 100
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 104
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md",
+        "lineNo": 104
+      },
+      {
+        "original": "[PERMIT and rules](permit-and-rules.md#what-permit-verify-and-deploy-check)",
+        "text": "PERMIT and rules",
+        "url": "permit-and-rules.md#what-permit-verify-and-deploy-check",
+        "lineNo": 128
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 148
+      },
+      {
+        "original": "[validation binding](permit-and-rules.md#validation-binding-and-quick-deploy)",
+        "text": "validation binding",
+        "url": "permit-and-rules.md#validation-binding-and-quick-deploy",
+        "lineNo": 148
+      },
+      {
+        "original": "[the exec provider](exec-provider.md#deploying)",
+        "text": "the exec provider",
+        "url": "exec-provider.md#deploying",
+        "lineNo": 164
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 180
+      },
+      {
+        "original": "[Verify, coverage and YAML settings](verify-and-coverage-settings.md)",
+        "text": "Verify, coverage and YAML settings",
+        "url": "verify-and-coverage-settings.md",
+        "lineNo": 194
+      },
+      {
+        "original": "[the exec provider](exec-provider.md)",
+        "text": "the exec provider",
+        "url": "exec-provider.md",
+        "lineNo": 194
+      },
+      {
+        "original": "[guard](#the-guard)",
+        "text": "guard",
+        "url": "#the-guard",
+        "lineNo": 225
+      },
+      {
+        "original": "[Run a pipeline](../guides/run-a-pipeline.md)",
+        "text": "Run a pipeline",
+        "url": "../guides/run-a-pipeline.md",
+        "lineNo": 303
+      },
+      {
+        "original": "[Bitbucket and GitLab](../guides/other-ci.md)",
+        "text": "Bitbucket and GitLab",
+        "url": "../guides/other-ci.md",
+        "lineNo": 439
+      },
+      {
+        "original": "[`schemas/result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/result.json)",
+        "text": "`schemas/result.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/result.json",
+        "lineNo": 457
+      },
+      {
+        "original": "[configuration reference](config.md)",
+        "text": "configuration reference",
+        "url": "config.md",
+        "lineNo": 482
+      },
+      {
+        "original": "[`schemas/config.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/config.json)",
+        "text": "`schemas/config.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/config.json",
+        "lineNo": 482
+      },
+      {
+        "original": "[`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml)",
+        "text": "`cli-e2e.yml`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/.github/workflows/cli-e2e.yml",
+        "lineNo": 488
+      },
+      {
+        "original": "[`scripts/e2e`](https://github.com/glassops-platform/glassops/tree/main/scripts/e2e)",
+        "text": "`scripts/e2e`",
+        "url": "https://github.com/glassops-platform/glassops/tree/main/scripts/e2e",
+        "lineNo": 488
+      },
+      {
+        "original": "[releases page](https://github.com/glassops-platform/glassops/releases)",
+        "text": "releases page",
+        "url": "https://github.com/glassops-platform/glassops/releases",
+        "lineNo": 494
+      },
+      {
+        "original": "[Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release)",
+        "text": "Releases, images and licenses",
+        "url": "releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 494
+      },
+      {
+        "original": "[Releases, images and licenses](releases-and-licenses.md)",
+        "text": "Releases, images and licenses",
+        "url": "releases-and-licenses.md",
+        "lineNo": 514
+      }
+    ]
+  },
+  "examples/gitlab/README.md": {
+    "anchors": [
+      "glassops-on-gitlab-ci",
+      "set-up",
+      "how-it-behaves"
+    ],
+    "links": []
+  },
+  "docs/reference/releases-and-licenses.md": {
+    "anchors": [
+      "releases-images-and-licenses",
+      "what-is-in-which-release",
+      "release-tags",
+      "which-image-a-workflow-runs",
+      "license-scan",
+      "third-party-notices",
+      "tested-here-and-not"
+    ],
+    "links": [
+      {
+        "original": "[releases page](https://github.com/glassops-platform/glassops/releases)",
+        "text": "releases page",
+        "url": "https://github.com/glassops-platform/glassops/releases",
+        "lineNo": 7
+      },
+      {
+        "original": "[Install](cli.md#install)",
+        "text": "Install",
+        "url": "cli.md#install",
+        "lineNo": 7
+      },
+      {
+        "original": "[`scripts/notices/allowlist.txt`](https://github.com/glassops-platform/glassops/blob/main/scripts/notices/allowlist.txt)",
+        "text": "`scripts/notices/allowlist.txt`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/scripts/notices/allowlist.txt",
+        "lineNo": 60
+      },
+      {
+        "original": "[`THIRD_PARTY_NOTICES`](https://github.com/glassops-platform/glassops/blob/main/THIRD_PARTY_NOTICES)",
+        "text": "`THIRD_PARTY_NOTICES`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/THIRD_PARTY_NOTICES",
+        "lineNo": 75
+      }
+    ]
+  },
+  "docs/reference/exec-provider.md": {
+    "anchors": [
+      "the-exec-provider",
+      "-run-your-deploy-tool-here-",
+      "run-it-step-by-step",
+      "the-exec-section",
+      "what-plan-does",
+      "what-every-command-gets",
+      "the-result-file",
+      "the-guard",
+      "deploying",
+      "verifying",
+      "untested-here"
+    ],
+    "links": [
+      {
+        "original": "[Deploying](#deploying)",
+        "text": "Deploying",
+        "url": "#deploying",
+        "lineNo": 77
+      },
+      {
+        "original": "[The guard](#the-guard)",
+        "text": "The guard",
+        "url": "#the-guard",
+        "lineNo": 103
+      },
+      {
+        "original": "[`schemas/engine-result.json`](https://github.com/glassops-platform/glassops/blob/main/schemas/engine-result.json)",
+        "text": "`schemas/engine-result.json`",
+        "url": "https://github.com/glassops-platform/glassops/blob/main/schemas/engine-result.json",
+        "lineNo": 140
+      },
+      {
+        "original": "[`glassops verify`](cli.md#glassops-verify)",
+        "text": "`glassops verify`",
+        "url": "cli.md#glassops-verify",
+        "lineNo": 202
       }
     ]
   },
@@ -1436,6 +1811,12 @@
     ],
     "links": [
       {
+        "original": "[what is in which release](releases-and-licenses.md#what-is-in-which-release)",
+        "text": "what is in which release",
+        "url": "releases-and-licenses.md#what-is-in-which-release",
+        "lineNo": 3
+      },
+      {
         "original": "[CLI reference](cli.md)",
         "text": "CLI reference",
         "url": "cli.md",
@@ -1445,15 +1826,26 @@
         "original": "[Deploy with GitHub](../guides/deploy-with-github.md)",
         "text": "Deploy with GitHub",
         "url": "../guides/deploy-with-github.md",
-        "lineNo": 43
+        "lineNo": 45
       },
       {
         "original": "[CLI reference](cli.md#the-guard)",
         "text": "CLI reference",
         "url": "cli.md#the-guard",
-        "lineNo": 53
+        "lineNo": 55
       }
     ]
+  },
+  "internal/core/report/testdata/summary-all-steps.md": {
+    "anchors": [
+      "glassops-report-error",
+      "validate-fail",
+      "gate-fail",
+      "deploy-error",
+      "permit-deny",
+      "deploy"
+    ],
+    "links": []
   },
   "internal/ci/testdata/github/README.md": {
     "anchors": [
@@ -1467,24 +1859,14 @@
     ],
     "links": []
   },
-  "internal/core/report/testdata/summary-all-steps.md": {
-    "anchors": [
-      "glassops-report-error",
-      "validate-fail",
-      "gate-fail",
-      "deploy-error",
-      "permit-deny",
-      "deploy"
-    ],
-    "links": []
-  },
   "internal/providers/salesforce/testdata/README.md": {
     "anchors": [
       "salesforce-provider-fixtures",
       "sf",
       "sgd",
       "codeanalyzer",
-      "facts-the-fixtures-show"
+      "facts-the-fixtures-show",
+      "sf-verify-and-timeout-captures"
     ],
     "links": []
   }

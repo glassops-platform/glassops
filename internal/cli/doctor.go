@@ -14,6 +14,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 type doctorOptions struct {
@@ -88,7 +89,11 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	var p providers.Provider
 	if cfg != nil && cfg.Provider != "" {
 		p = app.Providers.Get(cfg.Provider)
-		if detected == nil {
+		if cfg.Provider == config.ExecProvider && p != nil {
+			// provider exec is never detected from the project files, so the config naming
+			// it is the whole check, whatever else the project holds.
+			res.AddCheck("provider", run.StatusPass, p.Name()+" (from config)")
+		} else if detected == nil {
 			res.AddCheck("provider", run.StatusFail, fmt.Sprintf("config says %s but no %s project was found in %s", cfg.Provider, cfg.Provider, g.dir))
 		} else if detected.Name() != cfg.Provider {
 			res.AddCheck("provider", run.StatusFail, fmt.Sprintf("config says %s but the project looks like %s", cfg.Provider, detected.Name()))
@@ -103,6 +108,16 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	}
 	if p != nil {
 		res.Provider = p.Name()
+		// The provider reads its own config section before doctor --auth calls it, as
+		// loadProject does for every other command.
+		if c, ok := p.(providers.Configurable); ok && cfg != nil {
+			if err := c.Configure(cfg); err != nil {
+				res.AddCheck("provider", run.StatusError, err.Error())
+			}
+		}
+	}
+	if cfg != nil {
+		rememberProjectDir(cfg, g.dir)
 	}
 
 	// 4. Tools. git is always needed.
@@ -201,6 +216,10 @@ func (app *App) doctorAuth(ctx context.Context, res *run.Result, cfg *config.Con
 			continue
 		}
 		s, info, err := app.connect(ctx, p, t)
+		if errors.Is(err, execprovider.ErrNoDescribe) {
+			res.AddCheck(check, run.StatusSkipped, fmt.Sprintf("tier %s: %s", t.Tier, err))
+			continue
+		}
 		if err != nil {
 			res.AddCheck(check, run.StatusError, err.Error())
 			continue
@@ -236,19 +255,21 @@ func (app *App) checkTool(res *run.Result, name, version string, err error) {
 // the command's exit code.
 func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 	var md strings.Builder
-	fmt.Fprintf(&md, "### glassops %s: %s\n\n| Check | Status | Detail |\n|---|---|---|\n", res.Step, res.Status)
+	fmt.Fprintf(&md, "### glassops %s: %s\n\n| Check | Status | Detail |\n|---|---|---|\n", oneLine(res.Step), res.Status)
 	for _, ch := range res.Checks {
-		fmt.Fprintf(app.Stdout, "%-8s %-22s %s\n", ch.Status, ch.Name, ch.Detail)
-		fmt.Fprintf(&md, "| %s | %s | %s |\n", ch.Name, ch.Status, strings.ReplaceAll(ch.Detail, "|", "\\|"))
+		name, detail := oneLine(ch.Name), oneLine(ch.Detail)
+		fmt.Fprintf(app.Stdout, "%-8s %-22s %s\n", ch.Status, name, detail)
+		fmt.Fprintf(&md, "| %s | %s | %s |\n", cell(name), ch.Status, cell(detail))
 		if ch.Status == run.StatusFail || ch.Status == run.StatusError {
-			c.Annotate(ci.Errors, fmt.Sprintf("%s %s: %s", res.Step, ch.Name, ch.Detail))
+			c.Annotate(ci.Errors, fmt.Sprintf("%s %s: %s", res.Step, name, detail))
 		}
 	}
 	// Errors that are not tied to a check, such as a guard mismatch, are shown too, so a CI
 	// log says why the step stopped.
 	for _, e := range res.Errors {
+		e = oneLine(e)
 		fmt.Fprintf(app.Stdout, "%-8s %-22s %s\n", run.StatusError, "error", e)
-		fmt.Fprintf(&md, "| error | %s | %s |\n", run.StatusError, strings.ReplaceAll(e, "|", "\\|"))
+		fmt.Fprintf(&md, "| error | %s | %s |\n", run.StatusError, cell(e))
 		c.Annotate(ci.Errors, fmt.Sprintf("%s: %s", res.Step, e))
 	}
 
@@ -256,7 +277,7 @@ func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 	if err != nil {
 		return &exitcode.ExitError{Code: exitcode.Error, Err: err}
 	}
-	fmt.Fprintf(app.Stdout, "%s: %s (result: %s)\n", res.Step, res.Status, path)
+	fmt.Fprintf(app.Stdout, "%s: %s (result: %s)\n", oneLine(res.Step), res.Status, oneLine(path))
 
 	if err := c.SetOutput("status", string(res.Status)); err != nil {
 		return &exitcode.ExitError{Code: exitcode.Error, Err: err}
@@ -274,6 +295,17 @@ func (app *App) finish(res *run.Result, c ci.CI, g *globals) error {
 	}
 	return nil
 }
+
+// lineBreaks writes a carriage return or line feed as the two characters \r or \n.
+var lineBreaks = strings.NewReplacer("\r", `\r`, "\n", `\n`)
+
+// oneLine keeps s on one line. Every check name, detail and error finish prints goes through
+// it, because any of them can hold text from a target, a provider or a flag, and on GitHub a
+// stdout line that starts with :: is a workflow command.
+func oneLine(s string) string { return lineBreaks.Replace(s) }
+
+// cell makes s safe inside one markdown table cell: one line, with | escaped.
+func cell(s string) string { return strings.ReplaceAll(oneLine(s), "|", `\|`) }
 
 // envRefsFor lists the $VARs the env check covers. With --auth and --target T it covers only
 // target T and anything outside targets, so a target that does not exist yet (such as a

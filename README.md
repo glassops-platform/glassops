@@ -9,7 +9,7 @@
 
 GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
 
-v0.3.0 is released as a prerelease, with a container image at `ghcr.io/glassops-platform/glassops:0.3.0`. The next release adds the commands `env`, `test`, `run`, `check` and `analyze`, the reusable GitHub workflows, and a separate `glassops-analyzer` image (`ghcr.io/glassops-platform/glassops-analyzer`) that adds Java and the Code Analyzer for `analyze`. Until then, build from a checkout to use them.
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in a published release yet, so build from a checkout to use them.
 
 ---
 
@@ -17,7 +17,7 @@ v0.3.0 is released as a prerelease, with a container image at `ghcr.io/glassops-
 
 ### The `glassops` CLI
 
-The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command, and `glassops run` runs a whole pipeline of them.
+The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each step is its own command, and `glassops run` runs a whole pipeline of them. Salesforce is the built-in provider, and provider `exec` runs your own commands for any other deploy tool. The CI layers are GitHub Actions, Bitbucket Pipelines and GitLab CI. The last two have not run on a real runner yet.
 
 | Command | What it does |
 |---|---|
@@ -29,6 +29,7 @@ The CLI lives at the repository root (`cmd/`, `internal/`, `schemas/`). Each ste
 | `gate` | Evaluates the policy rules for a target into a signed PERMIT |
 | `permit verify` | Checks that a PERMIT is signed, unexpired and bound to this target, commit, plan and config |
 | `deploy` | Deploys the change set, only under a valid PERMIT, then moves the deployed tag |
+| `verify` | After a deploy, checks that the target holds what the plan says |
 | `report` | Summarises every result as markdown and SARIF |
 | `env create`, `env delete`, `env sweep` | Create, delete and sweep ephemeral scratch orgs that later steps use |
 | `test` | Runs Apex tests with coverage on a target and writes JUnit XML |
@@ -49,6 +50,11 @@ Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every co
 - **PERMIT and rules:** [`permit-and-rules.md`](docs/reference/permit-and-rules.md)
 - **Run a pipeline:** [`run-a-pipeline.md`](docs/guides/run-a-pipeline.md)
 - **Deploy with GitHub:** [`deploy-with-github.md`](docs/guides/deploy-with-github.md)
+- **Bitbucket and GitLab:** [`other-ci.md`](docs/guides/other-ci.md)
+- **Scratch org definitions and settings:** [`scratch-org-settings.md`](docs/guides/scratch-org-settings.md)
+- **The exec provider:** [`exec-provider.md`](docs/reference/exec-provider.md)
+- **Verify, coverage and YAML settings:** [`verify-and-coverage-settings.md`](docs/reference/verify-and-coverage-settings.md)
+- **Releases, images and licenses:** [`releases-and-licenses.md`](docs/reference/releases-and-licenses.md)
 - **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
 - **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
 
@@ -66,7 +72,7 @@ Teams that:
 
 ## Quick Start
 
-The released image is `ghcr.io/glassops-platform/glassops:0.3.0`. To use the newer commands, build the CLI from a checkout with `go build -o glassops ./cmd/glassops`, or build the container image with `docker build -t glassops .`.
+The latest published prerelease image is `ghcr.io/glassops-platform/glassops:0.4.0`. To use what was added since, build the CLI from a checkout with `go build -o glassops ./cmd/glassops`, or build the container image with `docker build -t glassops .`.
 
 On GitHub, [`examples/consumer/`](examples/consumer/) is the smallest working layout. It holds a `glassops.yaml` and two short workflows that call the reusable workflows `glassops-pr.yml` and `glassops-deploy.yml` from this repository. The deploy caller passes `GLASSOPS_PERMIT_KEY` by name, and the value lives only as a secret of the protected `glassops-deploy` environment. See the [GitHub deploy guide](docs/guides/deploy-with-github.md). Or run `glassops init` in a Salesforce DX project to generate a similar setup.
 

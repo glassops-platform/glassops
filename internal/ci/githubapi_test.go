@@ -274,3 +274,20 @@ func TestNextLink(t *testing.T) {
 		}
 	}
 }
+
+// The issue events endpoint answers 403 without issues: read. The error names the permission.
+func TestLabelAdderForbiddenNamesIssuesRead(t *testing.T) {
+	// Synthetic body: the message text is GitHub's documented wording, not captured.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"message":"Resource not accessible by integration"}`))
+	}))
+	defer srv.Close()
+	_, err := NewGitHubAPI(srv.URL, "secret-token", srv.Client()).LabelAdder(context.Background(), testRepo, 9, "ok")
+	if err == nil || !strings.Contains(err.Error(), "HTTP 403") || !strings.Contains(err.Error(), "issues: read") {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.Contains(err.Error(), "secret-token") {
+		t.Fatal("the token reached the error")
+	}
+}

@@ -25,6 +25,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
+	execprovider "github.com/glassops-platform/glassops/internal/providers/exec"
 )
 
 // sodRule is the rule whose result fills the PERMIT's separation_of_duties block.
@@ -46,6 +47,9 @@ type gateOptions struct {
 	planPath   string
 	permitPath string
 	noConnect  bool
+	// deployCommand is the JSON array of strings given to --deploy-command, the exact argv
+	// deploy -- will run for provider exec.
+	deployCommand string
 }
 
 func newGateCommand(app *App, g *globals) *cobra.Command {
@@ -58,7 +62,9 @@ func newGateCommand(app *App, g *globals) *cobra.Command {
 			"PERMIT to .glassops/permit.json, which records allow or deny and every rule result.\n" +
 			"It logs in to the target to run the org Id and tier guard unless --no-connect is\n" +
 			"set. It exits 1 when policy denies the deploy, and 2 when GLASSOPS_PERMIT_KEY is not\n" +
-			"set.",
+			"set. When the target's tier has deploy windows, the PERMIT expires when the window\n" +
+			"that holds the gate's clock closes, if that is before the configured TTL. With\n" +
+			"provider exec, --deploy-command binds the command deploy -- will run.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.gate(cmd.Context(), g, o)
@@ -69,6 +75,7 @@ func newGateCommand(app *App, g *globals) *cobra.Command {
 	f.StringVar(&o.planPath, "plan", "", "change set file (default <dir>/.glassops/plan.json)")
 	f.StringVar(&o.permitPath, "permit", "", "where the PERMIT is written (default <dir>/.glassops/permit.json)")
 	f.BoolVar(&o.noConnect, "no-connect", false, "do not log in to the target, and use its configured Id")
+	f.StringVar(&o.deployCommand, "deploy-command", "", `provider exec only: the command deploy -- will run, as a JSON array of strings such as '["./deploy.sh","--prod"]'. The PERMIT binds its sha256, never the text`)
 	_ = cmd.MarkFlagRequired("target")
 	return cmd
 }
@@ -128,7 +135,16 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		return app.finish(res, c, g)
 	}
 
-	signer, err := permitSigner(app.Getenv(permit.KeyEnv))
+	commandSHA, err := gateDeployCommand(proj.provider, o.deployCommand)
+	if err != nil {
+		res.AddCheck("deploy_command", run.StatusError, err.Error())
+		return app.finish(res, c, g)
+	}
+
+	signer, err := permit.SignerFor(cfg, permit.Keys{
+		HMACKey: func() ([]byte, error) { return gateHMACKey(app.Getenv(permit.KeyEnv)) },
+		NewHMAC: gateSigner,
+	})
 	if err != nil {
 		res.AddCheck("permit.key", run.StatusError, err.Error())
 		return app.finish(res, c, g)
@@ -158,7 +174,8 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		gr.evidenceFail("plan.digest", err.Error())
 	}
 
-	// Earlier results go in first, so the facts gate owns (target, change, ci) always win.
+	// Earlier results go in first, then the plan. Neither may set a fact gate owns (target,
+	// change, ci), and gate sets those after both.
 	validated, bound := gr.resultFacts(g, t, cs)
 	gr.doc.Merge("", facts.FromChangeSet(cs).Facts)
 	tgt, guardCheck, connected := gr.targetFacts(ctx, t, o.noConnect)
@@ -175,6 +192,8 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	}
 
 	now := app.Now().UTC()
+	expires, capped := permitExpiry(cfg, tgt.Tier, now)
+	var policyErr error
 	// validation.bound only says whether deploy may quick deploy. It never denies.
 	checks := []policy.Result{guardCheck, bound}
 	allow := guardCheck.Outcome != policy.Fail
@@ -190,9 +209,13 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 			// An empty rule set would allow everything, so it is a defect, never a pass.
 			gr.evidenceFail("policy", "no policy rules are loaded")
 		}
-		ok, results := policy.Evaluate(rules, policy.Input{Facts: gr.doc, Config: cfg, Now: now})
+		// The Go rules always run first. Rego, when configured, can only add results, and an
+		// evaluator that cannot decide denies and makes gate exit 2.
+		in := policy.Input{Facts: gr.doc, Config: cfg, Now: now}
+		ok, results, err := policy.EvaluateAll(ctx, policy.Evaluators(rules, cfg), in)
 		allow = allow && ok
 		checks = append(checks, results...)
+		policyErr = err
 	}
 	if len(gr.evidence) > 0 {
 		allow = false
@@ -204,13 +227,16 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		ID:           newPermitID(),
 		Allow:        allow,
 		IssuedAt:     now,
-		ExpiresAt:    now.Add(cfg.Policy.TTL()),
+		ExpiresAt:    expires,
 		Target:       tgt,
 		Commit:       cictx.SHA,
 		PlanSHA256:   cs.SHA256,
 		ConfigSHA256: loaded.SHA256(),
-		Validation:   validated,
-		Checks:       checks,
+		// The PERMIT binds how the plan files are used too, such as which are destructive.
+		ChangeSetSHA256:     permit.ChangeSetDigest(cs),
+		DeployCommandSHA256: commandSHA,
+		Validation:          validated,
+		Checks:              checks,
 	}
 	if p.ID == "" {
 		res.AddCheck("permit", run.StatusError, "could not generate a PERMIT Id")
@@ -238,21 +264,33 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	res.Facts["gate.ephemeral"] = ephemeral
 	res.Facts["gate.permit_id"] = p.ID
 	res.Facts["gate.expires_at"] = p.ExpiresAt.Format(time.RFC3339)
+	res.Facts["gate.expires_at_window_end"] = capped
+	if commandSHA != "" {
+		res.Facts["gate.deploy_command_sha256"] = commandSHA
+	}
 	verdict := "deny"
 	if allow {
 		verdict = "allow"
 	}
-	res.AddCheck("permit", run.StatusPass, fmt.Sprintf("%s, signed, written to %s, expires %s", verdict, permitPath, p.ExpiresAt.Format(time.RFC3339)))
+	expiry := p.ExpiresAt.Format(time.RFC3339)
+	if capped {
+		expiry += ", when the deploy window closes"
+	}
+	res.AddCheck("permit", run.StatusPass, fmt.Sprintf("%s, signed, written to %s, expires %s", verdict, permitPath, expiry))
 	if !allow {
 		res.Degrade(run.StatusFail)
+	}
+	if policyErr != nil {
+		// The PERMIT is written as a deny, and the step is an error because policy could not
+		// be evaluated.
+		res.AddCheck("policy.evaluate", run.StatusError, policyErr.Error())
 	}
 	return app.finish(res, c, g)
 }
 
-// permitSigner reads the key from GLASSOPS_PERMIT_KEY with permit.ParseKey, so gate accepts
-// exactly the keys permit verify accepts, and returns the signer for it. No error includes the
-// value.
-func permitSigner(value string) (permit.Signer, error) {
+// gateHMACKey reads the key from GLASSOPS_PERMIT_KEY with permit.ParseKey, so gate accepts
+// exactly the keys permit verify accepts. No error includes the value.
+func gateHMACKey(value string) ([]byte, error) {
 	if strings.TrimSpace(value) == "" {
 		return nil, fmt.Errorf("%s is not set, so no PERMIT can be signed", permit.KeyEnv)
 	}
@@ -260,7 +298,51 @@ func permitSigner(value string) (permit.Signer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", permit.KeyEnv, err)
 	}
-	return gateSigner(key), nil
+	return key, nil
+}
+
+// permitExpiry is when a PERMIT issued at now expires: after the configured TTL, or when the
+// deploy window for tier that holds now closes, whichever is first. capped says the window
+// end was used. A tier with no windows, or a clock outside them, keeps the TTL, because the
+// window rule then decides, and an unusable window fails that rule.
+func permitExpiry(cfg *config.Config, tier string, now time.Time) (time.Time, bool) {
+	expires := now.Add(cfg.Policy.TTL())
+	end, inside, err := policy.WindowEnd(cfg, tier, now)
+	if err == nil && inside && end.Before(expires) {
+		return end.UTC(), true
+	}
+	return expires, false
+}
+
+// gateDeployCommand parses --deploy-command and returns the sha256 the PERMIT binds it by, or
+// "" when the flag is not set. The value must be a JSON array of at least one string, and the
+// provider must take a deploy command, which is provider exec.
+func gateDeployCommand(p providers.Provider, value string) (string, error) {
+	if value == "" {
+		return "", nil
+	}
+	if _, ok := p.(deployOverrider); !ok {
+		return "", fmt.Errorf("--deploy-command needs provider exec, and this project uses %s", p.Name())
+	}
+	argv, err := parseDeployCommand(value)
+	if err != nil {
+		return "", err
+	}
+	return permit.DeployCommandDigest(argv), nil
+}
+
+// parseDeployCommand reads a JSON array of strings with at least one element and nothing
+// after it. The error never repeats the value.
+func parseDeployCommand(value string) ([]string, error) {
+	dec := json.NewDecoder(strings.NewReader(value))
+	var argv []string
+	if err := dec.Decode(&argv); err != nil || dec.More() {
+		return nil, errors.New(`--deploy-command must be a JSON array of strings, such as '["./deploy.sh","--prod"]'`)
+	}
+	if len(argv) == 0 || argv[0] == "" {
+		return nil, errors.New("--deploy-command names no command")
+	}
+	return argv, nil
 }
 
 // newPermitID returns 16 random bytes in hex, or "" when the system has no randomness.
@@ -290,7 +372,9 @@ func (r *gateRun) resultFacts(g *globals, t providers.Target, cs providers.Chang
 		if !ok {
 			continue
 		}
-		r.doc.Merge("", facts.FromResult(rr).Facts)
+		// Only the allowlisted step and provider facts are copied. The result files are not
+		// signed, so a ci., target. or change. fact in one would speak for gate.
+		r.doc.MergeOnly(facts.ResultPrefixes(r.proj.provider.Name()), rr.Facts)
 		if step == "validate" {
 			validated, bound = r.validation(rr, t, cs)
 		}
@@ -361,6 +445,10 @@ func (r *gateRun) targetFacts(ctx context.Context, t providers.Target, noConnect
 		case errors.As(err, &mm):
 			check = policy.Result{Rule: "guard", Outcome: policy.Fail, Detail: err.Error()}
 			r.evidenceFail("target", "the guard refused the target")
+		case errors.Is(err, execprovider.ErrNoDescribe):
+			// A provider exec target below prod with no exec.describe cannot report its Id,
+			// so the configured Id and kind are recorded, as --no-connect does.
+			check = policy.Result{Rule: "guard", Outcome: policy.Skipped, Detail: fmt.Sprintf("tier %s: %s, so the configured Id and kind are recorded", t.Tier, execprovider.ErrNoDescribe)}
 		case err != nil:
 			check = policy.Result{Rule: "guard", Outcome: policy.Fail, Detail: "the guard could not run"}
 			r.evidenceFail("target", err.Error())
@@ -520,15 +608,16 @@ func sodBlock(checks []policy.Result, doc *facts.Document) *permit.SoD {
 }
 
 // ruleStatus maps a rule outcome to a result check status. An evidence failure is an error,
-// because a tool or infrastructure problem stopped gate from seeing the evidence.
+// because a tool or infrastructure problem stopped gate from seeing the evidence. Any outcome
+// that denies, including one gate does not know, is a fail, as it is in the PERMIT.
 func ruleStatus(r policy.Result) run.Status {
-	switch r.Outcome {
-	case policy.Fail:
+	switch {
+	case r.Outcome.Denies():
 		if strings.HasPrefix(r.Rule, evidencePrefix) {
 			return run.StatusError
 		}
 		return run.StatusFail
-	case policy.Skipped:
+	case r.Outcome == policy.Skipped:
 		return run.StatusSkipped
 	default:
 		return run.StatusPass

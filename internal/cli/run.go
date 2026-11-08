@@ -18,8 +18,13 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/pipeline"
 	"github.com/glassops-platform/glassops/internal/core/run"
+	"github.com/glassops-platform/glassops/internal/core/telemetry"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
+
+// telemetryExport sends the finished run record when telemetry is configured. Tests replace
+// it.
+var telemetryExport = telemetry.Export
 
 // ResultsDirEnv is the variable an exec step reads to find the results dir.
 const ResultsDirEnv = "GLASSOPS_RESULTS_DIR"
@@ -160,7 +165,15 @@ func (app *App) runPipeline(ctx context.Context, g *globals, o *runOptions, name
 	}
 	// The run's status follows the worst exit code, so the run exits with that code.
 	res.Degrade(exitStatus(out.Exit))
-	return app.finish(res, c, g)
+	err = app.finish(res, c, g)
+	// Export runs after the record is written. A failed export only warns, so it never
+	// changes the exit code.
+	if proj.cfg.Telemetry.Enabled() {
+		if xerr := telemetryExport(ctx, proj.cfg, res); xerr != nil {
+			c.Annotate(ci.Warning, "run: telemetry export failed: "+xerr.Error())
+		}
+	}
+	return err
 }
 
 // removeStaleResults removes the glassops results an earlier run left in dir: run.json and
@@ -257,11 +270,11 @@ func (app *App) finishCode(res *run.Result, c ci.CI, g *globals) int {
 	var ee *exitcode.ExitError
 	if errors.As(err, &ee) {
 		if ee.Err != nil {
-			fmt.Fprintln(app.Stderr, "glassops:", ee.Err)
+			printErr(app.Stderr, ee.Err)
 		}
 		return ee.Code
 	}
-	fmt.Fprintln(app.Stderr, "glassops:", err)
+	printErr(app.Stderr, err)
 	return exitcode.Error
 }
 

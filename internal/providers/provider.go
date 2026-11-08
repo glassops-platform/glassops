@@ -5,8 +5,8 @@
 // example "salesforce.org_type". Deploy is part of the interface, and callers must verify a
 // PERMIT before they call it.
 //
-// Environments, Seeder and Tester are optional capabilities. A command checks for them with a
-// type assertion on the Provider.
+// Environments, Seeder, Tester, Verifier and Configurable are optional capabilities. A command
+// checks for them with a type assertion on the Provider.
 package providers
 
 import (
@@ -396,4 +396,74 @@ type TestResult struct {
 type Tester interface {
 	// RunTests runs or resumes a test run.
 	RunTests(ctx context.Context, s Session, req TestRequest) (TestResult, error)
+}
+
+// DeployRecord is what verify knows about the deploy it checks, read from the deploy result.
+type DeployRecord struct {
+	// ID is the target's Id for the deploy.
+	ID string
+	// Quick is true when the deploy was a quick deploy of a validation.
+	Quick bool
+	// Started and Ended are when the deploy step ran.
+	Started time.Time
+	Ended   time.Time
+	// TestLevel is the test level the deploy ran with. Empty means the provider default.
+	TestLevel          string
+	ComponentsDeployed int
+	// Commit is the commit that was deployed.
+	Commit string
+}
+
+// VerifyRequest asks a provider to check, after a deploy, that the target holds what the plan
+// says. It never changes the target.
+type VerifyRequest struct {
+	// Dir is the project root. Change set paths are relative to it.
+	Dir    string
+	Plan   ChangeSet
+	Deploy DeployRecord
+	// WindowStart and WindowEnd bound the search for other deploys to the target.
+	// WindowStart is normally Deploy.Started, and WindowEnd the time verify runs.
+	WindowStart time.Time
+	WindowEnd   time.Time
+	// ForeignDeploys and Flows are the verify modes from config: fail, warn or off.
+	ForeignDeploys string
+	Flows          string
+}
+
+// VerifyStatus is the outcome of one verify check.
+type VerifyStatus string
+
+const (
+	VerifyPass    VerifyStatus = "pass"
+	VerifyFail    VerifyStatus = "fail"
+	VerifyWarn    VerifyStatus = "warn"
+	VerifySkipped VerifyStatus = "skipped"
+)
+
+// VerifyCheck is one post-deploy check, such as "verify.members" or "verify.foreign_deploys".
+type VerifyCheck struct {
+	Name   string
+	Status VerifyStatus
+	Detail string
+}
+
+// VerifyResult is the outcome of a post-deploy verify.
+type VerifyResult struct {
+	// Passed is false when any check failed. A warning does not fail it.
+	Passed bool
+	Checks []VerifyCheck
+	Facts  map[string]any
+}
+
+// Verifier is implemented by providers that can check a target after a deploy.
+type Verifier interface {
+	// Verify reads the target and checks it against req. It never deploys.
+	Verify(ctx context.Context, s Session, req VerifyRequest) (VerifyResult, error)
+}
+
+// Configurable is implemented by providers that read their own config section, such as the
+// Salesforce engine. Commands call Configure once, after the config is loaded and before any
+// other provider call.
+type Configurable interface {
+	Configure(cfg *config.Config) error
 }

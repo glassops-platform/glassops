@@ -1,0 +1,29 @@
+{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "DeployRequest",
+          "url": "/services/data/v68.0/tooling/sobjects/DeployRequest/0Af000000000007AAA"
+        },
+        "Id": "0Af000000000007AAA",
+        "Status": "Succeeded",
+        "CheckOnly": false,
+        "NumberComponentsDeployed": 1,
+        "NumberComponentsTotal": 1,
+        "NumberComponentErrors": 0,
+        "NumberTestsCompleted": 0,
+        "NumberTestErrors": 0,
+        "NumberTestsTotal": 0,
+        "RunTestsEnabled": false,
+        "StartDate": "2026-11-08T18:42:42.000+0000",
+        "CompletedDate": "2026-11-08T18:42:43.000+0000",
+        "CreatedById": "005000000000001AAA"
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

@@ -20,9 +20,9 @@ var ErrNotCheckOnly = errors.New("salesforce: the target reported a deploy that 
 // validateWaitMinutes is how long sf waits for the validate to finish.
 const validateWaitMinutes = "60"
 
-// Validate runs a check-only deploy validate and reads the full result from deploy report.
+// nativeValidate runs a check-only deploy validate and reads the full result from deploy report.
 // The validate envelope alone is not enough: a failed validate carries only the deploy Id.
-func (p *Provider) Validate(ctx context.Context, s providers.Session, cs providers.ChangeSet, opts providers.ValidateOptions) (providers.ValidateResult, error) {
+func (p *Provider) nativeValidate(ctx context.Context, s providers.Session, cs providers.ChangeSet, opts providers.ValidateOptions) (providers.ValidateResult, error) {
 	sess, ok := asSession(s)
 	if !ok {
 		return providers.ValidateResult{}, errors.New("salesforce: validate needs a session from this provider")

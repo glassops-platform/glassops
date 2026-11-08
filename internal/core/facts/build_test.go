@@ -88,3 +88,57 @@ func TestFromResult(t *testing.T) {
 		t.Fatalf("empty result gave %+v", got)
 	}
 }
+
+// Synthetic: a plan file that names gate-owned facts and a provider count lower than its
+// destructive manifests.
+func TestFromChangeSetDropsGateOwnedFacts(t *testing.T) {
+	cs := providers.ChangeSet{Provider: "salesforce", SHA256: "abc", Destructive: []string{"a.xml", "b.xml"},
+		Facts: map[string]any{
+			"salesforce.destructive_count": 0, "change.destructive_count": 0, "change.plan_sha256": "forged",
+			"ci.pr_author": "someone-else", "target.tier": "dev", "salesforce.apex_classes": []string{"A"},
+		}}
+	d := FromChangeSet(cs)
+	if n, _ := d.Int(ChangeDestructiveCount); n != 2 {
+		t.Fatalf("destructive_count = %d, want the 2 manifests", n)
+	}
+	if s, _ := d.String(ChangePlanSHA256); s != "abc" {
+		t.Fatalf("plan_sha256 = %q", s)
+	}
+	for _, k := range []string{"ci.pr_author", "target.tier"} {
+		if _, ok := d.Get(k); ok {
+			t.Fatalf("%s was copied from the plan", k)
+		}
+	}
+	if _, ok := d.Strings("salesforce.apex_classes"); !ok {
+		t.Fatal("a provider fact was dropped")
+	}
+}
+
+func TestMergeOnly(t *testing.T) {
+	m := map[string]any{
+		"validate.plan_sha256": "a", "test.org_coverage": 80, "salesforce.deploy_id": "0Af",
+		"ci.pr_author": "x", "ci.approvals": []any{}, "target.id": "y", "change.empty": true,
+		"other.key": 1, "exec.thing": 2,
+	}
+	d := New()
+	d.MergeOnly(ResultPrefixes("salesforce"), m)
+	for _, k := range []string{"validate.plan_sha256", "test.org_coverage", "salesforce.deploy_id"} {
+		if _, ok := d.Get(k); !ok {
+			t.Errorf("%s was not copied", k)
+		}
+	}
+	for _, k := range []string{"ci.pr_author", "ci.approvals", "target.id", "change.empty", "other.key", "exec.thing"} {
+		if _, ok := d.Get(k); ok {
+			t.Errorf("%s was copied", k)
+		}
+	}
+	// A gate-owned prefix in the allowlist is still refused.
+	d = New()
+	d.MergeOnly([]string{"ci.", ""}, m)
+	if len(d.Facts) != 0 {
+		t.Fatalf("copied %v", d.Facts)
+	}
+	if got := ResultPrefixes(""); len(got) != 5 {
+		t.Fatalf("no provider gives %v", got)
+	}
+}
