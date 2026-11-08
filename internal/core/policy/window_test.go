@@ -109,3 +109,47 @@ func TestWindowMissingTier(t *testing.T) {
 		t.Fatalf("no windows configured and no tier: %+v", r)
 	}
 }
+
+func TestWindowEnd(t *testing.T) {
+	// 2027-01-04 is a Monday.
+	tests := []struct {
+		name   string
+		cfg    *config.Config
+		tier   string
+		now    string
+		want   string
+		inside bool
+	}{
+		{"12:50 in a window ending 13:00", windowCfg(win(allDays, "09:00", "13:00", "UTC")), "prod", "2027-01-04T12:50:00Z", "2027-01-04T13:00:00Z", true},
+		{"the last second before the end", windowCfg(win(allDays, "09:00", "13:00", "UTC")), "prod", "2027-01-04T12:59:59Z", "2027-01-04T13:00:00Z", true},
+		{"at the end it is closed", windowCfg(win(allDays, "09:00", "13:00", "UTC")), "prod", "2027-01-04T13:00:00Z", "", false},
+		{"in the zone of the window", windowCfg(win(allDays, "09:00", "17:00", "America/New_York")), "prod", "2027-01-04T15:00:00Z", "2027-01-04T22:00:00Z", true},
+		{"evening part of an overnight window", windowCfg(win([]string{"mon"}, "22:00", "02:00", "UTC")), "prod", "2027-01-04T23:00:00Z", "2027-01-05T02:00:00Z", true},
+		{"morning part of an overnight window", windowCfg(win([]string{"mon"}, "22:00", "02:00", "UTC")), "prod", "2027-01-05T01:00:00Z", "2027-01-05T02:00:00Z", true},
+		{"touching windows chain", windowCfg(win(allDays, "09:00", "12:00", "UTC"), win(allDays, "12:00", "15:00", "UTC")), "prod", "2027-01-04T11:00:00Z", "2027-01-04T15:00:00Z", true},
+		{"overlapping windows take the later end", windowCfg(win(allDays, "09:00", "12:00", "UTC"), win(allDays, "10:00", "14:00", "UTC")), "prod", "2027-01-04T11:00:00Z", "2027-01-04T14:00:00Z", true},
+		{"a later window that does not touch is not joined", windowCfg(win(allDays, "09:00", "12:00", "UTC"), win(allDays, "12:30", "15:00", "UTC")), "prod", "2027-01-04T11:00:00Z", "2027-01-04T12:00:00Z", true},
+		{"outside every window", windowCfg(win(allDays, "09:00", "13:00", "UTC")), "prod", "2027-01-04T08:00:00Z", "", false},
+		{"no windows for the tier", windowCfg(win(allDays, "09:00", "13:00", "UTC")), "qa", "2027-01-04T12:00:00Z", "", false},
+		{"no config", nil, "prod", "2027-01-04T12:00:00Z", "", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			now, _ := time.Parse(time.RFC3339, tc.now)
+			end, ok, err := WindowEnd(tc.cfg, tc.tier, now)
+			if err != nil || ok != tc.inside {
+				t.Fatalf("ok %v, err %v", ok, err)
+			}
+			if !ok {
+				return
+			}
+			want, _ := time.Parse(time.RFC3339, tc.want)
+			if !end.Equal(want) {
+				t.Fatalf("end %s, want %s", end.UTC().Format(time.RFC3339), tc.want)
+			}
+		})
+	}
+	if _, _, err := WindowEnd(windowCfg(win(allDays, "09:00", "13:00", "Mars/Olympus")), "prod", time.Now()); err == nil {
+		t.Fatal("an unknown zone gave no error")
+	}
+}

@@ -67,6 +67,56 @@ func inWindow(w config.Window, now time.Time) (bool, error) {
 	return (has(today) && mins >= from) || (has(yesterday) && mins < to), nil
 }
 
+// windowEnd returns when w closes, if now is inside it. The end is the to time, in the
+// window's zone, on the day the part of the window holding now ends.
+func windowEnd(w config.Window, now time.Time) (time.Time, bool, error) {
+	inside, err := inWindow(w, now)
+	if err != nil || !inside {
+		return time.Time{}, false, err
+	}
+	// inWindow has already checked the zone and both clocks.
+	loc, _ := time.LoadLocation(w.TZ)
+	from, _ := clockMinutes(w.From)
+	to, _ := clockMinutes(w.To)
+	local := now.In(loc)
+	day := local
+	if from > to && local.Hour()*60+local.Minute() >= from {
+		// The evening part of a window that runs past midnight ends tomorrow.
+		day = local.AddDate(0, 0, 1)
+	}
+	return time.Date(day.Year(), day.Month(), day.Day(), to/60, to%60, 0, 0, loc), true, nil
+}
+
+// WindowEnd returns when the deploy window that holds now closes for tier. A window that
+// overlaps or touches the one holding now extends it. ok is false when cfg has no windows for
+// tier or now is outside all of them. gate caps a PERMIT's expiry at this time, so a PERMIT
+// issued inside a window cannot deploy after it closes.
+func WindowEnd(cfg *config.Config, tier string, now time.Time) (end time.Time, ok bool, err error) {
+	if cfg == nil {
+		return time.Time{}, false, nil
+	}
+	windows := cfg.Policy.Windows[tier]
+	at := now
+	// Each pass moves to a later end, and a week of windows bounds the chain.
+	for i := 0; i <= 8*len(windows); i++ {
+		next := end
+		for _, w := range windows {
+			e, inside, err := windowEnd(w, at)
+			if err != nil {
+				return time.Time{}, false, fmt.Errorf("window for tier %s is not usable: %w", tier, err)
+			}
+			if inside && e.After(next) {
+				next = e
+			}
+		}
+		if !next.After(end) {
+			break
+		}
+		end, at = next, next
+	}
+	return end, !end.IsZero(), nil
+}
+
 // Evaluate checks the windows of the target's tier.
 func (Window) Evaluate(in Input) []Result {
 	tier, ok := tierOf(in)
