@@ -2,6 +2,28 @@
 
 This page describes how a GlassOps release is cut, which image tags exist, and how the license scan and the third party notices work.
 
+## What is in which release
+
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases). v1.0.0 is not out yet. This table says which release first has each command or feature. "Not yet" means it is in the repository and in no published release, so you need a build from this repository to use it. See [Install](cli.md#install).
+
+| Command or feature | First release |
+|---|---|
+| `init`, `doctor`, `describe`, `plan`, `validate` | v0.3.0 |
+| `gate`, `permit verify`, `deploy`, `report` | v0.3.0 |
+| `env create`, `env delete`, `env sweep` | v0.4.0 |
+| `test`, `check`, `analyze` and the `glassops-analyzer` image | v0.4.0 |
+| `run` and the default `pr` and `deploy` pipelines | v0.4.0 |
+| The reusable GitHub workflows and the consumer example | v0.4.0 |
+| `verify`, and `verify` in the default `deploy` pipeline | Not yet |
+| Provider `exec` and the engine result schema | Not yet |
+| The Bitbucket and GitLab CI layers | Not yet |
+| `env create` applying definition `settings` | Not yet |
+| `test.coverage.class_scope` | Not yet |
+| The hardened PERMIT: `change_set_sha256`, the lifetime and key checks, `gate --deploy-command` | Not yet |
+| `deploy` refusing a tree that is not the PERMIT commit, the window cap on `expires_at`, and `--resume` limits | Not yet |
+| The YAML limits on `glassops.yaml` | Not yet |
+| The license scan, `THIRD_PARTY_NOTICES` and the release tag rules below | Not yet |
+
 ## Release tags
 
 A release starts when a tag such as `v1.2.3` is pushed. The release workflow only starts for tags that begin like `v1.2.3`. `scripts/release/tags.sh` accepts `vMAJOR.MINOR.PATCH` with an optional suffix such as `-rc1`, and exits 2 for anything else, such as `v1.2.3.4`, so the plan job fails and nothing is published. It decides what a tag publishes, and `scripts/release/test-tags.sh` tests those rules.

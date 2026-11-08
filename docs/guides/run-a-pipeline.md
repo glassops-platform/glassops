@@ -6,14 +6,35 @@
 
 ## Run it locally
 
-From the project root, with `git`, the Salesforce CLI, `sfdx-git-delta` and the environment variables your targets name:
+From the project root, with `git`, the Salesforce CLI, `sfdx-git-delta` (`sf plugins install sfdx-git-delta`) and the environment variables your targets name:
 
 ```bash
 glassops run pr --dry-run   # print the steps, run nothing
-glassops run pr
 ```
 
-`--dry-run` shows each step, its `when` and the global flags it receives. It writes nothing and removes nothing. A real run writes one result file per step to `.glassops/results/`, plus `run.json` for the whole run. The exit code is the worst of all steps: 0 pass, 1 a check or policy failed, 2 a tool error.
+`--dry-run` shows each step, its `when` and the global flags it receives. It writes nothing and removes nothing. A real run writes one result file to `.glassops/results/` per step, plus `run.json` for the whole run. The exit code is the worst of all steps: 0 pass, 1 a check or policy failed, 2 a tool error. Add `.glassops/` to your `.gitignore`: `init` does not, and the directory holds generated plans, PERMITs and results.
+
+**A fresh `init` project does not finish `glassops run pr` on a laptop.** The default `pr` pipeline is written for a pull request in CI, and two things are missing outside one:
+
+- `plan` has no base. Outside a pull request, `--from auto` needs a target or a base branch, so the first step stops with "--from auto needs a target or a pull request base branch. Pass --from." Every later step is skipped except those marked `when: always`.
+- `environments.ephemeral` is not configured. `env create` and `env delete` need that entry and a Dev Hub target, so `env delete` fails with "environments.ephemeral is not configured". See [`environments`](../reference/config.md#environments).
+
+To run something that finishes, add a pipeline of your own to `glassops.yaml` that names the base and leaves out what you have not set up. This one plans from the previous commit, runs your project scripts and reports:
+
+```yaml
+pipelines:
+  local:
+    - plan --from HEAD~1
+    - check
+    - step: report
+      when: always
+```
+
+```bash
+glassops run local
+```
+
+Add `validate --target prod` before `report` to run a check-only validate against a real target. That logs in to the target with the credentials in your environment. The CI pipeline is the same steps with a base the CI provides, so a local `local` pipeline is a rehearsal and not the CI run.
 
 ## Run it in CI
 
@@ -25,7 +46,7 @@ docker run --rm -v "$PWD:/work" -w /work \
   ghcr.io/glassops-platform/glassops:<version> run pr
 ```
 
-`run` is not in v0.3.0. Use the image of the next release, or one you build from this repository with `docker build -t glassops .`.
+`run` is in v0.4.0 and later. For anything newer, build the image from this repository. See [Install](../reference/cli.md#install).
 
 On GitHub, the reusable workflows do this for you and add the checkout, the SARIF upload and the evidence upload. See [Deploy with GitHub](deploy-with-github.md). For a single command outside a pipeline, the `glassops-platform/glassops` action takes `command: run pr` or any other command line.
 
@@ -59,7 +80,7 @@ pipelines:
 
 **pr.** Plans the change, runs your project scripts (`check`), runs the Code Analyzer (`analyze`), creates a short-lived scratch org named `ephemeral` from the Dev Hub (`env create`), and runs a check-only validate there. `--fallback-target prod` makes `validate` use the `prod` target when no environment exists, for example when `environments.ephemeral` is not configured. `report` and `env delete` run even after a failure, so the run always leaves a summary and never leaves an org behind. `validate` runs the tests at the configured test level. To run the tests with coverage minimums as a separate step, add `test --target ephemeral` after `validate`.
 
-**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, deploys under it, and then runs [`verify`](../reference/cli.md#glassops-verify) to check that the target holds what the plan says. A denied gate exits 1 and the deploy step is skipped. `verify` is not in v0.4.0, so a deploy pipeline written for that release has no such step. `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
+**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, deploys under it, and then runs [`verify`](../reference/cli.md#glassops-verify) to check that the target holds what the plan says. A denied gate exits 1 and the deploy step is skipped. `verify` is newer than the published prereleases. See [what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release). `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
 
 Two steps skip themselves when they have nothing to do. `check` does nothing without `check.scripts`, and `analyze` does nothing without `analyze.enabled: true`. Both end with the status `empty` and exit 0.
 

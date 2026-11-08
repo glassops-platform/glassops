@@ -2,13 +2,15 @@
 
 The exec provider lets any deploy tool run under GlassOps. GlassOps keeps the gate, the signed PERMIT, the org Id guard and the evidence. Your own commands do the validate, the deploy and the verify. Use it when the target is not Salesforce, or when you deploy with a tool that GlassOps has no built-in provider for.
 
-The provider is never detected from the project files. You choose it in `glassops.yaml`:
+The provider is never detected from the project files, and `glassops init` does not write an exec project. You write `glassops.yaml` yourself. A minimal project has four small scripts. This one was run end to end in the GlassOps image with a built binary: `doctor --auth`, `plan`, `validate`, `gate`, `deploy`, `verify` all passed.
+
+`glassops.yaml`:
 
 ```yaml
 version: 1
 provider: exec
 exec:
-  paths: [terraform, config]
+  paths: [app]
   describe: ./ci/describe.sh
   validate: ./ci/validate.sh
   deploy: ./ci/deploy.sh
@@ -18,7 +20,75 @@ targets:
     id: prod-eu-1
     tier: prod
     branch: main
+pipelines:
+  deploy:
+    - plan --target prod
+    - validate --target prod
+    - gate --target prod
+    - deploy --target prod
+    - verify --target prod
+    - step: report
+      when: always
 ```
+
+An exec project has no default pipelines, because `init` never detects exec. Without a `pipelines:` block `glassops run deploy` fails with an unknown pipeline. The block above is the same steps the Salesforce default `deploy` pipeline runs.
+
+The target `id` is a plain Id that your `exec.describe` prints. It may hold letters, digits and `. _ : / -`, and must start with a letter or digit. It is compared exactly, and two targets may not share one. A Salesforce project still needs an org Id or a `$VAR` there.
+
+`ci/describe.sh` reports the target. `kind` is `production` for tier `prod`:
+
+```sh
+#!/bin/sh
+echo '{"id": "prod-eu-1", "kind": "production"}'
+```
+
+`ci/validate.sh` and `ci/verify.sh` can be as small as `exit 0` while you start. Replace them with real checks.
+
+`ci/deploy.sh` does the deploy and writes an engine result. **The `id` in that result is what `verify` needs.** Without it the deploy result has no `deploy.id`, and `verify` stops with exit 2 because there is no finished deploy to check.
+
+```sh
+#!/bin/sh
+set -eu
+echo "deploying to $GLASSOPS_TARGET"
+# ... run your deploy tool here ...
+cat > "$GLASSOPS_RESULTS_DIR/exec-deploy.json" <<JSON
+{"schema": "glassops.engine-result/v1", "step": "deploy", "passed": true, "id": "release-$(date +%Y%m%d%H%M%S)", "components_deployed": 1}
+JSON
+```
+
+Make the scripts executable with `chmod +x ci/*.sh`, and add `.glassops/` to `.gitignore`.
+
+### Run it step by step
+
+`GLASSOPS_PERMIT_KEY` is needed from `gate` on, and not before. Make one and set it in the shell, or as an environment secret in your CI. `plan` and `validate` do not read it.
+
+```bash
+export GLASSOPS_PERMIT_KEY="$(openssl rand -base64 48)"
+
+glassops doctor --auth --target prod
+glassops plan --from HEAD~1 --target prod
+glassops validate --target prod
+glassops gate --target prod --deploy-command '["./ci/deploy.sh"]'
+glassops deploy --target prod -- ./ci/deploy.sh
+glassops verify --target prod
+glassops report
+```
+
+The `gate` and `deploy` lines bind and run an explicit command, as [Deploying](#deploying) explains. Leave out `--deploy-command` and `-- ./ci/deploy.sh` to run `exec.deploy` from the config instead. `glassops run deploy` runs the same steps from the pipeline, with `exec.deploy`. The first `plan --target prod` for a target with no deployed tag plans every file under `exec.paths`.
+
+In PowerShell the JSON needs quoting that depends on the version. In PowerShell 7.3 and later, single quotes are enough:
+
+```powershell
+glassops gate --target prod --deploy-command '["./ci/deploy.sh"]'
+```
+
+In Windows PowerShell 5.1 and PowerShell before 7.3, the double quotes inside are dropped on the way to the program, and `gate` refuses the value as not a JSON array. Escape them with a backslash:
+
+```powershell
+glassops gate --target prod --deploy-command '[\"./ci/deploy.sh\"]'
+```
+
+Both forms were run on PowerShell 7.6 and 5.1 against a built binary. The scripts above are shell scripts, so on Windows they run from Git Bash or WSL.
 
 `glassops doctor` checks that `sh` and `git` exist. It does not check your commands.
 
@@ -86,7 +156,7 @@ A command may write `<results-dir>/exec-<step>.json` to say more than its exit c
 | `schema` | Must be `glassops.engine-result/v1` |
 | `step` | Must match the step that ran |
 | `passed` | Required |
-| `id` | Optional. The run's Id, such as a deploy Id. `deploy` records it as `deploy.id` |
+| `id` | Optional for `plan`, `validate` and `deploy`, but needed for `verify`. The run's Id, such as a deploy Id. `deploy` records it as `deploy.id`, and `verify` stops with exit 2 when `deploy.json` has none |
 | `components_deployed` | Optional. A count of zero or more |
 | `problems` | Optional. One line per failure |
 | `facts` | Optional. Every key must start with `exec.` |
@@ -129,7 +199,7 @@ glassops deploy --target prod -- ./ci/deploy.sh --region eu-1
 
 ## Verifying
 
-`glassops verify --target prod` runs `exec.verify` with `GLASSOPS_DEPLOY_ID` set. The check `verify.exec` passes or fails on the result above, and each problem line becomes a failing check named `verify.exec.problem.N`. The default `deploy` pipeline includes `verify`, so a project with provider exec must set `exec.verify` or remove that step from its pipeline. See [`glassops verify`](cli.md#glassops-verify).
+`glassops verify --target prod` runs `exec.verify` with `GLASSOPS_DEPLOY_ID` set. The check `verify.exec` passes or fails on the result above, and each problem line becomes a failing check named `verify.exec.problem.N`. Set `exec.verify` if your `deploy` pipeline has a `verify` step, as the example above does. `verify` also needs the deploy result to hold a deploy `id`, which the `deploy` script writes in its result file. See [`glassops verify`](cli.md#glassops-verify).
 
 ## Untested here
 

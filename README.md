@@ -9,7 +9,7 @@
 
 GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
 
-v0.3.0 and v0.4.0 are published as prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), with container images at `ghcr.io/glassops-platform/glassops`. v1.0.0 is not out yet. v0.4.0 has `env`, `test`, `run`, `check` and `analyze`, the reusable GitHub workflows, and the separate `glassops-analyzer` image. The commands and features added since, such as `verify`, provider `exec`, and the Bitbucket and GitLab layers, are in the repository and ship in the next release. Until then, build from a checkout to use them.
+v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in a published release yet, so build from a checkout to use them.
 
 ---
 
