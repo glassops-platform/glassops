@@ -1,0 +1,90 @@
+{
+  "status": 0,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-11-08T18:50:58.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T18:50:57.000Z",
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "MobileSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:50:57.000Z",
+          "deleted": false,
+          "fileName": "settings/Mobile.settings",
+          "fullName": "Mobile",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "LightningExperienceSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:50:57.000Z",
+          "deleted": false,
+          "fileName": "settings/LightningExperience.settings",
+          "fullName": "LightningExperience",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T18:50:57.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      },
+      "componentFailures": []
+    },
+    "done": true,
+    "id": "0Af000000000002AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T18:50:58.000Z",
+    "numberComponentErrors": 0,
+    "numberComponentsDeployed": 2,
+    "numberComponentsTotal": 2,
+    "numberFiles": "4",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-11-08T18:50:57.000Z",
+    "status": "Succeeded",
+    "success": true,
+    "zipSize": 953,
+    "files": [
+      {
+        "fullName": "LightningExperience",
+        "type": "Settings",
+        "state": "Changed",
+        "filePath": "conv\\force-app\\settings\\LightningExperience.settings-meta.xml"
+      },
+      {
+        "fullName": "Mobile",
+        "type": "Settings",
+        "state": "Changed",
+        "filePath": "conv\\force-app\\settings\\Mobile.settings-meta.xml"
+      }
+    ],
+    "zipFileCount": 4,
+    "deployUrl": "https://example.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0Af000000000002AAA%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}

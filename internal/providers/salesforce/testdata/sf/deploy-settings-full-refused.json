@@ -1,0 +1,147 @@
+{
+  "status": 1,
+  "result": {
+    "checkOnly": false,
+    "completedDate": "2026-11-08T18:51:09.000Z",
+    "createdBy": "005000000000001",
+    "createdByName": "Example User",
+    "createdDate": "2026-11-08T18:51:03.000Z",
+    "details": {
+      "componentFailures": [
+        {
+          "changed": false,
+          "componentType": "AgentPlatformSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:04.000Z",
+          "deleted": false,
+          "fileName": "settings/AgentPlatform.settings",
+          "fullName": "AgentPlatform",
+          "problem": "Not available for deploy for this organization",
+          "problemType": "Error",
+          "success": false
+        },
+        {
+          "changed": false,
+          "componentType": "EinsteinGptSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:04.000Z",
+          "deleted": false,
+          "fileName": "settings/EinsteinGpt.settings",
+          "fullName": "EinsteinGpt",
+          "problem": "Not available for deploy for this organization",
+          "problemType": "Error",
+          "success": false
+        }
+      ],
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "CommunitiesSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:09.000Z",
+          "deleted": false,
+          "fileName": "settings/Communities.settings",
+          "fullName": "Communities",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "MobileSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:09.000Z",
+          "deleted": false,
+          "fileName": "settings/Mobile.settings",
+          "fullName": "Mobile",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "LightningExperienceSettings",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:09.000Z",
+          "deleted": false,
+          "fileName": "settings/LightningExperience.settings",
+          "fullName": "LightningExperience",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "",
+          "created": false,
+          "createdDate": "2026-11-08T18:51:09.000Z",
+          "deleted": false,
+          "fileName": "package.xml",
+          "fullName": "package.xml",
+          "success": true
+        }
+      ],
+      "runTestResult": {
+        "numFailures": 0,
+        "numTestsRun": 0,
+        "totalTime": 0,
+        "codeCoverage": [],
+        "codeCoverageWarnings": [],
+        "failures": [],
+        "flowCoverage": [],
+        "flowCoverageWarnings": [],
+        "successes": []
+      }
+    },
+    "done": true,
+    "id": "0Af000000000001AAA",
+    "ignoreWarnings": false,
+    "lastModifiedDate": "2026-11-08T18:51:09.000Z",
+    "numberComponentErrors": 2,
+    "numberComponentsDeployed": 3,
+    "numberComponentsTotal": 5,
+    "numberFiles": "7",
+    "numberTestErrors": 0,
+    "numberTestsCompleted": 0,
+    "numberTestsTotal": 0,
+    "rollbackOnError": true,
+    "runTestsEnabled": false,
+    "startDate": "2026-11-08T18:51:04.000Z",
+    "status": "Failed",
+    "success": false,
+    "zipSize": 1798,
+    "files": [
+      {
+        "fullName": "AgentPlatform",
+        "type": "Settings",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "conv\\force-app\\settings\\AgentPlatform.settings-meta.xml",
+        "error": "Not available for deploy for this organization"
+      },
+      {
+        "fullName": "Communities",
+        "type": "Settings",
+        "state": "Changed",
+        "filePath": "conv\\force-app\\settings\\Communities.settings-meta.xml"
+      },
+      {
+        "fullName": "EinsteinGpt",
+        "type": "Settings",
+        "state": "Failed",
+        "problemType": "Error",
+        "filePath": "conv\\force-app\\settings\\EinsteinGpt.settings-meta.xml",
+        "error": "Not available for deploy for this organization"
+      },
+      {
+        "fullName": "LightningExperience",
+        "type": "Settings",
+        "state": "Changed",
+        "filePath": "conv\\force-app\\settings\\LightningExperience.settings-meta.xml"
+      },
+      {
+        "fullName": "Mobile",
+        "type": "Settings",
+        "state": "Changed",
+        "filePath": "conv\\force-app\\settings\\Mobile.settings-meta.xml"
+      }
+    ],
+    "zipFileCount": 7,
+    "deployUrl": "https://example.my.salesforce.com/lightning/setup/DeployStatus/page?address=%2Fchangemgmt%2FmonitorDeploymentsDetails.apexp%3FasyncId%3D0Af000000000001AAA%26retURL%3D%252Fchangemgmt%252FmonitorDeployment.apexp"
+  },
+  "warnings": []
+}
