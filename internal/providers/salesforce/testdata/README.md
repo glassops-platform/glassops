@@ -114,5 +114,8 @@ autolaunched Flow (`Glassops_Probe`). Scrubbed the same way as the files above.
 | `deploy-start-timeout.json` | `sf project deploy start --wait 1` with tests that take longer. Exit 1, `ClientTimeoutError`, and the job Id only in `data.id` |
 | `deploy-report-inprogress.json` | `sf project deploy report --job-id <id>` right after. Exit 0, `InProgress`, `done` false, 9 of 12 tests |
 | `deploy-report-after-timeout-done.json` | the same report after the deploy finished. `Succeeded`, 12 tests |
+| `deploy-validate-for-checkonly.json`, `tooling-deployrequest-checkonly.json` | `sf project deploy validate`, then Tooling `DeployRequest` by Id. `CheckOnly` true, `RunTestsEnabled` true |
+| `deploy-start-notestrun.json`, `tooling-deployrequest-notestrun.json` | `sf project deploy start --test-level NoTestRun`, then Tooling `DeployRequest`. `RunTestsEnabled` false, `NumberTestsTotal` 0 |
+| `deploy-start-lock-released.json`, `deploy-report-lock-released.json` | a transient platform error. `sf project deploy start` exited 1 with `MetadataTransferError` "Lock is already released" and the job Id in `data.id`, and `sf project deploy report` on that Id said `Succeeded`. An error from `deploy start` does not mean nothing was deployed |
 
 Also seen, not saved: `sf project deploy resume` refuses `--target-org` ("Nonexistent flag").
