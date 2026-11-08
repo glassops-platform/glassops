@@ -615,3 +615,103 @@ func TestVerifyTestsEnabledButNoneRan(t *testing.T) {
 	v.testsCheck(synthetic, providers.DeployRecord{TestLevel: "RunLocalTests"})
 	vfyWant(t, v.res, CheckVerifyTests, providers.VerifyFail, "no tests ran")
 }
+
+// vfyFolderReport reads the real full-source deploy report and manifest, the two fixtures that
+// show folder and Settings naming.
+func vfyFolderReport(t *testing.T) (reportBody, manifest) {
+	t.Helper()
+	env, err := parseEnvelope(fixture(t, "deploy-report-folders-settings.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rep reportBody
+	if err := json.Unmarshal(env.Result, &rep); err != nil {
+		t.Fatal(err)
+	}
+	pkg, err := readManifest(filepath.Join("testdata", "sf", "package-folders-settings.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rep, pkg
+}
+
+func TestVerifyMembersMatchRealFolderAndSettingsNaming(t *testing.T) {
+	rep, pkg := vfyFolderReport(t)
+	n := 0
+	for _, ty := range pkg.Types {
+		n += len(ty.Members)
+	}
+	if n != 18 { // the 19 successes include package.xml itself
+		t.Fatalf("manifest has %d members, the capture has 18", n)
+	}
+	v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+	v.membersCheck(deployRequestRow{}, rep, pkg, nil)
+	vfyWant(t, v.res, CheckVerifyMembers, providers.VerifyPass, "all 18 plan members")
+}
+
+func TestVerifyMembersRealNamingNegatives(t *testing.T) {
+	rep, _ := vfyFolderReport(t)
+	// without returns the successes minus the ones whose type and name match.
+	without := func(typ, name string) reportBody {
+		out := rep
+		out.Details.ComponentSuccesses = nil
+		for _, c := range rep.Details.ComponentSuccesses {
+			if c.ComponentType == typ && c.FullName == name {
+				continue
+			}
+			out.Details.ComponentSuccesses = append(out.Details.ComponentSuccesses, c)
+		}
+		if len(out.Details.ComponentSuccesses) == len(rep.Details.ComponentSuccesses) {
+			t.Fatalf("no success %s %s to remove", typ, name)
+		}
+		return out
+	}
+	one := func(typ string, members ...string) manifest {
+		return manifest{Types: []manifestType{{Name: typ, Members: members}}}
+	}
+	for _, tc := range []struct {
+		name string
+		rep  reportBody
+		pkg  manifest
+		want providers.VerifyStatus
+	}{
+		{"report folder deployed", rep, one("Report", "Portfolio_Owner_Reports/"), providers.VerifyPass},
+		{"report folder missing", without("ReportFolder", "Portfolio_Owner_Reports"), one("Report", "Portfolio_Owner_Reports/"), providers.VerifyFail},
+		{"dashboard folder missing", without("DashboardFolder", "Portfolio_Owner_Dashboards"), one("Dashboard", "Portfolio_Owner_Dashboards/"), providers.VerifyFail},
+		{"email folder missing", without("EmailFolder", "Portfolio_Contact"), one("EmailTemplate", "Portfolio_Contact"), providers.VerifyFail},
+		{"email template named like a folder that was not deployed", rep, one("EmailTemplate", "Portfolio_Nothing"), providers.VerifyFail},
+		{"settings with no matching success", without("EmailAdministrationSettings", "EmailAdministration"), one("Settings", "EmailAdministration"), providers.VerifyFail},
+		{"settings that was never deployed", rep, one("Settings", "Mobile"), providers.VerifyFail},
+		{"folder name with the wrong type", rep, one("Dashboard", "Portfolio_Owner_Reports/"), providers.VerifyFail},
+		{"slash-less report is not its folder", rep, one("Report", "Portfolio_Owner_Reports"), providers.VerifyFail},
+		{"slash-less dashboard is not its folder", rep, one("Dashboard", "Portfolio_Owner_Dashboards"), providers.VerifyFail},
+		{"email folder name under another type", rep, one("GenAiPlugin", "Portfolio_Testimonial"), providers.VerifyFail},
+		{"settings name matches only the Settings suffix type", rep, one("EmailAdministrationSettings", "EmailAdministration"), providers.VerifyPass},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+			v.membersCheck(deployRequestRow{}, tc.rep, tc.pkg, nil)
+			vfyWant(t, v.res, CheckVerifyMembers, tc.want)
+		})
+	}
+}
+
+func TestReportedAs(t *testing.T) {
+	for _, tc := range []struct{ typ, name, wantTyp, wantName string }{
+		{"Dashboard", "F/", "DashboardFolder", "F"},
+		{"Report", "F/", "ReportFolder", "F"},
+		{"Document", "F/", "DocumentFolder", "F"}, // [unverified]
+		{"Dashboard", "F/D", "Dashboard", "F/D"},
+		{"Dashboard", "/", "Dashboard", "/"},
+		{"EmailTemplate", "F", "EmailFolder", "F"},
+		{"EmailTemplate", "F/T", "EmailTemplate", "F/T"},
+		{"EmailTemplate", "*", "EmailTemplate", "*"},
+		{"Settings", "Mobile", "MobileSettings", "Mobile"},
+		{"ApexClass", "A", "ApexClass", "A"},
+	} {
+		gt, gn := reportedAs(tc.typ, tc.name)
+		if gt != tc.wantTyp || gn != tc.wantName {
+			t.Errorf("reportedAs(%s, %s) = %s, %s, want %s, %s", tc.typ, tc.name, gt, gn, tc.wantTyp, tc.wantName)
+		}
+	}
+}
