@@ -1,7 +1,10 @@
 name: CLI End-to-End
 
-# Runs the CLI against a real Salesforce scratch org. It is not a required check. Only one run
-# at a time, so only one scratch org exists at a time.
+# Two jobs. "exec" runs the exec provider end to end with no outside system and no secrets, so
+# it runs on every push to main and every pull request. "e2e" runs the CLI against a real
+# Salesforce scratch org. It is not a required check, never runs for a pull request, and only
+# one run at a time, so only one scratch org exists at a time. The same pipeline runs every
+# night in e2e-nightly.yml.
 on:
   workflow_dispatch:
     inputs:
@@ -12,13 +15,10 @@ on:
         default: all
   push:
     branches: [main]
+  pull_request:
 
 permissions:
   contents: read
-
-concurrency:
-  group: cli-e2e
-  cancel-in-progress: false
 
 env:
   # Dependabot and fork pull requests get no repository secrets, so the steps that log in to
@@ -30,10 +30,44 @@ env:
   SF_DEVHUB_ORG_ID: ${{ secrets.SF_DEVHUB_ORG_ID }}
 
 jobs:
+  exec:
+    name: Exec provider end to end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=e2e-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # The target is a temp directory inside the container. The container gets no credentials
+      # and no network, and the script exits 0 only when every refusal refused. The binary is
+      # passed by path: exec-e2e.sh defines a shell function named glassops, so the bare name
+      # would call the function again and never reach the binary.
+      - name: Run the exec provider end to end
+        run: |
+          docker run --rm --network none --entrypoint sh \
+            -v "$PWD/scripts/e2e:/scripts:ro" \
+            glassops:e2e /scripts/exec-e2e.sh /usr/local/bin/glassops
+
   e2e:
     name: Scratch org end to end
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    concurrency:
+      group: cli-e2e
+      cancel-in-progress: false
     steps:
       - name: Note skipped run
         if: env.HAS_SF_SECRETS != 'true'
@@ -213,6 +247,24 @@ jobs:
           tag=$(git -C "$RUNNER_TEMP/origin.git" rev-parse refs/tags/glassops/deployed/ephemeral)
           if [ "$head" != "$tag" ]; then echo "deployed tag is $tag, HEAD is $head" >&2; exit 1; fi
 
+      # run deploy ends with verify, so the e2e checks the same step against the real org.
+      - name: Verify the deploy
+        if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
+        run: |
+          docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
+            -v "$RUNNER_TEMP/repo:/work" -w /work \
+            glassops:e2e verify --target ephemeral --config /work/glassops-full.yaml --ci local
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+            const f = r.facts || {};
+            const bad = (r.checks || []).filter(c => c.status !== "pass" && c.status !== "skipped");
+            if (r.status !== "pass" || f["verify.passed"] !== true || f["verify.check_only"] !== false || bad.length) {
+              console.error("verify did not pass: status " + r.status + ", failing checks " + JSON.stringify(bad));
+              process.exit(1);
+            }
+            console.log("verify passed on deploy " + f["verify.deploy_id"]);
+          ' "$RUNNER_TEMP/repo/.glassops/results/verify.json"
+
       - name: Plan from the deployed tag
         if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
@@ -232,35 +284,20 @@ jobs:
             glassops:e2e report --ci local --summary /work/.glassops/summary.md --sarif /work/.glassops/report.sarif
           cat "$RUNNER_TEMP/repo/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
-      # Phase 4: one glassops run in one container. It plans a delta that deletes a field,
-      # creates a scratch org, seeds the deleted field so the validate can pass, gates and deploys
-      # into the created org, runs the tests there with the coverage gate, runs an exec step,
-      # reports and deletes the org.
+      # Phase 4 and 5: one glassops run in one container. It plans a delta that deletes a field,
+      # creates a scratch org from a definition with settings, checks the org's Mobile settings,
+      # seeds the deleted field so the validate can pass, gates and deploys into the created org,
+      # verifies the deploy, runs the tests there with the coverage gate, runs an exec step,
+      # reports and deletes the org. The same scripts run in e2e-nightly.yml.
       - name: Run a pipeline with a created scratch org
         if: env.HAS_SF_SECRETS == 'true'
         run: |
-          sh testdata/sfdx/build-repo.sh "$RUNNER_TEMP/repo4"
-          cp testdata/e2e/glassops-run.yaml "$RUNNER_TEMP/repo4/glassops.yaml"
-          sed -i 's|^    - step: report$|    - step: report --summary .glassops/summary.md|' "$RUNNER_TEMP/repo4/glassops.yaml"
           set +e
-          docker run --rm -e SF_JWT_KEY -e SF_CLIENT_ID -e SF_USERNAME -e SF_DEVHUB_ORG_ID -e GLASSOPS_PERMIT_KEY \
-            -v "$RUNNER_TEMP/repo4:/work" -w /work \
-            glassops:e2e run e2e --ci local
+          sh scripts/e2e/scratch-pipeline-run.sh "$RUNNER_TEMP/repo4" glassops:e2e
           code=$?
           set -e
           cat "$RUNNER_TEMP/repo4/.glassops/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
-          node -e '
-            const fs = require("fs"), dir = process.argv[1];
-            const facts = n => (JSON.parse(fs.readFileSync(dir + "/" + n + ".json", "utf8")).facts || {});
-            const v = facts("validate"), t = facts("test"), r = facts("run");
-            const problems = [];
-            if (v["validate.seed.mode"] !== "minimal") problems.push("seed mode " + v["validate.seed.mode"]);
-            if (!JSON.stringify(v["validate.seed.members"] || []).includes("Account.Tier__c")) problems.push("seed members " + JSON.stringify(v["validate.seed.members"]));
-            if (!(t["test.org_coverage"] >= 75)) problems.push("org coverage " + t["test.org_coverage"]);
-            if (r["run.exit_code"] !== 0) problems.push("run exit " + r["run.exit_code"]);
-            if (problems.length) { console.error("unexpected pipeline results: " + problems.join(", ")); process.exit(1); }
-            console.log("run e2e: minimal seed, validate, tests at " + t["test.org_coverage"] + "% org coverage, exec step, report, env delete");
-          ' "$RUNNER_TEMP/repo4/.glassops/results"
+          sh scripts/e2e/scratch-pipeline-check.sh "$RUNNER_TEMP/repo4/.glassops/results"
           exit $code
 
       - name: Sweep any scratch org the pipeline left

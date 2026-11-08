@@ -10,6 +10,7 @@ environments:
     devhub: devhub
     ttl_days: 1
     prefix: glassops-e2e
+    definition: config/e2e-scratch-def.json
 salesforce:
   test_level:
     ephemeral: RunLocalTests
@@ -22,9 +23,12 @@ pipelines:
   e2e:
     - plan --from HEAD~1 --to HEAD
     - env create
+    - step: exec
+      run: sh scratch-settings-check.sh
     - validate --target ephemeral
     - gate --target ephemeral
     - deploy --target ephemeral
+    - verify --target ephemeral
     - test --target ephemeral
     - step: exec
       run: test -s "$GLASSOPS_RESULTS_DIR/validate.json" && test -s "$GLASSOPS_RESULTS_DIR/test.json"
