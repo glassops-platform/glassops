@@ -41,12 +41,12 @@ type deployResultBody struct {
 	NumberComponentsDeployed flexInt `json:"numberComponentsDeployed"`
 	// coverageWarnings is details.runTestResult.codeCoverageWarnings, read on its own by
 	// parseDeployBody because a second details field here would hide the embedded one.
-	coverageWarnings []coverageWarning
+	coverageWarnings []deployCoverageWarning
 }
 
-// coverageWarning is one entry of runTestResult.codeCoverageWarnings. name is null for the
+// deployCoverageWarning is one entry of runTestResult.codeCoverageWarnings. name is null for the
 // org-wide average [confirmed: deploy-start-coverage-fail.json].
-type coverageWarning struct {
+type deployCoverageWarning struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
 }
@@ -55,7 +55,7 @@ type coverageWarning struct {
 type coverageBody struct {
 	Details struct {
 		RunTestResult struct {
-			CodeCoverageWarnings flexList[coverageWarning] `json:"codeCoverageWarnings"`
+			CodeCoverageWarnings flexList[deployCoverageWarning] `json:"codeCoverageWarnings"`
 		} `json:"runTestResult"`
 	} `json:"details"`
 }
