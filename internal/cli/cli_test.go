@@ -2,8 +2,10 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,10 +58,18 @@ func newHarness(t *testing.T) *harness {
 			v, ok := h.env[k]
 			return v, ok
 		},
-		Now:       func() time.Time { return time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC) },
-		Run:       func(_ string, name string, args ...string) ([]byte, error) { return h.tools.run(name, args...) },
-		Providers: providers.Registry{salesforce.NewWithRunner(func(name string, args ...string) ([]byte, error) { return h.tools.run(name, args...) })},
-		Version:   "test",
+		Now: func() time.Time { return time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC) },
+		Run: func(_ string, name string, args ...string) ([]byte, error) { return h.tools.run(name, args...) },
+		// Exec is refused, so no cli test can start the real sf through login or an engine
+		// command, and LookupEnv reads only the harness environment.
+		Providers: providers.Registry{salesforce.NewWithOptions(salesforce.Options{
+			Run: func(name string, args ...string) ([]byte, error) { return h.tools.run(name, args...) },
+			Exec: func(_ context.Context, c salesforce.Cmd) (salesforce.Output, error) {
+				return salesforce.Output{}, fmt.Errorf("test harness: %s does not run in cli tests", c.Name)
+			},
+			LookupEnv: func(k string) (string, bool) { v, ok := h.env[k]; return v, ok },
+		})},
+		Version: "test",
 	}
 	return h
 }
