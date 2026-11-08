@@ -270,11 +270,11 @@ func (app *App) finishCode(res *run.Result, c ci.CI, g *globals) int {
 	var ee *exitcode.ExitError
 	if errors.As(err, &ee) {
 		if ee.Err != nil {
-			fmt.Fprintln(app.Stderr, "glassops:", ee.Err)
+			fmt.Fprintln(app.Stderr, "glassops:", oneLine(ee.Err.Error()))
 		}
 		return ee.Code
 	}
-	fmt.Fprintln(app.Stderr, "glassops:", err)
+	fmt.Fprintln(app.Stderr, "glassops:", oneLine(err.Error()))
 	return exitcode.Error
 }
 

@@ -109,11 +109,11 @@ func ExecuteContext(ctx context.Context, app *App, args []string) int {
 	var ee *exitcode.ExitError
 	if errors.As(err, &ee) {
 		if ee.Err != nil {
-			fmt.Fprintln(app.Stderr, "glassops:", ee.Err)
+			fmt.Fprintln(app.Stderr, "glassops:", oneLine(ee.Err.Error()))
 		}
 		return ee.Code
 	}
 	// Flag and argument errors from cobra are usage problems, not check failures.
-	fmt.Fprintln(app.Stderr, "glassops:", err)
+	fmt.Fprintln(app.Stderr, "glassops:", oneLine(err.Error()))
 	return exitcode.Error
 }
