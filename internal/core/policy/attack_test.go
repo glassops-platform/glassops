@@ -1,8 +1,8 @@
 package policy
 
 // Red team tests for the gate decision. A test here passes when the attack is refused.
-// Attacks that currently succeed are in attack_open_test.go, behind the redteam_open build
-// tag.
+// An attack that succeeds goes in attack_open_test.go, behind the redteam_open build tag,
+// until it is fixed. None is open now.
 
 import (
 	"context"
