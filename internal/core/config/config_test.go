@@ -367,6 +367,7 @@ func TestDefaultPipelines(t *testing.T) {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
+			{Run: "verify --target prod"},
 			{Run: "report", When: "always"},
 		},
 	}

@@ -28,7 +28,7 @@ func detailOf(r run.Result, name string) string {
 	return ""
 }
 
-func TestVerifyCommandIsAStub(t *testing.T) {
+func TestVerifyCommandIsRegistered(t *testing.T) {
 	h := newHarness(t)
 	c, _, err := NewRootCommand(h.app).Find([]string{"verify"})
 	if err != nil || c.Name() != "verify" {
@@ -41,9 +41,6 @@ func TestVerifyCommandIsAStub(t *testing.T) {
 	}
 	if code := h.exec("verify"); code != exitcode.Error {
 		t.Fatalf("verify without --target exit %d", code)
-	}
-	if code := h.exec("verify", "--target", "prod"); code != exitcode.Error || !strings.Contains(h.out.String(), "verify is not implemented yet") {
-		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
 }
 

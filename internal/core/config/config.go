@@ -570,6 +570,7 @@ func DefaultPipelines() map[string][]Step {
 			{Run: "validate --target prod"},
 			{Run: "gate --target prod"},
 			{Run: "deploy --target prod"},
+			{Run: "verify --target prod"},
 			{Run: "report", When: "always"},
 		},
 	}
