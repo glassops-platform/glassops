@@ -344,6 +344,34 @@ func (v *verifyRun) checkOnlyCheck(dr deployRequestRow) {
 	}
 }
 
+// reportedAs maps a manifest member to the type and name the deploy reports for it. A folder
+// is named in the manifest as its content type, and the deploy reports it as a folder type:
+//   - Dashboard "Folder/" (trailing slash) is DashboardFolder "Folder", and Report the same.
+//   - EmailTemplate "Folder" (no slash in the name) is EmailFolder "Folder".
+//   - Settings "Name" is "NameSettings" with the full name "Name".
+//
+// All three are [confirmed] by deploy-report-folders-settings.json. Document "Folder/" is
+// DocumentFolder "Folder" by the same folder rule, [unverified]: it was not captured.
+// Every other member, and every member that does not fit these shapes, is matched as is, so a
+// different type with the same name still fails.
+func reportedAs(typ, name string) (string, string) {
+	switch typ {
+	case "Dashboard", "Report", "Document": // Document is [unverified]
+		if base, ok := strings.CutSuffix(name, "/"); ok && base != "" && !strings.Contains(base, "/") {
+			return typ + "Folder", base
+		}
+	case "EmailTemplate":
+		if name != "" && name != "*" && !strings.Contains(name, "/") {
+			return "EmailFolder", name
+		}
+	case "Settings":
+		if name != "" && name != "*" {
+			return name + "Settings", name
+		}
+	}
+	return typ, name
+}
+
 // memberKey is how a plan member and a component success are matched: the type as is, the
 // name URL-decoded and folded to lower case.
 func memberKey(typ, name string) string {
@@ -383,7 +411,7 @@ func (v *verifyRun) membersCheck(dr deployRequestRow, rep reportBody, pkg manife
 				if byType[t.Name] == 0 {
 					missing = append(missing, t.Name+":*")
 				}
-			case !deployed[memberKey(t.Name, m)]:
+			case !deployed[memberKey(reportedAs(t.Name, m))]:
 				missing = append(missing, t.Name+":"+m)
 			}
 		}
@@ -394,7 +422,7 @@ func (v *verifyRun) membersCheck(dr deployRequestRow, rep reportBody, pkg manife
 		for _, t := range d.Types {
 			for _, m := range t.Members {
 				destructiveCount++
-				if !deleted[memberKey(t.Name, m)] {
+				if !deleted[memberKey(reportedAs(t.Name, m))] {
 					notDeleted = append(notDeleted, t.Name+":"+m)
 				}
 			}
