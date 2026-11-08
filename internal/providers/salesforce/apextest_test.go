@@ -38,8 +38,11 @@ func TestRunTestsPass(t *testing.T) {
 		t.Fatalf("classes: %+v", res.Classes)
 	}
 	cmds := f.commands()
-	if len(cmds) != 1 {
+	if len(cmds) != 2 || !strings.HasPrefix(cmds[1], "sf data query --use-tooling-api") {
 		t.Fatalf("commands: %v", cmds)
+	}
+	if _, ok := res.Facts["test.coverage_unavailable"]; !ok {
+		t.Fatalf("the unanswered aggregate query was not recorded: %v", res.Facts)
 	}
 	for _, frag := range []string{"apex run test", "--test-level RunLocalTests", "--code-coverage",
 		"--result-format json", "--target-org glassops-target", "--wait 2", "--json"} {
@@ -102,7 +105,7 @@ func TestRunTestsUnfinishedThenResumed(t *testing.T) {
 		t.Fatalf("result: %+v", res)
 	}
 	cmds := f.commands()
-	if len(cmds) != 2 || !strings.Contains(cmds[1], "apex get test --test-run-id 707000000000005") ||
+	if len(cmds) != 3 || !strings.Contains(cmds[1], "apex get test --test-run-id 707000000000005") ||
 		!strings.Contains(cmds[1], "--code-coverage") {
 		t.Fatalf("commands: %v", cmds)
 	}
@@ -126,7 +129,7 @@ func TestRunTestsResume(t *testing.T) {
 	if err != nil || res.Failed != 1 {
 		t.Fatalf("%v %+v", err, res)
 	}
-	if cmds := f.commands(); len(cmds) != 1 || strings.Contains(cmds[0], "apex run test") {
+	if cmds := f.commands(); len(cmds) != 2 || strings.Contains(cmds[0], "apex run test") {
 		t.Fatalf("commands: %v", cmds)
 	}
 }
@@ -191,5 +194,53 @@ func TestRunTestsUncoveredClassIsNotListed(t *testing.T) {
 	}
 	if res.OrgCoverage != 66 || len(res.Classes) != 1 || res.Classes[0].Name != "Greeter" {
 		t.Fatalf("org %d, classes %+v", res.OrgCoverage, res.Classes)
+	}
+}
+
+const aggregateQueryPrefix = "sf data query --use-tooling-api"
+
+// A class no test touches is absent from the sf apex run test list and present in
+// ApexCodeCoverageAggregate with no covered lines. [confirmed: apex-test-with-orphan.json and
+// tooling-coverage-aggregate.json, sf 2.156.8]
+func TestRunTestsFindsUntouchedClassInAggregate(t *testing.T) {
+	p, f, s := testerSetup(t, map[string]fakeReply{
+		runTestPrefix:        {Stdout: fixture(t, "apex-test-with-orphan.json")},
+		aggregateQueryPrefix: {Stdout: fixture(t, "tooling-coverage-aggregate.json")},
+	})
+	res, err := p.RunTests(context.Background(), s, providers.TestRequest{Dir: t.TempDir(), TestLevel: "RunLocalTests"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range res.Classes {
+		if c.Name == "Orphan" {
+			t.Fatalf("the test output was expected to leave Orphan out: %+v", res.Classes)
+		}
+	}
+	got, _ := res.Facts["test.coverage_untouched"].([]string)
+	if len(got) != 1 || got[0] != "Orphan" {
+		t.Fatalf("test.coverage_untouched = %v", res.Facts["test.coverage_untouched"])
+	}
+	if _, bad := res.Facts["test.coverage_unavailable"]; bad {
+		t.Fatalf("facts: %v", res.Facts)
+	}
+	if cmds := f.commands(); !strings.Contains(cmds[1], "FROM ApexCodeCoverageAggregate") {
+		t.Fatalf("commands: %v", cmds)
+	}
+}
+
+func TestRunTestsAggregateFailureIsRecordedNotHidden(t *testing.T) {
+	p, _, s := testerSetup(t, map[string]fakeReply{
+		runTestPrefix:        {Stdout: fixture(t, "apex-test-with-orphan.json")},
+		aggregateQueryPrefix: {Stdout: []byte(`{"status":1,"name":"Boom","message":"boom"}`), ExitCode: 1},
+	})
+	res, err := p.RunTests(context.Background(), s, providers.TestRequest{Dir: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := res.Facts["test.coverage_unavailable"]; !ok {
+		t.Fatalf("facts: %v", res.Facts)
+	}
+	if _, ok := res.Facts["test.coverage_untouched"]; ok {
+		t.Fatalf("a failed query produced a list: %v", res.Facts)
 	}
 }

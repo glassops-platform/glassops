@@ -124,6 +124,7 @@ func TestParseRejects(t *testing.T) {
 		{"bad seed", "version: 1\nsalesforce:\n  ephemeral: { seed: some }\n", "/salesforce/ephemeral/seed"},
 		{"coverage over 100", "version: 1\ntest:\n  coverage: { org_min: 101 }\n", "/test/coverage/org_min"},
 		{"coverage below 0", "version: 1\ntest:\n  coverage: { class_min: -1 }\n", "/test/coverage/class_min"},
+		{"class scope unknown", "version: 1\ntest:\n  coverage: { class_min: 70, class_scope: some }\n", "/test/coverage/class_scope"},
 		{"max severity 0", "version: 1\nanalyze: { max_severity: 0 }\n", "/analyze/max_severity"},
 		{"max severity 6", "version: 1\nanalyze: { max_severity: 6 }\n", "/analyze/max_severity"},
 		{"script without run", "version: 1\ncheck:\n  scripts: [{ name: lint }]\n", "/check/scripts/0"},
@@ -262,7 +263,7 @@ salesforce:
     seed: full
 test:
   level: { default: RunLocalTests }
-  coverage: { org_min: 75, class_min: 70 }
+  coverage: { org_min: 75, class_min: 70, class_scope: all }
 check:
   scripts:
     - name: lint
@@ -292,7 +293,7 @@ func TestParsePhase4Config(t *testing.T) {
 	if got := cfg.Salesforce.Ephemeral.SeedMode(); got != SeedFull {
 		t.Fatalf("SeedMode = %q", got)
 	}
-	if cfg.Test.Level["default"] != "RunLocalTests" || *cfg.Test.Coverage.OrgMin != 75 || *cfg.Test.Coverage.ClassMin != 70 {
+	if cfg.Test.Level["default"] != "RunLocalTests" || *cfg.Test.Coverage.OrgMin != 75 || *cfg.Test.Coverage.ClassMin != 70 || cfg.Test.Coverage.ClassScope != "all" {
 		t.Fatalf("test = %+v", cfg.Test)
 	}
 	if !reflect.DeepEqual(cfg.Check.Scripts, []Script{{Name: "lint", Run: "npm run lint"}}) {
