@@ -491,8 +491,9 @@ func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord, pl
 	}
 	switch {
 	case d.Quick:
-		// [unverified] No quick deploy DeployRequest was captured. The tests of a quick
-		// deploy ran in the validation it deploys, which the PERMIT binds.
+		// [confirmed] A quick deploy's DeployRequest reports RunTestsEnabled false and no
+		// tests (tooling-deployrequest-quick.json). Its tests ran in the validation it deploys,
+		// which the PERMIT binds.
 		v.add(CheckVerifyTests, providers.VerifySkipped, "a quick deploy reuses the tests of the validation it deploys")
 		return
 	case d.TestLevel == "":
@@ -504,8 +505,10 @@ func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord, pl
 	}
 	known := dr.RunTestsEnabled != nil && total >= 0 && completed >= 0 && errs >= 0
 	if d.TestLevel == "RunRelevantTests" && !planHasApex && known && (!*dr.RunTestsEnabled || total == 0) {
-		// [unverified] No RunRelevantTests DeployRequest was captured. Salesforce picks the
-		// tests from the Apex in the deploy, so a plan with no Apex can rightly run none.
+		// Salesforce picks the tests from the Apex in the deploy, so a plan with no Apex can
+		// rightly run none. [confirmed] for a check-only validation, which reports
+		// RunTestsEnabled true and no tests (tooling-deployrequest-relevant-noapex.json).
+		// [unverified] for a full deploy at this level, which was not captured.
 		v.add(CheckVerifyTests, providers.VerifySkipped, "test level RunRelevantTests picks tests from the Apex in the deploy, and the plan has no Apex, so no tests ran")
 		return
 	}

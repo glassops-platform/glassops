@@ -759,3 +759,48 @@ func TestHasApex(t *testing.T) {
 		t.Fatal("an Apex class in the plan or a trigger in a destructive manifest counts as Apex")
 	}
 }
+
+// vfyRequestRow reads the one DeployRequest row of a Tooling capture.
+func vfyRequestRow(t *testing.T, name string) deployRequestRow {
+	t.Helper()
+	env, err := parseEnvelope(fixture(t, name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var q struct {
+		Records []deployRequestRow `json:"records"`
+	}
+	if err := json.Unmarshal(env.Result, &q); err != nil || len(q.Records) != 1 {
+		t.Fatalf("%s: %v, %d records", name, err, len(q.Records))
+	}
+	return q.Records[0]
+}
+
+func TestVerifyTestsOnProductionCaptures(t *testing.T) {
+	noApex := vfyRequestRow(t, "tooling-deployrequest-relevant-noapex.json")
+	apex := vfyRequestRow(t, "tooling-deployrequest-relevant-apex.json")
+	quick := vfyRequestRow(t, "tooling-deployrequest-quick.json")
+	for _, tc := range []struct {
+		name    string
+		row     deployRequestRow
+		deploy  providers.DeployRecord
+		hasApex bool
+		want    providers.VerifyStatus
+		detail  string
+	}{
+		// Production reports RunTestsEnabled true and 0 tests when the change has no Apex.
+		{"relevant, no Apex", noApex, providers.DeployRecord{TestLevel: "RunRelevantTests"}, false, providers.VerifySkipped, "plan has no Apex"},
+		{"relevant, same row with Apex in the plan", noApex, providers.DeployRecord{TestLevel: "RunRelevantTests"}, true, providers.VerifyFail, "no tests ran"},
+		{"local, same row", noApex, providers.DeployRecord{TestLevel: "RunLocalTests"}, false, providers.VerifyFail, "no tests ran"},
+		{"relevant, Apex", apex, providers.DeployRecord{TestLevel: "RunRelevantTests"}, true, providers.VerifyPass, "272 of 272 tests ran"},
+		// A quick deploy reports RunTestsEnabled false and 0 tests, so only the quick skip keeps it from failing.
+		{"quick deploy", quick, providers.DeployRecord{TestLevel: "RunRelevantTests", Quick: true}, true, providers.VerifySkipped, "reuses the tests"},
+		{"quick deploy read as a full deploy", quick, providers.DeployRecord{TestLevel: "RunRelevantTests"}, true, providers.VerifyFail, "tests did not run"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+			v.testsCheck(tc.row, tc.deploy, tc.hasApex)
+			vfyWant(t, v.res, CheckVerifyTests, tc.want, tc.detail)
+		})
+	}
+}
