@@ -612,7 +612,7 @@ func TestVerifyTestsEnabledButNoneRan(t *testing.T) {
 	zero := flexInt(0)
 	synthetic := deployRequestRow{ID: vfyDeployPass, RunTestsEnabled: &yes, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}
 	v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
-	v.testsCheck(synthetic, providers.DeployRecord{TestLevel: "RunLocalTests"})
+	v.testsCheck(synthetic, providers.DeployRecord{TestLevel: "RunLocalTests"}, true)
 	vfyWant(t, v.res, CheckVerifyTests, providers.VerifyFail, "no tests ran")
 }
 
@@ -713,5 +713,49 @@ func TestReportedAs(t *testing.T) {
 		if gt != tc.wantTyp || gn != tc.wantName {
 			t.Errorf("reportedAs(%s, %s) = %s, %s, want %s, %s", tc.typ, tc.name, gt, gn, tc.wantTyp, tc.wantName)
 		}
+	}
+}
+
+func TestVerifyRelevantTestsWithNoApex(t *testing.T) {
+	// Synthetic: no RunRelevantTests deploy was captured.
+	yes, no := true, false
+	zero, three, one := flexInt(0), flexInt(3), flexInt(1)
+	for _, tc := range []struct {
+		name    string
+		row     deployRequestRow
+		hasApex bool
+		want    providers.VerifyStatus
+		detail  string
+	}{
+		{"no apex, none ran", deployRequestRow{RunTestsEnabled: &yes, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}, false, providers.VerifySkipped, "plan has no Apex"},
+		{"no apex, tests off", deployRequestRow{RunTestsEnabled: &no, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}, false, providers.VerifySkipped, "plan has no Apex"},
+		{"apex, none ran", deployRequestRow{RunTestsEnabled: &yes, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}, true, providers.VerifyFail, "no tests ran"},
+		{"apex, tests off", deployRequestRow{RunTestsEnabled: &no, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}, true, providers.VerifyFail, "tests did not run"},
+		{"no apex, critical test failed", deployRequestRow{RunTestsEnabled: &yes, NumberTestsTotal: &three, NumberTestsCompleted: &three, NumberTestErrors: &one}, false, providers.VerifyFail, "1 of 3 tests failed"},
+		{"no apex, counts unknown", deployRequestRow{RunTestsEnabled: &yes}, false, providers.VerifyFail, "does not say"},
+		{"apex, tests passed", deployRequestRow{RunTestsEnabled: &yes, NumberTestsTotal: &three, NumberTestsCompleted: &three, NumberTestErrors: &zero}, true, providers.VerifyPass, "3 of 3 tests ran"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.row.ID = vfyDeployPass
+			v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+			v.testsCheck(tc.row, providers.DeployRecord{TestLevel: "RunRelevantTests"}, tc.hasApex)
+			vfyWant(t, v.res, CheckVerifyTests, tc.want, tc.detail)
+		})
+	}
+	// Other levels keep requiring tests on a plan with no Apex.
+	v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+	v.testsCheck(deployRequestRow{ID: vfyDeployPass, RunTestsEnabled: &yes, NumberTestsTotal: &zero, NumberTestsCompleted: &zero, NumberTestErrors: &zero}, providers.DeployRecord{TestLevel: "RunLocalTests"}, false)
+	vfyWant(t, v.res, CheckVerifyTests, providers.VerifyFail, "no tests ran")
+}
+
+func TestHasApex(t *testing.T) {
+	cls := manifest{Types: []manifestType{{Name: "ApexClass", Members: []string{"Greeter"}}}}
+	trg := manifest{Types: []manifestType{{Name: "ApexTrigger", Members: []string{"AccountTrigger"}}}}
+	flow := manifest{Types: []manifestType{{Name: "Flow", Members: []string{"Probe"}}}}
+	if hasApex(flow, nil) {
+		t.Fatal("a Flow only plan has no Apex")
+	}
+	if !hasApex(cls, nil) || !hasApex(flow, []manifest{trg}) {
+		t.Fatal("an Apex class in the plan or a trigger in a destructive manifest counts as Apex")
 	}
 }

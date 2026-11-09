@@ -184,7 +184,7 @@ Before it logs in, `verify` reads the deploy result and the change set. It stops
 | `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy lists the coverage warnings the report holds |
 | `verify.check_only` | The deploy was not a check-only run, so it changed something |
 | `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
-| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
+| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check. At `RunRelevantTests`, a plan with no Apex class or trigger may run no tests, and the check is skipped then |
 | `verify.flows` | Every Flow in the plan whose source says Active runs as its latest version in the target, and when the deploy changed it, that version was modified after the deploy started. A Flow whose source says Draft is not checked |
 | `verify.foreign_deploys` | No other deploy that is not check-only was created in the target between the deploy's start and now. Fails or warns according to the setting |
 | `verify.smoke` | The `verify.smoke` command exits 0. Skipped when it is not set |
