@@ -216,7 +216,7 @@ func (p *Provider) Verify(ctx context.Context, s providers.Session, req provider
 	v.statusCheck(dr, rep)
 	v.checkOnlyCheck(dr)
 	v.membersCheck(dr, rep, pkg, destructive)
-	v.testsCheck(dr, req.Deploy)
+	v.testsCheck(dr, req.Deploy, hasApex(pkg, destructive))
 
 	started := req.Deploy.Started
 	if t, ok := parseSFTime(dr.StartDate); ok {
@@ -460,8 +460,20 @@ func (v *verifyRun) membersCheck(dr deployRequestRow, rep reportBody, pkg manife
 	v.add(CheckVerifyMembers, providers.VerifyFail, strings.Join(parts, ". "))
 }
 
-// testsCheck checks that tests ran when the deploy's test level needs them.
-func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord) {
+// hasApex reports whether the plan's manifest or any destructive manifest names an Apex class
+// or trigger.
+func hasApex(pkg manifest, destructive []manifest) bool {
+	for _, m := range append([]manifest{pkg}, destructive...) {
+		if len(m.members("ApexClass")) > 0 || len(m.members("ApexTrigger")) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// testsCheck checks that tests ran when the deploy's test level needs them. planHasApex says
+// whether the plan deploys or deletes any Apex class or trigger.
+func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord, planHasApex bool) {
 	f := v.res.Facts
 	f["verify.test_level"] = d.TestLevel
 	if dr.RunTestsEnabled != nil {
@@ -479,8 +491,9 @@ func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord) {
 	}
 	switch {
 	case d.Quick:
-		// [unverified] No quick deploy DeployRequest was captured. The tests of a quick
-		// deploy ran in the validation it deploys, which the PERMIT binds.
+		// [confirmed] A quick deploy's DeployRequest reports RunTestsEnabled false and no
+		// tests (tooling-deployrequest-quick.json). Its tests ran in the validation it deploys,
+		// which the PERMIT binds.
 		v.add(CheckVerifyTests, providers.VerifySkipped, "a quick deploy reuses the tests of the validation it deploys")
 		return
 	case d.TestLevel == "":
@@ -490,8 +503,17 @@ func (v *verifyRun) testsCheck(dr deployRequestRow, d providers.DeployRecord) {
 		v.add(CheckVerifyTests, providers.VerifySkipped, "test level "+d.TestLevel+" requires no tests")
 		return
 	}
+	known := dr.RunTestsEnabled != nil && total >= 0 && completed >= 0 && errs >= 0
+	if d.TestLevel == "RunRelevantTests" && !planHasApex && known && (!*dr.RunTestsEnabled || total == 0) {
+		// Salesforce picks the tests from the Apex in the deploy, so a plan with no Apex can
+		// rightly run none. [confirmed] for a check-only validation, which reports
+		// RunTestsEnabled true and no tests (tooling-deployrequest-relevant-noapex.json).
+		// [unverified] for a full deploy at this level, which was not captured.
+		v.add(CheckVerifyTests, providers.VerifySkipped, "test level RunRelevantTests picks tests from the Apex in the deploy, and the plan has no Apex, so no tests ran")
+		return
+	}
 	switch {
-	case dr.RunTestsEnabled == nil || total < 0 || completed < 0 || errs < 0:
+	case !known:
 		v.add(CheckVerifyTests, providers.VerifyFail, "the DeployRequest does not say whether tests ran")
 	case !*dr.RunTestsEnabled:
 		v.add(CheckVerifyTests, providers.VerifyFail, fmt.Sprintf("tests did not run, and test level %s requires them", d.TestLevel))

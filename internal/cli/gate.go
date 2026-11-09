@@ -407,9 +407,26 @@ func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.Cha
 		return skip("the validate result does not record which plan it validated")
 	case planHash != cs.SHA256:
 		return skip("the validate result is for a different plan")
+	case ranNoTests(rr.Facts[prefix+"tests_total"]):
+		// [confirmed] A production org refused to quick deploy a RunRelevantTests validation
+		// that ran no tests, with no other deploy in between, and quick deployed one that ran
+		// tests. Binding it would only add a refused quick deploy before the full deploy.
+		return skip("the validation ran no tests, and the target refuses to quick deploy a validation that ran none")
 	}
 	return &permit.Validation{DeployID: id, TestLevel: level, Passed: true},
 		policy.Result{Rule: "validation.bound", Outcome: policy.Pass, Detail: "check-only validation " + id + " of this plan is bound for a quick deploy"}
+}
+
+// ranNoTests reports whether a tests_total fact says that no tests ran. A missing or
+// non-numeric fact says nothing, so it is false.
+func ranNoTests(v any) bool {
+	switch n := v.(type) {
+	case float64:
+		return n == 0
+	case int:
+		return n == 0
+	}
+	return false
 }
 
 // readResult reads a result envelope. A missing file is not an error.

@@ -122,3 +122,19 @@ autolaunched Flow (`Glassops_Probe`). Scrubbed the same way as the files above.
 | `deploy-report-folders-settings.json`, `package-folders-settings.xml` | trimmed from a real full-source deploy of a larger project (1167 components) into a scratch org, keeping the 19 successes and manifest members that show folder and Settings naming. The manifest names a dashboard or report folder as `Dashboard` or `Report` with a trailing slash (`Portfolio_Owner_Dashboards/`) and an email folder as `EmailTemplate` without one (`Portfolio_Contact`). The deploy reports them as `DashboardFolder`, `ReportFolder` and `EmailFolder` with the bare name. The manifest names `Settings` `EmailAdministration`, and the deploy reports `EmailAdministrationSettings` `EmailAdministration`. The `files` list and the test results were removed |
 
 Also seen, not saved: `sf project deploy resume` refuses `--target-org` ("Nonexistent flag"). The portfolio AI definition, with `Einstein1AIPlatform` and `Communities`, signs up on a Developer Edition Dev Hub, and `Settings:AgentPlatform` does not come back from a retrieve there.
+
+## `sf/`, RunRelevantTests and quick deploy captures
+
+Captured with `sf` 2.156.8 against a Developer Edition production org on 2026-11-09, then
+scrubbed the same way as the files above. Each is a Tooling `DeployRequest` by Id with the fields
+of `tooling-deployrequest-pass.json`.
+
+| File | What ran |
+|---|---|
+| `tooling-deployrequest-relevant-noapex.json` | `sf project deploy validate --test-level RunRelevantTests` of an LWC and a custom field, no Apex. `CheckOnly` true, `RunTestsEnabled` true, `NumberTestsTotal` 0. `sf project deploy quick` of it, with no other deploy in between, failed with `CannotQuickDeployError` |
+| `tooling-deployrequest-relevant-apex.json` | the same command for 14 Apex classes. `RunTestsEnabled` true, 272 of 272 tests from 19 test classes, picked by Salesforce |
+| `tooling-deployrequest-quick.json` | `sf project deploy quick` of that validation. `CheckOnly` false, 14 of 14 components, `RunTestsEnabled` false, `NumberTestsTotal` 0 |
+
+Also seen, not saved: a quick deploy of a validation that ran tests was refused with the same
+`CannotQuickDeployError` after another deploy reached the org between the validation and the
+quick deploy.
