@@ -162,7 +162,7 @@ jobs:
         if: always() && inputs.upload-sarif && steps.checkout.outcome == 'success' && hashFiles('.glassops/report.sarif') != ''
         # A pull request from a fork has no security-events: write, so this must not fail the run.
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: .glassops/report.sarif
           category: glassops
