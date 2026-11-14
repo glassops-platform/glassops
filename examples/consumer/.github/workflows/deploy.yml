@@ -15,6 +15,7 @@ jobs:
       actions: read
       issues: read
       pull-requests: read
+      id-token: write
     with:
       environment: glassops-deploy
     # The permit key is a secret of the glassops-deploy environment only. The caller still passes

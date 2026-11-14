@@ -1,0 +1,7 @@
+{
+  "status": 1,
+  "result": {
+    "outputstring": "Deployment summary for metadata-deployment\nStatus: Failed\nDeployment ID: 0Af000000000003AAA\nDeployment mode: FULL\nComponents: 2 deployed, 0 failed (2 total)\nApex tests: 0 completed, 1 failed (1 total)\nDuration: 0:00:01.000\nDefine NO_TRUNCATE_LOGS=true to display the full deployment JSON in the console again\n\n\n\nTest failures:\n\n\ud83d\udca5 GreeterTest.greetsByName: System.AssertException: Assertion Failed: Expected: Hello, Bob!, Actual: Hello, Ada!\nStack: Class.GreeterTest.greetsByName: line 5, column 1\n"
+  },
+  "warnings": []
+}

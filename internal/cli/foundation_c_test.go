@@ -79,7 +79,17 @@ func TestGateWithoutRegoIsUnchanged(t *testing.T) {
 	}
 }
 
-func TestGateSigstoreIsNotImplemented(t *testing.T) {
+// noCosign makes this process a GitHub Actions job with id-token: write but no cosign on
+// PATH. The sigstore signer reads the process environment, not the harness's.
+func noCosign(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "true")
+	t.Setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "https://example.invalid/token")
+	t.Setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "syntheticRequestToken")
+	t.Setenv("PATH", t.TempDir())
+}
+
+func TestGateSigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	installGateFakes(t, fixedRule("plan_not_empty", policy.Pass))
 	h, _ := gateHarness(t, sigstoreConfig)
 	delete(h.env, "GLASSOPS_PERMIT_KEY")
@@ -89,17 +99,18 @@ func TestGateSigstoreIsNotImplemented(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(h.dir, ".glassops", "permit.json")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("a PERMIT was written: %v", err)
 	}
-	if d := detailOf(h.result(t, "gate"), "permit.key"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "gate"), "permit.key"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("permit.key detail = %q", d)
 	}
 }
 
-func TestDeploySigstoreIsNotImplemented(t *testing.T) {
+func TestDeploySigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	h, fp := gateHarness(t, sigstoreConfig)
 	if code := Execute(h.app, []string{"deploy", "--target", "prod", "--dir", h.dir, "--ci", "github"}); code != exitcode.Error {
 		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
 	}
-	if d := detailOf(h.result(t, "deploy"), "permit"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "deploy"), "permit"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("permit detail = %q", d)
 	}
 	if fp.deployCalls != 0 || len(fp.sessions) != 0 {
@@ -107,12 +118,13 @@ func TestDeploySigstoreIsNotImplemented(t *testing.T) {
 	}
 }
 
-func TestPermitVerifySigstoreIsNotImplemented(t *testing.T) {
+func TestPermitVerifySigstoreWithoutCosign(t *testing.T) {
+	noCosign(t)
 	h, _ := gateHarness(t, sigstoreConfig)
 	if code := Execute(h.app, []string{"permit", "verify", "--target", "prod", "--dir", h.dir, "--ci", "github"}); code != exitcode.Error {
 		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
 	}
-	if d := detailOf(h.result(t, "permit-verify"), "key"); !strings.Contains(d, "sigstore signing is not implemented") {
+	if d := detailOf(h.result(t, "permit-verify"), "key"); !strings.Contains(d, "cosign is not installed") {
 		t.Fatalf("key detail = %q", d)
 	}
 }
@@ -130,15 +142,21 @@ func TestConfigureErrorExitsTwo(t *testing.T) {
 	}
 }
 
-func TestEngineHardisPlanIsAToolError(t *testing.T) {
-	h := newHarness(t)
-	h.write(t, "sfdx-project.json", "{}")
-	h.write(t, "glassops.yaml", "version: 1\nsalesforce:\n  engine: hardis\n  delta: { enabled: false }\n")
-	if code := h.exec("plan"); code != exitcode.Error {
-		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)
+// TestEngineHardisPlansLikeNative: engine hardis keeps GlassOps' own plan, so plan gives the
+// same exit and the same detail as the native engine. The provider tests compare the change
+// sets of a passing plan.
+func TestEngineHardisPlansLikeNative(t *testing.T) {
+	plan := func(engine string) (int, string) {
+		h := newHarness(t)
+		h.write(t, "sfdx-project.json", "{}")
+		h.write(t, "glassops.yaml", "version: 1\nsalesforce:\n  engine: "+engine+"\n  delta: { enabled: false }\n")
+		code := h.exec("plan")
+		return code, strings.ReplaceAll(detailOf(h.result(t, "plan"), "plan"), h.dir, "<dir>")
 	}
-	if d := detailOf(h.result(t, "plan"), "plan"); !strings.Contains(d, "engine hardis is not implemented") {
-		t.Fatalf("plan detail = %q", d)
+	nCode, nDetail := plan("native")
+	hCode, hDetail := plan("hardis")
+	if nCode != hCode || nDetail != hDetail || strings.Contains(hDetail, "not implemented") {
+		t.Fatalf("native exit %d %q, hardis exit %d %q", nCode, nDetail, hCode, hDetail)
 	}
 }
 

@@ -32,7 +32,9 @@ A PERMIT binds to a specific target, commit, plan, change set and config. Change
 
 ## The signing key
 
-The PERMIT is signed with HMAC-SHA256. The key comes from the environment variable `GLASSOPS_PERMIT_KEY`, which holds base64 text that decodes to at least 32 bytes with at least 8 different byte values. Standard base64 is accepted with or without padding. A shorter key, or a placeholder such as one character repeated, is refused, and the error never contains the key. One way to make a key:
+By default the PERMIT is signed with HMAC-SHA256, as described here. On GitHub Actions you can sign keyless with Sigstore instead, which needs no key. See [Sigstore signing](sigstore-signing.md). The rest of this section is about the HMAC key.
+
+The key comes from the environment variable `GLASSOPS_PERMIT_KEY`, which holds base64 text that decodes to at least 32 bytes with at least 8 different byte values. Standard base64 is accepted with or without padding. A shorter key, or a placeholder such as one character repeated, is refused, and the error never contains the key. One way to make a key:
 
 ```bash
 openssl rand -base64 48
@@ -63,6 +65,7 @@ Missing evidence is never a pass.
 - A rule that needs a fact that is not there fails, or says so in its detail.
 - A tool or infrastructure problem while gathering evidence adds a failing `evidence.<name>` check. The PERMIT denies, is still signed and written, and `gate` exits 2 instead of 1. Examples: the guard refusing the target, a GitHub API call that fails, a result file that exists but cannot be read, a missing commit or plan hash, and plan files that no longer match the plan hash.
 - A rule set with no rules is a defect, never a pass. So is a rule source that returns no results.
+- Optional [Rego rules](rego-rules.md) run after the built-in rules and can only add denials. If `opa` or a policy file cannot be used, the PERMIT denies and `gate` exits 2.
 - Only the outcomes `pass`, `skipped`, `waived_by_config` and `satisfied_by_approval` allow. Any other outcome denies, including a misspelled or empty one.
 - `gate` owns the facts under `change.`, `ci.` and `target.`. The change set file and earlier result files can never set them. From the earlier results in the results directory, `gate` reads only facts under `validate.`, `plan.`, `analyze.`, `test.`, `check.` and the provider's own prefix, such as `salesforce.`. `change.destructive_count` is the larger of the provider's count and the number of destructive manifests.
 
@@ -88,7 +91,7 @@ Both use the same verification, in this order. The first failure is the one repo
 The PERMIT checks, shared by both:
 
 1. It is signed and has a `change_set_sha256`.
-2. The signature: the algorithm is `HMAC-SHA256`, the key id matches, and the value verifies.
+2. The signature: the algorithm is `HMAC-SHA256`, the key id matches, and the value verifies. With [Sigstore signing](sigstore-signing.md) the algorithm is `sigstore-bundle` and `cosign` checks the certificate identity, the issuer and the repository instead of a key id.
 3. The schema is `glassops.permit/v1`.
 4. `allow` is true.
 5. It has not expired.

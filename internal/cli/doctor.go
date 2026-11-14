@@ -74,6 +74,7 @@ func (app *App) doctor(ctx context.Context, g *globals, o *doctorOptions) error 
 	switch {
 	case err == nil:
 		cfg = loaded.Config
+		rememberProjectDir(cfg, g.dir)
 		if loaded.Path == "" {
 			res.AddCheck("config", run.StatusPass, "no glassops.yaml, using defaults")
 		} else {

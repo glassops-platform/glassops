@@ -16,6 +16,8 @@ Beyond the schema, these rules are checked:
 - Every `environments.<name>.devhub` names a configured target.
 - No pipeline step is empty.
 - With provider `exec`, `exec.paths` lists at least one path.
+- With `policy.permit.signing: sigstore`, both `identity` and `issuer` are set, and `repository` (when set) is `owner/name`.
+- Every `telemetry.otlp.headers` value is a whole `$VAR` reference.
 - The file stays inside the [YAML limits](verify-and-coverage-settings.md#yaml-limits): an alias that refers to itself is refused, and so are files nested deeper than 64 levels or expanding past 100000 values.
 
 Names (targets, tiers, environments, pipelines) are lowercase letters, digits, `_` and `-`, starting with a letter.
@@ -35,6 +37,8 @@ Names (targets, tiers, environments, pipelines) are lowercase letters, digits, `
 | `analyze` | no | Code Analyzer settings |
 | `verify` | no | Settings for `verify`. See [Verify, coverage and YAML settings](verify-and-coverage-settings.md) |
 | `exec` | no | The commands provider `exec` runs. See [The exec provider](exec-provider.md) |
+| `telemetry` | no | Opt-in export of run spans to an OpenTelemetry collector. See [Pull request comment and OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export) |
+| `report` | no | Settings for `report`. See [Pull request comment and OpenTelemetry export](pr-comment-and-telemetry.md#pull-request-comment) |
 | `pipelines` | no | Named lists of steps for `run` |
 
 ### `version` and `provider`
@@ -78,6 +82,8 @@ What `gate` evaluates. The rules are described in [PERMIT and rules](permit-and-
 | `blackouts` | Date ranges (`from`, `to`, optional `tiers` and `reason`) when no deploy is allowed |
 | `rules` | `coverage_min`, `analyzer_max_severity`, `separation_of_duties`, `destructive_needs_label` |
 | `permit_ttl` | How long a PERMIT stays valid, from `5m` to `24h`. The default is `2h` |
+| `permit` | How PERMITs are signed: `signing` (`hmac`, the default, or `sigstore`), and for `sigstore` the `identity`, `issuer` and `repository`. See [Sigstore signing](sigstore-signing.md) |
+| `rego` | `files`, a list of Rego policy files that `gate` runs after the built-in rules. See [Rego rules](rego-rules.md) |
 | `actors` | Accepted by the schema. No command reads it yet |
 
 ```yaml
@@ -104,7 +110,9 @@ policy:
 | `delta.enabled` | `false` makes `plan` list the whole source instead of a delta |
 | `deploy.quick` | `prefer` (the default), `require` or `off`. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy) |
 | `ephemeral.seed` | `minimal` (the default), `full` or `off`. See [the smart seed](cli.md#the-smart-seed) |
-| `engine`, `api_version` | Accepted by the schema (`native`, and `auto` or a version such as `62.0`). No command reads them yet |
+| `engine` | `native` (the default) or `hardis`. `hardis` is experimental, see [Engine hardis](hardis-engine.md) |
+| `hardis.min_version` | With engine `hardis`, the oldest `sfdx-hardis` version `doctor` accepts. The default is `8.20.1` |
+| `api_version` | Accepted by the schema (`auto` or a version such as `62.0`). No command reads it yet |
 
 ```yaml
 salesforce:

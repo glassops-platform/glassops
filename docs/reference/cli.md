@@ -45,6 +45,7 @@ Runs these checks and fails if any of them fails:
 - The provider: the config and the project files must agree.
 - The tools: `git` always, plus `sf` and the `sfdx-git-delta` plugin for Salesforce projects. Versions are recorded.
 - The analyzer, only when `analyze.enabled` is `true`: Java 11 or newer and the Code Analyzer plugin (`tool.java` and `tool.code-analyzer`). Both are in the `glassops-analyzer` image.
+- Opt-in features, only when you turn them on: `cosign` and the signing identity, issuer and repository for [Sigstore signing](sigstore-signing.md), `opa` and the policy files for [Rego rules](rego-rules.md), and `sfdx-hardis` for [Engine hardis](hardis-engine.md).
 - The checkout: a shallow clone fails, because it would make every change set empty. On GitHub, use `actions/checkout` with `fetch-depth: 0`.
 - The environment: every `$VAR` the config names must be set. Only presence is checked. Values are never printed or stored.
 - The PERMIT key: on a `pull_request` or `pull_request_target` run, `GLASSOPS_PERMIT_KEY` should not be set. If it is, `doctor` adds a `permit.key` check whose detail starts with `warning:` and a CI warning annotation. This never fails the command. Only presence is checked. See [PERMIT and rules](permit-and-rules.md#the-signing-key).
@@ -115,7 +116,7 @@ When the target's tier has deploy windows and the gate's clock is inside one, th
 
 A blackout shortens the PERMIT too. When a blackout that covers the target's tier has not ended by today (UTC), the PERMIT expires when it begins, at 00:00 UTC on its first day, if that is before the TTL and before any window end. A PERMIT issued before a blackout can never be valid inside it. An ephemeral target is not checked against blackouts, so its PERMIT is not shortened. `deploy` needs no separate blackout check, because the config is bound by hash and the expiry is checked at deploy.
 
-Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
+Needs `GLASSOPS_PERMIT_KEY`, unless `policy.permit.signing` is `sigstore`. Then it needs a GitHub Actions job with `id-token: write` and `cosign` instead, see [Sigstore signing](sigstore-signing.md). With `policy.rego` set it also runs your [Rego rules](rego-rules.md) with `opa`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
 
 | Exit | When |
 |---|---|
@@ -138,7 +139,7 @@ Checks a PERMIT without logging in to the target, so any deploy tool can honour 
 
 Without `--deploy-command` the command is not checked, as `deploy` without `--` does not check it. With it, a PERMIT that binds no command, or another one, fails (exit 1).
 
-Needs `GLASSOPS_PERMIT_KEY`. Reads the PERMIT, the change set, the plan files under `.glassops/plan/`, `glassops.yaml` and the CI commit. Writes `.glassops/results/permit-verify.json`.
+Needs `GLASSOPS_PERMIT_KEY`, unless `policy.permit.signing` is `sigstore`. Then it needs `cosign` and a pinned repository instead, see [Sigstore signing](sigstore-signing.md). Reads the PERMIT, the change set, the plan files under `.glassops/plan/`, `glassops.yaml` and the CI commit. Writes `.glassops/results/permit-verify.json`.
 
 | Exit | When |
 |---|---|
@@ -222,6 +223,7 @@ Reads every result in the results directory. It writes a markdown summary to the
 |---|---|---|
 | `--sarif` | `<dir>/.glassops/report.sarif` | SARIF file to write |
 | `--summary` | | Also write the markdown summary to this file |
+| `--pr-comment` | `false` | On a GitHub pull request run, also post the summary as one pull request comment, created the first time and updated after. `report.pr_comment: true` does the same. A failed post only warns. See [Pull request comment](pr-comment-and-telemetry.md#pull-request-comment) |
 
 `report` exits with the worst status among the results: `0` when all pass, `1` when any failed, `2` when any errored. That lets a CI run it after a failed step with `if: always()` and still fail the job. It also exits `2` when there are no results or one cannot be read.
 
@@ -337,6 +339,8 @@ A step has failed when its exit code is not 0. After a `plan` step that exits 0,
 **Exit code.** The worst exit code of all steps. Any code other than 0 and 1 ranks as 2.
 
 Writes `.glassops/results/run.json` with the facts `run.pipeline`, `run.steps` (index, step, `when`, argv, result, exit code, duration, skip reason), `run.exit_code`, `run.empty_plan`, `run.cancelled` and `run.stale_removed`, and one check per step. A pipeline that is not in the config, or a step that does not parse, exits 2 before anything runs.
+
+With `telemetry.otlp.endpoint` set, `run` sends the finished run to an OpenTelemetry collector as trace spans after it writes the record. A failed export only warns. See [OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export).
 
 ### `glassops check`
 
@@ -502,7 +506,7 @@ v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://githu
 |---|---|---|
 | Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
 | `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.4 or later, and the host tools below |
-| `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
+| `docker build -t glassops .` | The current binary in an image with the tools, plus `cosign` and `opa` | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
 
 A built Linux binary also runs inside the published image. Mount it over the image's own:
 

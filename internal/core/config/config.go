@@ -272,6 +272,11 @@ type PermitSigning struct {
 	// must carry. Both are required for sigstore.
 	Identity string `yaml:"identity,omitempty" json:"identity,omitempty"`
 	Issuer   string `yaml:"issuer,omitempty" json:"issuer,omitempty"`
+	// Repository is the GitHub repository, as owner/name, a sigstore signature must come
+	// from. Every repository that calls the same reusable workflow gets the same certificate
+	// identity, so verifying pins the repository too. It defaults to GITHUB_REPOSITORY on
+	// GitHub Actions and is required anywhere else.
+	Repository string `yaml:"repository,omitempty" json:"repository,omitempty"`
 }
 
 // Method returns Signing, or SigningHMAC when it is not set.

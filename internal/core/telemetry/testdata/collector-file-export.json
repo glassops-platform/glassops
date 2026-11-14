@@ -1,0 +1,238 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "glassops-probe"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "glassops"
+          },
+          "spans": [
+            {
+              "traceId": "6a4a88bcffacbb7f569c1d31dd9a3e2d",
+              "spanId": "aa651d8948e8f82d",
+              "name": "glassops run",
+              "kind": 1,
+              "startTimeUnixNano": "1794164818964007009",
+              "endTimeUnixNano": "1794164818990452101",
+              "attributes": [
+                {
+                  "key": "glassops.duration_ms",
+                  "value": {
+                    "intValue": "26"
+                  }
+                },
+                {
+                  "key": "glassops.pipeline",
+                  "value": {
+                    "stringValue": "probe"
+                  }
+                },
+                {
+                  "key": "glassops.provider",
+                  "value": {
+                    "stringValue": "exec"
+                  }
+                },
+                {
+                  "key": "glassops.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "glassops.empty_plan",
+                  "value": {
+                    "boolValue": false
+                  }
+                },
+                {
+                  "key": "glassops.cancelled",
+                  "value": {
+                    "boolValue": false
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "6a4a88bcffacbb7f569c1d31dd9a3e2d",
+              "spanId": "78ea2d8407b0d093",
+              "parentSpanId": "aa651d8948e8f82d",
+              "name": "glassops exec",
+              "kind": 1,
+              "startTimeUnixNano": "1794164818964218862",
+              "endTimeUnixNano": "1794164818973218862",
+              "attributes": [
+                {
+                  "key": "glassops.step",
+                  "value": {
+                    "stringValue": "exec"
+                  }
+                },
+                {
+                  "key": "glassops.step.index",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "glassops.step.when",
+                  "value": {
+                    "stringValue": "success"
+                  }
+                },
+                {
+                  "key": "glassops.duration_ms",
+                  "value": {
+                    "intValue": "9"
+                  }
+                },
+                {
+                  "key": "glassops.step.skipped",
+                  "value": {
+                    "boolValue": false
+                  }
+                },
+                {
+                  "key": "glassops.exit_code",
+                  "value": {
+                    "intValue": "0"
+                  }
+                },
+                {
+                  "key": "glassops.step.outcome",
+                  "value": {
+                    "stringValue": "pass"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "6a4a88bcffacbb7f569c1d31dd9a3e2d",
+              "spanId": "0111779c2f98c1a0",
+              "parentSpanId": "aa651d8948e8f82d",
+              "name": "glassops exec",
+              "kind": 1,
+              "startTimeUnixNano": "1794164818974051081",
+              "endTimeUnixNano": "1794164818982051081",
+              "attributes": [
+                {
+                  "key": "glassops.step",
+                  "value": {
+                    "stringValue": "exec"
+                  }
+                },
+                {
+                  "key": "glassops.step.index",
+                  "value": {
+                    "intValue": "2"
+                  }
+                },
+                {
+                  "key": "glassops.step.when",
+                  "value": {
+                    "stringValue": "success"
+                  }
+                },
+                {
+                  "key": "glassops.duration_ms",
+                  "value": {
+                    "intValue": "8"
+                  }
+                },
+                {
+                  "key": "glassops.step.skipped",
+                  "value": {
+                    "boolValue": false
+                  }
+                },
+                {
+                  "key": "glassops.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "glassops.step.outcome",
+                  "value": {
+                    "stringValue": "fail"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "6a4a88bcffacbb7f569c1d31dd9a3e2d",
+              "spanId": "f13f7f1c5a30397f",
+              "parentSpanId": "aa651d8948e8f82d",
+              "name": "glassops exec",
+              "kind": 1,
+              "startTimeUnixNano": "1794164818982554579",
+              "endTimeUnixNano": "1794164818989554579",
+              "attributes": [
+                {
+                  "key": "glassops.step",
+                  "value": {
+                    "stringValue": "exec"
+                  }
+                },
+                {
+                  "key": "glassops.step.index",
+                  "value": {
+                    "intValue": "3"
+                  }
+                },
+                {
+                  "key": "glassops.step.when",
+                  "value": {
+                    "stringValue": "always"
+                  }
+                },
+                {
+                  "key": "glassops.duration_ms",
+                  "value": {
+                    "intValue": "7"
+                  }
+                },
+                {
+                  "key": "glassops.step.skipped",
+                  "value": {
+                    "boolValue": false
+                  }
+                },
+                {
+                  "key": "glassops.exit_code",
+                  "value": {
+                    "intValue": "0"
+                  }
+                },
+                {
+                  "key": "glassops.step.outcome",
+                  "value": {
+                    "stringValue": "pass"
+                  }
+                }
+              ],
+              "status": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

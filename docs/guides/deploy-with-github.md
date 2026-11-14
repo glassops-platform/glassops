@@ -54,7 +54,7 @@ jobs:
     uses: glassops-platform/glassops/.github/workflows/glassops-pr.yml@v1
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       security-events: write
     with:
       targets: devhub
@@ -66,6 +66,8 @@ jobs:
       SF_PROD_USERNAME: ${{ secrets.SF_PROD_USERNAME }}
       SF_PROD_ORG_ID: ${{ secrets.SF_PROD_ORG_ID }}
 ```
+
+**Permissions.** The calling job must grant `pull-requests: write`, because the workflow grants it to its job so that `glassops report` can post the [pull request comment](../reference/pr-comment-and-telemetry.md#permission). A called workflow cannot hold more than its caller grants, so a caller that grants less is refused when the run starts. A pull request from a fork gets a read-only token whatever the caller grants, so there the comment warns and is not posted, and the run is not affected.
 
 The workflow checks out full history, runs `glassops run pr`, uploads the SARIF file to code scanning, and keeps the results as an artifact. It never receives the permit key.
 
@@ -99,6 +101,7 @@ jobs:
       actions: read
       issues: read
       pull-requests: read
+      id-token: write
     with:
       environment: glassops-deploy
     secrets:
@@ -123,6 +126,7 @@ jobs:
 | `actions: read` | `gate` reads this run's environment approvals |
 | `pull-requests: read` | `gate` reads the pull request behind the commit, its author and labels |
 | `issues: read` | `gate` reads who added an approval label |
+| `id-token: write` | Sigstore keyless signing of the PERMIT, when `policy.permit.signing` is `sigstore`. The reusable workflow grants it to its job, so the caller must grant it too or GitHub refuses to start the run. HMAC signing does not use it |
 
 ### What the deploy job does
 
