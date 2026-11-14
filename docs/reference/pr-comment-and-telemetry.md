@@ -33,9 +33,9 @@ The comment body is the same redacted markdown that `report` writes to the CI's 
 
 ### Permission
 
-The job needs `pull-requests: write`. Give it to the job that runs `report` and to no other. A pull request from a fork gets a read-only token, so the comment cannot be posted there.
+The job needs `pull-requests: write`. Give it to the job that runs `report` and to no other. A pull request from a fork gets a read-only token, so the comment cannot be posted there. It warns instead.
 
-The reusable workflow `glassops-pr.yml` grants its job `pull-requests: read` only. With `report.pr_comment: true` it would try to post and get a 403. To post a comment, run `glassops report` in a workflow of your own with the permission.
+The reusable workflow `glassops-pr.yml` grants `pull-requests: write` to its one job, the one that runs `report`. The caller must grant `pull-requests: write` too, because a called workflow cannot hold more than its caller grants. A caller that grants less is refused when the run starts. The workflow's other permissions stay `contents: read` and `security-events: write`.
 
 ### It never changes the result
 

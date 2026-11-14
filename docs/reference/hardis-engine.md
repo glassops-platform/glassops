@@ -63,7 +63,7 @@ That is why the engine validates and quick deploys with `sf` directly. If a late
 
 ## Pull request comments
 
-`sfdx-hardis` posts pull request comments and notifications when it finds a CI token. The engine blanks `GITHUB_TOKEN`, `SYSTEM_ACCESSTOKEN`, `CI_SFDX_HARDIS_GITLAB_TOKEN` and `CI_SFDX_HARDIS_BITBUCKET_TOKEN` for the `sfdx-hardis` process, so `glassops report` stays the only thing that writes to the pull request. See [the PR comment](pr-comment-and-telemetry.md#pull-request-comment).
+`sfdx-hardis` posts pull request comments and notifications when it finds a CI token. The engine removes `GITHUB_TOKEN`, `SYSTEM_ACCESSTOKEN`, `CI_SFDX_HARDIS_GITLAB_TOKEN` and `CI_SFDX_HARDIS_BITBUCKET_TOKEN` from the `sfdx-hardis` process environment, so they are absent there and not set empty, and `glassops report` stays the only thing that writes to the pull request. See [the PR comment](pr-comment-and-telemetry.md#pull-request-comment).
 
 ---
 

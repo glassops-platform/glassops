@@ -4,10 +4,13 @@ name: glassops deploy
 #   jobs:
 #     glassops:
 #       uses: glassops-platform/glassops/.github/workflows/glassops-deploy.yml@v1
-#       permissions: { contents: write, actions: read, issues: read, pull-requests: read }
+#       permissions: { contents: write, actions: read, issues: read, pull-requests: read, id-token: write }
 #       secrets:
 #         GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
 #         SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+# The caller must grant id-token: write, because a called workflow cannot hold more than its caller
+# grants and this workflow grants it to its job, so Sigstore signing works. HMAC signing does not
+# use it.
 # The job runs in a protected GitHub environment. The permit key lives only as a secret of that
 # environment. A called workflow gets an environment secret only when the caller passes it by
 # name, as above, and the value is then resolved from the environment of the deploy job.
@@ -55,12 +58,14 @@ jobs:
     environment: ${{ inputs.environment }}
     # contents: write pushes the glassops/deployed/* tag. actions: read lets gate read this
     # run's own approval. issues: read lets gate read who added an approval label. pull-requests: read
-    # lets gate read the PR behind the commit.
+    # lets gate read the PR behind the commit. id-token: write lets gate sign the PERMIT keyless with
+    # Sigstore when policy.permit.signing is sigstore. HMAC signing never uses it.
     permissions:
       contents: write
       actions: read
       issues: read
       pull-requests: read
+      id-token: write
     # One deploy at a time per environment. A queued deploy waits and is never cancelled.
     concurrency:
       group: glassops-deploy-${{ inputs.environment }}
@@ -161,7 +166,7 @@ jobs:
         name: Run the deploy pipeline
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          GLASSOPS_PASS_ENV: GLASSOPS_PERMIT_KEY
+          GLASSOPS_PASS_ENV: GLASSOPS_PERMIT_KEY ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN
           GLASSOPS_PERMIT_KEY: ${{ secrets.GLASSOPS_PERMIT_KEY }}
           SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
           SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
