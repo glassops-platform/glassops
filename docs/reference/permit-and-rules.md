@@ -14,7 +14,7 @@ The PERMIT is JSON in `.glassops/permit.json`, with the schema name `glassops.pe
 |---|---|
 | `id` | A random identifier, in hex |
 | `allow` | `true` or `false`. A deny is recorded as a PERMIT too |
-| `issued_at`, `expires_at` | When it was made and when it stops being valid. The lifetime is `policy.permit_ttl`, or less when the target's tier has deploy windows: the PERMIT then expires when the window that held the gate's clock closes |
+| `issued_at`, `expires_at` | When it was made and when it stops being valid. The lifetime is `policy.permit_ttl`, or less when the target's tier has deploy windows: the PERMIT then expires when the window that held the gate's clock closes, or when a blackout that covers the tier next begins |
 | `target` | The target `name`, `tier`, `id` and `kind`. The Id and kind are what the login reported, unless `--no-connect` was used |
 | `commit` | The commit the CI reported |
 | `plan_sha256` | The hash of the plan files |
@@ -102,7 +102,7 @@ The PERMIT checks, shared by both:
 10. The plan hash matches.
 11. The config hash matches.
 12. The change set hash matches.
-13. For `deploy -- <command>` with provider exec, the PERMIT binds that exact command. A PERMIT with no `deploy_command_sha256`, or a different one, is refused.
+13. For `deploy -- <command>` or `permit verify --deploy-command <command>` with provider exec, the PERMIT binds that exact command. A PERMIT with no `deploy_command_sha256`, or a different one, is refused.
 
 Checking the signature first means a forged or damaged PERMIT is rejected before any of its contents are trusted. `deploy` additionally compares the PERMIT against the deployed commit, which is the CI's commit, or `git rev-parse HEAD` when the CI reports none.
 
@@ -120,6 +120,7 @@ After the PERMIT verifies and before it logs in, `deploy` checks the working tre
 - It is for the same target name.
 - It was a check-only run with a deploy Id.
 - It records the plan hash it validated (`validate.plan_sha256`) and that hash equals the current plan.
+- It records the change set hash it validated (`validate.change_set_sha256`, the same hash as the PERMIT's `change_set_sha256`) and that hash equals the current change set. A validate result written before this fact existed has none, so it is not bound. Run `validate` again.
 - It did not record that no tests ran. A validation with `salesforce.tests_total` 0 is not bound, because the target refuses to quick deploy it.
 
 The PERMIT then carries `validation` with the deploy Id and the recorded test level. The `validation.bound` check says whether it was bound and why not. It never denies. Without a bound validation, `deploy` runs a full deploy.
@@ -169,6 +170,8 @@ Configured as `policy.blackouts`, a list with `from` and `to` dates (`YYYY-MM-DD
 
 - `skipped` when no blackouts are configured.
 - `fail` when today (UTC) falls in a blackout that covers the target's tier. An empty `tiers` list covers every tier. When the tier is not known, every blackout in range counts.
+
+The rule refuses a gate that runs inside a blackout. `gate` also ends the PERMIT when the next blackout for the tier begins, so a PERMIT issued earlier expires before it and is refused inside it. `deploy` does not look at blackouts itself, because the config is bound into the PERMIT by hash and the expiry is checked at deploy.
 - `pass` otherwise.
 
 ### `coverage_min`

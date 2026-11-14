@@ -17,6 +17,8 @@ type permitVerifyOptions struct {
 	target     string
 	permitPath string
 	planPath   string
+	// deployCommand is the JSON array given to --deploy-command, as gate takes it.
+	deployCommand string
 }
 
 func newPermitCommand(app *App, g *globals) *cobra.Command {
@@ -39,7 +41,9 @@ func newPermitVerifyCommand(app *App, g *globals) *cobra.Command {
 			"exits 0 when the PERMIT holds and 1 when it does not, so any deploy tool can honour\n" +
 			"a PERMIT. It exits 2 when GLASSOPS_PERMIT_KEY is not set or usable, or when the\n" +
 			"PERMIT, the plan or the config cannot be read. It needs the key and never logs in\n" +
-			"to the target.",
+			"to the target. With --deploy-command, which takes the same JSON array gate does, it\n" +
+			"also checks that the PERMIT binds that command, and it fails when the PERMIT binds a\n" +
+			"different command or none. Without the flag the command is not checked.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.permitVerify(g, o)
@@ -49,6 +53,7 @@ func newPermitVerifyCommand(app *App, g *globals) *cobra.Command {
 	f.StringVar(&o.target, "target", "", "target name from glassops.yaml (required)")
 	f.StringVar(&o.permitPath, "permit", "", "PERMIT file (default <dir>/.glassops/permit.json)")
 	f.StringVar(&o.planPath, "plan", "", "change set file (default <dir>/.glassops/plan.json)")
+	f.StringVar(&o.deployCommand, "deploy-command", "", `provider exec only: the command deploy -- is about to run, as a JSON array of strings, as gate takes it. The PERMIT must bind exactly this command`)
 	_ = cmd.MarkFlagRequired("target")
 	return cmd
 }
@@ -132,6 +137,10 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 		return app.finish(res, c, g)
 	}
 
+	commandSHA, err := gateDeployCommand(proj.provider, o.deployCommand)
+	if err != nil {
+		return stop("deploy_command", err)
+	}
 	canon := proj.provider.CanonicalID
 	err = permit.Verify(p, signer, permit.Expect{
 		TargetName:   o.target,
@@ -140,10 +149,11 @@ func (app *App) permitVerify(g *globals, o *permitVerifyOptions) error {
 		PlanSHA256:   cs.SHA256,
 		ConfigSHA256: loaded.SHA256(),
 		// The change set hash covers which plan files are destructive.
-		ChangeSetSHA256: permit.ChangeSetDigest(cs),
-		Now:             app.Now(),
-		MaxTTL:          proj.cfg.Policy.TTL(),
-		CanonicalID:     canon,
+		ChangeSetSHA256:     permit.ChangeSetDigest(cs),
+		DeployCommandSHA256: commandSHA,
+		Now:                 app.Now(),
+		MaxTTL:              proj.cfg.Policy.TTL(),
+		CanonicalID:         canon,
 	})
 	switch {
 	case err == nil:
