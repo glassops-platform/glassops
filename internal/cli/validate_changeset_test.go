@@ -84,3 +84,21 @@ func TestGateBindsValidationOnlyForTheSameChangeSet(t *testing.T) {
 		})
 	}
 }
+
+// Each problem validate reports is a check named problem.N, counted from 1.
+func TestValidateNumbersProblemsFromOne(t *testing.T) {
+	h, fp := validateHarness(t)
+	fp.validateFn = func(_ providers.Target, _ providers.ChangeSet, _ providers.ValidateOptions) (providers.ValidateResult, error) {
+		r := passingResult()
+		r.Passed = false
+		r.Problems = []string{"first", "second"}
+		return r, nil
+	}
+	if code := h.exec("validate", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	r := h.result(t, "validate")
+	if checkStatus(r, "problem.1") != run.StatusFail || checkStatus(r, "problem.2") != run.StatusFail {
+		t.Fatalf("checks %+v", r.Checks)
+	}
+}
