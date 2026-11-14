@@ -501,7 +501,7 @@ v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://githu
 | Route | What you get | What you need |
 |---|---|---|
 | Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
-| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.3 or later, and the host tools below |
+| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.4 or later, and the host tools below |
 | `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
 
 A built Linux binary also runs inside the published image. Mount it over the image's own:
