@@ -11,6 +11,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/ci"
 	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
+	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
@@ -112,6 +113,9 @@ func (app *App) validate(ctx context.Context, g *globals, o *validateOptions) er
 	// gate binds this validation into a PERMIT only for the same plan, and quick deploy
 	// reuses it at the same test level, so both are recorded after the provider's own facts.
 	res.Facts["validate.plan_sha256"] = cs.SHA256
+	// permit.ChangeSetDigest is the hash gate binds a PERMIT by, so gate can tell that a validation
+	// is of this change set and not only of these plan files.
+	res.Facts["validate.change_set_sha256"] = permit.ChangeSetDigest(cs)
 	res.Facts["validate.test_level"] = level
 	if out.Passed {
 		res.AddCheck("validate", run.StatusPass, "check-only validate passed")

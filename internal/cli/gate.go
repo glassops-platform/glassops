@@ -63,8 +63,9 @@ func newGateCommand(app *App, g *globals) *cobra.Command {
 			"It logs in to the target to run the org Id and tier guard unless --no-connect is\n" +
 			"set. It exits 1 when policy denies the deploy, and 2 when GLASSOPS_PERMIT_KEY is not\n" +
 			"set. When the target's tier has deploy windows, the PERMIT expires when the window\n" +
-			"that holds the gate's clock closes, if that is before the configured TTL. With\n" +
-			"provider exec, --deploy-command binds the command deploy -- will run.",
+			"that holds the gate's clock closes. It also expires when the next blackout that\n" +
+			"covers the tier begins. Either applies only when it is before the configured TTL.\n" +
+			"With provider exec, --deploy-command binds the command deploy -- will run.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.gate(cmd.Context(), g, o)
@@ -193,6 +194,13 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 
 	now := app.Now().UTC()
 	expires, capped := permitExpiry(cfg, tgt.Tier, now)
+	blackoutCapped := false
+	if !ephemeral {
+		// The blackout rule does not run for an ephemeral target, so it does not shorten its PERMIT.
+		if start, ok := policy.BlackoutStart(cfg, tgt.Tier, now); ok && start.Before(expires) {
+			expires, capped, blackoutCapped = start.UTC(), false, true
+		}
+	}
 	var policyErr error
 	// validation.bound only says whether deploy may quick deploy. It never denies.
 	checks := []policy.Result{guardCheck, bound}
@@ -265,6 +273,7 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	res.Facts["gate.permit_id"] = p.ID
 	res.Facts["gate.expires_at"] = p.ExpiresAt.Format(time.RFC3339)
 	res.Facts["gate.expires_at_window_end"] = capped
+	res.Facts["gate.expires_at_blackout_start"] = blackoutCapped
 	if commandSHA != "" {
 		res.Facts["gate.deploy_command_sha256"] = commandSHA
 	}
@@ -275,6 +284,8 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	expiry := p.ExpiresAt.Format(time.RFC3339)
 	if capped {
 		expiry += ", when the deploy window closes"
+	} else if blackoutCapped {
+		expiry += ", when a blackout starts"
 	}
 	res.AddCheck("permit", run.StatusPass, fmt.Sprintf("%s, signed, written to %s, expires %s", verdict, permitPath, expiry))
 	if !allow {
@@ -384,7 +395,7 @@ func (r *gateRun) resultFacts(g *globals, t providers.Target, cs providers.Chang
 
 // validation returns the validation a validate result proves for target t and plan cs, or nil
 // with the reason. It binds only a passed check-only validate of the same target and the same
-// plan, at the test level validate recorded.
+// plan and change set, at the test level validate recorded.
 func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.ChangeSet) (*permit.Validation, policy.Result) {
 	skip := func(why string) (*permit.Validation, policy.Result) {
 		return nil, policy.Result{Rule: "validation.bound", Outcome: policy.Skipped, Detail: why + ", so deploy runs a full deploy"}
@@ -394,6 +405,7 @@ func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.Cha
 	checkOnly, _ := rr.Facts[prefix+"check_only"].(bool)
 	planHash, _ := rr.Facts["validate.plan_sha256"].(string)
 	level, _ := rr.Facts["validate.test_level"].(string)
+	changeSet, _ := rr.Facts["validate.change_set_sha256"].(string)
 	switch {
 	case rr.Status != run.StatusPass:
 		return skip(fmt.Sprintf("the validate result is %s, not pass", rr.Status))
@@ -407,6 +419,10 @@ func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.Cha
 		return skip("the validate result does not record which plan it validated")
 	case planHash != cs.SHA256:
 		return skip("the validate result is for a different plan")
+	case changeSet == "":
+		return skip("the validate result does not record which change set it validated")
+	case changeSet != permit.ChangeSetDigest(cs):
+		return skip("the validate result is for a different change set")
 	case ranNoTests(rr.Facts[prefix+"tests_total"]):
 		// [confirmed] A production org refused to quick deploy a RunRelevantTests validation
 		// that ran no tests, with no other deploy in between, and quick deployed one that ran
