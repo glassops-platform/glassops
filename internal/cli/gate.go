@@ -395,7 +395,7 @@ func (r *gateRun) resultFacts(g *globals, t providers.Target, cs providers.Chang
 
 // validation returns the validation a validate result proves for target t and plan cs, or nil
 // with the reason. It binds only a passed check-only validate of the same target and the same
-// plan, at the test level validate recorded.
+// plan and change set, at the test level validate recorded.
 func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.ChangeSet) (*permit.Validation, policy.Result) {
 	skip := func(why string) (*permit.Validation, policy.Result) {
 		return nil, policy.Result{Rule: "validation.bound", Outcome: policy.Skipped, Detail: why + ", so deploy runs a full deploy"}
@@ -405,6 +405,7 @@ func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.Cha
 	checkOnly, _ := rr.Facts[prefix+"check_only"].(bool)
 	planHash, _ := rr.Facts["validate.plan_sha256"].(string)
 	level, _ := rr.Facts["validate.test_level"].(string)
+	changeSet, _ := rr.Facts["validate.change_set_sha256"].(string)
 	switch {
 	case rr.Status != run.StatusPass:
 		return skip(fmt.Sprintf("the validate result is %s, not pass", rr.Status))
@@ -418,6 +419,10 @@ func (r *gateRun) validation(rr run.Result, t providers.Target, cs providers.Cha
 		return skip("the validate result does not record which plan it validated")
 	case planHash != cs.SHA256:
 		return skip("the validate result is for a different plan")
+	case changeSet == "":
+		return skip("the validate result does not record which change set it validated")
+	case changeSet != permit.ChangeSetDigest(cs):
+		return skip("the validate result is for a different change set")
 	case ranNoTests(rr.Facts[prefix+"tests_total"]):
 		// [confirmed] A production org refused to quick deploy a RunRelevantTests validation
 		// that ran no tests, with no other deploy in between, and quick deployed one that ran

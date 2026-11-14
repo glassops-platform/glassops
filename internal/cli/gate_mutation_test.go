@@ -59,6 +59,7 @@ func TestMutGateUnreadablePlanResultStillBindsValidate(t *testing.T) {
 	r.Facts["salesforce.check_only"] = true
 	r.Facts["validate.test_level"] = "RunLocalTests"
 	r.Facts["validate.plan_sha256"] = planHash(t, h)
+	r.Facts["validate.change_set_sha256"] = changeSetHash(t, h)
 	writeResult(t, h, r)
 	if code := h.gate("--target", "prod"); code != exitcode.Error {
 		t.Fatalf("exit %d, want 2. output:\n%s", code, h.out)

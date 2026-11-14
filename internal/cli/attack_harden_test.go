@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
+	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
@@ -263,6 +264,7 @@ func TestRTQuickDeployIDIsBoundToTheSignedPlan(t *testing.T) {
 		r.Facts["salesforce.deploy_id"] = id
 		r.Facts["salesforce.check_only"] = true
 		r.Facts["validate.plan_sha256"] = cs.SHA256
+		r.Facts["validate.change_set_sha256"] = permit.ChangeSetDigest(cs)
 		writeResult(t, e.harness, r)
 	}
 	write("0Af00000000RT02AAA")

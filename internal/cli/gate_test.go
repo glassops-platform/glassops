@@ -795,6 +795,7 @@ func TestGateBindsValidationOnlyForTheSamePlan(t *testing.T) {
 			if tc.r != nil {
 				if tc.r.Facts["validate.plan_sha256"] == same {
 					tc.r.Facts["validate.plan_sha256"] = planHash(t, h)
+					tc.r.Facts["validate.change_set_sha256"] = changeSetHash(t, h)
 				}
 				writeResult(t, h, tc.r)
 			}
