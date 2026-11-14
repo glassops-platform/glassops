@@ -51,7 +51,7 @@ jobs:
       security-events: write
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Full history, so the change set between the base and the head is complete.
           fetch-depth: 0
