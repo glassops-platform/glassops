@@ -750,6 +750,12 @@ func writeResult(t *testing.T, h *harness, r *run.Result) {
 	}
 }
 
+// withTests sets the validate result's salesforce.tests_total fact.
+func withTests(r *run.Result, total any) *run.Result {
+	r.Facts["salesforce.tests_total"] = total
+	return r
+}
+
 func TestGateBindsValidationOnlyForTheSamePlan(t *testing.T) {
 	const same = "same-plan"
 	validate := func(target string, status run.Status, checkOnly bool, plan string) *run.Result {
@@ -778,6 +784,9 @@ func TestGateBindsValidationOnlyForTheSamePlan(t *testing.T) {
 		{"no plan hash recorded", validate("prod", run.StatusPass, true, ""), nil, "does not record which plan"},
 		{"different plan", validate("prod", run.StatusPass, true, "0000"), nil, "different plan"},
 		{"no validate result", nil, nil, "no validate result"},
+		{"ran no tests", withTests(validate("prod", run.StatusPass, true, same), 0), nil, "ran no tests"},
+		{"ran one test", withTests(validate("prod", run.StatusPass, true, same), 1), &permit.Validation{DeployID: "0Af000000000001AAA", TestLevel: "RunSpecifiedTests", Passed: true}, "0Af000000000001AAA"},
+		{"test count not a number", withTests(validate("prod", run.StatusPass, true, same), "0"), &permit.Validation{DeployID: "0Af000000000001AAA", TestLevel: "RunSpecifiedTests", Passed: true}, "0Af000000000001AAA"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1009,5 +1018,18 @@ func TestGateDestructiveCount(t *testing.T) {
 				t.Fatalf("count %d, want %d", n, tc.want)
 			}
 		})
+	}
+}
+
+func TestRanNoTests(t *testing.T) {
+	for _, tc := range []struct {
+		v    any
+		want bool
+	}{
+		{float64(0), true}, {float64(1), false}, {0, true}, {1, false}, {"0", false}, {nil, false},
+	} {
+		if got := ranNoTests(tc.v); got != tc.want {
+			t.Errorf("ranNoTests(%#v) = %v, want %v", tc.v, got, tc.want)
+		}
 	}
 }

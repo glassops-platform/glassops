@@ -185,7 +185,7 @@ Before it logs in, `verify` reads the deploy result and the change set. It stops
 | `verify.status` | The target's deploy record says the deploy succeeded. A failed deploy lists the coverage warnings the report holds |
 | `verify.check_only` | The deploy was not a check-only run, so it changed something |
 | `verify.members` | Every component in the plan, and every destructive member, is in the deploy's component successes. Counts are recorded as facts and never compared, because the target's counts expand and vary |
-| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check |
+| `verify.tests` | Apex tests ran when the test level needs them. A quick deploy and an empty test level skip this check. At `RunRelevantTests`, a plan with no Apex class or trigger may run no tests, and the check is skipped then |
 | `verify.flows` | Every Flow in the plan whose source says Active runs as its latest version in the target, and when the deploy changed it, that version was modified after the deploy started. A Flow whose source says Draft is not checked |
 | `verify.foreign_deploys` | No other deploy that is not check-only was created in the target between the deploy's start and now. Fails or warns according to the setting |
 | `verify.smoke` | The `verify.smoke` command exits 0. Skipped when it is not set |
@@ -500,7 +500,7 @@ v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://githu
 | Route | What you get | What you need |
 |---|---|---|
 | Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
-| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.3 or later, and the host tools below |
+| `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.4 or later, and the host tools below |
 | `docker build -t glassops .` | The current binary in an image with the tools, plus `cosign` and `opa` | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
 
 A built Linux binary also runs inside the published image. Mount it over the image's own:

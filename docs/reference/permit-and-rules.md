@@ -120,6 +120,7 @@ After the PERMIT verifies and before it logs in, `deploy` checks the working tre
 - It is for the same target name.
 - It was a check-only run with a deploy Id.
 - It records the plan hash it validated (`validate.plan_sha256`) and that hash equals the current plan.
+- It did not record that no tests ran. A validation with `salesforce.tests_total` 0 is not bound, because the target refuses to quick deploy it.
 
 The PERMIT then carries `validation` with the deploy Id and the recorded test level. The `validation.bound` check says whether it was bound and why not. It never denies. Without a bound validation, `deploy` runs a full deploy.
 
@@ -131,7 +132,9 @@ How `deploy` uses it depends on `salesforce.deploy.quick` in `glassops.yaml`:
 | `require` | Quick deploy only. With no passed validation in the PERMIT, `deploy` fails with exit 1 before any login. If the target refuses the quick deploy, no full deploy runs |
 | `off` | Always run a full deploy |
 
-The target refuses a quick deploy when the validation was never run, was already deployed, or is more than ten days old.
+The target refuses a quick deploy when the validation was never run, was already deployed, or is more than ten days old. It also refused one in testing when another deploy reached the target after the validation, so run any other deploy to the same target after `deploy`, not between `validate` and `deploy`.
+
+At `RunRelevantTests`, Salesforce picks the tests from the Apex in the change set. A change set with no Apex class or trigger runs no tests, so its validation is not bound and `deploy` runs a full deploy. Do not combine `RunRelevantTests` with `quick: require`, or every change set with no Apex fails at `deploy`.
 
 ---
 
