@@ -247,22 +247,29 @@ func TestHardisDeployPass(t *testing.T) {
 	}
 	noHardisWrappers(t, f)
 
-	// The pull request tokens are blank for the hardis process, whatever the process env holds.
+	// The pull request tokens are removed for the hardis process, whatever the process env
+	// holds. Absent, not blank: no Env entry names them, and Unset lists every one.
 	start := f.calls[2]
-	merged := mergeEnv(os.Environ(), start.Env)
-	for _, k := range hardisBlankedEnv {
-		found := false
-		for _, kv := range merged {
-			name, v, _ := strings.Cut(kv, "=")
-			if strings.EqualFold(name, k) {
-				if v != "" {
-					t.Errorf("hardis gets %s with a value", k)
-				}
-				found = true
+	for _, k := range hardisRemovedEnv {
+		for _, kv := range start.Env {
+			if name, _, _ := strings.Cut(kv, "="); strings.EqualFold(name, k) {
+				t.Errorf("hardis Env sets %s, it must be removed: %q", k, kv)
 			}
 		}
-		if !found {
-			t.Errorf("%s is not blanked for hardis", k)
+		if !contains(start.Unset, k) {
+			t.Errorf("%s is not removed for hardis", k)
+		}
+	}
+	// The child env the process would get has none of the keys, even with them set here.
+	for _, k := range hardisRemovedEnv {
+		t.Setenv(k, "from-the-process")
+	}
+	child := unsetEnv(mergeEnv(os.Environ(), start.Env), start.Unset)
+	for _, k := range hardisRemovedEnv {
+		for _, kv := range child {
+			if name, _, _ := strings.Cut(kv, "="); strings.EqualFold(name, k) {
+				t.Errorf("hardis child env has %q, the key must be absent", kv)
+			}
 		}
 	}
 	// Plain sf calls keep the process env as before.

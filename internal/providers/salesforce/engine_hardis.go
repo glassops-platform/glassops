@@ -137,10 +137,10 @@ func versionLess(a, b string) (bool, error) {
 // and the quick wrapper refused --job-id and -i. Validate and quick deploys go to sf directly.
 const hardisDeployCommand = "hardis:project:deploy:start"
 
-// hardisBlankedEnv are the tokens sfdx-hardis uses to post pull request comments and
-// notifications. They are set empty for the hardis process, so GlassOps' report stays the only
-// writer to the pull request.
-var hardisBlankedEnv = []string{
+// hardisRemovedEnv are the tokens sfdx-hardis uses to post pull request comments and
+// notifications. They are removed from the hardis process environment, not set empty, so
+// the GlassOps report stays the only writer to the pull request.
+var hardisRemovedEnv = []string{
 	"GITHUB_TOKEN",
 	"SYSTEM_ACCESSTOKEN",
 	"CI_SFDX_HARDIS_GITLAB_TOKEN",
@@ -314,24 +314,15 @@ func (e hardisEngine) checkInstalled(ctx context.Context, dir string) (string, e
 }
 
 // hardis runs one sfdx-hardis command with --json in session sess, with the pull request
-// tokens blanked, and returns the sf envelope it wraps.
+// tokens removed, and returns the sf envelope it wraps.
 func (e hardisEngine) hardis(ctx context.Context, sess *session, dir string, args []string) (envelope, error) {
 	full := append(append([]string{}, args...), "--json")
-	c := Cmd{Name: "sf", Args: full, Dir: dir, Env: append(append(sfBaseEnv(), sess.env()...), hardisEnv()...)}
+	c := Cmd{Name: "sf", Args: full, Dir: dir, Env: append(sfBaseEnv(), sess.env()...), Unset: hardisRemovedEnv}
 	out, err := e.p.exec(ctx, c)
 	if err != nil {
 		return envelope{}, err
 	}
 	return readHardisOutput(commandName(args), out.Stdout, out.ExitCode)
-}
-
-// hardisEnv blanks every token in hardisBlankedEnv.
-func hardisEnv() []string {
-	env := make([]string, 0, len(hardisBlankedEnv))
-	for _, k := range hardisBlankedEnv {
-		env = append(env, k+"=")
-	}
-	return env
 }
 
 // hardisOutput is the envelope sfdx-hardis prints with --json. Its result holds outputstring:

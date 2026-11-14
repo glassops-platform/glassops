@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -104,5 +105,45 @@ func TestSessionCloseRemovesHome(t *testing.T) {
 	}
 	if err := s.Close(); err != nil {
 		t.Fatal("second close:", err)
+	}
+}
+
+func TestUnsetEnvRemovesKeys(t *testing.T) {
+	got := unsetEnv([]string{"A=1", "TOKEN=x", "B=", "TOKEN_X=y"}, []string{"TOKEN", "B"})
+	if strings.Join(got, ",") != "A=1,TOKEN_X=y" {
+		t.Fatalf("got %v", got)
+	}
+}
+
+// TestOsExecUnsetIsAbsentNotEmpty runs a real child and checks it does not see the variable at
+// all, which a blank value would not satisfy.
+func TestOsExecUnsetIsAbsentNotEmpty(t *testing.T) {
+	if os.Getenv("GO_WANT_ENV_CHILD") == "1" {
+		_, set := os.LookupEnv("GLASSOPS_TEST_UNSET_ME")
+		if set {
+			os.Stdout.WriteString("present")
+		} else {
+			os.Stdout.WriteString("absent")
+		}
+		os.Exit(0)
+	}
+	t.Setenv("GLASSOPS_TEST_UNSET_ME", "secret")
+	run := func(unset []string) string {
+		out, err := osExec(context.Background(), Cmd{
+			Name:  os.Args[0],
+			Args:  []string{"-test.run=TestOsExecUnsetIsAbsentNotEmpty"},
+			Env:   []string{"GO_WANT_ENV_CHILD=1"},
+			Unset: unset,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(out.Stdout)
+	}
+	if got := run(nil); !strings.Contains(got, "present") {
+		t.Fatalf("control: the child should see the variable, got %q", got)
+	}
+	if got := run([]string{"GLASSOPS_TEST_UNSET_ME"}); !strings.Contains(got, "absent") {
+		t.Fatalf("the child should not see the variable, got %q", got)
 	}
 }
