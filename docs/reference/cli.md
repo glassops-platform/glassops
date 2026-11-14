@@ -97,7 +97,7 @@ Logs in to the target, runs the guard, and runs a check-only validate of the cha
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--check-only` | `true` | Always true. `false` is refused |
 
-A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login. `validate` records the facts `validate.plan_sha256` and `validate.test_level`, which `gate` uses to decide whether a deploy may reuse the validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy).
+A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login. `validate` records the facts `validate.plan_sha256`, `validate.change_set_sha256` (the hash a PERMIT binds the change set by) and `validate.test_level`, which `gate` uses to decide whether a deploy may reuse the validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy).
 
 ### `glassops gate`
 
@@ -113,6 +113,8 @@ Reads the change set, the earlier results in the results directory and the CI co
 
 When the target's tier has deploy windows and the gate's clock is inside one, the PERMIT expires when that window closes, if that is before `policy.permit_ttl`. Windows that overlap or touch extend it. With no window for the tier, or a clock outside them, the PERMIT keeps the full TTL, and the window rule decides.
 
+A blackout shortens the PERMIT too. When a blackout that covers the target's tier has not ended by today (UTC), the PERMIT expires when it begins, at 00:00 UTC on its first day, if that is before the TTL and before any window end. A PERMIT issued before a blackout can never be valid inside it. An ephemeral target is not checked against blackouts, so its PERMIT is not shortened. `deploy` needs no separate blackout check, because the config is bound by hash and the expiry is checked at deploy.
+
 Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/plan.json` and `.glassops/results/validate.json` when they exist, and the CI context. Writes `.glassops/permit.json`, `.glassops/facts.json` and `.glassops/results/gate.json`.
 
 | Exit | When |
@@ -121,7 +123,7 @@ Needs `GLASSOPS_PERMIT_KEY`. Reads `.glassops/plan.json`, `.glassops/results/pla
 | `1` | Policy denies the deploy. The signed PERMIT is still written |
 | `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
 
-Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), `gate.expires_at_blackout_start` (true when a blackout start set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
 
 ### `glassops permit verify`
 
@@ -132,14 +134,17 @@ Checks a PERMIT without logging in to the target, so any deploy tool can honour 
 | `--target` | | Target name from `glassops.yaml` (required) |
 | `--permit` | `<dir>/.glassops/permit.json` | PERMIT file |
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
+| `--deploy-command` | | Provider `exec` only. The command `deploy --` is about to run, as the same JSON array of strings `gate --deploy-command` takes. The PERMIT must bind exactly this command. With any other provider it is an error |
+
+Without `--deploy-command` the command is not checked, as `deploy` without `--` does not check it. With it, a PERMIT that binds no command, or another one, fails (exit 1).
 
 Needs `GLASSOPS_PERMIT_KEY`. Reads the PERMIT, the change set, the plan files under `.glassops/plan/`, `glassops.yaml` and the CI commit. Writes `.glassops/results/permit-verify.json`.
 
 | Exit | When |
 |---|---|
 | `0` | The PERMIT holds |
-| `1` | The PERMIT does not hold: bad signature, denied, expired, a different target, commit, plan or config, a file that is not a readable PERMIT, or plan files changed after `plan` |
-| `2` | The key is missing or unusable, or the PERMIT file, the change set, the config or the commit cannot be read or found |
+| `1` | The PERMIT does not hold: bad signature, denied, expired, a different target, commit, plan, config, change set or deploy command, a file that is not a readable PERMIT, or plan files changed after `plan` |
+| `2` | The key is missing or unusable, or the PERMIT file, the change set, the config or the commit cannot be read or found, or `--deploy-command` is not a JSON array of at least one string or is used with a provider other than exec |
 
 Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
