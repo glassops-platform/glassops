@@ -68,7 +68,7 @@ Logs in to one target, runs the guard, and writes what the target reports about 
 
 ### `glassops plan`
 
-Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
+Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. For Salesforce, `plan` also reads the checked out source of each changed Apex class and records the classes annotated `@IsTest` in the fact `salesforce.apex_test_classes`. The check looks at the annotations before the first `class` keyword, after it strips comments and strings. It is not an Apex parser, and a class it cannot read is treated as a normal class. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
 
 | Flag | Default | Meaning |
 |---|---|---|

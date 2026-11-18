@@ -104,6 +104,7 @@ func TestPlanDeltaParsesManifests(t *testing.T) {
 		"salesforce.counts":            map[string]int{"ApexClass": 2, "PermissionSet": 1},
 		"salesforce.destructive_count": 1,
 		"salesforce.apex_classes":      []string{"Greeter", "GreeterTest"},
+		"salesforce.apex_test_classes": []string{},
 		"salesforce.permission_sets":   []string{"Greeter_User"},
 		"salesforce.profiles":          []string{},
 	}

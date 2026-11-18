@@ -46,6 +46,39 @@ func TestCoverageMin(t *testing.T) {
 			"salesforce.apex_classes":           []string{"ATest"},
 			"salesforce.coverage.ATest.percent": 10,
 		}, Fail, "ATest 10%"},
+		{"declared test class passes without the name", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []string{"A", "TestFactory"},
+			"salesforce.apex_test_classes":  []string{"TestFactory"},
+			"salesforce.coverage.A.percent": 90,
+		}, Pass, "annotated @IsTest"},
+		{"declared test class through JSON types", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []any{"A", "TestFactory"},
+			"salesforce.apex_test_classes":  []any{"TestFactory"},
+			"salesforce.coverage.A.percent": float64(90),
+		}, Pass, "1 class(es)"},
+		{"a class not declared fails even with a test name when the fact is present", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []string{"A", "ATest"},
+			"salesforce.apex_test_classes":  []string{},
+			"salesforce.coverage.A.percent": 90,
+		}, Fail, "ATest has no coverage fact"},
+		{"normal class without coverage still fails with the fact present", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []string{"A", "TestFactory", "B"},
+			"salesforce.apex_test_classes":  []string{"TestFactory"},
+			"salesforce.coverage.A.percent": 90,
+		}, Fail, "B has no coverage fact"},
+		{"no declared fact keeps the name heuristic", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []string{"A", "ATest"},
+			"salesforce.coverage.A.percent": 90,
+		}, Pass, "Test or _Test"},
+		{"no declared fact and a helper without the suffix fails", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":       []string{"A", "TestFactory"},
+			"salesforce.coverage.A.percent": 90,
+		}, Fail, "TestFactory has no coverage fact"},
+		{"a declared class with coverage is held to the minimum", covCfg(intp(75)), map[string]any{
+			"salesforce.apex_classes":                 []string{"TestFactory"},
+			"salesforce.apex_test_classes":            []string{"TestFactory"},
+			"salesforce.coverage.TestFactory.percent": 10,
+		}, Fail, "TestFactory 10%"},
 		{"no apex classes fact", covCfg(intp(75)), map[string]any{}, Fail, "plan facts are missing"},
 		{"empty class list passes", covCfg(intp(75)), map[string]any{"salesforce.apex_classes": []string{}}, Pass, "0 class"},
 		{"coverage through JSON types", covCfg(intp(75)), map[string]any{

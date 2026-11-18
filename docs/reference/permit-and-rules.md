@@ -177,7 +177,7 @@ Configured as `policy.rules.coverage_min`, a whole number from 0 to 100.
 
 - `skipped` when it is not set.
 - `fail` when the plan facts do not list the changed Apex classes.
-- Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless its name ends in `Test` or `_Test`. Those are treated as test classes, and the detail says how many.
+- Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless it is a test class. Salesforce reports no coverage for test classes. `plan` reads each changed class file and records the ones annotated `@IsTest` (any case, with or without arguments) in the fact `salesforce.apex_test_classes`. Those are treated as test classes whatever their names, and the detail says how many and why. A `@IsTest` method inside a normal class does not make the class a test class. A plan file written before that fact existed has no such fact, and then a name ending in `Test` or `_Test` marks a test class.
 - `pass` when every class is at or above the minimum.
 
 ### `destructive_needs_label`

@@ -264,6 +264,26 @@ func TestTestUncoveredChangedClassFailsClassMin(t *testing.T) {
 	}
 }
 
+// A plan that lists test classes by annotation is believed over the name. TestFactory has no
+// Test suffix and is skipped, and ReportsTest has the suffix but is not declared, so it counts.
+func TestTestClassFloorUsesDeclaredTestClasses(t *testing.T) {
+	plan := `{"schema":"glassops.plan/v1","provider":"salesforce","full":false,"dir":".glassops/plan","manifest":".glassops/plan/package.xml","destructive":[],"empty":false,"plan_sha256":"x","facts":{"salesforce.apex_classes":["Greeter","TestFactory","ReportsTest"],"salesforce.apex_test_classes":["TestFactory"]}}`
+	h, _ := testHarness(t, "  coverage: { class_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", plan)
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, want 1. output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if checkStatus(r, "coverage.class.TestFactory") != "" {
+		t.Fatal("a declared test class was counted")
+	}
+	for _, n := range []string{"ReportsTest"} {
+		if checkStatus(r, "coverage.class."+n) != run.StatusFail {
+			t.Fatalf("%s was not counted at 0%%: %+v", n, r.Checks)
+		}
+	}
+}
+
 func TestTestUncoveredClassIgnoredWithoutClassMinOrPlan(t *testing.T) {
 	h, _ := testHarness(t, "  coverage: { org_min: 50 }\n")
 	h.write(t, ".glassops/plan.json", syntheticPlan)

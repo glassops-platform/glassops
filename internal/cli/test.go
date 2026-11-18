@@ -8,13 +8,13 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/junit"
+	"github.com/glassops-platform/glassops/internal/core/policy"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
 )
@@ -177,9 +177,10 @@ func stringList(v any) []string {
 // default) takes the changed classes in .glassops/plan.json, and when there is no plan it takes
 // every class the provider found untouched in the org's coverage
 // aggregate (fact test.coverage_untouched), since without a plan nothing says which classes
-// changed. "all" takes the plan's classes and every untouched class. A class whose name ends in
-// Test or _Test is taken for a test class and skipped, the same reading the gate's coverage_min
-// uses. It returns the classes it added. A plan that exists and cannot be read is an error, and
+// changed. "all" takes the plan's classes and every untouched class. A class the plan lists in
+// salesforce.apex_test_classes is a test class and is skipped. A plan with no such fact falls back
+// to the name heuristic (Test or _Test), the same reading the gate's coverage_min uses. An
+// untouched class that is not in the plan is judged by name only, because its source is not read. It returns the classes it added. A plan that exists and cannot be read is an error, and
 // so is an aggregate the provider could not read when the scope needs it, so a broken input
 // never weakens the check.
 func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (providers.TestResult, []string, error) {
@@ -189,8 +190,16 @@ func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (pr
 		return out, nil, fmt.Errorf("the changed classes could not be read, so unreported classes are not counted at 0%%: %w", err)
 	}
 	havePlan := err == nil
+	haveDeclared := false
+	declared := map[string]bool{}
 	if havePlan {
 		classes = stringList(cs.Facts["salesforce.apex_classes"])
+		if v, ok := cs.Facts["salesforce.apex_test_classes"]; ok {
+			haveDeclared = true
+			for _, n := range stringList(v) {
+				declared[n] = true
+			}
+		}
 	}
 	if scope == "all" || !havePlan {
 		if why, ok := out.Facts["test.coverage_unavailable"]; ok {
@@ -202,9 +211,19 @@ func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (pr
 	for _, cl := range out.Classes {
 		reported[cl.Name] = true
 	}
+	inPlan := map[string]bool{}
+	if havePlan {
+		for _, n := range stringList(cs.Facts["salesforce.apex_classes"]) {
+			inPlan[n] = true
+		}
+	}
 	var added []string
 	for _, name := range classes {
-		if reported[name] || strings.HasSuffix(name, "Test") {
+		isTest := policy.IsTestClassName(name)
+		if haveDeclared && inPlan[name] {
+			isTest = declared[name]
+		}
+		if reported[name] || isTest {
 			continue
 		}
 		reported[name] = true

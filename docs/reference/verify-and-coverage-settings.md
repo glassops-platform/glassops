@@ -39,7 +39,7 @@ test:
 
 Rules that apply to both:
 
-- A class whose name ends in `Test` is taken for a test class and skipped.
+- A class listed in the plan fact `salesforce.apex_test_classes` (changed classes annotated `@IsTest`) is taken for a test class and skipped. With no such fact in the plan, a class whose name ends in `Test` is skipped instead. An untouched class that is not in the plan is judged by name, because its source is not read.
 - The classes added this way are recorded in the fact `test.coverage_unreported`. The provider records the untouched classes it found as `test.coverage_untouched`.
 - If the coverage aggregate cannot be read, the step fails instead of passing on a missing list. The fact `test.coverage_unavailable` holds the reason.
 - A plan file that exists and cannot be read fails the step.
