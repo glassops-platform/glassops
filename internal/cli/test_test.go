@@ -361,3 +361,21 @@ func TestTestUnreadableAggregateFailsClosed(t *testing.T) {
 		}
 	}
 }
+
+// An interface or enum has no executable lines, so the plan fact exempts it from the class floor.
+// A normal class with the same lack of coverage still counts at 0%.
+func TestTestClassFloorSkipsNonExecutableTypes(t *testing.T) {
+	plan := `{"schema":"glassops.plan/v1","provider":"salesforce","full":false,"dir":".glassops/plan","manifest":".glassops/plan/package.xml","destructive":[],"empty":false,"plan_sha256":"x","facts":{"salesforce.apex_classes":["Greeter","ApiRateLimiter","Orphan"],"salesforce.apex_test_classes":[],"salesforce.apex_nonexecutable_types":["ApiRateLimiter"]}}`
+	h, _ := testHarness(t, "  coverage: { class_min: 50 }\n")
+	h.write(t, ".glassops/plan.json", plan)
+	if code := h.exec("test", "--target", "qa"); code != exitcode.Fail {
+		t.Fatalf("exit %d, want 1. output:\n%s", code, h.out)
+	}
+	r := h.result(t, "test")
+	if checkStatus(r, "coverage.class.ApiRateLimiter") != "" {
+		t.Fatal("an interface was counted")
+	}
+	if checkStatus(r, "coverage.class.Orphan") != run.StatusFail {
+		t.Fatalf("Orphan was not counted at 0%%: %+v", r.Checks)
+	}
+}

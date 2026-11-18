@@ -85,6 +85,8 @@ func (p *Provider) nativePlan(ctx context.Context, req providers.PlanRequest) (p
 	}
 	cs.Facts = planFacts(pkg, dest)
 	cs.Facts["salesforce.apex_test_classes"] = testClassNames(dir, pkgDirs, pkg.members("ApexClass"))
+	// An interface or enum has no executable lines, so Salesforce reports no coverage for it.
+	cs.Facts["salesforce.apex_nonexecutable_types"] = nonExecutableTypeNames(dir, pkgDirs, pkg.members("ApexClass"))
 	return cs, nil
 }
 

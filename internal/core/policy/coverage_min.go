@@ -46,13 +46,25 @@ func classCoverage(in Input, min int) []Result {
 	for _, d := range declared {
 		isDeclared[d] = true
 	}
+	// salesforce.apex_nonexecutable_types lists the changed classes whose top level type is an
+	// interface or an enum. They have no executable lines, so Salesforce lists no coverage for them.
+	nonExec := map[string]bool{}
+	if names, ok := in.Facts.Strings("salesforce.apex_nonexecutable_types"); ok {
+		for _, n := range names {
+			nonExec[n] = true
+		}
+	}
 	var failed []string
-	checked, tests := 0, 0
+	checked, tests, unmeasured := 0, 0, 0
 	for _, c := range classes {
 		key := "salesforce.coverage." + c + ".percent"
 		pct, has := in.Facts.Int(key)
 		if !has {
 			if _, present := in.Facts.Get(key); !present {
+				if nonExec[c] {
+					unmeasured++
+					continue
+				}
 				if isDeclared[c] {
 					tests++
 					continue
@@ -77,6 +89,9 @@ func classCoverage(in Input, min int) []Result {
 		} else {
 			note = fmt.Sprintf(" %d class(es) with no coverage entry and a name ending in Test or _Test were treated as test classes.", tests)
 		}
+	}
+	if unmeasured > 0 {
+		note += fmt.Sprintf(" %d interface or enum type(s) have no executable lines and were not measured.", unmeasured)
 	}
 	if len(failed) > 0 {
 		return one("coverage_min", Fail, "below %d%% or unmeasured: %s.%s", min, strings.Join(failed, ", "), note)

@@ -349,8 +349,12 @@ func (v *verifyRun) checkOnlyCheck(dr deployRequestRow) {
 //   - Dashboard "Folder/" (trailing slash) is DashboardFolder "Folder", and Report the same.
 //   - EmailTemplate "Folder" (no slash in the name) is EmailFolder "Folder".
 //   - Settings "Name" is "NameSettings" with the full name "Name".
+//   - GlobalValueSet "Name" is GlobalValueSet "Name__gvs". The plain name is also accepted, see
+//     reportedPlain.
 //
-// All three are [confirmed] by deploy-report-folders-settings.json. Document "Folder/" is
+// The first three are [confirmed] by deploy-report-folders-settings.json and the GlobalValueSet
+// rule by deploy-report-globalvalueset.json (manifest Requirement_Category, deploy reports
+// Requirement_Category__gvs). Document "Folder/" is
 // DocumentFolder "Folder" by the same folder rule, [unverified]: it was not captured.
 // Every other member, and every member that does not fit these shapes, is matched as is, so a
 // different type with the same name still fails.
@@ -368,8 +372,34 @@ func reportedAs(typ, name string) (string, string) {
 		if name != "" && name != "*" {
 			return name + "Settings", name
 		}
+	case "GlobalValueSet":
+		if name != "" && name != "*" && !strings.HasSuffix(name, "__gvs") {
+			return typ, name + "__gvs"
+		}
 	}
 	return typ, name
+}
+
+// reportedPlain is the second spelling a member may be reported under. A GlobalValueSet is
+// reported as Name__gvs in the capture, and the plain Name is accepted too in case another API
+// version reports it that way. It returns false when there is no second spelling.
+func reportedPlain(typ, name string) (string, string, bool) {
+	if typ == "GlobalValueSet" && name != "" && name != "*" && !strings.HasSuffix(name, "__gvs") {
+		return typ, name, true
+	}
+	return "", "", false
+}
+
+// memberFound reports whether a plan member is in set, under the name reportedAs gives or, where
+// reportedPlain has one, the plain name.
+func memberFound(set map[string]bool, typ, name string) bool {
+	if set[memberKey(reportedAs(typ, name))] {
+		return true
+	}
+	if t, n, ok := reportedPlain(typ, name); ok {
+		return set[memberKey(t, n)]
+	}
+	return false
 }
 
 // memberKey is how a plan member and a component success are matched: the type as is, the
@@ -411,7 +441,7 @@ func (v *verifyRun) membersCheck(dr deployRequestRow, rep reportBody, pkg manife
 				if byType[t.Name] == 0 {
 					missing = append(missing, t.Name+":*")
 				}
-			case !deployed[memberKey(reportedAs(t.Name, m))]:
+			case !memberFound(deployed, t.Name, m):
 				missing = append(missing, t.Name+":"+m)
 			}
 		}
@@ -422,7 +452,7 @@ func (v *verifyRun) membersCheck(dr deployRequestRow, rep reportBody, pkg manife
 		for _, t := range d.Types {
 			for _, m := range t.Members {
 				destructiveCount++
-				if !deleted[memberKey(reportedAs(t.Name, m))] {
+				if !memberFound(deleted, t.Name, m) {
 					notDeleted = append(notDeleted, t.Name+":"+m)
 				}
 			}
