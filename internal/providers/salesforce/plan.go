@@ -84,6 +84,7 @@ func (p *Provider) nativePlan(ctx context.Context, req providers.PlanRequest) (p
 		return providers.ChangeSet{}, err
 	}
 	cs.Facts = planFacts(pkg, dest)
+	cs.Facts["salesforce.apex_test_classes"] = testClassNames(dir, pkgDirs, pkg.members("ApexClass"))
 	return cs, nil
 }
 
