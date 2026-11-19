@@ -4,7 +4,7 @@ This page describes how a GlassOps release is cut, which image tags exist, and h
 
 ## What is in which release
 
-v1.0.0 is the first final release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1, v1.0.0-rc.2 and v1.0.0-rc.3 are prereleases, listed on the [releases page](https://github.com/glassops-platform/glassops/releases). This table says which tag first has each command or feature, so you can tell what an older pinned version lacks. Everything in it is in v1.0.0.
+v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1, v1.0.0-rc.2 and v1.0.0-rc.3 are prereleases, listed on the [releases page](https://github.com/glassops-platform/glassops/releases). This table says which tag first has each command or feature, so you can tell what an older pinned version lacks. Everything in it is in v1.0.1.
 
 | Command or feature | First release |
 |---|---|
@@ -27,6 +27,8 @@ v1.0.0 is the first final release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1,
 | `RunRelevantTests`: `verify` passes a change set with no Apex that ran no tests, and `gate` does not bind such a validation for a quick deploy | v1.0.0-rc.2 |
 | Test classes decided by the `@IsTest` annotation, and Apex interfaces and enums exempt from `coverage_min` | v1.0.0-rc.3 |
 | `verify` matching GlobalValueSet members that a deploy reports with a `__gvs` suffix | v1.0.0-rc.3 |
+| `RunRelevantTests` accepted as a `test_level` in `glassops.yaml`. Before this, the config check refused it | v1.0.1 |
+| `validate` waiting for the final status when the Salesforce CLI stops watching a validate that is still running | v1.0.1 |
 
 ## Release tags
 

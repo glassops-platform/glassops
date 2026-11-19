@@ -275,3 +275,60 @@ func TestValidateNeedsOwnSession(t *testing.T) {
 		t.Fatal("want an error for a foreign session")
 	}
 }
+
+// inProgressValidate is the deploy report body of a check-only validate still running in the org.
+var inProgressValidate = []byte(`{"status":0,"result":{"checkOnly":true,"done":false,"id":"0Af000000000001AAA","status":"InProgress","success":false}}`)
+
+// sf stopped watching (its wait ran out, with the Id in data.id) while the validate ran on.
+// The first report shows it in progress, so validate waits on the report for the final status.
+func TestValidateWaitsWhenSFStopsWatching(t *testing.T) {
+	p, f, s := validateSetup(t, map[string]fakeReply{
+		validatePrefix: {Stdout: fixture(t, "deploy-start-timeout.json"), ExitCode: 1},
+		reportPrefix:   {Stdout: inProgressValidate},
+		reportPrefix + " --job-id 0Af000000000001AAA --wait": {Stdout: fixture(t, "deploy-validate-pass.json")},
+	})
+	res, err := p.Validate(context.Background(), s, testChangeSet(), providers.ValidateOptions{Dir: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.Passed || res.ID != "0Af000000000001AAA" || res.Facts["salesforce.deploy_status"] != "Succeeded" {
+		t.Fatalf("result: %+v", res)
+	}
+	cmds := f.commands()
+	if len(cmds) != 3 {
+		t.Fatalf("commands: %v", cmds)
+	}
+	if strings.Contains(cmds[1], "--wait") || !strings.Contains(cmds[2], "project deploy report --job-id 0Af000000000001AAA --wait 60 --target-org glassops-target") {
+		t.Fatalf("report commands: %v", cmds[1:])
+	}
+}
+
+// A validate that finishes as failed while validate waits can come back as a failure envelope
+// that still holds the body. That is a failed validate with its problems, not a tool error.
+func TestValidateWaitReadsAFailedBody(t *testing.T) {
+	failed := []byte(`{"status":1,"name":"FailedValidationError","message":"Failed to validate the deployment (0Af000000000001AAA).","data":{"checkOnly":true,"done":true,"id":"0Af000000000001AAA","status":"Failed","success":false,"numberTestErrors":1,"details":{"runTestResult":{"numFailures":1,"failures":{"name":"GreeterTest","methodName":"greetsByName","message":"System.AssertException: Assertion Failed"}}}}}`)
+	p, _, s := validateSetup(t, map[string]fakeReply{
+		validatePrefix: {Stdout: fixture(t, "deploy-start-timeout.json"), ExitCode: 1},
+		reportPrefix:   {Stdout: inProgressValidate},
+		reportPrefix + " --job-id 0Af000000000001AAA --wait": {Stdout: failed, ExitCode: 1},
+	})
+	res, err := p.Validate(context.Background(), s, testChangeSet(), providers.ValidateOptions{Dir: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Passed || len(res.Problems) != 1 || !strings.Contains(res.Problems[0], "GreeterTest.greetsByName") {
+		t.Fatalf("result: %+v", res)
+	}
+}
+
+// A wait that fails with no body to read is an error, never a pass.
+func TestValidateWaitFailureIsError(t *testing.T) {
+	p, _, s := validateSetup(t, map[string]fakeReply{
+		validatePrefix: {Stdout: fixture(t, "deploy-start-timeout.json"), ExitCode: 1},
+		reportPrefix:   {Stdout: inProgressValidate},
+		reportPrefix + " --job-id 0Af000000000001AAA --wait": {Stdout: []byte(`{"status":1,"name":"X","message":"no report"}`), ExitCode: 1},
+	})
+	if _, err := p.Validate(context.Background(), s, testChangeSet(), providers.ValidateOptions{Dir: t.TempDir()}); err == nil {
+		t.Fatal("want an error when the wait cannot read the result")
+	}
+}
