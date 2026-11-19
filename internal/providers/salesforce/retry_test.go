@@ -22,6 +22,7 @@ func TestIsTransient(t *testing.T) {
 		"request failed with status code 500",
 		"Service Unavailable",
 		"UNABLE_TO_LOCK_ROW: unable to obtain exclusive access to this record",
+		"RefreshTokenAuthError Error authenticating with the refresh token due to: fetch failed",
 	}
 	for _, m := range yes {
 		if !isTransient(m) {
@@ -97,7 +98,8 @@ func transientBody(t *testing.T, msg string) []byte {
 
 func TestTransientFailuresRetryThreeTimes(t *testing.T) {
 	for _, msg := range []string{"getaddrinfo ENOTFOUND login.salesforce.com", "connect ETIMEDOUT", "read ECONNRESET",
-		"connect ECONNREFUSED", "getaddrinfo EAI_AGAIN", "socket hang up", "HTTP 503 Service Unavailable", "UNABLE_TO_LOCK_ROW"} {
+		"connect ECONNREFUSED", "getaddrinfo EAI_AGAIN", "socket hang up", "HTTP 503 Service Unavailable", "UNABLE_TO_LOCK_ROW",
+		"Error authenticating with the refresh token due to: fetch failed"} {
 		t.Run(msg, func(t *testing.T) {
 			waits := noSleep(t)
 			f := withReplies(map[string]fakeReply{"sf org login jwt": {Stdout: transientBody(t, msg), ExitCode: 1}})
