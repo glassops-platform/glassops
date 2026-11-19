@@ -1,0 +1,34 @@
+{
+  "status": 0,
+  "result": {
+    "id": "0Af000000000001AAA",
+    "status": "Succeeded",
+    "checkOnly": false,
+    "details": {
+      "componentSuccesses": [
+        {
+          "changed": true,
+          "componentType": "ApexClass",
+          "created": true,
+          "createdDate": "2026-11-18T23:12:43.000Z",
+          "deleted": false,
+          "fileName": "classes/ApiRateLimiter.cls",
+          "fullName": "ApiRateLimiter",
+          "id": "01p000000000001AAA",
+          "success": true
+        },
+        {
+          "changed": true,
+          "componentType": "GlobalValueSet",
+          "created": true,
+          "createdDate": "2026-11-18T23:13:38.000Z",
+          "deleted": false,
+          "fileName": "globalValueSets/Requirement_Category.globalValueSet",
+          "fullName": "Requirement_Category__gvs",
+          "id": "0Nt000000000001AAA",
+          "success": true
+        }
+      ]
+    }
+  }
+}

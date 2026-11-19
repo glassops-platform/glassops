@@ -80,6 +80,18 @@ func blankCommentsAndStrings(src string) string {
 // declares a test class, sorted. A class with no file under classes/ is not listed, so a
 // class that cannot be read is treated as a normal class.
 func testClassNames(dir string, pkgDirs, classes []string) []string {
+	return classNamesWhere(dir, pkgDirs, classes, IsTestClassSource)
+}
+
+// nonExecutableTypeNames returns the names in classes whose source declares an interface or enum
+// as its top level type, sorted. Salesforce lists no coverage for such a type.
+func nonExecutableTypeNames(dir string, pkgDirs, classes []string) []string {
+	return classNamesWhere(dir, pkgDirs, classes, IsNonExecutableTypeSource)
+}
+
+// classNamesWhere returns the names in classes whose source file under the package directories
+// satisfies match, sorted.
+func classNamesWhere(dir string, pkgDirs, classes []string, match func(string) bool) []string {
 	want := map[string]bool{}
 	for _, c := range classes {
 		want[c] = true
@@ -95,7 +107,7 @@ func testClassNames(dir string, pkgDirs, classes []string) []string {
 			if !want[name] || found[name] {
 				return nil
 			}
-			if data, rerr := os.ReadFile(path); rerr == nil && IsTestClassSource(string(data)) {
+			if data, rerr := os.ReadFile(path); rerr == nil && match(string(data)) {
 				found[name] = true
 			}
 			return nil
@@ -107,4 +119,19 @@ func testClassNames(dir string, pkgDirs, classes []string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// IsNonExecutableTypeSource reports whether Apex source declares an interface or an enum as its
+// top level type. Such a type has no executable lines, so Salesforce lists no coverage for it,
+// and a coverage minimum cannot apply to it. The same reading limits as IsTestClassSource apply.
+// A class is never exempt, whatever it implements and whatever inner types it holds, and an
+// abstract class is a class, because it may have concrete methods.
+func IsNonExecutableTypeSource(src string) bool {
+	clean := blankCommentsAndStrings(src)
+	loc := typeKeyword.FindStringSubmatchIndex(clean)
+	if loc == nil {
+		return false
+	}
+	kw := strings.ToLower(clean[loc[2]:loc[3]])
+	return kw == "interface" || kw == "enum"
 }

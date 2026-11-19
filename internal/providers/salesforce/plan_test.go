@@ -101,12 +101,13 @@ func TestPlanDeltaParsesManifests(t *testing.T) {
 		t.Fatal("plan is empty, want not empty")
 	}
 	wantFacts := map[string]any{
-		"salesforce.counts":            map[string]int{"ApexClass": 2, "PermissionSet": 1},
-		"salesforce.destructive_count": 1,
-		"salesforce.apex_classes":      []string{"Greeter", "GreeterTest"},
-		"salesforce.apex_test_classes": []string{},
-		"salesforce.permission_sets":   []string{"Greeter_User"},
-		"salesforce.profiles":          []string{},
+		"salesforce.counts":                   map[string]int{"ApexClass": 2, "PermissionSet": 1},
+		"salesforce.destructive_count":        1,
+		"salesforce.apex_classes":             []string{"Greeter", "GreeterTest"},
+		"salesforce.apex_test_classes":        []string{},
+		"salesforce.apex_nonexecutable_types": []string{},
+		"salesforce.permission_sets":          []string{"Greeter_User"},
+		"salesforce.profiles":                 []string{},
 	}
 	if !reflect.DeepEqual(cs.Facts, wantFacts) {
 		t.Fatalf("Facts = %#v\nwant %#v", cs.Facts, wantFacts)

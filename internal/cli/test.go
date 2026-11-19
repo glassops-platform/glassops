@@ -178,7 +178,9 @@ func stringList(v any) []string {
 // every class the provider found untouched in the org's coverage
 // aggregate (fact test.coverage_untouched), since without a plan nothing says which classes
 // changed. "all" takes the plan's classes and every untouched class. A class the plan lists in
-// salesforce.apex_test_classes is a test class and is skipped. A plan with no such fact falls back
+// salesforce.apex_test_classes is a test class and is skipped, and so is a class the plan lists in
+// salesforce.apex_nonexecutable_types (an interface or enum, with no executable lines). A plan with
+// no test class fact falls back
 // to the name heuristic (Test or _Test), the same reading the gate's coverage_min uses. An
 // untouched class that is not in the plan is judged by name only, because its source is not read. It returns the classes it added. A plan that exists and cannot be read is an error, and
 // so is an aggregate the provider could not read when the scope needs it, so a broken input
@@ -191,9 +193,13 @@ func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (pr
 	}
 	havePlan := err == nil
 	haveDeclared := false
+	nonExec := map[string]bool{}
 	declared := map[string]bool{}
 	if havePlan {
 		classes = stringList(cs.Facts["salesforce.apex_classes"])
+		for _, n := range stringList(cs.Facts["salesforce.apex_nonexecutable_types"]) {
+			nonExec[n] = true
+		}
 		if v, ok := cs.Facts["salesforce.apex_test_classes"]; ok {
 			haveDeclared = true
 			for _, n := range stringList(v) {
@@ -222,6 +228,9 @@ func addUncoveredClasses(g *globals, scope string, out providers.TestResult) (pr
 		isTest := policy.IsTestClassName(name)
 		if haveDeclared && inPlan[name] {
 			isTest = declared[name]
+		}
+		if nonExec[name] {
+			isTest = true // an interface or enum has no executable lines, so it is skipped like a test class
 		}
 		if reported[name] || isTest {
 			continue
