@@ -44,6 +44,11 @@ var transientWords = []string{
 	"bad gateway",
 	"gateway timeout",
 	"unable_to_lock_row",
+	// Node's fetch says only this when the connection itself fails, before any answer from
+	// Salesforce. sf wraps it in the login error, for example "RefreshTokenAuthError: Error
+	// authenticating with the refresh token due to: fetch failed" [confirmed: GlassOps CLI
+	// End-to-End run 44451465131, an sfdx-url login to a scratch org].
+	"fetch failed",
 }
 
 // http5xx matches an HTTP status in the 500s when it is written as a status, not as a

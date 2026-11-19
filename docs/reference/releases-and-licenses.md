@@ -29,6 +29,7 @@ v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tag
 | `verify` matching GlobalValueSet members that a deploy reports with a `__gvs` suffix | v1.0.0-rc.3 |
 | `RunRelevantTests` accepted as a `test_level` in `glassops.yaml`. Before this, the config check refused it | v1.0.1 |
 | `validate` waiting for the final status when the Salesforce CLI stops watching a validate that is still running | v1.0.1 |
+| A login that fails with `fetch failed`, a connection failure, is retried like the other network errors | v1.0.1 |
 
 ## Release tags
 
