@@ -1,6 +1,6 @@
 # Sigstore signing
 
-> **Opt-in, and not in a published release yet.** This is planned for v1.1.0. HMAC signing stays the default. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
+> **Opt-in, since v1.1.0.** HMAC signing stays the default. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 By default a PERMIT is signed with a shared secret, `GLASSOPS_PERMIT_KEY`. With Sigstore signing, `gate` signs the PERMIT keyless on GitHub Actions instead. There is no secret to store or rotate. The signature says which workflow, in which repository, signed the PERMIT, and `permit verify` and `deploy` accept only a signature from the workflow and repository you name. The PERMIT itself is unchanged. See [PERMIT and rules](permit-and-rules.md) for what it holds.
 

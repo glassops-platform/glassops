@@ -1,6 +1,6 @@
 # Rego rules
 
-> **Opt-in, and not in a published release yet.** This is planned for v1.1.0. Without `policy.rego` in `glassops.yaml`, `gate` runs only its built-in rules. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
+> **Opt-in, since v1.1.0.** Without `policy.rego` in `glassops.yaml`, `gate` runs only its built-in rules. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 The built-in rules in [PERMIT and rules](permit-and-rules.md#the-v1-rules) cover the common cases. When you need a rule of your own, `gate` can run [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/) policies after them. A Rego rule can only add a denial. It can never turn a failed built-in rule into a pass.
 
