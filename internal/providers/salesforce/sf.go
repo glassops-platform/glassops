@@ -20,6 +20,9 @@ type Cmd struct {
 	// Env is added to the process environment as KEY=VALUE pairs. A key here replaces the
 	// same key from the process environment.
 	Env []string
+	// Unset lists variable names removed from the child environment. They are absent there, not
+	// set empty. Unset applies after Env.
+	Unset []string
 	// Stdin, when set, is written to the program's standard input.
 	Stdin []byte
 }
@@ -38,7 +41,7 @@ type Exec func(ctx context.Context, c Cmd) (Output, error)
 func osExec(ctx context.Context, c Cmd) (Output, error) {
 	cmd := exec.CommandContext(ctx, c.Name, c.Args...)
 	cmd.Dir = c.Dir
-	cmd.Env = mergeEnv(os.Environ(), c.Env)
+	cmd.Env = unsetEnv(mergeEnv(os.Environ(), c.Env), c.Unset)
 	if c.Stdin != nil {
 		cmd.Stdin = bytes.NewReader(c.Stdin)
 	}
@@ -84,6 +87,32 @@ func mergeEnv(base, extra []string) []string {
 		}
 	}
 	return append(out, extra...)
+}
+
+// unsetEnv returns env without the variables in names. Names compare case-insensitively on
+// Windows, like mergeEnv.
+func unsetEnv(env, names []string) []string {
+	if len(names) == 0 {
+		return env
+	}
+	norm := func(k string) string {
+		if isWindows {
+			return strings.ToUpper(k)
+		}
+		return k
+	}
+	drop := map[string]bool{}
+	for _, n := range names {
+		drop[norm(n)] = true
+	}
+	out := make([]string, 0, len(env))
+	for _, kv := range env {
+		k, _, _ := strings.Cut(kv, "=")
+		if !drop[norm(k)] {
+			out = append(out, kv)
+		}
+	}
+	return out
 }
 
 // envelope is the JSON sf prints with --json. A success has status 0 and a result. A failure

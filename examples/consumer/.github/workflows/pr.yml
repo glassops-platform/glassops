@@ -11,7 +11,7 @@ jobs:
     uses: glassops-platform/glassops/.github/workflows/glassops-pr.yml@v1
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       security-events: write
     with:
       targets: devhub

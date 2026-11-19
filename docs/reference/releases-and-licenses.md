@@ -30,6 +30,11 @@ v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tag
 | `RunRelevantTests` accepted as a `test_level` in `glassops.yaml`. Before this, the config check refused it | v1.0.1 |
 | `validate` waiting for the final status when the Salesforce CLI stops watching a validate that is still running | v1.0.1 |
 | A login that fails with `fetch failed`, a connection failure, is retried like the other network errors | v1.0.1 |
+| [Sigstore signing](sigstore-signing.md) of PERMITs, with `policy.permit` | Not yet (v1.1.0) |
+| [Opt-in Rego rules](rego-rules.md), with `policy.rego` | Not yet (v1.1.0) |
+| [The pull request comment](pr-comment-and-telemetry.md#pull-request-comment), with `report --pr-comment` and `report.pr_comment` | Not yet (v1.1.0) |
+| [OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export), with `telemetry.otlp` | Not yet (v1.1.0) |
+| `cosign` and `opa` in both images | Not yet (v1.1.0) |
 
 ## Release tags
 
@@ -52,6 +57,17 @@ Details:
 ### Which image a workflow runs
 
 The reusable workflows and the `glassops-platform/glassops` action choose their default image from the tag they were called at. A call to `@v1` runs the image of the current `v1.x.y` release, and `@v1.2.3` runs the image of `v1.2.3`. When the reference is a branch or a commit, the image is `latest`. Pass the `image` input to override this. For a run you must reproduce exactly, pin a full version or an image digest.
+
+### Tools in the images
+
+Both images, built from this repository, hold two more programs that GlassOps runs as separate commands:
+
+| Program | Version | Used for |
+|---|---|---|
+| `cosign` | v2.5.3 | [Sigstore signing](sigstore-signing.md) of PERMITs, when `policy.permit.signing` is `sigstore` |
+| `opa` | 1.22.0, the static build | [Rego rules](rego-rules.md), when `policy.rego` is set |
+
+Both are Apache-2.0 programs copied from their official images, which are pinned by digest in the Dockerfiles. They are not linked into `glassops`, and they do nothing unless you turn those features on. They are listed in `THIRD_PARTY_NOTICES` like every other package in the images. The image `ghcr.io/glassops-platform/glassops:0.4.0` does not hold them.
 
 ## License scan
 

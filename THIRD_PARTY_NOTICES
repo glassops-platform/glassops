@@ -75,12 +75,349 @@ apk utmps-libs 0.1.3.3-r0 : ISC
 apk xz-libs 5.8.4-r0 : 0BSD AND GPL-2.0-or-later AND LGPL-2.1-or-later AND Public-Domain
 apk zlib 1.3.2-r1 : Zlib
 apk zstd-libs 1.5.7-r2 : BSD-3-Clause OR GPL-2.0-or-later
+go-module cel.dev/expr v0.23.1 : Apache-2.0
+go-module cloud.google.com/go v0.121.1 : Apache-2.0 AND BSD-3-Clause
+go-module cloud.google.com/go/auth v0.16.2 : Apache-2.0
+go-module cloud.google.com/go/auth/oauth2adapt v0.2.8 : Apache-2.0
+go-module cloud.google.com/go/compute/metadata v0.7.0 : Apache-2.0
+go-module cloud.google.com/go/iam v1.5.2 : Apache-2.0
+go-module cloud.google.com/go/kms v1.22.0 : Apache-2.0
+go-module cloud.google.com/go/longrunning v0.6.7 : Apache-2.0
+go-module cloud.google.com/go/monitoring v1.24.2 : Apache-2.0
+go-module cloud.google.com/go/spanner v1.82.0 : Apache-2.0
+go-module cloud.google.com/go/storage v1.55.0 : Apache-2.0
+go-module cuelabs.dev/go/oci/ociregistry v0.0.0-20241125120445-2c00c104c6e1 : Apache-2.0
+go-module cuelang.org/go v0.12.1 : Apache-2.0 AND BSD-3-Clause
+go-module github.com/AliyunContainerService/ack-ram-tool/pkg/credentials/provider v0.14.0 : Apache-2.0
+go-module github.com/Azure/azure-sdk-for-go v68.0.0+incompatible : MIT AND sha256:ae29545608f708a0f778e8e5f9a5792641c974a7ec96a94f191026e93ef1a54f
+go-module github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0 : MIT
+go-module github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.10.1 : MIT
+go-module github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.1 : MIT
+go-module github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.3.1 : MIT
+go-module github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v1.1.1 : MIT
+go-module github.com/Azure/go-autorest/autorest v0.11.29 : Apache-2.0
+go-module github.com/Azure/go-autorest/autorest/adal v0.9.23 : Apache-2.0
+go-module github.com/Azure/go-autorest/autorest/azure/auth v0.5.12 : Apache-2.0
+go-module github.com/Azure/go-autorest/autorest/azure/cli v0.4.6 : Apache-2.0
+go-module github.com/Azure/go-autorest/autorest/date v0.3.0 : Apache-2.0
+go-module github.com/Azure/go-autorest/logger v0.2.1 : Apache-2.0
+go-module github.com/Azure/go-autorest/tracing v0.6.0 : Apache-2.0
+go-module github.com/AzureAD/microsoft-authentication-library-for-go v1.4.2 : MIT
+go-module github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.2 : Apache-2.0
+go-module github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.27.0 : Apache-2.0
+go-module github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0 : Apache-2.0
+go-module github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 : Apache-2.0
+go-module github.com/agnivade/levenshtein v1.2.1 : MIT
+go-module github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.4 : Apache-2.0
+go-module github.com/alibabacloud-go/cr-20160607 v1.0.1 : Apache-2.0
+go-module github.com/alibabacloud-go/cr-20181201 v1.0.10 : Apache-2.0
+go-module github.com/alibabacloud-go/darabonba-openapi v0.2.1 : Apache-2.0
+go-module github.com/alibabacloud-go/debug v1.0.0 : Apache-2.0
+go-module github.com/alibabacloud-go/endpoint-util v1.1.1 : Apache-2.0
+go-module github.com/alibabacloud-go/openapi-util v0.1.0 : Apache-2.0
+go-module github.com/alibabacloud-go/tea v1.2.1 : Apache-2.0
+go-module github.com/alibabacloud-go/tea-utils v1.4.5 : Apache-2.0
+go-module github.com/alibabacloud-go/tea-xml v1.1.3 : Apache-2.0
+go-module github.com/aliyun/credentials-go v1.3.2 : Apache-2.0
+go-module github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 : MIT
+go-module github.com/avast/retry-go/v4 v4.6.1 : MIT
+go-module github.com/aws/aws-sdk-go-v2 v1.36.5 : Apache-2.0 AND BSD-3-Clause AND sha256:3ecfc10e2382a82ad998f1db7c76bc9114d26f5f43da142e3f328533cf0c1f70 AND sha256:a6e830174d62dafad3a718384772ea1f4c0e27989f050932dc442a5e3ddad080
+go-module github.com/aws/aws-sdk-go-v2/config v1.29.17 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/credentials v1.17.70 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.36 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.36 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/ecr v1.40.3 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.31.2 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.4 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.17 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/kms v1.41.2 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/sso v1.25.5 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.3 : Apache-2.0
+go-module github.com/aws/aws-sdk-go-v2/service/sts v1.34.0 : Apache-2.0
+go-module github.com/aws/smithy-go v1.22.4 : Apache-2.0 AND BSD-3-Clause AND sha256:d4290ed64c2edd0fce1d84e3f9dfb2881240fe534def76b8cd29ed6af683e287
+go-module github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.9.1 : Apache-2.0
+go-module github.com/beorn7/perks v1.0.1 : MIT
+go-module github.com/blang/semver v3.5.1+incompatible : MIT
+go-module github.com/buildkite/agent/v3 v3.102.1 : MIT
+go-module github.com/buildkite/go-pipeline v0.14.0 : MIT
+go-module github.com/buildkite/interpolate v0.1.5 : MIT
+go-module github.com/buildkite/roko v1.3.1 : MIT
+go-module github.com/cenkalti/backoff/v4 v4.3.0 : MIT
+go-module github.com/cenkalti/backoff/v5 v5.0.2 : MIT
+go-module github.com/cenkalti/backoff/v5 v5.0.3 : MIT
+go-module github.com/cespare/xxhash/v2 v2.3.0 : MIT
+go-module github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 : Apache-2.0
+go-module github.com/clbanning/mxj/v2 v2.7.0 : BSD-3-Clause AND MIT
+go-module github.com/clipperhouse/displaywidth v0.10.0 : MIT
+go-module github.com/clipperhouse/uax29/v2 v2.6.0 : MIT
+go-module github.com/cncf/xds/go v0.0.0-20250326154945-ae57f3c0d45f : Apache-2.0
+go-module github.com/cockroachdb/apd/v3 v3.2.1 : Apache-2.0
+go-module github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be : MIT
+go-module github.com/containerd/stargz-snapshotter/estargz v0.16.3 : Apache-2.0
+go-module github.com/coreos/go-oidc/v3 v3.14.1 : Apache-2.0 AND sha256:dccd26c6fd9c296daf44d0bc56bb4efc566edd4880381b3331c9a63e6e471338
+go-module github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 : Apache-2.0 AND sha256:af99833f38f9849acc41e2ca1de50a3cb266e712713efa6f377bae4befb16482
+go-module github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc : ISC
+go-module github.com/dgraph-io/badger/v4 v4.9.6 : Apache-2.0
+go-module github.com/dgraph-io/ristretto/v2 v2.2.0 : Apache-2.0 AND MIT
+go-module github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 : MIT
+go-module github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 : BSD-2-Clause
+go-module github.com/dimchansky/utfbom v1.1.1 : Apache-2.0
+go-module github.com/docker/cli v28.2.2+incompatible : Apache-2.0 AND sha256:a8c869fbda819afb8d80e0ac19bac52e766bc6c19cb38cf94f52d64c4be2aab6
+go-module github.com/docker/distribution v2.8.3+incompatible : Apache-2.0
+go-module github.com/docker/docker-credential-helpers v0.9.3 : MIT
+go-module github.com/dustin/go-humanize v1.0.1 : MIT
+go-module github.com/emicklei/go-restful/v3 v3.11.0 : MIT
+go-module github.com/emicklei/proto v1.13.4 : MIT
+go-module github.com/envoyproxy/go-control-plane/envoy v1.32.4 : Apache-2.0
+go-module github.com/envoyproxy/protoc-gen-validate v1.2.1 : Apache-2.0
+go-module github.com/fatih/color v1.18.0 : MIT
+go-module github.com/felixge/httpsnoop v1.0.4 : MIT
+go-module github.com/felixge/httpsnoop v1.1.0 : MIT
+go-module github.com/fsnotify/fsnotify v1.10.1 : BSD-3-Clause
+go-module github.com/fsnotify/fsnotify v1.9.0 : BSD-3-Clause
+go-module github.com/fxamacker/cbor/v2 v2.7.0 : MIT
 go-module github.com/glassops-platform/glassops : Apache-2.0
+go-module github.com/globocom/go-buffer v1.2.2 : MIT
+go-module github.com/go-chi/chi v4.1.2+incompatible : MIT
+go-module github.com/go-ini/ini v1.67.0 : Apache-2.0
+go-module github.com/go-jose/go-jose/v3 v3.0.4 : Apache-2.0 AND BSD-3-Clause
+go-module github.com/go-jose/go-jose/v4 v4.0.5 : Apache-2.0 AND BSD-3-Clause
+go-module github.com/go-logr/logr v1.4.3 : Apache-2.0
+go-module github.com/go-logr/logr v1.4.4 : Apache-2.0
+go-module github.com/go-logr/stdr v1.2.2 : Apache-2.0
+go-module github.com/go-openapi/analysis v0.23.0 : Apache-2.0
+go-module github.com/go-openapi/errors v0.22.1 : Apache-2.0
+go-module github.com/go-openapi/jsonpointer v0.21.0 : Apache-2.0
+go-module github.com/go-openapi/jsonreference v0.21.0 : Apache-2.0
+go-module github.com/go-openapi/loads v0.22.0 : Apache-2.0
+go-module github.com/go-openapi/runtime v0.28.0 : Apache-2.0 AND MIT
+go-module github.com/go-openapi/spec v0.21.0 : Apache-2.0 AND sha256:11280d39f759c157026dd0fad8742d9478191f15dc981b38d2d9e6a602987bba AND sha256:9ba36f66fba6f2e3b7dce95d9413a738688abcfce8c3d38c581b276f9437d1c6
+go-module github.com/go-openapi/strfmt v0.23.0 : Apache-2.0
+go-module github.com/go-openapi/swag v0.23.1 : Apache-2.0
+go-module github.com/go-openapi/validate v0.24.0 : Apache-2.0
+go-module github.com/go-viper/mapstructure/v2 v2.3.0 : MIT
+go-module github.com/gobwas/glob v0.2.3 : MIT
+go-module github.com/gobwas/glob v1.0.0 : MIT
+go-module github.com/gogo/protobuf v1.3.2 : BSD-3-Clause
+go-module github.com/golang-jwt/jwt/v4 v4.5.2 : MIT
+go-module github.com/golang-jwt/jwt/v5 v5.2.2 : MIT
+go-module github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 : Apache-2.0
+go-module github.com/golang/snappy v0.0.4 : BSD-3-Clause
+go-module github.com/google/certificate-transparency-go v1.3.2 : Apache-2.0
+go-module github.com/google/flatbuffers v25.2.10+incompatible : Apache-2.0
+go-module github.com/google/gnostic-models v0.6.9 : Apache-2.0
+go-module github.com/google/go-cmp v0.7.0 : BSD-3-Clause
+go-module github.com/google/go-containerregistry v0.20.6 : Apache-2.0
+go-module github.com/google/go-github/v73 v73.0.0 : BSD-3-Clause AND sha256:1455c0f1b06aec793cf93ab5e2ed410908361d18168e76809f397ef616ad774a AND sha256:2b33938c1228d5271a4409befb3b087ced10e46a42103664c55d25f9ebc2b598
+go-module github.com/google/go-querystring v1.1.0 : BSD-3-Clause
+go-module github.com/google/s2a-go v0.1.9 : Apache-2.0
+go-module github.com/google/uuid v1.6.0 : BSD-3-Clause
+go-module github.com/googleapis/enterprise-certificate-proxy v0.3.6 : Apache-2.0
+go-module github.com/googleapis/gax-go/v2 v2.14.2 : BSD-3-Clause
+go-module github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1 : BSD-3-Clause
+go-module github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 : BSD-3-Clause AND sha256:c2382787dab8660e35020c56ff1eccabc7738427e6154a9c4e627295cd477aba
+go-module github.com/hashicorp/errwrap v1.1.0 : MPL-2.0
+go-module github.com/hashicorp/go-cleanhttp v0.5.2 : MPL-2.0
+go-module github.com/hashicorp/go-multierror v1.1.1 : MPL-2.0
+go-module github.com/hashicorp/go-retryablehttp v0.7.8 : MPL-2.0
+go-module github.com/hashicorp/go-rootcerts v1.0.2 : MPL-2.0
+go-module github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 : MPL-2.0
+go-module github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 : MPL-2.0
+go-module github.com/hashicorp/go-sockaddr v1.0.7 : MPL-2.0
+go-module github.com/hashicorp/golang-lru/v2 v2.0.7 : BSD-3-Clause AND MPL-2.0
+go-module github.com/hashicorp/hcl v1.0.1-vault-5 : MPL-2.0
+go-module github.com/hashicorp/vault/api v1.16.0 : MPL-2.0
+go-module github.com/huandu/go-clone v1.7.3 : MIT
+go-module github.com/huandu/go-sqlbuilder v1.43.0 : MIT
+go-module github.com/huandu/xstrings v1.4.0 : MIT
+go-module github.com/in-toto/attestation v1.1.2 : Apache-2.0
+go-module github.com/in-toto/in-toto-golang v0.9.0 : Apache-2.0
+go-module github.com/jedisct1/go-minisign v0.0.0-20230811132847-661be99b8267 : MIT
+go-module github.com/jellydator/ttlcache/v3 v3.3.0 : MIT
+go-module github.com/josharian/intern v1.0.0 : MIT
+go-module github.com/json-iterator/go v1.1.12 : MIT
+go-module github.com/klauspost/compress v1.18.0 : Apache-2.0 AND BSD-3-Clause AND MIT
+go-module github.com/klauspost/compress v1.20.0 : Apache-2.0 AND BSD-3-Clause AND MIT
+go-module github.com/kylelemons/godebug v1.1.0 : Apache-2.0
+go-module github.com/lestrrat-go/blackmagic v1.0.4 : MIT
+go-module github.com/lestrrat-go/dsig v1.4.0 : MIT
+go-module github.com/lestrrat-go/httpcc v1.0.1 : MIT
+go-module github.com/lestrrat-go/httprc/v3 v3.0.6 : MIT
+go-module github.com/lestrrat-go/jwx/v3 v3.3.0 : MIT
+go-module github.com/lestrrat-go/option/v2 v2.0.0 : MIT
+go-module github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec : BSD-2-Clause AND MPL-2.0
+go-module github.com/mailru/easyjson v0.9.0 : MIT
+go-module github.com/mattn/go-colorable v0.1.14 : MIT
+go-module github.com/mattn/go-isatty v0.0.20 : MIT
+go-module github.com/mattn/go-runewidth v0.0.19 : MIT
+go-module github.com/mitchellh/go-homedir v1.1.0 : MIT
+go-module github.com/mitchellh/go-wordwrap v1.0.1 : MIT
+go-module github.com/mitchellh/mapstructure v1.5.1-0.20231216201459-8508981c8b6c : MIT
+go-module github.com/moby/term v0.5.2 : Apache-2.0
+go-module github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd : Apache-2.0
+go-module github.com/modern-go/reflect2 v1.0.2 : Apache-2.0
+go-module github.com/mozillazg/docker-credential-acr-helper v0.4.0 : MIT
+go-module github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 : BSD-3-Clause
+go-module github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 : Apache-2.0
+go-module github.com/oklog/ulid v1.3.1 : Apache-2.0
+go-module github.com/oleiade/reflections v1.1.0 : MIT
+go-module github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 : MIT
+go-module github.com/olekukonko/errors v1.2.0 : MIT
+go-module github.com/olekukonko/ll v0.1.6 : MIT
+go-module github.com/olekukonko/tablewriter v1.1.5 : MIT
+go-module github.com/open-policy-agent/opa v1.22.0+dirty : Apache-2.0
+go-module github.com/open-policy-agent/opa v1.6.0 : Apache-2.0 AND BSD-3-Clause AND MIT AND sha256:d64678da511cc3c76e1b20cd7074c102a62de0685d486eba144e3ff7b3ee60f3
+go-module github.com/opencontainers/go-digest v1.0.0 : Apache-2.0 AND CC-BY-SA-4.0
+go-module github.com/opencontainers/image-spec v1.1.1 : Apache-2.0
+go-module github.com/opentracing/opentracing-go v1.2.0 : Apache-2.0
+go-module github.com/pborman/uuid v1.2.1 : BSD-3-Clause
+go-module github.com/pelletier/go-toml/v2 v2.2.4 : MIT
+go-module github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c : BSD-2-Clause
+go-module github.com/pkg/errors v0.9.1 : BSD-2-Clause
+go-module github.com/prometheus/client_golang v1.22.0 : Apache-2.0 AND BSD-3-Clause AND sha256:8548bfb2bc1913396df38c548a6ec60b8dbcac3b0800485a40569c8bdd184471
+go-module github.com/prometheus/client_golang v1.24.1 : Apache-2.0 AND BSD-3-Clause AND sha256:8548bfb2bc1913396df38c548a6ec60b8dbcac3b0800485a40569c8bdd184471
+go-module github.com/prometheus/client_model v0.6.2 : Apache-2.0 AND sha256:6c79faa15168885fb88a316ae0df18f486deafddefdc16826cdc56dfbd421e24
+go-module github.com/prometheus/client_model v0.6.3 : Apache-2.0 AND sha256:6c79faa15168885fb88a316ae0df18f486deafddefdc16826cdc56dfbd421e24
+go-module github.com/prometheus/common v0.63.0 : Apache-2.0 AND sha256:600244c8052c8c1d307043fafacbc83b429c171dd8e08f5a537c0a54014585ee
+go-module github.com/prometheus/common v0.70.1 : Apache-2.0 AND sha256:600244c8052c8c1d307043fafacbc83b429c171dd8e08f5a537c0a54014585ee
+go-module github.com/prometheus/procfs v0.15.1 : Apache-2.0 AND sha256:497fcdb9fae55924c12f55f05cbe83a096662e5c591d79b74e4a8f23bab5ffee
+go-module github.com/prometheus/procfs v0.21.1 : Apache-2.0 AND sha256:497fcdb9fae55924c12f55f05cbe83a096662e5c591d79b74e4a8f23bab5ffee
+go-module github.com/protocolbuffers/txtpbfmt v0.0.0-20241112170944-20d2c9ebc01d : Apache-2.0
+go-module github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 : BSD-2-Clause-Views
+go-module github.com/reeflective/readline v1.3.0 : Apache-2.0 AND MIT
+go-module github.com/rivo/uniseg v0.4.7 : MIT
+go-module github.com/rogpeppe/go-internal v1.14.1 : BSD-3-Clause
+go-module github.com/ryanuber/go-glob v1.0.0 : MIT
+go-module github.com/sagikazarmark/locafero v0.7.0 : MIT
 go-module github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 : Apache-2.0
+go-module github.com/sassoftware/relic v7.2.1+incompatible : Apache-2.0
+go-module github.com/secure-systems-lab/go-securesystemslib v0.9.0 : MIT
+go-module github.com/segmentio/ksuid v1.0.4 : MIT
+go-module github.com/sergi/go-diff v1.4.0 : MIT
+go-module github.com/shibumi/go-pathspec v1.3.0 : Apache-2.0
+go-module github.com/sigstore/cosign/v2 v0.0.0-20250717195647-488ef8ceed5a : Apache-2.0
+go-module github.com/sigstore/fulcio v1.7.1 : Apache-2.0
+go-module github.com/sigstore/protobuf-specs v0.5.0 : Apache-2.0
+go-module github.com/sigstore/rekor v1.3.10 : Apache-2.0
+go-module github.com/sigstore/rekor-tiles v0.1.7-0.20250624231741-98cd4a77300f : Apache-2.0 AND sha256:493860dc362b6c386f56b7cbbecdc2696352c4b25573a1fc159de842342c1d38
+go-module github.com/sigstore/sigstore v1.9.5 : Apache-2.0
+go-module github.com/sigstore/sigstore-go v1.1.0 : Apache-2.0
+go-module github.com/sigstore/sigstore/pkg/signature/kms/aws v1.9.5 : Apache-2.0
+go-module github.com/sigstore/sigstore/pkg/signature/kms/azure v1.9.5 : Apache-2.0
+go-module github.com/sigstore/sigstore/pkg/signature/kms/gcp v1.9.5 : Apache-2.0
+go-module github.com/sigstore/sigstore/pkg/signature/kms/hashivault v1.9.5 : Apache-2.0
+go-module github.com/sigstore/timestamp-authority v1.2.8 : Apache-2.0
+go-module github.com/sirupsen/logrus v1.10.2 : MIT
+go-module github.com/sirupsen/logrus v1.9.3 : MIT
+go-module github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 : MIT
+go-module github.com/sourcegraph/conc v0.3.0 : MIT
+go-module github.com/spf13/afero v1.12.0 : Apache-2.0
+go-module github.com/spf13/cast v1.7.1 : MIT
 go-module github.com/spf13/cobra v1.10.2 : Apache-2.0
+go-module github.com/spf13/cobra v1.9.1 : Apache-2.0
 go-module github.com/spf13/pflag v1.0.10 : BSD-3-Clause
+go-module github.com/spf13/pflag v1.0.6 : BSD-3-Clause
+go-module github.com/spf13/viper v1.20.1 : MIT
+go-module github.com/spiffe/go-spiffe/v2 v2.5.0 : Apache-2.0
+go-module github.com/subosito/gotenv v1.6.0 : MIT
+go-module github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d : BSD-2-Clause
+go-module github.com/tchap/go-patricia/v2 v2.3.2 : MIT
+go-module github.com/tetratelabs/wazero v1.12.0 : Apache-2.0 AND sha256:e6f0c5c151a3ff1eba8f5930a31ec084ca6d7adda43c8675ab81f7d36af50b4f
+go-module github.com/theupdateframework/go-tuf v0.7.0 : BSD-3-Clause AND sha256:cd65721176ce5fdbb05773c0b1349f993b94ce77a51062cfa7a78b34cc82fc71
+go-module github.com/theupdateframework/go-tuf/v2 v2.1.1 : Apache-2.0 AND sha256:86ce5e2bb72f603a8849e085524022bdac6668df4f0baca507033610237365f3
+go-module github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 : MIT
+go-module github.com/tjfoc/gmsm v1.4.1 : Apache-2.0
+go-module github.com/transparency-dev/formats v0.0.0-20250421220931-bb8ad4d07c26 : Apache-2.0
+go-module github.com/transparency-dev/merkle v0.0.2 : Apache-2.0
+go-module github.com/transparency-dev/tessera v0.2.1-0.20250610150926-8ee4e93b2823 : Apache-2.0
+go-module github.com/valyala/fastjson v1.6.10 : MIT
+go-module github.com/vbatts/tar-split v0.12.1 : BSD-3-Clause
+go-module github.com/vektah/gqlparser/v2 v2.5.28 : BSD-3-Clause AND MIT
+go-module github.com/vektah/gqlparser/v2 v2.5.58 : BSD-3-Clause AND MIT
+go-module github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1 : MIT
+go-module github.com/x448/float16 v0.8.4 : MIT
+go-module github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb : Apache-2.0
+go-module github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 : Apache-2.0
+go-module github.com/yashtewari/glob-intersection v0.2.0 : Apache-2.0
+go-module github.com/zeebo/errs v1.4.0 : MIT
+go-module gitlab.com/gitlab-org/api/client-go v0.134.0 : Apache-2.0 AND sha256:05ab355ead4d1e4d3935bf867b6809cd8a5ae99f64bfe2259ccdd1e010b1d6ee AND sha256:4be2eb211c42beef906e0f2f005ef0cca1e348572089502496af0b1d141b727f AND sha256:976201cdc3ed74247020b5efd437f8e4d3721505af8770093c310b60e1a6ddca AND sha256:b165bb06b4a92f4431d172e5285c429a11b72d7111bfe5fa5481b07382260b35 AND sha256:b995cee65168da80a8ae84888f4b5c792a9d2a1ddf3b46485cd0e3a53157fa8e AND sha256:d2f2457d330e05e42ee1e4f769a897a3d79890c2e765fd5603655773fb607c2e
+go-module go.mongodb.org/mongo-driver v1.14.0 : Apache-2.0
+go-module go.opencensus.io v0.24.0 : Apache-2.0
+go-module go.opentelemetry.io/auto/sdk v1.1.0 : Apache-2.0
+go-module go.opentelemetry.io/auto/sdk v1.2.1 : Apache-2.0
+go-module go.opentelemetry.io/contrib/bridges/prometheus v0.71.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/contrib/detectors/gcp v1.36.0 : Apache-2.0
+go-module go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 : Apache-2.0
+go-module go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 : Apache-2.0
+go-module go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel v1.37.0 : Apache-2.0
+go-module go.opentelemetry.io/otel v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/metric v1.37.0 : Apache-2.0
+go-module go.opentelemetry.io/otel/metric v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/sdk v1.37.0 : Apache-2.0
+go-module go.opentelemetry.io/otel/sdk v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/sdk/metric v1.36.0 : Apache-2.0
+go-module go.opentelemetry.io/otel/sdk/metric v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/otel/trace v1.37.0 : Apache-2.0
+go-module go.opentelemetry.io/otel/trace v1.46.0 : Apache-2.0 AND BSD-3-Clause
+go-module go.opentelemetry.io/proto/otlp v1.11.0 : Apache-2.0
+go-module go.uber.org/multierr v1.11.0 : MIT
+go-module go.uber.org/zap v1.27.0 : MIT
+go-module go.yaml.in/yaml/v3 v3.0.5 : Apache-2.0 AND MIT
+go-module golang.org/x/crypto v0.40.0 : BSD-3-Clause
+go-module golang.org/x/crypto v0.57.0 : BSD-3-Clause
+go-module golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 : BSD-3-Clause
+go-module golang.org/x/mod v0.26.0 : BSD-3-Clause
+go-module golang.org/x/net v0.41.0 : BSD-3-Clause
+go-module golang.org/x/net v0.60.0 : BSD-3-Clause
+go-module golang.org/x/oauth2 v0.30.0 : BSD-3-Clause
+go-module golang.org/x/sync v0.16.0 : BSD-3-Clause
+go-module golang.org/x/sync v0.23.0 : BSD-3-Clause
+go-module golang.org/x/sys v0.34.0 : BSD-3-Clause
+go-module golang.org/x/sys v0.48.0 : BSD-3-Clause
+go-module golang.org/x/term v0.33.0 : BSD-3-Clause
+go-module golang.org/x/term v0.46.0 : BSD-3-Clause
+go-module golang.org/x/text v0.27.0 : BSD-3-Clause
+go-module golang.org/x/text v0.42.0 : BSD-3-Clause
 go-module golang.org/x/text v0.43.0 : BSD-3-Clause
-go-module gopkg.in/yaml.v3 v3.0.1 : MIT AND Apache-2.0
+go-module golang.org/x/time v0.12.0 : BSD-3-Clause
+go-module golang.org/x/time v0.16.0 : BSD-3-Clause
+go-module google.golang.org/api v0.241.0 : BSD-3-Clause
+go-module google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 : Apache-2.0
+go-module google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 : Apache-2.0
+go-module google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 : Apache-2.0
+go-module google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 : Apache-2.0
+go-module google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 : Apache-2.0
+go-module google.golang.org/grpc v1.73.0 : Apache-2.0
+go-module google.golang.org/grpc v1.84.0 : Apache-2.0
+go-module google.golang.org/protobuf v1.36.12 : BSD-3-Clause
+go-module google.golang.org/protobuf v1.36.6 : BSD-3-Clause
+go-module gopkg.in/evanphx/json-patch.v4 v4.12.0 : BSD-3-Clause
+go-module gopkg.in/inf.v0 v0.9.1 : BSD-3-Clause
+go-module gopkg.in/ini.v1 v1.67.0 : Apache-2.0
+go-module gopkg.in/ini.v1 v1.67.3 : Apache-2.0
+go-module gopkg.in/natefinch/lumberjack.v2 v2.2.1 : MIT
+go-module gopkg.in/yaml.v3 v3.0.1 : Apache-2.0 AND MIT
+go-module k8s.io/api v0.33.2 : Apache-2.0
+go-module k8s.io/apimachinery v0.33.2 : Apache-2.0 AND BSD-3-Clause
+go-module k8s.io/client-go v0.33.2 : Apache-2.0 AND BSD-3-Clause
+go-module k8s.io/klog/v2 v2.130.1 : Apache-2.0
+go-module k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff : Apache-2.0 AND BSD-3-Clause AND MIT AND sha256:99b8cc6bf35926b4cdf033e003e52957baac91c9fd45358d816f6b8b977e1ccb
+go-module k8s.io/utils v0.0.0-20241210054802-24370beab758 : Apache-2.0 AND BSD-3-Clause
+go-module oras.land/oras-go/v2 v2.6.2 : Apache-2.0 AND sha256:5aeb9da5e86e0bedc93cf147f20c585e76faa119ad773dc280d70c7c09ac9289
+go-module sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 : Apache-2.0 AND BSD-3-Clause
+go-module sigs.k8s.io/randfill v1.0.0 : Apache-2.0 AND sha256:69b2d8ca988fc62b41cd6217562c7804aed88826c393f40512e22e4aaa5ea38f
+go-module sigs.k8s.io/release-utils v0.11.1 : Apache-2.0
+go-module sigs.k8s.io/structured-merge-diff/v4 v4.6.0 : Apache-2.0
+go-module sigs.k8s.io/yaml v1.4.0 : Apache-2.0 AND BSD-3-Clause AND MIT
+go-module stdlib go1.24.5 : BSD-3-Clause
 go-module stdlib go1.27.3 : BSD-3-Clause
 java-archive Saxon-HE 12.9 : UNKNOWN
 java-archive annotations 13.0 : The Apache Software License, Version 2.0

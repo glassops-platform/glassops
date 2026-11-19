@@ -1,0 +1,12 @@
+{
+  "schema": "glassops.facts/v1",
+  "facts": {
+    "target.name": "prod",
+    "target.tier": "prod",
+    "change.empty": false,
+    "change.destructive_count": 0,
+    "salesforce.apex_classes": ["Greeter", "GreeterTest"],
+    "salesforce.permission_sets": ["Greeter_User"],
+    "salesforce.profiles": ["Admin"]
+  }
+}

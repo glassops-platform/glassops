@@ -6,7 +6,7 @@ The `config/devops-config.json` file is the central nervous system of GlassOps. 
 
 The configuration is divided into 4 main sections:
 
-1.  `execution`: Defines which engine (Native/Hardis) runs the deployment.
+1.  `execution`: Defines which engine (Native) runs the deployment.
 2.  `governance`: Sets the baseline quality standards (e.g., Min Coverage).
 3.  `environments`: Maps git branches to Salesforce orgs and sets per-environment rules.
 4.  `notifications`: Controls Slack/Email alerting behavior.

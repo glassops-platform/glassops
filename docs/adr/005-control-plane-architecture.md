@@ -40,7 +40,7 @@ The initial "Three-Level" architecture implied that "Level 3: GlassOps Reference
 **Positive:**
 
 - **Psychological Safety:** Teams can adopt the Protocol (Level 2) without fearing vendor lock-in to the UI.
-- **Ecosystem Friendly:** Invites 3rd-party vendors (e.g., sfdx-hardis, Copado) to plug into the event stream rather than competing for the glass.
+- **Ecosystem Friendly:** Invites third-party tools to plug into the event stream rather than competing for the glass.
 - **Clear Boundaries:** Reinforces that GlassOps owns _State_ and _Policy_, but delegates _Execution_ and _UX_.
 
 **Negative:**

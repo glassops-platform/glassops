@@ -17,6 +17,10 @@ Salesforce DX project, or run `glassops init` to generate a similar `glassops.ya
 The pr workflow never receives the permit key. Only a job in the protected environment can read it.
 The [GitHub deploy guide](../docs/guides/deploy-with-github.md) explains each part of the deploy job.
 
+## Opt-in policy
+
+- [`rego/`](rego/README.md): a Rego policy with tests that denies production deploys of protected profiles and permission sets. See [Rego rules](../docs/reference/rego-rules.md). Not in a published release yet.
+
 ## Other CI systems
 
 - [`bitbucket/`](bitbucket/README.md): `bitbucket-pipelines.yml` and `glassops.yaml` for Bitbucket Pipelines.

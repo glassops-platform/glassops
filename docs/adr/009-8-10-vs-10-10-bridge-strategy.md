@@ -92,7 +92,7 @@ GitHub Actions (8/10)         Kubernetes Operator (10/10)
 
 ```yaml
 Execution Authority: GitHub Actions
-Adapters: glassops-native, glassops-hardis
+Adapters: glassops-native
 Contract Store: GitHub Artifacts (S3 later)
 Policy Engine: JavaScript (serverless)
 UI: Optional Salesforce Console

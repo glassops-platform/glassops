@@ -17,8 +17,8 @@ func TestConfigureSelectsEngine(t *testing.T) {
 	}{
 		{"", config.EngineNative, ""},
 		{"native", config.EngineNative, ""},
-		{"hardis", config.EngineHardis, ""},
 		{"exec", "", "unknown engine"},
+		{"external", "", "unknown engine"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.engine, func(t *testing.T) {
@@ -42,21 +42,20 @@ func TestConfigureSelectsEngine(t *testing.T) {
 		t.Fatalf("unconfigured engine = %q", got)
 	}
 	p := New()
-	_ = p.Configure(&config.Config{Salesforce: config.Salesforce{Engine: "hardis"}})
+	_ = p.Configure(&config.Config{Salesforce: config.Salesforce{Engine: "native"}})
 	if err := p.Configure(nil); err != nil || p.Engine().Name() != config.EngineNative {
 		t.Fatal("Configure(nil) did not go back to native")
 	}
 }
 
-func TestHardisEngineIsNotImplemented(t *testing.T) {
+// TestNativeEngineNeedsASession: the native engine refuses validate and deploy without a
+// session from this provider.
+func TestNativeEngineNeedsASession(t *testing.T) {
 	p := New()
-	if err := p.Configure(&config.Config{Salesforce: config.Salesforce{Engine: "hardis"}}); err != nil {
+	if err := p.Configure(&config.Config{Salesforce: config.Salesforce{Engine: "native"}}); err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	if _, err := p.Plan(ctx, providers.PlanRequest{Dir: t.TempDir()}); err == nil || !strings.Contains(err.Error(), "not implemented") {
-		t.Fatalf("plan: %v", err)
-	}
 	if _, err := p.Validate(ctx, nil, providers.ChangeSet{}, providers.ValidateOptions{}); err == nil {
 		t.Fatal("validate did not fail")
 	}

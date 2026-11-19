@@ -1,7 +1,10 @@
 name: CLI End-to-End
 
-# Two jobs. "exec" runs the exec provider end to end with no outside system and no secrets, so
-# it runs on every push to main and every pull request. "e2e" runs the CLI against a real
+# Six jobs. "exec" runs the exec provider end to end with no outside system and no secrets, so
+# it runs on every push to main and every pull request. "sigstore", "opa" and "otel" prove
+# the Phase 6 features on a dummy exec project, also with no Salesforce org and no secret, and
+# run on every push and pull request. "pr-comment" proves the pull request comment and runs on
+# pull requests only. "e2e" runs the CLI against a real
 # Salesforce scratch org. It is not a required check, never runs for a pull request, and only
 # one run at a time, so only one scratch org exists at a time. The same pipeline runs every
 # night in e2e-nightly.yml.
@@ -59,6 +62,184 @@ jobs:
           docker run --rm --network none --entrypoint sh \
             -v "$PWD/scripts/e2e:/scripts:ro" \
             glassops:e2e /scripts/exec-e2e.sh /usr/local/bin/glassops
+
+  # Keyless signing with the job's own OIDC token. Every signing writes a public entry to the
+  # Rekor transparency log: the hash of the PERMIT and the signing certificate, which names
+  # this repository, this workflow and the ref. The project is a dummy one, so the PERMIT
+  # holds nothing but made-up target names. A pull request from a fork or from Dependabot gets
+  # no id-token permission, so the job is skipped there.
+  sigstore:
+    name: Sigstore signing end to end
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=e2e-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # The certificate identity of a keyless signature is https://github.com/ followed by
+      # the workflow ref. github.workflow_ref is this workflow's own ref, which is the
+      # job_workflow_ref of the OIDC token because this workflow is not a called one. The
+      # repository the verifier pins is GITHUB_REPOSITORY, which the script passes through.
+      # The container has a network, because cosign talks to Fulcio and Rekor, and no
+      # credential beyond the OIDC request variables.
+      - name: Sign, verify and refuse
+        env:
+          E2E_WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          docker run --rm --entrypoint sh \
+            -v "$PWD:/src:ro" \
+            -e GITHUB_ACTIONS -e GITHUB_REPOSITORY \
+            -e ACTIONS_ID_TOKEN_REQUEST_URL -e ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            -e "E2E_IDENTITY=https://github.com/$E2E_WORKFLOW_REF" \
+            glassops:e2e /src/scripts/e2e/sigstore-e2e.sh /usr/local/bin/glassops
+
+  # Rego rules over an exec project. No network and no secret.
+  opa:
+    name: OPA rules end to end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=e2e-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Gate with examples/rego
+        run: |
+          docker run --rm --network none --entrypoint sh \
+            -v "$PWD:/src:ro" \
+            glassops:e2e /src/scripts/e2e/opa-e2e.sh /usr/local/bin/glassops /src
+
+  # OTLP export to a Collector with a file exporter. The file exporter is in the contrib build
+  # of the Collector, so this uses otel/opentelemetry-collector-contrib. A job service
+  # container cannot take a config file, so the Collector is started with docker run on a
+  # private network that holds nothing else. The Collector is stopped before the check, which
+  # flushes the file.
+  otel:
+    name: OTel export end to end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=e2e-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start the Collector
+        run: |
+          out=$(mktemp -d)
+          chmod 777 "$out"
+          echo "OTEL_OUT=$out" >> "$GITHUB_ENV"
+          docker network create otel-e2e
+          docker run -d --name otel-collector --network otel-e2e \
+            -v "$PWD/testdata/e2e/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro" \
+            -v "$out:/out" \
+            otel/opentelemetry-collector-contrib:0.140.0
+          for _ in $(seq 1 30); do
+            if docker logs otel-collector 2>&1 | grep -q "Everything is ready"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the Collector did not start"
+          docker logs otel-collector
+          exit 1
+
+      - name: Run a pipeline that exports spans
+        run: |
+          docker run --rm --network otel-e2e --entrypoint sh \
+            -v "$PWD:/src:ro" \
+            -e E2E_OTLP_ENDPOINT=http://otel-collector:4318 \
+            glassops:e2e /src/scripts/e2e/otel-e2e.sh /usr/local/bin/glassops
+
+      - name: Check the spans
+        run: |
+          docker stop -t 30 otel-collector
+          docker run --rm --entrypoint node \
+            -v "$PWD:/src:ro" -v "$OTEL_OUT:/out:ro" \
+            glassops:e2e /src/scripts/e2e/otel-assert.js /out/traces.jsonl plan gate report
+
+      - name: Collector log
+        if: failure()
+        run: docker logs otel-collector || true
+
+  # The pull request comment. It posts one public comment on the pull request itself, from the
+  # dummy project's results, and needs pull-requests: write, so it has its own permissions and
+  # no other job gets them. A pull request from a fork or from Dependabot gets a read-only
+  # token, so the job is skipped there. Runs for one pull request never overlap, because they
+  # share one comment.
+  pr-comment:
+    name: Pull request comment end to end
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: cli-e2e-pr-comment-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: glassops:e2e
+          build-args: VERSION=e2e-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create the comment, then update it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          docker run --rm --entrypoint sh \
+            -v "$PWD:/src:ro" \
+            -e GITHUB_TOKEN -e GITHUB_REPOSITORY -e GITHUB_REF -e GITHUB_EVENT_NAME \
+            -e GITHUB_API_URL -e "E2E_ACTOR=$GITHUB_ACTOR" \
+            glassops:e2e /src/scripts/e2e/pr-comment-e2e.sh /usr/local/bin/glassops
 
   e2e:
     name: Scratch org end to end

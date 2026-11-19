@@ -272,6 +272,11 @@ type PermitSigning struct {
 	// must carry. Both are required for sigstore.
 	Identity string `yaml:"identity,omitempty" json:"identity,omitempty"`
 	Issuer   string `yaml:"issuer,omitempty" json:"issuer,omitempty"`
+	// Repository is the GitHub repository, as owner/name, a sigstore signature must come
+	// from. Every repository that calls the same reusable workflow gets the same certificate
+	// identity, so verifying pins the repository too. It defaults to GITHUB_REPOSITORY on
+	// GitHub Actions and is required anywhere else.
+	Repository string `yaml:"repository,omitempty" json:"repository,omitempty"`
 }
 
 // Method returns Signing, or SigningHMAC when it is not set.
@@ -360,14 +365,12 @@ type DestructiveLabelRule struct {
 // Salesforce engines for salesforce.engine.
 const (
 	EngineNative = "native"
-	EngineHardis = "hardis"
 )
 
 // Salesforce holds provider settings.
 type Salesforce struct {
-	// Engine is native or hardis. Use EngineName to read it with the default, native.
+	// Engine is native, the only engine. Use EngineName to read it with the default, native.
 	Engine     string              `yaml:"engine,omitempty" json:"engine,omitempty"`
-	Hardis     Hardis              `yaml:"hardis,omitempty" json:"hardis,omitempty"`
 	APIVersion string              `yaml:"api_version,omitempty" json:"api_version,omitempty"`
 	TestLevel  map[string]string   `yaml:"test_level,omitempty" json:"test_level,omitempty"`
 	Delta      Delta               `yaml:"delta,omitempty" json:"delta,omitempty"`
@@ -381,13 +384,6 @@ func (s Salesforce) EngineName() string {
 		return EngineNative
 	}
 	return s.Engine
-}
-
-// Hardis holds the settings for engine hardis. The user installs sfdx-hardis. GlassOps never
-// ships it.
-type Hardis struct {
-	// MinVersion is the oldest sfdx-hardis version doctor accepts.
-	MinVersion string `yaml:"min_version,omitempty" json:"min_version,omitempty"`
 }
 
 // Seed modes for salesforce.ephemeral.seed.

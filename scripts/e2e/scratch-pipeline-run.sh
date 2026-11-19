@@ -15,8 +15,8 @@ set -eu
 
 REPO=${1:?usage: scratch-pipeline-run.sh REPO IMAGE}
 IMAGE=${2:?usage: scratch-pipeline-run.sh REPO IMAGE}
-HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-ROOT=$(CDPATH= cd -- "$HERE/../.." && pwd)
+HERE=$(CDPATH="" cd -- "$(dirname -- "$0")" && pwd)
+ROOT=$(CDPATH="" cd -- "$HERE/../.." && pwd)
 
 sh "$ROOT/testdata/sfdx/build-repo.sh" "$REPO"
 mkdir -p "$REPO/config"

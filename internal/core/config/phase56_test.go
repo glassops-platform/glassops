@@ -18,8 +18,7 @@ policy:
   rego:
     files: [policy/deploy.rego]
 salesforce:
-  engine: hardis
-  hardis: { min_version: "6.0" }
+  engine: native
 verify:
   smoke: ./scripts/smoke.sh
   foreign_deploys: fail
@@ -51,7 +50,7 @@ func TestParsePhase56Config(t *testing.T) {
 	if !cfg.Policy.Rego.Enabled() || cfg.Policy.Rego.Files[0] != "policy/deploy.rego" {
 		t.Fatalf("rego = %+v", cfg.Policy.Rego)
 	}
-	if cfg.Salesforce.EngineName() != EngineHardis || cfg.Salesforce.Hardis.MinVersion != "6.0" {
+	if cfg.Salesforce.EngineName() != EngineNative {
 		t.Fatalf("salesforce = %+v", cfg.Salesforce)
 	}
 	v := cfg.Verify
@@ -101,7 +100,7 @@ func TestParseRejectsPhase56(t *testing.T) {
 	}{
 		{"unknown provider", "version: 1\nprovider: terraform\n", "/provider"},
 		{"unknown engine", "version: 1\nsalesforce: { engine: exec }\n", "/salesforce/engine"},
-		{"bad hardis version", "version: 1\nsalesforce: { hardis: { min_version: latest } }\n", "/salesforce/hardis/min_version"},
+		{"unknown engine", "version: 1\nsalesforce: { engine: external }\n", "/salesforce/engine"},
 		{"unknown signing", "version: 1\npolicy:\n  permit: { signing: gpg }\n", "/policy/permit/signing"},
 		{"sigstore without identity", "version: 1\npolicy:\n  permit: { signing: sigstore, issuer: https://token.actions.githubusercontent.com }\n", "needs both identity and issuer"},
 		{"sigstore without issuer", "version: 1\npolicy:\n  permit: { signing: sigstore, identity: me }\n", "needs both identity and issuer"},
