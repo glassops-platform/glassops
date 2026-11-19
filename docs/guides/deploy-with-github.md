@@ -1,7 +1,5 @@
 # Deploy with GitHub
 
-> **Early work.** v1.0.0 is not out yet. See [what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release).
-
 This guide sets up pull request checks and a deploy to production on GitHub. Two reusable workflows in this repository run the `glassops` container image for you. Your repository calls them with a few lines each. [`examples/consumer/`](https://github.com/glassops-platform/glassops/tree/main/examples/consumer) is the smallest working layout, and `glassops init` writes a similar `glassops.yaml` and workflow into your project. For what a PERMIT is, see [PERMIT and rules](../reference/permit-and-rules.md).
 
 | Reusable workflow | Runs | Triggered by |
@@ -145,7 +143,7 @@ One deploy runs at a time per environment. A queued deploy waits and is never ca
 
 ### Notes
 
-- The references say `@v1`. The `v1` workflow tag and the `:v1` image tag move only on a final 1.x release. Until one exists, replace `@v1` with a release tag or a commit SHA, and set the `image` input to a version tag.
+- The references say `@v1`. `@v1` follows the latest 1.x release, and the `:v1` image tag moves with it. For a reproducible run, pin a release tag such as `@v1.0.0` or a commit SHA, and set the `image` input to a version tag such as `1.0.0` or to an image digest.
 - Separation of duties needs the rule in `glassops.yaml`. When the person who merges is also the pull request author, the rule fails unless an approval satisfies it. Set `approval.environment: glassops-deploy` so an approval of the environment satisfies the rule. See [PERMIT and rules](../reference/permit-and-rules.md#separation_of_duties).
 - The container runs as root, so files it writes under `.glassops/` are owned by root on the runner.
 - The warning about the tag push inside the container appears on every deploy. That is expected, because the runner step pushes the tag.
