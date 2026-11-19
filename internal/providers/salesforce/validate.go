@@ -116,9 +116,10 @@ func (p *Provider) readValidateReport(ctx context.Context, sess *session, dir, i
 }
 
 // runValidate runs the validate command and returns the deploy Id from either shape: the
-// result of a pass or the data of a failure. A failure names the Id in data.deployId, and
-// a wait that ran out names it in data.id [confirmed: deploy-validate-test-fail.json,
-// deploy-start-timeout.json]. A failure that carries no Id is an error.
+// result of a pass or the data of a failure. A failed validate names the Id in data.deployId
+// [confirmed: deploy-validate-test-fail.json]. A deploy start whose wait ran out names it in
+// data.id [confirmed: deploy-start-timeout.json], and a validate is read the same way
+// [unverified, no validate timeout was captured]. A failure that carries no Id is an error.
 func (p *Provider) runValidate(ctx context.Context, sess *session, dir string, args []string) (string, error) {
 	env, err := p.sf(ctx, sess, dir, args...)
 	if err == nil {
