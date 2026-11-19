@@ -9,7 +9,7 @@
 
 GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held.
 
-The current release is v1.0.1. v1.0.0 was the first final release. Both are on the [releases page](https://github.com/glassops-platform/glassops/releases). GlassOps has deployed a real Salesforce project to production through its full deploy pipeline: plan, validate, gate, deploy, verify and report, in a protected GitHub environment. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. The opt-in Sigstore signing, Rego rules, pull request comment and OpenTelemetry export are planned for v1.1.0.
+The current release is v1.1.0. It adds opt-in Sigstore signing, Rego rules, a pull request comment and OpenTelemetry export. v1.0.0 was the first final release. All releases are on the [releases page](https://github.com/glassops-platform/glassops/releases). GlassOps has deployed a real Salesforce project to production through its full deploy pipeline: plan, validate, gate, deploy, verify and report, in a protected GitHub environment. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it.
 
 ---
 

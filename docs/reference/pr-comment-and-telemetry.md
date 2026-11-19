@@ -1,6 +1,6 @@
 # Pull request comment and OpenTelemetry export
 
-> **Opt-in, and not in a published release yet.** Both are planned for v1.1.0. Neither does anything until you turn it on. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
+> **Opt-in, since v1.1.0.** Neither does anything until you turn it on. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
 
 ---
 

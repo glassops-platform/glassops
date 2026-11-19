@@ -4,7 +4,7 @@ This page describes how a GlassOps release is cut, which image tags exist, and h
 
 ## What is in which release
 
-v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1, v1.0.0-rc.2 and v1.0.0-rc.3 are prereleases, listed on the [releases page](https://github.com/glassops-platform/glassops/releases). This table says which tag first has each command or feature, so you can tell what an older pinned version lacks. Everything in it is in v1.0.1.
+v1.0.0 is the first final release, v1.0.1 is a patch release and v1.1.0 is the first minor release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1, v1.0.0-rc.2, v1.0.0-rc.3 and v1.1.0-rc.1 are prereleases, listed on the [releases page](https://github.com/glassops-platform/glassops/releases). This table says which tag first has each command or feature, so you can tell what an older pinned version lacks. Everything in it is in v1.1.0.
 
 | Command or feature | First release |
 |---|---|
@@ -30,11 +30,12 @@ v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tag
 | `RunRelevantTests` accepted as a `test_level` in `glassops.yaml`. Before this, the config check refused it | v1.0.1 |
 | `validate` waiting for the final status when the Salesforce CLI stops watching a validate that is still running | v1.0.1 |
 | A login that fails with `fetch failed`, a connection failure, is retried like the other network errors | v1.0.1 |
-| [Sigstore signing](sigstore-signing.md) of PERMITs, with `policy.permit` | Not yet (v1.1.0) |
-| [Opt-in Rego rules](rego-rules.md), with `policy.rego` | Not yet (v1.1.0) |
-| [The pull request comment](pr-comment-and-telemetry.md#pull-request-comment), with `report --pr-comment` and `report.pr_comment` | Not yet (v1.1.0) |
-| [OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export), with `telemetry.otlp` | Not yet (v1.1.0) |
-| `cosign` and `opa` in both images | Not yet (v1.1.0) |
+| [Sigstore signing](sigstore-signing.md) of PERMITs, with `policy.permit` | v1.1.0-rc.1 |
+| [Opt-in Rego rules](rego-rules.md), with `policy.rego` | v1.1.0-rc.1 |
+| [The pull request comment](pr-comment-and-telemetry.md#pull-request-comment), with `report --pr-comment` and `report.pr_comment` | v1.1.0-rc.1 |
+| [OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export), with `telemetry.otlp` | v1.1.0-rc.1 |
+| `cosign` and `opa` in both images | v1.1.0-rc.1 |
+| The reusable workflows asking for `id-token: write` (deploy) and `pull-requests: write` (PR), which the calling job [must grant](../guides/deploy-with-github.md) | v1.1.0-rc.1 |
 
 ## Release tags
 
