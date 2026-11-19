@@ -54,13 +54,18 @@ func (p *Provider) nativeValidate(ctx context.Context, s providers.Session, cs p
 		return providers.ValidateResult{}, err
 	}
 
-	rep, err := p.sf(ctx, sess, dir, "project", "deploy", "report", "--job-id", id, "--target-org", sess.alias)
+	body, err := p.readValidateReport(ctx, sess, dir, id, false)
 	if err != nil {
-		return providers.ValidateResult{}, fmt.Errorf("salesforce: read validate result %s: %w", id, err)
+		return providers.ValidateResult{}, err
 	}
-	var body deployBody
-	if err := json.Unmarshal(rep.Result, &body); err != nil {
-		return providers.ValidateResult{}, fmt.Errorf("salesforce: read deploy report: %w", err)
+	if !finalDeployStatus(body.Status) {
+		// sf can stop watching while the validate still runs in the org, for example when its
+		// wait runs out or a status poll fails. The validate then comes back with only its Id
+		// and the report shows it unfinished. Wait on the report until the org says how it
+		// ended, so a validate that is still running is never read as a failure.
+		if body, err = p.readValidateReport(ctx, sess, dir, id, true); err != nil {
+			return providers.ValidateResult{}, err
+		}
 	}
 	if body.CheckOnly == nil || !*body.CheckOnly {
 		return providers.ValidateResult{}, ErrNotCheckOnly
@@ -68,8 +73,53 @@ func (p *Provider) nativeValidate(ctx context.Context, s providers.Session, cs p
 	return body.toResult(id), nil
 }
 
+// finalDeployStatus reports whether a deploy status is one the org will not change again.
+func finalDeployStatus(s string) bool {
+	switch s {
+	case "Succeeded", "SucceededPartial", "Failed", "Canceled":
+		return true
+	}
+	return false
+}
+
+// readValidateReport reads the validate's full result with deploy report. With wait, sf
+// waits until the validate finishes. A validate that then finished as failed can come back
+// as a failure envelope that still holds the body, so that body is read too. Without wait,
+// any failure is an error.
+func (p *Provider) readValidateReport(ctx context.Context, sess *session, dir, id string, wait bool) (deployBody, error) {
+	args := []string{"project", "deploy", "report", "--job-id", id}
+	if wait {
+		args = append(args, "--wait", validateWaitMinutes)
+	}
+	args = append(args, "--target-org", sess.alias)
+	rep, err := p.sf(ctx, sess, dir, args...)
+	if err != nil {
+		if !wait {
+			return deployBody{}, fmt.Errorf("salesforce: read validate result %s: %w", id, err)
+		}
+		raw := rep.Result
+		var sfErr *SFError
+		if len(raw) == 0 && errors.As(err, &sfErr) {
+			raw = sfErr.Data
+		}
+		var b deployBody
+		if len(raw) == 0 || json.Unmarshal(raw, &b) != nil || b.ID == "" || b.Status == "" {
+			return deployBody{}, fmt.Errorf("salesforce: read validate result %s: %w", id, err)
+		}
+		return b, nil
+	}
+	var body deployBody
+	if err := json.Unmarshal(rep.Result, &body); err != nil {
+		return deployBody{}, fmt.Errorf("salesforce: read deploy report: %w", err)
+	}
+	return body, nil
+}
+
 // runValidate runs the validate command and returns the deploy Id from either shape: the
-// result of a pass or the data of a failure. A failure that carries no Id is an error.
+// result of a pass or the data of a failure. A failed validate names the Id in data.deployId
+// [confirmed: deploy-validate-test-fail.json]. A deploy start whose wait ran out names it in
+// data.id [confirmed: deploy-start-timeout.json], and a validate is read the same way
+// [unverified, no validate timeout was captured]. A failure that carries no Id is an error.
 func (p *Provider) runValidate(ctx context.Context, sess *session, dir string, args []string) (string, error) {
 	env, err := p.sf(ctx, sess, dir, args...)
 	if err == nil {
@@ -85,14 +135,8 @@ func (p *Provider) runValidate(ctx context.Context, sess *session, dir string, a
 		}
 		return body.ID, nil
 	}
-	var sfErr *SFError
-	if errors.As(err, &sfErr) {
-		var data struct {
-			DeployID string `json:"deployId"`
-		}
-		if len(sfErr.Data) > 0 && json.Unmarshal(sfErr.Data, &data) == nil && data.DeployID != "" {
-			return data.DeployID, nil
-		}
+	if id := failureDeployID(err); id != "" {
+		return id, nil
 	}
 	return "", err
 }

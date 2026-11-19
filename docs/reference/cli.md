@@ -1,7 +1,5 @@
 # CLI Reference
 
-> **Early work.** v0.3.0 and v0.4.0 are published prereleases and v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
-
 `glassops` is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.
 
 ---
@@ -69,7 +67,7 @@ Logs in to one target, runs the guard, and writes what the target reports about 
 
 ### `glassops plan`
 
-Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
+Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. For Salesforce, `plan` also reads the checked out source of each changed Apex class and records the classes annotated `@IsTest` in the fact `salesforce.apex_test_classes`, and the classes whose top level type is an `interface` or `enum`, which have no executable lines and no coverage, in the fact `salesforce.apex_nonexecutable_types`. The check looks at the annotations before the first `class` keyword, after it strips comments and strings. It is not an Apex parser, and a class it cannot read is treated as a normal class. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -98,7 +96,7 @@ Logs in to the target, runs the guard, and runs a check-only validate of the cha
 | `--plan` | `<dir>/.glassops/plan.json` | Change set file |
 | `--check-only` | `true` | Always true. `false` is refused |
 
-A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login. `validate` records the facts `validate.plan_sha256`, `validate.change_set_sha256` (the hash a PERMIT binds the change set by) and `validate.test_level`, which `gate` uses to decide whether a deploy may reuse the validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy).
+A target counts as not configured when it is missing from `glassops.yaml` or when its `id` variable is not set, for example because the scratch org was never created. A guard mismatch never falls back. The test level comes from `salesforce.test_level` for the tier of the target used, then its `default` entry, then the Salesforce CLI's own default. An empty change set ends with status `empty` and no login. When the Salesforce CLI stops watching a validate that is still running, for example because its wait ran out, `validate` waits on `sf project deploy report` until the org gives the final status, so a validate still in progress is never read as a failure. `validate` records the facts `validate.plan_sha256`, `validate.change_set_sha256` (the hash a PERMIT binds the change set by) and `validate.test_level`, which `gate` uses to decide whether a deploy may reuse the validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy).
 
 ### `glassops gate`
 
@@ -500,18 +498,18 @@ The workflow [`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/
 
 ## Install
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. **`verify`, provider `exec`, the Bitbucket and GitLab layers and the other changes listed under "Not yet in a release" in [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) are not in a published release yet.** To use them, build from this repository.
+The current release is v1.0.0 on the [releases page](https://github.com/glassops-platform/glassops/releases). [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) says which release first has each command and feature.
 
 | Route | What you get | What you need |
 |---|---|---|
-| Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
+| Published image `ghcr.io/glassops-platform/glassops:v1`, or `1.0.0` for a fixed release | The release binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
 | `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.4 or later, and the host tools below |
 | `docker build -t glassops .` | The current binary in an image with the tools, plus `cosign` and `opa` | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
 
 A built Linux binary also runs inside the published image. Mount it over the image's own:
 
 ```bash
-docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:0.4.0 doctor
+docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:1.0.0 doctor
 ```
 
 **Host prerequisites for `go build`.** `git` always. For a Salesforce project also the Salesforce CLI `sf` and its `sfdx-git-delta` plugin:

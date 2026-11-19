@@ -1,7 +1,5 @@
 # PERMIT and Rules
 
-> **Early work.** v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release). This page describes the current repository, which is ahead of the published prereleases.
-
 A PERMIT is a signed file that records one decision: whether one plan may be deployed to one target. `glassops gate` makes the decision and writes the PERMIT. `glassops deploy` and `glassops permit verify` refuse to go on unless the PERMIT is genuine, still valid and about the thing being deployed. This page describes the PERMIT, the rules that feed it, and the evidence `gate` reads. The commands are in the [CLI reference](cli.md).
 
 ---
@@ -180,7 +178,7 @@ Configured as `policy.rules.coverage_min`, a whole number from 0 to 100.
 
 - `skipped` when it is not set.
 - `fail` when the plan facts do not list the changed Apex classes.
-- Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless its name ends in `Test` or `_Test`. Those are treated as test classes, and the detail says how many.
+- Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless it is a test class. Salesforce reports no coverage for test classes. `plan` reads each changed class file and records the ones annotated `@IsTest` (any case, with or without arguments) in the fact `salesforce.apex_test_classes`. Those are treated as test classes whatever their names, and the detail says how many and why. A `@IsTest` method inside a normal class does not make the class a test class. An Apex `interface` or `enum` has no executable lines, so Salesforce lists no coverage for it. `plan` also records the changed classes whose top level type is an `interface` or `enum` in the fact `salesforce.apex_nonexecutable_types`. Those are not measured, and the detail gives their count. An abstract class is a class and is still measured, and so is a class that implements an interface or holds an inner interface. A type in that fact that does have a coverage entry is still held to the minimum. A plan file written before these facts existed has neither, and then a name ending in `Test` or `_Test` marks a test class and an interface with no coverage fails as before.
 - `pass` when every class is at or above the minimum.
 
 ### `destructive_needs_label`
@@ -191,6 +189,8 @@ Configured as `policy.rules.destructive_needs_label` with a `label` and optional
 - `fail` when the tier is unknown, or the facts do not say how many destructive changes the plan has.
 - `pass` when the plan has no destructive changes.
 - With destructive changes: `fail` when no pull request was found, or the pull request lacks the label. `pass` when it has the label.
+
+This rule has unit tests but has not yet run against a real repository.
 
 ### `separation_of_duties`
 
@@ -210,6 +210,8 @@ Two kinds of approval can satisfy the rule:
 | `label` | `approval.label` and `approval.approvers` | The pull request has the label, and the person who added it is one of the approvers |
 
 A label approver may be the pull request author. The explicit approval by a listed approver is the control.
+
+Label approval has unit tests but has not yet run against a real repository. Environment approval has run on a real project.
 
 The PERMIT's `separation_of_duties` block records the result. Its `mode` is `enforced`, `waived_by_config`, `satisfied_by_approval` or `not_applicable` (the rule is off, or the PERMIT is an ephemeral automatic one). It also holds the author, the deployer and, for an approval, the mechanism and approver.
 

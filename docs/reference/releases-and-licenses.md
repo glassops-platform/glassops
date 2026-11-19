@@ -4,7 +4,7 @@ This page describes how a GlassOps release is cut, which image tags exist, and h
 
 ## What is in which release
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases). v1.0.0 is not out yet. This table says which release first has each command or feature. "Not yet" means it is in the repository and in no published release, so you need a build from this repository to use it. See [Install](cli.md#install).
+v1.0.0 is the first final release and v1.0.1 is a patch release. The earlier tags v0.3.0, v0.4.0, v1.0.0-rc.1, v1.0.0-rc.2 and v1.0.0-rc.3 are prereleases, listed on the [releases page](https://github.com/glassops-platform/glassops/releases). This table says which tag first has each command or feature, so you can tell what an older pinned version lacks. Everything in it is in v1.0.1.
 
 | Command or feature | First release |
 |---|---|
@@ -14,18 +14,24 @@ v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://githu
 | `test`, `check`, `analyze` and the `glassops-analyzer` image | v0.4.0 |
 | `run` and the default `pr` and `deploy` pipelines | v0.4.0 |
 | The reusable GitHub workflows and the consumer example | v0.4.0 |
-| `verify`, and `verify` in the default `deploy` pipeline | Not yet |
-| Provider `exec` and the engine result schema | Not yet |
-| The Bitbucket and GitLab CI layers | Not yet |
-| `env create` applying definition `settings` | Not yet |
-| `test.coverage.class_scope` | Not yet |
-| The hardened PERMIT: `change_set_sha256`, the lifetime and key checks, `gate --deploy-command` | Not yet |
-| `deploy` refusing a tree that is not the PERMIT commit, the window cap on `expires_at`, and `--resume` limits | Not yet |
-| The YAML limits on `glassops.yaml` | Not yet |
-| The license scan, `THIRD_PARTY_NOTICES` and the release tag rules below | Not yet |
+| `verify`, and `verify` in the default `deploy` pipeline | v1.0.0-rc.1 |
+| Provider `exec` and the engine result schema | v1.0.0-rc.1 |
+| The Bitbucket and GitLab CI layers | v1.0.0-rc.1 |
+| `env create` applying definition `settings` | v1.0.0-rc.1 |
+| `test.coverage.class_scope` | v1.0.0-rc.1 |
+| The hardened PERMIT: `change_set_sha256`, the lifetime and key checks, `gate --deploy-command` | v1.0.0-rc.1 |
+| `deploy` refusing a tree that is not the PERMIT commit, the window cap on `expires_at`, and `--resume` limits | v1.0.0-rc.1 |
+| The YAML limits on `glassops.yaml` | v1.0.0-rc.1 |
+| The license scan, `THIRD_PARTY_NOTICES` and the release tag rules below | v1.0.0-rc.1 |
+| `permit verify --deploy-command`, a PERMIT ending when a blackout for its tier begins, and the change set hash that `validate` records | v1.0.0-rc.2 |
+| `RunRelevantTests`: `verify` passes a change set with no Apex that ran no tests, and `gate` does not bind such a validation for a quick deploy | v1.0.0-rc.2 |
+| Test classes decided by the `@IsTest` annotation, and Apex interfaces and enums exempt from `coverage_min` | v1.0.0-rc.3 |
+| `verify` matching GlobalValueSet members that a deploy reports with a `__gvs` suffix | v1.0.0-rc.3 |
+| `RunRelevantTests` accepted as a `test_level` in `glassops.yaml`. Before this, the config check refused it | v1.0.1 |
+| `validate` waiting for the final status when the Salesforce CLI stops watching a validate that is still running | v1.0.1 |
+| A login that fails with `fetch failed`, a connection failure, is retried like the other network errors | v1.0.1 |
 | [Sigstore signing](sigstore-signing.md) of PERMITs, with `policy.permit` | Not yet (v1.1.0) |
 | [Opt-in Rego rules](rego-rules.md), with `policy.rego` | Not yet (v1.1.0) |
-| [Engine hardis](hardis-engine.md), experimental, with `salesforce.engine: hardis` | Not yet (v1.1.0) |
 | [The pull request comment](pr-comment-and-telemetry.md#pull-request-comment), with `report --pr-comment` and `report.pr_comment` | Not yet (v1.1.0) |
 | [OpenTelemetry export](pr-comment-and-telemetry.md#opentelemetry-export), with `telemetry.otlp` | Not yet (v1.1.0) |
 | `cosign` and `opa` in both images | Not yet (v1.1.0) |

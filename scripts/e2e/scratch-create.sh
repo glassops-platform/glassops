@@ -34,18 +34,39 @@ trap cleanup EXIT INT TERM
 CALLBACK='http://localhost:1717/OauthRedirect'
 Q="$HOME/query.json"
 
+# Prints the error name from an sf --json failure, such as LIMIT_EXCEEDED, so a failed step says
+# why. Only a name made of letters, digits and underscores is printed, never the message, which
+# can hold a username or an Id. Any other name prints "unrecognized", and output that is not JSON
+# prints "unknown".
+sf_error_name() {
+  node -e '
+const fs = require("fs");
+let name = "";
+for (const f of process.argv.slice(1)) {
+  try {
+    const j = JSON.parse(fs.readFileSync(f, "utf8"));
+    name = String(j.name || j.code || "");
+    if (name) break;
+  } catch (e) {}
+}
+if (!name) name = "unknown";
+else if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(name)) name = "unrecognized";
+process.stdout.write(name);
+' "$@"
+}
+
 printf '%s\n' "$SF_JWT_KEY" > "$HOME/jwt.key"
 if ! sf org login jwt --username "$SF_USERNAME" --client-id "$SF_CLIENT_ID" \
   --jwt-key-file "$HOME/jwt.key" --instance-url https://login.salesforce.com \
-  --alias hub --json > "$HOME/login.json" 2>/dev/null; then
-  echo "scratch-create: the Dev Hub login failed" >&2
+  --alias hub --json > "$HOME/login.json" 2> "$HOME/login.err"; then
+  echo "scratch-create: the Dev Hub login failed ($(sf_error_name "$HOME/login.json" "$HOME/login.err"))" >&2
   exit 1
 fi
 
 if ! sf data create record --sobject ScratchOrgInfo \
   --values "Edition=Developer OrgName='GlassOps E2E' DurationDays=1 ConnectedAppConsumerKey=PlatformCLI ConnectedAppCallbackUrl=$CALLBACK" \
-  --target-org hub --json > "$HOME/create.json" 2>/dev/null; then
-  echo "scratch-create: could not create the ScratchOrgInfo record" >&2
+  --target-org hub --json > "$HOME/create.json" 2> "$HOME/create.err"; then
+  echo "scratch-create: could not create the ScratchOrgInfo record ($(sf_error_name "$HOME/create.json" "$HOME/create.err"))" >&2
   exit 1
 fi
 INFO_ID=$(node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String(j.result&&j.result.id||""))' "$HOME/create.json")

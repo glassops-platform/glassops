@@ -223,7 +223,7 @@
         "test_level": {
           "type": "object",
           "additionalProperties": {
-            "enum": ["NoTestRun", "RunSpecifiedTests", "RunLocalTests", "RunAllTestsInOrg"]
+            "enum": ["NoTestRun", "RunSpecifiedTests", "RunLocalTests", "RunRelevantTests", "RunAllTestsInOrg"]
           }
         },
         "delta": {

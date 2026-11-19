@@ -46,7 +46,7 @@ docker run --rm -v "$PWD:/work" -w /work \
   ghcr.io/glassops-platform/glassops:<version> run pr
 ```
 
-`run` is in v0.4.0 and later. For anything newer, build the image from this repository. See [Install](../reference/cli.md#install).
+`run` is in v0.4.0 and later. See [Install](../reference/cli.md#install).
 
 On GitHub, the reusable workflows do this for you and add the checkout, the SARIF upload and the evidence upload. See [Deploy with GitHub](deploy-with-github.md). For a single command outside a pipeline, the `glassops-platform/glassops` action takes `command: run pr` or any other command line.
 
@@ -80,7 +80,7 @@ pipelines:
 
 **pr.** Plans the change, runs your project scripts (`check`), runs the Code Analyzer (`analyze`), creates a short-lived scratch org named `ephemeral` from the Dev Hub (`env create`), and runs a check-only validate there. `--fallback-target prod` makes `validate` use the `prod` target when no environment exists, for example when `environments.ephemeral` is not configured. `report` and `env delete` run even after a failure, so the run always leaves a summary and never leaves an org behind. `validate` runs the tests at the configured test level. To run the tests with coverage minimums as a separate step, add `test --target ephemeral` after `validate`.
 
-**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, deploys under it, and then runs [`verify`](../reference/cli.md#glassops-verify) to check that the target holds what the plan says. A denied gate exits 1 and the deploy step is skipped. `verify` is newer than the published prereleases. See [what is in which release](../reference/releases-and-licenses.md#what-is-in-which-release). `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
+**deploy.** Plans from what `prod` last received (`--target prod` starts from the `glassops/deployed/prod` tag), validates, asks the policy rules for a signed PERMIT, deploys under it, and then runs [`verify`](../reference/cli.md#glassops-verify) to check that the target holds what the plan says. A denied gate exits 1 and the deploy step is skipped. `report` runs either way. The deploy needs `GLASSOPS_PERMIT_KEY`, which should be available only to the protected deploy job. See [Deploy with GitHub](deploy-with-github.md).
 
 Two steps skip themselves when they have nothing to do. `check` does nothing without `check.scripts`, and `analyze` does nothing without `analyze.enabled: true`. Both end with the status `empty` and exit 0.
 

@@ -88,6 +88,22 @@ func TestParseFullConfig(t *testing.T) {
 	}
 }
 
+// Every test level the Salesforce CLI takes for a validate or a deploy loads, including the
+// beta RunRelevantTests that verify and gate already handle.
+func TestParseTestLevels(t *testing.T) {
+	for _, level := range []string{"NoTestRun", "RunSpecifiedTests", "RunLocalTests", "RunRelevantTests", "RunAllTestsInOrg"} {
+		t.Run(level, func(t *testing.T) {
+			cfg, err := Parse([]byte("version: 1\nsalesforce:\n  test_level: { prod: " + level + " }\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := cfg.Salesforce.TestLevel["prod"]; got != level {
+				t.Fatalf("test_level.prod = %q, want %q", got, level)
+			}
+		})
+	}
+}
+
 func TestParseRejects(t *testing.T) {
 	cases := []struct {
 		name string
@@ -109,6 +125,7 @@ func TestParseRejects(t *testing.T) {
 		{"duplicate key", "version: 1\ntargets:\n  a: {}\n  a: {}\n", "already defined"},
 		{"delta from is gone", "version: 1\nsalesforce:\n  delta: { from: auto }\n", "/salesforce/delta"},
 		{"bad quick", "version: 1\nsalesforce:\n  deploy: { quick: sometimes }\n", "/salesforce/deploy/quick"},
+		{"unknown test level", "version: 1\nsalesforce:\n  test_level: { prod: RunSomeTests }\n", "/salesforce/test_level/prod"},
 		{"permit ttl not a duration", "version: 1\npolicy:\n  permit_ttl: soon\n", "is not a duration"},
 		{"permit ttl too short", "version: 1\npolicy:\n  permit_ttl: 1m\n", "is outside"},
 		{"permit ttl too long", "version: 1\npolicy:\n  permit_ttl: 25h\n", "is outside"},

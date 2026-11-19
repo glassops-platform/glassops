@@ -707,6 +707,9 @@ func TestReportedAs(t *testing.T) {
 		{"EmailTemplate", "F/T", "EmailTemplate", "F/T"},
 		{"EmailTemplate", "*", "EmailTemplate", "*"},
 		{"Settings", "Mobile", "MobileSettings", "Mobile"},
+		{"GlobalValueSet", "Cat", "GlobalValueSet", "Cat__gvs"},
+		{"GlobalValueSet", "Cat__gvs", "GlobalValueSet", "Cat__gvs"},
+		{"GlobalValueSet", "*", "GlobalValueSet", "*"},
 		{"ApexClass", "A", "ApexClass", "A"},
 	} {
 		gt, gn := reportedAs(tc.typ, tc.name)
@@ -803,4 +806,46 @@ func TestVerifyTestsOnProductionCaptures(t *testing.T) {
 			vfyWant(t, v.res, CheckVerifyTests, tc.want, tc.detail)
 		})
 	}
+}
+
+func TestVerifyMembersGlobalValueSetReportedWithGvsSuffix(t *testing.T) {
+	env, err := parseEnvelope(fixture(t, "deploy-report-globalvalueset.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rep reportBody
+	if err := json.Unmarshal(env.Result, &rep); err != nil {
+		t.Fatal(err)
+	}
+	pkg, err := readManifest(filepath.Join("testdata", "sf", "package-globalvalueset.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+	v.membersCheck(deployRequestRow{}, rep, pkg, nil)
+	vfyWant(t, v.res, CheckVerifyMembers, providers.VerifyPass, "all 2 plan members")
+
+	// The plain name is accepted too, in case another API version reports it that way.
+	plain := rep
+	plain.Details.ComponentSuccesses = append(flexList[componentSuccess](nil), rep.Details.ComponentSuccesses...)
+	for i := range plain.Details.ComponentSuccesses {
+		if plain.Details.ComponentSuccesses[i].ComponentType == "GlobalValueSet" {
+			plain.Details.ComponentSuccesses[i].FullName = "Requirement_Category"
+		}
+	}
+	v = &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+	v.membersCheck(deployRequestRow{}, plain, pkg, nil)
+	vfyWant(t, v.res, CheckVerifyMembers, providers.VerifyPass)
+
+	// A set that was not deployed, or only another type with the name, still fails.
+	other := rep
+	other.Details.ComponentSuccesses = nil
+	for _, c := range rep.Details.ComponentSuccesses {
+		if c.ComponentType != "GlobalValueSet" {
+			other.Details.ComponentSuccesses = append(other.Details.ComponentSuccesses, c)
+		}
+	}
+	v = &verifyRun{res: providers.VerifyResult{Facts: map[string]any{}}}
+	v.membersCheck(deployRequestRow{}, other, pkg, nil)
+	vfyWant(t, v.res, CheckVerifyMembers, providers.VerifyFail, "GlobalValueSet:Requirement_Category")
 }

@@ -106,7 +106,7 @@ policy:
 
 | Field | Meaning |
 |---|---|
-| `test_level` | Map of tier to the test level `validate` and `deploy` use: `NoTestRun`, `RunSpecifiedTests`, `RunLocalTests` or `RunAllTestsInOrg`. The `default` key applies to any tier not listed |
+| `test_level` | Map of tier to the test level `validate` and `deploy` use: `NoTestRun`, `RunSpecifiedTests`, `RunLocalTests`, `RunRelevantTests` or `RunAllTestsInOrg`. `RunRelevantTests` is a beta Salesforce test level that runs the tests Salesforce picks from the Apex in the change set, so a change set with no Apex runs none (see [PERMIT and rules](permit-and-rules.md)). The `default` key applies to any tier not listed |
 | `delta.enabled` | `false` makes `plan` list the whole source instead of a delta |
 | `deploy.quick` | `prefer` (the default), `require` or `off`. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy) |
 | `ephemeral.seed` | `minimal` (the default), `full` or `off`. See [the smart seed](cli.md#the-smart-seed) |
