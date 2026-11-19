@@ -143,7 +143,7 @@ jq -e '.runs[0].invocations[0].executionSuccessful' .glassops/glassops-contract.
 
 ### Potential Next Steps
 
-1. **Audit Existing Adapters** - Check glassops-native, glassops-hardis, glassops-scanner for SARIF compliance
+1. **Audit Existing Adapters** - Check glassops-native and glassops-scanner for SARIF compliance
 2. **Schema Validation** - Add automated SARIF schema validation to CI
 3. **Contract Linter** - Create tool to validate SARIF contracts against Protocol
 4. **Migration Guide** - If legacy adapters exist, provide migration path

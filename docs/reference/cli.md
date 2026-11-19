@@ -43,7 +43,7 @@ Runs these checks and fails if any of them fails:
 - The provider: the config and the project files must agree.
 - The tools: `git` always, plus `sf` and the `sfdx-git-delta` plugin for Salesforce projects. Versions are recorded.
 - The analyzer, only when `analyze.enabled` is `true`: Java 11 or newer and the Code Analyzer plugin (`tool.java` and `tool.code-analyzer`). Both are in the `glassops-analyzer` image.
-- Opt-in features, only when you turn them on: `cosign` and the signing identity, issuer and repository for [Sigstore signing](sigstore-signing.md), `opa` and the policy files for [Rego rules](rego-rules.md), and `sfdx-hardis` for [Engine hardis](hardis-engine.md).
+- Opt-in features, only when you turn them on: `cosign` and the signing identity, issuer and repository for [Sigstore signing](sigstore-signing.md), and `opa` and the policy files for [Rego rules](rego-rules.md).
 - The checkout: a shallow clone fails, because it would make every change set empty. On GitHub, use `actions/checkout` with `fetch-depth: 0`.
 - The environment: every `$VAR` the config names must be set. Only presence is checked. Values are never printed or stored.
 - The PERMIT key: on a `pull_request` or `pull_request_target` run, `GLASSOPS_PERMIT_KEY` should not be set. If it is, `doctor` adds a `permit.key` check whose detail starts with `warning:` and a CI warning annotation. This never fails the command. Only presence is checked. See [PERMIT and rules](permit-and-rules.md#the-signing-key).

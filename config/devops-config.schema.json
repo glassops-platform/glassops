@@ -15,7 +15,7 @@
             "properties": {
                 "engine": {
                     "type": "string",
-                    "enum": ["native", "hardis"],
+                    "enum": ["native"],
                     "default": "native",
                     "description": "Primary execution engine"
                 },

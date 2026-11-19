@@ -142,21 +142,14 @@ func TestConfigureErrorExitsTwo(t *testing.T) {
 	}
 }
 
-// TestEngineHardisPlansLikeNative: engine hardis keeps GlassOps' own plan, so plan gives the
-// same exit and the same detail as the native engine. The provider tests compare the change
-// sets of a passing plan.
-func TestEngineHardisPlansLikeNative(t *testing.T) {
-	plan := func(engine string) (int, string) {
-		h := newHarness(t)
-		h.write(t, "sfdx-project.json", "{}")
-		h.write(t, "glassops.yaml", "version: 1\nsalesforce:\n  engine: "+engine+"\n  delta: { enabled: false }\n")
-		code := h.exec("plan")
-		return code, strings.ReplaceAll(detailOf(h.result(t, "plan"), "plan"), h.dir, "<dir>")
-	}
-	nCode, nDetail := plan("native")
-	hCode, hDetail := plan("hardis")
-	if nCode != hCode || nDetail != hDetail || strings.Contains(hDetail, "not implemented") {
-		t.Fatalf("native exit %d %q, hardis exit %d %q", nCode, nDetail, hCode, hDetail)
+// TestUnknownEngineIsAConfigError: native is the only engine, so any other salesforce.engine
+// stops plan at config load with exit 2.
+func TestUnknownEngineIsAConfigError(t *testing.T) {
+	h := newHarness(t)
+	h.write(t, "sfdx-project.json", "{}")
+	h.write(t, "glassops.yaml", "version: 1\nsalesforce:\n  engine: external\n  delta: { enabled: false }\n")
+	if code := h.exec("plan"); code != exitcode.Error || !strings.Contains(h.out.String(), "/salesforce/engine") {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
 	}
 }
 

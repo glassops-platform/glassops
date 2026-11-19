@@ -67,7 +67,7 @@ Both images, built from this repository, hold two more programs that GlassOps ru
 | `cosign` | v2.5.3 | [Sigstore signing](sigstore-signing.md) of PERMITs, when `policy.permit.signing` is `sigstore` |
 | `opa` | 1.22.0, the static build | [Rego rules](rego-rules.md), when `policy.rego` is set |
 
-Both are Apache-2.0 programs copied from their official images, which are pinned by digest in the Dockerfiles. They are not linked into `glassops`, and they do nothing unless you turn those features on. They are listed in `THIRD_PARTY_NOTICES` like every other package in the images. The image `ghcr.io/glassops-platform/glassops:0.4.0` does not hold them. The hardis engine's `sfdx-hardis` is in no image, see [Engine hardis](hardis-engine.md).
+Both are Apache-2.0 programs copied from their official images, which are pinned by digest in the Dockerfiles. They are not linked into `glassops`, and they do nothing unless you turn those features on. They are listed in `THIRD_PARTY_NOTICES` like every other package in the images. The image `ghcr.io/glassops-platform/glassops:0.4.0` does not hold them.
 
 ## License scan
 

@@ -110,8 +110,7 @@ policy:
 | `delta.enabled` | `false` makes `plan` list the whole source instead of a delta |
 | `deploy.quick` | `prefer` (the default), `require` or `off`. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy) |
 | `ephemeral.seed` | `minimal` (the default), `full` or `off`. See [the smart seed](cli.md#the-smart-seed) |
-| `engine` | `native` (the default) or `hardis`. `hardis` is experimental, see [Engine hardis](hardis-engine.md) |
-| `hardis.min_version` | With engine `hardis`, the oldest `sfdx-hardis` version `doctor` accepts. The default is `8.20.1` |
+| `engine` | `native`, the default and the only engine |
 | `api_version` | Accepted by the schema (`auto` or a version such as `62.0`). No command reads it yet |
 
 ```yaml

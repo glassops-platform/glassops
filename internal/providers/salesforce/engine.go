@@ -24,10 +24,8 @@ func (p *Provider) engineFor(name string, cfg config.Salesforce) (Engine, error)
 	switch name {
 	case "", config.EngineNative:
 		return nativeEngine{p: p}, nil
-	case config.EngineHardis:
-		return newHardisEngine(p, cfg.Hardis), nil
 	default:
-		return nil, fmt.Errorf("salesforce: unknown engine %q (want %s or %s)", name, config.EngineNative, config.EngineHardis)
+		return nil, fmt.Errorf("salesforce: unknown engine %q (want %s)", name, config.EngineNative)
 	}
 }
 

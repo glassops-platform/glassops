@@ -365,14 +365,12 @@ type DestructiveLabelRule struct {
 // Salesforce engines for salesforce.engine.
 const (
 	EngineNative = "native"
-	EngineHardis = "hardis"
 )
 
 // Salesforce holds provider settings.
 type Salesforce struct {
-	// Engine is native or hardis. Use EngineName to read it with the default, native.
+	// Engine is native, the only engine. Use EngineName to read it with the default, native.
 	Engine     string              `yaml:"engine,omitempty" json:"engine,omitempty"`
-	Hardis     Hardis              `yaml:"hardis,omitempty" json:"hardis,omitempty"`
 	APIVersion string              `yaml:"api_version,omitempty" json:"api_version,omitempty"`
 	TestLevel  map[string]string   `yaml:"test_level,omitempty" json:"test_level,omitempty"`
 	Delta      Delta               `yaml:"delta,omitempty" json:"delta,omitempty"`
@@ -386,13 +384,6 @@ func (s Salesforce) EngineName() string {
 		return EngineNative
 	}
 	return s.Engine
-}
-
-// Hardis holds the settings for engine hardis. The user installs sfdx-hardis. GlassOps never
-// ships it.
-type Hardis struct {
-	// MinVersion is the oldest sfdx-hardis version doctor accepts.
-	MinVersion string `yaml:"min_version,omitempty" json:"min_version,omitempty"`
 }
 
 // Seed modes for salesforce.ephemeral.seed.
