@@ -1,7 +1,5 @@
 # CLI Reference
 
-> **Early work.** v0.3.0 and v0.4.0 are published prereleases and v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release).
-
 `glassops` is one Go binary that runs each delivery step as its own command. The goal is a governed pipeline that runs the same way in any CI system or on a laptop. Salesforce is the first provider.
 
 ---
@@ -496,18 +494,18 @@ The workflow [`cli-e2e.yml`](https://github.com/glassops-platform/glassops/blob/
 
 ## Install
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. **`verify`, provider `exec`, the Bitbucket and GitLab layers and the other changes listed under "Not yet in a release" in [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) are not in a published release yet.** To use them, build from this repository.
+The current release is v1.0.0 on the [releases page](https://github.com/glassops-platform/glassops/releases). [Releases, images and licenses](releases-and-licenses.md#what-is-in-which-release) says which release first has each command and feature.
 
 | Route | What you get | What you need |
 |---|---|---|
-| Published image `ghcr.io/glassops-platform/glassops:0.4.0` | The v0.4.0 binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
+| Published image `ghcr.io/glassops-platform/glassops:v1`, or `1.0.0` for a fixed release | The release binary with Node 22, the Salesforce CLI and `sfdx-git-delta` | Docker |
 | `go build -o glassops ./cmd/glassops` | The current binary | Go 1.27.4 or later, and the host tools below |
 | `docker build -t glassops .` | The current binary in an image with the tools | Docker. Add `docker build -f Dockerfile.analyzer -t glassops-analyzer .` for `analyze` |
 
 A built Linux binary also runs inside the published image. Mount it over the image's own:
 
 ```bash
-docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:0.4.0 doctor
+docker run --rm -v "$PWD:/work" -w /work -v "$PWD/glassops:/usr/local/bin/glassops"   ghcr.io/glassops-platform/glassops:1.0.0 doctor
 ```
 
 **Host prerequisites for `go build`.** `git` always. For a Salesforce project also the Salesforce CLI `sf` and its `sfdx-git-delta` plugin:

@@ -7,9 +7,9 @@
 
 ## Status
 
-GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held. It is early work, not a finished product.
+GlassOps is a CI-agnostic command line tool that acts as the CI/CD layer for Salesforce delivery, with other platforms possible later. It is written in Go and replaces the older GitHub Action runtime that this repository once held.
 
-v0.3.0 and v0.4.0 are published prereleases on the [releases page](https://github.com/glassops-platform/glassops/releases), and v1.0.0 is not out yet. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it. `verify`, provider `exec` and the Bitbucket and GitLab layers are not in a published release yet, so build from a checkout to use them.
+The current release is v1.0.0, the first final release, on the [releases page](https://github.com/glassops-platform/glassops/releases). GlassOps has deployed a real Salesforce project to production through its full deploy pipeline: plan, validate, gate, deploy, verify and report, in a protected GitHub environment. [What is in which release](docs/reference/releases-and-licenses.md#what-is-in-which-release) lists every command and feature with the release that first has it.
 
 ---
 
@@ -72,7 +72,7 @@ Teams that:
 
 ## Quick Start
 
-The latest published prerelease image is `ghcr.io/glassops-platform/glassops:0.4.0`. To use what was added since, build the CLI from a checkout with `go build -o glassops ./cmd/glassops`, or build the container image with `docker build -t glassops .`.
+The image to use is `ghcr.io/glassops-platform/glassops:v1`, which follows the latest 1.x release. For a reproducible run, use `ghcr.io/glassops-platform/glassops:1.0.0` or pin the image by digest. To build from a checkout instead, run `go build -o glassops ./cmd/glassops` for the CLI or `docker build -t glassops .` for the container image.
 
 On GitHub, [`examples/consumer/`](examples/consumer/) is the smallest working layout. It holds a `glassops.yaml` and two short workflows that call the reusable workflows `glassops-pr.yml` and `glassops-deploy.yml` from this repository. The deploy caller passes `GLASSOPS_PERMIT_KEY` by name, and the value lives only as a secret of the protected `glassops-deploy` environment. See the [GitHub deploy guide](docs/guides/deploy-with-github.md). Or run `glassops init` in a Salesforce DX project to generate a similar setup.
 

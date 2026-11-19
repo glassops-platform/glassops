@@ -1,7 +1,5 @@
 # PERMIT and Rules
 
-> **Early work.** v1.0.0 is not out yet. See [what is in which release](releases-and-licenses.md#what-is-in-which-release). This page describes the current repository, which is ahead of the published prereleases.
-
 A PERMIT is a signed file that records one decision: whether one plan may be deployed to one target. `glassops gate` makes the decision and writes the PERMIT. `glassops deploy` and `glassops permit verify` refuse to go on unless the PERMIT is genuine, still valid and about the thing being deployed. This page describes the PERMIT, the rules that feed it, and the evidence `gate` reads. The commands are in the [CLI reference](cli.md).
 
 ---
@@ -189,6 +187,8 @@ Configured as `policy.rules.destructive_needs_label` with a `label` and optional
 - `pass` when the plan has no destructive changes.
 - With destructive changes: `fail` when no pull request was found, or the pull request lacks the label. `pass` when it has the label.
 
+This rule has unit tests but has not yet run against a real repository.
+
 ### `separation_of_duties`
 
 Configured as `policy.rules.separation_of_duties` with `tiers` and an optional `approval`. It makes sure the person who deploys is not the author of the change.
@@ -207,6 +207,8 @@ Two kinds of approval can satisfy the rule:
 | `label` | `approval.label` and `approval.approvers` | The pull request has the label, and the person who added it is one of the approvers |
 
 A label approver may be the pull request author. The explicit approval by a listed approver is the control.
+
+Label approval has unit tests but has not yet run against a real repository. Environment approval has run on a real project.
 
 The PERMIT's `separation_of_duties` block records the result. Its `mode` is `enforced`, `waived_by_config`, `satisfied_by_approval` or `not_applicable` (the rule is off, or the PERMIT is an ephemeral automatic one). It also holds the author, the deployer and, for an approval, the mechanism and approver.
 
