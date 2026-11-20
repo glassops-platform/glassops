@@ -1,7 +1,7 @@
 site_name: GlassOps
-site_description: The Universal Governance Orchestration Protocol
+site_description: A CI-agnostic CLI for governed Salesforce deployments
 site_author: Ryan Bumstead
-site_url: https://glassops.io/
+site_url: https://glassops-platform.github.io/glassops/
 
 repo_name: glassops-platform/glassops
 repo_url: https://github.com/glassops-platform/glassops
@@ -66,37 +66,23 @@ exclude_docs: |
     **docs_staging/**
     **glassops_site/**
     **docs/internal/**
+    # Design history. These files stay in the repository and are left off the site,
+    # because they describe direction and earlier designs, not the released CLI.
+    /docs/vision.md
+    /docs/whitepaper.md
+    /docs/doc-map.md
+    /docs/adr-index.md
+    /docs/adr/
+    /docs/reference/platform-reference.md
 
 nav:
     - Home: README.md
 
-    - Foundation:
-          - "Vision": docs/vision.md
-          - "Whitepaper": docs/whitepaper.md
-          - "Documentation Map": docs/doc-map.md
-          - "The 8/10 Constraint": docs/adr/009-8-10-vs-10-10-bridge-strategy.md
-          - "Compliance":
-                - "Contributing": CONTRIBUTING.md
-                - "Code License": https://github.com/glassops-platform/glassops/blob/main/LICENSE
-                - "Docs License": https://github.com/glassops-platform/glassops/blob/main/docs/LICENSE
-
-    - Protocol (The Law):
-          - "Identity Contract": docs/adr/010-identity-contract.md
-
-    - Architecture:
-          - "Overview": docs/architecture/overview.md
-          - "Control Plane": docs/adr/005-control-plane-architecture.md
-          - "ADR Master Index": docs/adr-index.md
-          - "ADRs":
-                - "Platform ADRs Index": docs/adr/README.md
-                - "System API Primitive": docs/adr/001-system-api-primitive.md
-                - "GitHub Execution Authority": docs/adr/002-github-execution-authority.md
-                - "Additive Governance": docs/adr/003-additive-governance.md
-                - "Schema Contract Config": docs/adr/004-schema-contract-config.md
-                - "Documentation as Governed Artifact": docs/adr/006-documentation-as-governed-artifact.md
-                - "Protocol Supremacy Enforcement": docs/adr/007-protocol-supremacy-enforcement.md
-                - "Federated Documentation Structure": docs/adr/008-federated-documentation-structure.md
-                - "Monorepo Strategy": docs/adr/011-monorepo-strategy.md
+    - Guides:
+          - "Run a Pipeline": docs/guides/run-a-pipeline.md
+          - "Deploy with GitHub": docs/guides/deploy-with-github.md
+          - "Bitbucket and GitLab": docs/guides/other-ci.md
+          - "Scratch Org Settings": docs/guides/scratch-org-settings.md
 
     - Reference:
           - "CLI Reference": docs/reference/cli.md
@@ -108,11 +94,11 @@ nav:
           - "PR Comment and OpenTelemetry": docs/reference/pr-comment-and-telemetry.md
           - "Verify, Coverage and YAML Settings": docs/reference/verify-and-coverage-settings.md
           - "Releases, Images and Licenses": docs/reference/releases-and-licenses.md
-          - "Platform Reference": docs/reference/platform-reference.md
           - "Examples": examples/README.md
 
-    - Guides:
-          - "Run a Pipeline": docs/guides/run-a-pipeline.md
-          - "Deploy with GitHub": docs/guides/deploy-with-github.md
-          - "Bitbucket and GitLab": docs/guides/other-ci.md
-          - "Scratch Org Settings": docs/guides/scratch-org-settings.md
+    - Architecture: docs/architecture/overview.md
+
+    - Project:
+          - "Contributing": CONTRIBUTING.md
+          - "Code License": https://github.com/glassops-platform/glassops/blob/main/LICENSE
+          - "Docs License": https://github.com/glassops-platform/glassops/blob/main/docs/LICENSE

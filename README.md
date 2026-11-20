@@ -44,7 +44,6 @@ Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every co
 ## Learn More
 
 - **Architecture overview:** [`overview.md`](docs/architecture/overview.md)
-- **Vision:** [`vision.md`](docs/vision.md)
 - **CLI reference:** [`cli.md`](docs/reference/cli.md)
 - **Configuration reference:** [`config.md`](docs/reference/config.md)
 - **PERMIT and rules:** [`permit-and-rules.md`](docs/reference/permit-and-rules.md)
@@ -58,8 +57,7 @@ Commands exit 0 on pass, 1 on a failed check and 2 on a tool error, and every co
 - **Pull request comment and OpenTelemetry export (opt-in):** [`pr-comment-and-telemetry.md`](docs/reference/pr-comment-and-telemetry.md)
 - **Verify, coverage and YAML settings:** [`verify-and-coverage-settings.md`](docs/reference/verify-and-coverage-settings.md)
 - **Releases, images and licenses:** [`releases-and-licenses.md`](docs/reference/releases-and-licenses.md)
-- **White paper (describes direction, not current functionality):** [`whitepaper.md`](docs/whitepaper.md)
-- **ADRs:** [earlier design decisions](docs/adr/README.md), each with a status line
+- **Design history (direction and earlier designs, not current functionality):** the [vision](https://github.com/glassops-platform/glassops/blob/main/docs/vision.md), the [white paper](https://github.com/glassops-platform/glassops/blob/main/docs/whitepaper.md) and the [ADRs](https://github.com/glassops-platform/glassops/blob/main/docs/adr/README.md) are kept in the repository and are not part of the docs site
 
 ---
 
