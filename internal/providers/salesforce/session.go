@@ -1,6 +1,7 @@
 package salesforce
 
 import (
+	"errors"
 	"os"
 	"runtime"
 	"sync"
@@ -53,4 +54,15 @@ func (s *session) env() []string {
 func asSession(s providers.Session) (*session, bool) {
 	ss, ok := s.(*session)
 	return ss, ok
+}
+
+// SessionEnv points sf in an exec step's command at this session: the session's home holds
+// the login, and SF_TARGET_ORG makes its alias the default org, so a plain "sf data query"
+// runs against the target. The token itself is never put in the environment.
+func (p *Provider) SessionEnv(s providers.Session) ([]string, error) {
+	ss, ok := asSession(s)
+	if !ok || ss.home == "" {
+		return nil, errors.New("not a Salesforce session")
+	}
+	return append(ss.env(), "SF_TARGET_ORG="+ss.alias), nil
 }

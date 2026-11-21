@@ -127,6 +127,13 @@ func Check(c *Config) []string {
 			if strings.TrimSpace(s.Run) == "" {
 				add("pipelines.%s[%d]: empty step", name, i)
 			}
+			if s.Target != "" {
+				_, isTarget := c.Targets[s.Target]
+				_, isEnv := c.Environments[s.Target]
+				if !isTarget && !isEnv {
+					add("pipelines.%s[%d].target: %q is not a configured target or environment", name, i, s.Target)
+				}
+			}
 		}
 	}
 	return problems

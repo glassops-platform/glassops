@@ -17,6 +17,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/ci"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/pipeline"
+	"github.com/glassops-platform/glassops/internal/core/redact"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/core/telemetry"
 	"github.com/glassops-platform/glassops/internal/providers"
@@ -101,7 +102,11 @@ func (app *App) runPipeline(ctx context.Context, g *globals, o *runOptions, name
 		fmt.Fprintf(app.Stdout, "pipeline %s, %d steps, each glassops step also gets: %s\n", name, len(steps), strings.Join(globalArgs, " "))
 		for _, s := range steps {
 			if s.IsExec() {
-				fmt.Fprintf(app.Stdout, "%2d. [%s] exec: sh -c %q (result exec.%d.json)\n", s.Index, s.When, s.Exec, s.ExecN)
+				on := ""
+				if s.Target != "" {
+					on = " logged in to " + s.Target
+				}
+				fmt.Fprintf(app.Stdout, "%2d. [%s] exec: sh -c %q%s (result exec.%d.json)\n", s.Index, s.When, s.Exec, on, s.ExecN)
 				continue
 			}
 			fmt.Fprintf(app.Stdout, "%2d. [%s] glassops %s\n", s.Index, s.When, strings.Join(s.Argv, " "))
@@ -250,7 +255,26 @@ func (app *App) execStep(ctx context.Context, g *globals, c ci.CI, s pipeline.St
 	// The exec step sees the process environment, not app.Getenv, because App has no way
 	// to list the environment. Tests replace shellRunner instead.
 	env := append(os.Environ(), ResultsDirEnv+"="+results)
-	code, err := shellRunner(ctx, g.dir, env, s.Exec, app.Stdout, app.Stderr)
+	runner := shellRunner
+	var stdout, stderr io.Writer = app.Stdout, app.Stderr
+	var closeOut func()
+	if s.Target != "" {
+		ss, err := app.execSession(ctx, g, c, s, res)
+		if err != nil {
+			return app.finishCode(res, c, g), path
+		}
+		defer func() { _ = ss.sess.Close() }()
+		// The session's variables come last, so they win over any the job already set.
+		env = append(withoutPermitKey(env), ss.env...)
+		ow, ew := redact.NewLineWriter(app.Stdout), redact.NewLineWriter(app.Stderr)
+		stdout, stderr = ow, ew
+		closeOut = func() { _ = ow.Close(); _ = ew.Close() }
+		runner = sessionShellRunner
+	}
+	code, err := runner(ctx, g.dir, env, s.Exec, stdout, stderr)
+	if closeOut != nil {
+		closeOut()
+	}
 	if err != nil {
 		res.AddCheck("command", run.StatusError, fmt.Sprintf("%s: %v", s.Exec, err))
 		return app.finishCode(res, c, g), path

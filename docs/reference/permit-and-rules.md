@@ -19,6 +19,7 @@ The PERMIT is JSON in `.glassops/permit.json`, with the schema name `glassops.pe
 | `config_sha256` | The hash of `glassops.yaml` |
 | `change_set_sha256` | The hash of `plan_sha256` and the change set fields that say how the plan files are used: `provider`, `dir`, `manifest`, the `destructive` list in order, `empty` and `full` |
 | `deploy_command_sha256` | Provider exec only, when `gate` ran with `--deploy-command`. The SHA-256 of the command as a JSON array of strings. The command text is never stored |
+| `exec_commands_sha256` | Only when `gate` ran with `--exec-command`. The sorted SHA-256 of each exec step command that may run logged in to the target, each as a one element JSON array of strings. The text is never stored |
 | `validation` | Optional. The deploy Id of a passed check-only validation, its test level and `passed` |
 | `separation_of_duties` | How the separation of duties rule was met. See below |
 | `checks` | Every rule result, each with its rule name, outcome and detail |
@@ -101,6 +102,7 @@ The PERMIT checks, shared by both:
 11. The config hash matches.
 12. The change set hash matches.
 13. For `deploy -- <command>` or `permit verify --deploy-command <command>` with provider exec, the PERMIT binds that exact command. A PERMIT with no `deploy_command_sha256`, or a different one, is refused.
+14. For a pipeline exec step with a `target` on any tier but `ephemeral`, the PERMIT lists that step's command in `exec_commands_sha256`. A PERMIT that does not is refused, and the step logs in to nothing.
 
 Checking the signature first means a forged or damaged PERMIT is rejected before any of its contents are trusted. `deploy` additionally compares the PERMIT against the deployed commit, which is the CI's commit, or `git rev-parse HEAD` when the CI reports none.
 

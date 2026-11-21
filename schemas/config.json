@@ -371,11 +371,12 @@
           "properties": {
             "step": { "type": "string", "minLength": 1 },
             "run": { "type": "string", "minLength": 1 },
-            "when": { "enum": ["success", "failure", "always"] }
+            "when": { "enum": ["success", "failure", "always"] },
+            "target": { "$ref": "#/$defs/name" }
           },
           "if": { "properties": { "step": { "const": "exec" } } },
           "then": { "required": ["run"] },
-          "else": { "not": { "required": ["run"] } }
+          "else": { "not": { "anyOf": [{ "required": ["run"] }, { "required": ["target"] }] } }
         }
       ]
     }

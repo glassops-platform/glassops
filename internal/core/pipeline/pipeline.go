@@ -38,6 +38,8 @@ type Step struct {
 	// ExecN is the exec step's 1-based count among the pipeline's exec steps, used to name
 	// its result exec.<n>.json. It is 0 for a glassops step.
 	ExecN int
+	// Target is the target an exec step runs logged in to, or "" for a step with no session.
+	Target string
 	// When is the step's condition, never empty.
 	When When
 	// Raw is the step as written in the config.
@@ -118,9 +120,12 @@ func parseStep(cs config.Step) (Step, error) {
 			return Step{}, errors.New("an exec step needs run")
 		}
 		s.Exec = cs.Exec
+		s.Target = cs.Target
 		return s, nil
 	case cs.Exec != "":
 		return Step{}, errors.New("run is only for exec steps")
+	case cs.Target != "":
+		return Step{}, errors.New("target is only for exec steps, a glassops step takes --target")
 	case strings.HasPrefix(argv[0], "-"):
 		return Step{}, errors.New("a step starts with a command name, not a flag")
 	case argv[0] == "run":

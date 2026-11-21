@@ -133,3 +133,16 @@ func TestDefaultPipelinesParse(t *testing.T) {
 		}
 	}
 }
+
+// gate --exec-command takes the exec step's run text as one argument, so a pipeline string
+// step must keep a quoted command together.
+func TestSplitKeepsAQuotedExecCommand(t *testing.T) {
+	got, err := Split(`gate --target prod --exec-command "node scripts/api-check.js"`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"gate", "--target", "prod", "--exec-command", "node scripts/api-check.js"}
+	if strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Fatalf("Split = %q, want %q", got, want)
+	}
+}

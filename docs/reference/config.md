@@ -192,7 +192,9 @@ analyze:
 
 ### `pipelines`
 
-Named lists of steps for [`glassops run`](cli.md#glassops-run). Each step is a string (a glassops command line without the `glassops` prefix) or a map with `step`, optional `when` (`success`, `failure` or `always`) and, for the step `exec`, a `run` shell command. A pipeline needs at least one step.
+Named lists of steps for [`glassops run`](cli.md#glassops-run). Each step is a string (a glassops command line without the `glassops` prefix) or a map with `step`, optional `when` (`success`, `failure` or `always`) and, for the step `exec`, a `run` shell command and an optional `target`. A pipeline needs at least one step.
+
+An exec step with `target` runs its command logged in to that target, a name under `targets` or `environments`. See [exec steps with a target](cli.md#glassops-run). On any tier but `ephemeral` it needs a PERMIT from `gate --exec-command` that binds the command.
 
 ```yaml
 pipelines:
@@ -203,6 +205,14 @@ pipelines:
       run: npm run build
     - step: report
       when: always
+  deploy:
+    - plan --target prod
+    - validate --target prod
+    - gate --target prod --exec-command "node scripts/api-check.js"
+    - step: exec
+      run: node scripts/api-check.js
+      target: prod
+    - deploy --target prod
 ```
 
 The default `pr` and `deploy` pipelines apply only when the project has no `glassops.yaml`. A file that has a `pipelines` key replaces them, and one without the key has no pipelines, so `glassops run pr` fails with an unknown pipeline. `glassops init` writes the defaults into the file. See [Run a pipeline](../guides/run-a-pipeline.md).

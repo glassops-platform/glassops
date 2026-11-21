@@ -467,3 +467,10 @@ type Verifier interface {
 type Configurable interface {
 	Configure(cfg *config.Config) error
 }
+
+// SessionEnver is implemented by providers whose session can be handed to a pipeline exec
+// step. SessionEnv returns the environment variables that make the provider's own tools in that
+// command use the session's login, and nothing that holds a secret itself.
+type SessionEnver interface {
+	SessionEnv(s Session) ([]string, error)
+}

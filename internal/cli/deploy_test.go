@@ -13,6 +13,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -77,6 +78,8 @@ func deployFakeVerify(p permit.Permit, s permit.Signer, want permit.Expect) erro
 		return permit.ErrExpired
 	case p.Target.Name != want.TargetName, (&fakeProvider{}).CanonicalID(p.Target.ID) != want.TargetID, p.Commit != want.Commit,
 		p.PlanSHA256 != want.PlanSHA256, p.ConfigSHA256 != want.ConfigSHA256, p.ChangeSetSHA256 != want.ChangeSetSHA256:
+		return permit.ErrMismatch
+	case want.ExecCommandSHA256 != "" && !slices.Contains(p.ExecCommandsSHA256, want.ExecCommandSHA256):
 		return permit.ErrMismatch
 	}
 	return nil
