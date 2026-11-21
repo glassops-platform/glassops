@@ -206,8 +206,9 @@ def main():
             cmd.append("--dirty")
     else:
         print("Building MkDocs site...")
-        cmd = [sys.executable, "-m", "mkdocs", "build"]
-    
+        # --strict fails the build on any warning, such as a link to a missing page or heading.
+        cmd = [sys.executable, "-m", "mkdocs", "build", "--strict"]
+
     try:
         # We don't capture output in serve mode so user can see logs
         subprocess.run(

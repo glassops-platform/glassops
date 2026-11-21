@@ -75,6 +75,13 @@ exclude_docs: |
     /docs/adr/
     /docs/reference/platform-reference.md
 
+# A link to a missing page or a missing heading is a warning, and scripts/build-docs.py builds
+# with --strict, so any warning fails the build.
+validation:
+    links:
+        not_found: warn
+        anchors: warn
+
 nav:
     - Home: README.md
 
