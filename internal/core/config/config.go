@@ -373,6 +373,26 @@ type Rules struct {
 	AnalyzerMaxSeverity   *int                  `yaml:"analyzer_max_severity,omitempty" json:"analyzer_max_severity,omitempty"`
 	SeparationOfDuties    *SoDRule              `yaml:"separation_of_duties,omitempty" json:"separation_of_duties,omitempty"`
 	DestructiveNeedsLabel *DestructiveLabelRule `yaml:"destructive_needs_label,omitempty" json:"destructive_needs_label,omitempty"`
+	// ValidatePassed sets the tiers on which a failed validate of the plan denies the PERMIT.
+	// Use ValidatePassedTiers to read it with the default applied.
+	ValidatePassed *TierRule `yaml:"validate_passed,omitempty" json:"validate_passed,omitempty"`
+}
+
+// TierRule is a rule that applies to the listed tiers.
+type TierRule struct {
+	Tiers []string `yaml:"tiers" json:"tiers"`
+}
+
+// DefaultValidatePassedTiers are the tiers validate_passed covers when the config does not say.
+var DefaultValidatePassedTiers = []string{"prod"}
+
+// ValidatePassedTiers returns the tiers validate_passed covers: the configured list, which may
+// be empty to switch the rule off, or DefaultValidatePassedTiers when it is not set.
+func (r Rules) ValidatePassedTiers() []string {
+	if r.ValidatePassed == nil || r.ValidatePassed.Tiers == nil {
+		return DefaultValidatePassedTiers
+	}
+	return r.ValidatePassed.Tiers
 }
 
 // SoDRule requires that the person who deploys to the listed tiers is not the author of the

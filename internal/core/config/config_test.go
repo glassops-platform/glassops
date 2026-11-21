@@ -465,3 +465,28 @@ func TestPlanScopeLeavesConfigHashAlone(t *testing.T) {
 		t.Fatalf("target JSON = %s, want no plan key", data)
 	}
 }
+
+func TestValidatePassedTiers(t *testing.T) {
+	for name, tc := range map[string]struct {
+		yaml string
+		want []string
+	}{
+		"default":    {"version: 1\n", []string{"prod"}},
+		"configured": {"version: 1\npolicy:\n  rules:\n    validate_passed: { tiers: [prod, uat] }\n", []string{"prod", "uat"}},
+		"off":        {"version: 1\npolicy:\n  rules:\n    validate_passed: { tiers: [] }\n", []string{}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			cfg, err := Parse([]byte(tc.yaml))
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := cfg.Policy.Rules.ValidatePassedTiers()
+			if strings.Join(got, ",") != strings.Join(tc.want, ",") || (got == nil) != (tc.want == nil) {
+				t.Fatalf("tiers = %#v, want %#v", got, tc.want)
+			}
+		})
+	}
+	if _, err := Parse([]byte("version: 1\npolicy:\n  rules:\n    validate_passed: {}\n")); err == nil || !strings.Contains(err.Error(), "validate_passed") {
+		t.Fatalf("validate_passed without tiers: %v, want a schema error", err)
+	}
+}
