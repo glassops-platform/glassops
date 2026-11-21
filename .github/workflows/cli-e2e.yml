@@ -5,11 +5,11 @@ name: CLI End-to-End
 # the Phase 6 features on a dummy exec project, also with no Salesforce org and no secret, and
 # run on every push and pull request. "pr-comment" proves the pull request comment and runs on
 # pull requests only. "e2e" runs the CLI against a real
-# Salesforce scratch org. It runs on main, and on a pull request only when the PR carries the
-# label scratch-e2e, because every run spends Dev Hub scratch org creates. Only one run at a
-# time, so only one scratch org exists at a time. "scratch-label" fails a pull request that
-# changes what the scratch org run covers but does not carry the label. The same pipeline runs
-# every night in e2e-nightly.yml.
+# Salesforce scratch org. Every run spends Dev Hub scratch org creates, and the Dev Hub allows
+# 6 a day, so it runs only on a pull request that carries the label scratch-e2e and when started
+# by hand, never on a push to main. The nightly run in e2e-nightly.yml covers main. Only one run
+# at a time, so only one scratch org exists at a time. "scratch-label" fails a pull request that
+# changes what the scratch org run covers but does not carry the label.
 on:
   workflow_dispatch:
     inputs:
@@ -282,8 +282,9 @@ jobs:
   e2e:
     name: Scratch org end to end
     if: >-
-      github.event_name != 'pull_request' ||
-      (contains(github.event.pull_request.labels.*.name, 'scratch-e2e') &&
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'scratch-e2e') &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.actor != 'dependabot[bot]')
     runs-on: ubuntu-latest
