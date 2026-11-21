@@ -350,7 +350,8 @@ jobs:
             -v "$RUNNER_TEMP/repo:/work" -w /work \
             glassops:e2e validate --target ephemeral --config /work/glassops-full.yaml
 
-      # Phase 3: gate, a tampered PERMIT, a real deploy into the scratch org and the deployed tag.
+      # Phase 3: gate, a tampered PERMIT, a real deploy into the scratch org, and no deployed tag,
+      # because a tier ephemeral target keeps none.
       # The key is a throwaway made in this job, never the deploy environment's key.
       - name: Make a throwaway PERMIT key and a bare origin
         if: env.HAS_SF_SECRETS == 'true'
@@ -420,13 +421,16 @@ jobs:
             glassops:e2e deploy --target ephemeral --config /work/glassops-full.yaml --ci local
           node -e '
             const f = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).facts || {};
-            const ok = f["salesforce.deploy_status"] === "Succeeded" && f["deploy.quick"] === true && f["deploy.tag_pushed"] === true;
+            const ok = f["salesforce.deploy_status"] === "Succeeded" && f["deploy.quick"] === true && f["deploy.tag_pushed"] === false && !("deploy.tag" in f);
             if (!ok) { console.error("unexpected deploy facts: " + JSON.stringify(f)); process.exit(1); }
-            console.log("quick deployed " + f["salesforce.deploy_id"] + " and pushed the deployed tag");
+            console.log("quick deployed " + f["salesforce.deploy_id"] + " and kept no deployed tag");
           ' "$RUNNER_TEMP/repo/.glassops/results/deploy.json"
-          head=$(git -C "$RUNNER_TEMP/repo" rev-parse HEAD)
-          tag=$(git -C "$RUNNER_TEMP/origin.git" rev-parse refs/tags/glassops/deployed/ephemeral)
-          if [ "$head" != "$tag" ]; then echo "deployed tag is $tag, HEAD is $head" >&2; exit 1; fi
+          for repo in "$RUNNER_TEMP/repo" "$RUNNER_TEMP/origin.git"; do
+            if git -C "$repo" rev-parse -q --verify refs/tags/glassops/deployed/ephemeral >/dev/null; then
+              echo "an ephemeral deploy left the tag glassops/deployed/ephemeral in $repo" >&2
+              exit 1
+            fi
+          done
 
       # run deploy ends with verify, so the e2e checks the same step against the real org.
       - name: Verify the deploy
@@ -446,7 +450,8 @@ jobs:
             console.log("verify passed on deploy " + f["verify.deploy_id"]);
           ' "$RUNNER_TEMP/repo/.glassops/results/verify.json"
 
-      - name: Plan from the deployed tag
+      # With no tag, the next plan for the target is a first deploy: the whole source.
+      - name: Plan after the deploy
         if: env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
         run: |
           docker run --rm -e SF_EPHEMERAL_ORG_ID -e SF_EPHEMERAL_AUTH_URL \
@@ -454,9 +459,13 @@ jobs:
             glassops:e2e plan --target ephemeral --ci local
           node -e '
             const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-            if (!p.empty) { console.error("expected an empty plan from the deployed tag"); process.exit(1); }
-            console.log("plan from the deployed tag is empty");
-          ' "$RUNNER_TEMP/repo/.glassops/plan.json"
+            const f = JSON.parse(require("fs").readFileSync(process.argv[2], "utf8")).facts || {};
+            if (!p.full || p.empty || f["plan.first_deploy"] !== true) {
+              console.error("expected a full first deploy plan, got full=" + p.full + " empty=" + p.empty + " first_deploy=" + f["plan.first_deploy"]);
+              process.exit(1);
+            }
+            console.log("plan after the deploy is a full first deploy plan, since no tag was kept");
+          ' "$RUNNER_TEMP/repo/.glassops/plan.json" "$RUNNER_TEMP/repo/.glassops/results/plan.json"
 
       - name: Report
         if: always() && env.HAS_SF_SECRETS == 'true' && inputs.scope != 'pipeline'
