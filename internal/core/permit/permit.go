@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -77,11 +78,14 @@ type Permit struct {
 	ChangeSetSHA256 string `json:"change_set_sha256"`
 	// DeployCommandSHA256 is set when gate was given the deploy command for provider exec. It
 	// is DeployCommandDigest of that command, never the command itself.
-	DeployCommandSHA256 string          `json:"deploy_command_sha256,omitempty"`
-	Validation          *Validation     `json:"validation,omitempty"`
-	SeparationOfDuties  *SoD            `json:"separation_of_duties,omitempty"`
-	Checks              []policy.Result `json:"checks"`
-	Signature           Signature       `json:"signature"`
+	DeployCommandSHA256 string `json:"deploy_command_sha256,omitempty"`
+	// ExecCommandsSHA256 lists, sorted and without repeats, ExecCommandDigest of each pipeline
+	// exec step command gate was told may run with a session on this target. Never the text.
+	ExecCommandsSHA256 []string        `json:"exec_commands_sha256,omitempty"`
+	Validation         *Validation     `json:"validation,omitempty"`
+	SeparationOfDuties *SoD            `json:"separation_of_duties,omitempty"`
+	Checks             []policy.Result `json:"checks"`
+	Signature          Signature       `json:"signature"`
 }
 
 // Target is the target a PERMIT is for.
@@ -141,7 +145,10 @@ type Expect struct {
 	// place of exec.deploy. The PERMIT must carry the same value. When empty the PERMIT's
 	// command hash is not checked, because the command comes from the signed config.
 	DeployCommandSHA256 string
-	Now                 time.Time
+	// ExecCommandSHA256, when set, is ExecCommandDigest of an exec step command about to run
+	// with a session on the target. The PERMIT must list it in exec_commands_sha256.
+	ExecCommandSHA256 string
+	Now               time.Time
 	// MaxTTL is the longest lifetime, expires_at minus issued_at, a PERMIT may have. Zero
 	// means config.MaxPermitTTL.
 	MaxTTL time.Duration
@@ -204,8 +211,8 @@ func Sign(p *Permit, s Signer) error {
 
 // Verify checks p's signature with s and that p allows a deploy matching want. It checks, in
 // order, that p is signed and binds a change set, the signature, allow, expiry and the
-// lifetime, then the target, commit, plan, config and change set, and the deploy command when
-// want names one. The error wraps the matching sentinel and says which check failed, never
+// lifetime, then the target, commit, plan, config and change set, the deploy command when
+// want names one, and the exec step command when want names one. The error wraps the matching sentinel and says which check failed, never
 // any key material.
 func Verify(p Permit, s Signer, want Expect) error {
 	if p.Signature.Value == "" {
@@ -272,7 +279,32 @@ func Verify(p Permit, s Signer, want Expect) error {
 			return fmt.Errorf("%w: the deploy command differs from the one the permit was issued for", ErrMismatch)
 		}
 	}
+	if want.ExecCommandSHA256 != "" && !slices.Contains(p.ExecCommandsSHA256, want.ExecCommandSHA256) {
+		return fmt.Errorf("%w: the permit does not bind this exec step command. Run gate with --exec-command and the step's run text", ErrMismatch)
+	}
 	return nil
+}
+
+// ExecCommandDigest is the value exec_commands_sha256 lists for an exec step command: the
+// DeployCommandDigest of the one element argv holding the step's run text exactly as written.
+// An empty command gives "".
+func ExecCommandDigest(command string) string {
+	if command == "" {
+		return ""
+	}
+	return DeployCommandDigest([]string{command})
+}
+
+// ExecCommandDigests returns the sorted digests of commands without repeats, or nil for none.
+func ExecCommandDigests(commands []string) []string {
+	var out []string
+	for _, c := range commands {
+		if d := ExecCommandDigest(c); d != "" && !slices.Contains(out, d) {
+			out = append(out, d)
+		}
+	}
+	slices.Sort(out)
+	return out
 }
 
 // checkLifetime refuses a PERMIT with no issued_at, one issued more than MaxClockSkew after
