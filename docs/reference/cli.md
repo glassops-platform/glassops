@@ -67,13 +67,14 @@ Logs in to one target, runs the guard, and writes what the target reports about 
 
 ### `glassops plan`
 
-Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. For Salesforce, `plan` also reads the checked out source of each changed Apex class and records the classes annotated `@IsTest` in the fact `salesforce.apex_test_classes`, and the classes whose top level type is an `interface` or `enum`, which have no executable lines and no coverage, in the fact `salesforce.apex_nonexecutable_types`. The check looks at the annotations before the first `class` keyword, after it strips comments and strings. It is not an Apex parser, and a class it cannot read is treated as a normal class. With `salesforce.delta.enabled: false`, `plan` lists the whole source instead, and it reads no git history.
+Works out the change set between two git refs. It writes the provider's manifests to `.glassops/plan/` and the change set to `.glassops/plan.json`. For Salesforce, `sfdx-git-delta` works out the delta and the project's `.forceignore` applies. A shallow clone is an error, never an empty plan. For Salesforce, `plan` also reads the checked out source of each changed Apex class and records the classes annotated `@IsTest` in the fact `salesforce.apex_test_classes`, and the classes whose top level type is an `interface` or `enum`, which have no executable lines and no coverage, in the fact `salesforce.apex_nonexecutable_types`. The check looks at the annotations before the first `class` keyword, after it strips comments and strings. It is not an Apex parser, and a class it cannot read is treated as a normal class. With a full scope, `plan` lists the whole source instead, and it reads no git history. See the plan scope below.
 
 | Flag | Default | Meaning |
 |---|---|---|
 | `--from` | `auto` | Base git ref, or `auto` |
 | `--to` | `auto` | Head git ref, or `auto` (`HEAD`) |
-| `--target` | | Target the plan is for, used by `--from auto` |
+| `--target` | | Target the plan is for, used by `--from auto` and the plan scope. A name under `targets` or `environments` |
+| `--scope` | | `full` or `delta`. Overrides the config for this run |
 
 With `--from auto`, a pull request uses the merge base with its base branch. With `--target`, `auto` uses the git tag `glassops/deployed/<target>`, then the merge base with the target's branch. Without either, pass `--from`.
 
@@ -84,6 +85,8 @@ glassops plan --from HEAD~1
 ```
 
 First deploy rule: with `--target` and `--from auto`, a target that has no `glassops/deployed/<target>` tag has never received a deploy from glassops. `plan` then plans the whole source instead of a delta, prints a notice, and records the facts `plan.first_deploy` and `plan.from_source: first-deploy`. A shallow clone is still an error.
+
+Plan scope: `full` plans the whole source and `delta` plans what changed. `plan` takes the first of these that is set: `--scope`, then [`targets.<target>.plan.scope`](config.md#targets) for the `--target` given, then `salesforce.delta.enabled`, then `delta`. A full scope never looks up a tag or a merge base, so a shallow clone does not matter. A delta scope still follows the first deploy rule. Use `scope: full` on a scratch org target, where a delta would fail on components the empty org does not have, and keep production on `delta`. `plan` records the facts `plan.scope` and `plan.scope_source`, and `doctor` prints the scope every target gets.
 
 ### `glassops validate`
 
@@ -149,7 +152,7 @@ Result facts: `permit.key_id`, `permit.id` and `permit.expires_at`.
 
 ### `glassops deploy`
 
-Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A checkout with no remote called `origin` gets that warning too, never a failure.
+Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and deploys the change set in `.glassops/plan.json`. When the PERMIT holds a validated deploy Id, it quick deploys that validation. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy). Success is read from the target's result body. After a successful deploy it moves the git tag `glassops/deployed/<target>` to the deployed commit and pushes it. The tag is lightweight. A failed move or push is a warning, because the deploy has already happened: the `tag` check is `skipped`, `deploy.tag_pushed` is `false`, and the CI gets a warning annotation. A checkout with no remote called `origin` gets that warning too, never a failure. A target of tier `ephemeral` keeps no tag, because its org does not outlive the run. `deploy` then moves and pushes nothing, the `tag` check is `skipped` with no warning, and `deploy.tag_pushed` is `false`.
 
 **The local tag stays.** The tag is moved in your checkout before the push, so it stays there when the push fails. A rerun of `plan --target <target>` then starts from the deployed commit and finds nothing to deploy. If the push did not happen and you want the plan to start from the old base again, delete the local tag:
 

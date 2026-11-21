@@ -1124,3 +1124,50 @@ func TestExecDeployRefusesAModifiedTree(t *testing.T) {
 		t.Fatalf("deploy of the clean tree exit %d: %s", code, p.out.String())
 	}
 }
+
+const deployEphemeralConfig = `version: 1
+targets:
+  qa:
+    id: 00D000000000002AAA
+    tier: ephemeral
+    auth: { method: sfdx-url, url: $SF_QA_AUTH_URL }
+`
+
+// An ephemeral target keeps no deployed tag: deploy neither moves nor pushes one, and says so.
+// A target of any other tier still moves it (TestDeployPass).
+func TestDeployEphemeralSkipsTag(t *testing.T) {
+	h := newDeployHarness(t, deployEphemeralConfig, func(p *permit.Permit) {
+		p.Target.Tier, p.Target.Kind = "ephemeral", "scratch"
+		p.Validation = nil
+	})
+	h.fp.describe = reportsAs(providers.KindScratch)
+	var gitCalls []string
+	run0 := h.app.Run
+	h.app.Run = func(dir, name string, args ...string) ([]byte, error) {
+		if name == "git" {
+			gitCalls = append(gitCalls, strings.Join(args, " "))
+		}
+		return run0(dir, name, args...)
+	}
+	if code := h.run(); code != exitcode.OK {
+		t.Fatalf("exit %d, output:\n%s", code, h.out)
+	}
+	for _, c := range gitCalls {
+		if strings.HasPrefix(c, "tag") || strings.HasPrefix(c, "push") {
+			t.Fatalf("an ephemeral deploy ran git %q", c)
+		}
+	}
+	r := h.result(t, "deploy")
+	if r.Status != run.StatusPass || r.Facts["deploy.tag_pushed"] != false || checkStatus(r, "tag") != run.StatusSkipped {
+		t.Fatalf("result = %+v", r)
+	}
+	if _, ok := r.Facts["deploy.tag"]; ok {
+		t.Fatalf("deploy.tag set for an ephemeral target: %+v", r.Facts)
+	}
+	if !strings.Contains(checkDetail(r, "tag"), "tier ephemeral") {
+		t.Fatalf("tag check = %q", checkDetail(r, "tag"))
+	}
+	if strings.Contains(h.out.String(), "::warning") {
+		t.Fatalf("a skipped ephemeral tag is not a warning:\n%s", h.out)
+	}
+}

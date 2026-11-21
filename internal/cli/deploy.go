@@ -14,6 +14,7 @@ import (
 	"github.com/glassops-platform/glassops/internal/core/config"
 	"github.com/glassops-platform/glassops/internal/core/exitcode"
 	"github.com/glassops-platform/glassops/internal/core/gitref"
+	"github.com/glassops-platform/glassops/internal/core/guard"
 	"github.com/glassops-platform/glassops/internal/core/permit"
 	"github.com/glassops-platform/glassops/internal/core/run"
 	"github.com/glassops-platform/glassops/internal/providers"
@@ -243,6 +244,13 @@ func (app *App) deploy(ctx context.Context, g *globals, o *deployOptions) error 
 	}
 	res.AddCheck("deploy", run.StatusPass, fmt.Sprintf("deploy %s succeeded, %d components (%s)", out.ID, out.ComponentsDeployed, how))
 
+	if t.Tier == guard.TierEphemeral {
+		// An ephemeral org is gone after the run, so a tag for it would only make the next
+		// plan for that name a delta from a deploy no org holds any more.
+		res.Facts["deploy.tag_pushed"] = false
+		res.AddCheck("tag", run.StatusSkipped, fmt.Sprintf("target %s is tier %s, which keeps no deployed tag", t.Name, guard.TierEphemeral))
+		return app.finish(res, c, g)
+	}
 	app.moveDeployedTag(res, c, g, t.Name, commit)
 	return app.finish(res, c, g)
 }

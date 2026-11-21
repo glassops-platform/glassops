@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -142,6 +143,8 @@ func TestParseRejects(t *testing.T) {
 		{"ttl days zero", "version: 1\ntargets:\n  devhub: {}\nenvironments:\n  ephemeral: { devhub: devhub, ttl_days: 0 }\n", "/environments/ephemeral/ttl_days"},
 		{"bad shape", "version: 1\ntargets:\n  devhub: {}\nenvironments:\n  ephemeral: { devhub: devhub, shape: org }\n", "/environments/ephemeral/shape"},
 		{"bad seed", "version: 1\nsalesforce:\n  ephemeral: { seed: some }\n", "/salesforce/ephemeral/seed"},
+		{"bad plan scope", "version: 1\ntargets:\n  qa: { plan: { scope: since } }\n", "/targets/qa/plan/scope"},
+		{"unknown plan key", "version: 1\ntargets:\n  qa: { plan: { from: main } }\n", "/targets/qa/plan"},
 		{"coverage over 100", "version: 1\ntest:\n  coverage: { org_min: 101 }\n", "/test/coverage/org_min"},
 		{"coverage below 0", "version: 1\ntest:\n  coverage: { class_min: -1 }\n", "/test/coverage/class_min"},
 		{"class scope unknown", "version: 1\ntest:\n  coverage: { class_min: 70, class_scope: some }\n", "/test/coverage/class_scope"},
@@ -417,5 +420,48 @@ func TestPermitRepositoryParses(t *testing.T) {
 	cfg, err = Parse([]byte("version: 1\npolicy:\n  permit: { signing: sigstore, identity: me, issuer: you }\n"))
 	if err != nil || cfg.Policy.Permit.Repository != "" {
 		t.Fatalf("without repository: %+v, %v", cfg.Policy.Permit, err)
+	}
+}
+
+func TestPlanScopeResolutionOrder(t *testing.T) {
+	cases := []struct {
+		name, yaml, target, scope, source string
+	}{
+		{"default", "version: 1\n", "", ScopeDelta, "default"},
+		{"unknown target gets the default", "version: 1\n", "nope", ScopeDelta, "default"},
+		{"project full", "version: 1\nsalesforce:\n  delta: { enabled: false }\n", "qa", ScopeFull, "salesforce.delta.enabled"},
+		{"project delta", "version: 1\nsalesforce:\n  delta: { enabled: true }\n", "", ScopeDelta, "salesforce.delta.enabled"},
+		{"target full over project delta", "version: 1\ntargets:\n  qa: { plan: { scope: full } }\nsalesforce:\n  delta: { enabled: true }\n", "qa", ScopeFull, "targets.qa.plan.scope"},
+		{"target delta over project full", "version: 1\ntargets:\n  prod: { plan: { scope: delta } }\nsalesforce:\n  delta: { enabled: false }\n", "prod", ScopeDelta, "targets.prod.plan.scope"},
+		{"target without scope gets the project", "version: 1\ntargets:\n  qa: { tier: qa }\nsalesforce:\n  delta: { enabled: false }\n", "qa", ScopeFull, "salesforce.delta.enabled"},
+		{"no target ignores target scopes", "version: 1\ntargets:\n  qa: { plan: { scope: full } }\n", "", ScopeDelta, "default"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, err := Parse([]byte(tc.yaml))
+			if err != nil {
+				t.Fatal(err)
+			}
+			scope, source := cfg.PlanScope(tc.target)
+			if scope != tc.scope || source != tc.source {
+				t.Fatalf("PlanScope(%q) = %s, %s, want %s, %s", tc.target, scope, source, tc.scope, tc.source)
+			}
+		})
+	}
+}
+
+// A target that sets no plan scope encodes as before the field existed, so SHA256 of a config
+// read from no file (it hashes the JSON) is unchanged.
+func TestPlanScopeLeavesConfigHashAlone(t *testing.T) {
+	a, err := Parse([]byte("version: 1\ntargets:\n  qa: { tier: qa }\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(a.Targets["qa"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "plan") {
+		t.Fatalf("target JSON = %s, want no plan key", data)
 	}
 }
