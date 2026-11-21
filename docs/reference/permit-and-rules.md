@@ -148,6 +148,8 @@ At `RunRelevantTests`, Salesforce picks the tests from the Apex in the change se
 | `separation_of_duties` | See below |
 | `analyzer_max_severity` | See below |
 
+`gate` then checks [`validate_passed`](#validate_passed) on its own.
+
 ### `window.<tier>`
 
 Named after the target's tier, such as `window.prod`. Configured as `policy.windows.<tier>`, a list of weekly windows with `days`, `from`, `to` and `tz`.
@@ -176,7 +178,18 @@ Configured as `policy.rules.coverage_min`, a whole number from 0 to 100.
 - `skipped` when it is not set.
 - `fail` when the plan facts do not list the changed Apex classes.
 - Otherwise it checks each changed Apex class against the per class coverage facts from the validate result. A class below the minimum fails. A class with no coverage fact fails too, unless it is a test class. Salesforce reports no coverage for test classes. `plan` reads each changed class file and records the ones annotated `@IsTest` (any case, with or without arguments) in the fact `salesforce.apex_test_classes`. Those are treated as test classes whatever their names, and the detail says how many and why. A `@IsTest` method inside a normal class does not make the class a test class. An Apex `interface` or `enum` has no executable lines, so Salesforce lists no coverage for it. `plan` also records the changed classes whose top level type is an `interface` or `enum` in the fact `salesforce.apex_nonexecutable_types`. Those are not measured, and the detail gives their count. An abstract class is a class and is still measured, and so is a class that implements an interface or holds an inner interface. A type in that fact that does have a coverage entry is still held to the minimum. A plan file written before these facts existed has neither, and then a name ending in `Test` or `_Test` marks a test class and an interface with no coverage fails as before.
-- `pass` when every class is at or above the minimum.
+- `skipped` when the change set has no Apex class with coverage to measure, such as a change with no Apex or only test classes. A rule that measured nothing never reads as a pass.
+- `pass` when every measured class is at or above the minimum.
+
+### `validate_passed`
+
+Configured as `policy.rules.validate_passed` with `tiers`. It covers `[prod]` when it is not set, and an empty `tiers` list switches it off. It is checked by `gate` itself, after the rules above, and does not run for an ephemeral target.
+
+- `skipped` when the target's tier is not covered, when this run has no validate result, or when the validate result is for another target or another plan.
+- `fail` when the validate of this plan for this target did not pass. A failed validate then denies the PERMIT, so no deploy starts after a red validate.
+- `pass` when it passed.
+
+The rule reads the validate result file, which is not signed, only to deny. It can never allow a deploy that another rule denies.
 
 ### `destructive_needs_label`
 

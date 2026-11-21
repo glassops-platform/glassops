@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -91,6 +92,8 @@ type gateRun struct {
 	// of a tool or infrastructure error. Any one of them denies the PERMIT and makes the step
 	// exit 2.
 	evidence []policy.Result
+	// validate is the validate result resultFacts read, or nil when there is none.
+	validate *run.Result
 }
 
 func (r *gateRun) evidenceFail(name, detail string) {
@@ -224,6 +227,11 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		allow = allow && ok
 		checks = append(checks, results...)
 		policyErr = err
+		vp := gr.validatePassed(t, cs)
+		checks = append(checks, vp)
+		if vp.Outcome.Denies() {
+			allow = false
+		}
 	}
 	if len(gr.evidence) > 0 {
 		allow = false
@@ -387,10 +395,38 @@ func (r *gateRun) resultFacts(g *globals, t providers.Target, cs providers.Chang
 		// signed, so a ci., target. or change. fact in one would speak for gate.
 		r.doc.MergeOnly(facts.ResultPrefixes(r.proj.provider.Name()), rr.Facts)
 		if step == "validate" {
+			r.validate = &rr
 			validated, bound = r.validation(rr, t, cs)
 		}
 	}
 	return validated, bound
+}
+
+// validatePassed is the validate_passed rule: on a tier it covers, a validate of this plan for
+// this target that did not pass denies. A missing validate result, or one for another target or
+// plan, says nothing about this deploy, so the rule is skipped. It reads the unsigned result
+// file only to deny, never to allow.
+func (r *gateRun) validatePassed(t providers.Target, cs providers.ChangeSet) policy.Result {
+	const rule = "validate_passed"
+	skip := func(why string) policy.Result { return policy.Result{Rule: rule, Outcome: policy.Skipped, Detail: why} }
+	if !slices.Contains(r.cfg.Policy.Rules.ValidatePassedTiers(), t.Tier) {
+		return skip(fmt.Sprintf("policy.rules.validate_passed does not cover tier %s", t.Tier))
+	}
+	rr := r.validate
+	switch {
+	case rr == nil:
+		return skip("no validate result for this run")
+	case rr.Target != t.Name:
+		return skip(fmt.Sprintf("the validate result is for target %q, not %q", rr.Target, t.Name))
+	}
+	planHash, _ := rr.Facts["validate.plan_sha256"].(string)
+	if planHash != "" && planHash != cs.SHA256 {
+		return skip("the validate result is for a different plan")
+	}
+	if rr.Status == run.StatusPass {
+		return policy.Result{Rule: rule, Outcome: policy.Pass, Detail: fmt.Sprintf("the validate of this plan for %s passed", t.Name)}
+	}
+	return policy.Result{Rule: rule, Outcome: policy.Fail, Detail: fmt.Sprintf("the validate of this plan for %s is %s, not pass. Fix it and validate again before a deploy", t.Name, rr.Status)}
 }
 
 // validation returns the validation a validate result proves for target t and plan cs, or nil
