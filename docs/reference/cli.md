@@ -112,6 +112,7 @@ Reads the change set, the earlier results in the results directory and the CI co
 | `--permit` | `<dir>/.glassops/permit.json` | Where the PERMIT is written |
 | `--no-connect` | `false` | Do not log in. The PERMIT records the configured Id and the kind the guard requires for the tier, and the `guard` check is `skipped` |
 | `--deploy-command` | | Provider `exec` only. The command `deploy --` will run, as a JSON array of strings, such as `'["./deploy.sh","--prod"]'`. The PERMIT binds its SHA-256, never the text. With any other provider it is an error |
+| `--exec-command` | | The `run` text of a pipeline exec step that may run logged in to this target, exactly as written. Repeat it for each step. The PERMIT binds the SHA-256 of each, never the text. See [exec steps with a target](#glassops-run) |
 
 When the target's tier has deploy windows and the gate's clock is inside one, the PERMIT expires when that window closes, if that is before `policy.permit_ttl`. Windows that overlap or touch extend it. With no window for the tier, or a clock outside them, the PERMIT keeps the full TTL, and the window rule decides.
 
@@ -125,7 +126,7 @@ Needs `GLASSOPS_PERMIT_KEY`, unless `policy.permit.signing` is `sigstore`. Then 
 | `1` | Policy denies the deploy. The signed PERMIT is still written |
 | `2` | `GLASSOPS_PERMIT_KEY` is missing or unusable, the plan file is missing or unreadable, the target is not in the config, or evidence could not be gathered. A missing key, plan or target writes no PERMIT. Evidence that could not be gathered writes a signed PERMIT that denies |
 
-Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), `gate.expires_at_blackout_start` (true when a blackout start set the expiry), and `gate.deploy_command_sha256` when `--deploy-command` was given.
+Result facts: `gate.allow`, `gate.ephemeral`, `gate.permit_id`, `gate.expires_at`, `gate.expires_at_window_end` (true when the window end set the expiry), `gate.expires_at_blackout_start` (true when a blackout start set the expiry), `gate.deploy_command_sha256` when `--deploy-command` was given, and `gate.exec_commands_sha256` when `--exec-command` was given.
 
 ### `glassops permit verify`
 
@@ -334,6 +335,15 @@ A step is a glassops command line such as `validate --target prod`, or a map wit
 A step has failed when its exit code is not 0. After a `plan` step that exits 0, `run` reads `.glassops/plan.json`. An empty plan skips every later step that is not `when: always`, with the reason "the plan is empty". A plan that cannot be read is an error (exit 2), and later `success` steps are skipped, so it is never read as an empty plan. A cancel (Ctrl+C or SIGTERM) stops the current step and skips the rest except `when: always` steps, which still run with up to 2 minutes each. A cancelled run exits at least 2.
 
 **Exec steps.** A step named `exec` runs its `run` command with `sh -c` in the project directory. The command inherits the environment and gets `GLASSOPS_RESULTS_DIR`, the absolute path of the results directory. Its output goes straight to the run's output. A zero exit passes and any other exit is a fail (exit 1). A command that cannot start, is stopped by a signal or is cancelled is an error (exit 2). Each exec step writes `exec.<n>.json`, where `n` counts exec steps from 1, with one `command` check and the facts `exec.run`, `exec.index` and `exec.exit_code`.
+
+**Exec steps with a target.** An exec step with `target` runs its command logged in to that target, so a project script can use the Salesforce CLI against the org without its own login. In order, the step:
+
+1. On any tier but `ephemeral`, checks before any login that `.glassops/permit.json` allows this target, commit, plan and config, and binds the step's command. `gate` binds it with `--exec-command` followed by the step's `run` text exactly as written. It also checks that the working tree is the PERMIT's commit with no tracked file modified, so a script the command runs is the one the PERMIT was issued for. A pull request run has no PERMIT key, so it cannot run such a step against production. A tier `ephemeral` target needs only the guard.
+2. Logs in, runs the [guard](#the-guard), and runs the command with the session's environment. For Salesforce that is `HOME` and `USERPROFILE` set to the session's private directory and `SF_TARGET_ORG` set to its login, so `sf data query --query ...` runs against the target. The token itself is never put in the environment, and `GLASSOPS_PERMIT_KEY` is removed from it.
+3. Masks login material in the command's output, such as a session Id or an auth URL, one line at a time.
+4. On Linux and macOS, runs the command in its own process group and kills the group when the command ends, so nothing it started keeps the login. Then it removes the session's directory.
+
+The result `exec.<n>.json` also has the checks `permit`, `tree` and `guard`, and the facts `exec.target`, `exec.tier`, `exec.session` and `exec.permit_id`. A refusal is an error (exit 2) and runs nothing. A provider that cannot hand out a session, such as `exec`, refuses a step with a target.
 
 **Global flags.** Every glassops step receives this run's `--dir`, `--config`, `--results-dir` and `--ci`, so all steps read one project and write to one results directory.
 

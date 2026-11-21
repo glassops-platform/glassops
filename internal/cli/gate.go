@@ -50,6 +50,9 @@ type gateOptions struct {
 	// deployCommand is the JSON array of strings given to --deploy-command, the exact argv
 	// deploy -- will run for provider exec.
 	deployCommand string
+	// execCommands are the run texts of pipeline exec steps that may run with a session on the
+	// target. The PERMIT binds their sha256, never the text.
+	execCommands []string
 }
 
 func newGateCommand(app *App, g *globals) *cobra.Command {
@@ -65,7 +68,9 @@ func newGateCommand(app *App, g *globals) *cobra.Command {
 			"set. When the target's tier has deploy windows, the PERMIT expires when the window\n" +
 			"that holds the gate's clock closes. It also expires when the next blackout that\n" +
 			"covers the tier begins. Either applies only when it is before the configured TTL.\n" +
-			"With provider exec, --deploy-command binds the command deploy -- will run.",
+			"With provider exec, --deploy-command binds the command deploy -- will run.\n" +
+			"--exec-command binds the run text of a pipeline exec step that runs with a\n" +
+			"session on the target. Repeat it for each such step.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.gate(cmd.Context(), g, o)
@@ -77,6 +82,7 @@ func newGateCommand(app *App, g *globals) *cobra.Command {
 	f.StringVar(&o.permitPath, "permit", "", "where the PERMIT is written (default <dir>/.glassops/permit.json)")
 	f.BoolVar(&o.noConnect, "no-connect", false, "do not log in to the target, and use its configured Id")
 	f.StringVar(&o.deployCommand, "deploy-command", "", `provider exec only: the command deploy -- will run, as a JSON array of strings such as '["./deploy.sh","--prod"]'. The PERMIT binds its sha256, never the text`)
+	f.StringArrayVar(&o.execCommands, "exec-command", nil, "the run text of a pipeline exec step that may run with a session on the target, exactly as written. Repeat for each step. The PERMIT binds its sha256, never the text")
 	_ = cmd.MarkFlagRequired("target")
 	return cmd
 }
@@ -141,6 +147,13 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		res.AddCheck("deploy_command", run.StatusError, err.Error())
 		return app.finish(res, c, g)
 	}
+	for _, ec := range o.execCommands {
+		if strings.TrimSpace(ec) == "" {
+			res.AddCheck("exec_command", run.StatusError, "--exec-command names no command")
+			return app.finish(res, c, g)
+		}
+	}
+	execSHAs := permit.ExecCommandDigests(o.execCommands)
 
 	signer, err := permit.SignerFor(cfg, permit.Keys{
 		HMACKey: func() ([]byte, error) { return gateHMACKey(app.Getenv(permit.KeyEnv)) },
@@ -243,6 +256,7 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 		// The PERMIT binds how the plan files are used too, such as which are destructive.
 		ChangeSetSHA256:     permit.ChangeSetDigest(cs),
 		DeployCommandSHA256: commandSHA,
+		ExecCommandsSHA256:  execSHAs,
 		Validation:          validated,
 		Checks:              checks,
 	}
@@ -276,6 +290,9 @@ func (app *App) gate(ctx context.Context, g *globals, o *gateOptions) error {
 	res.Facts["gate.expires_at_blackout_start"] = blackoutCapped
 	if commandSHA != "" {
 		res.Facts["gate.deploy_command_sha256"] = commandSHA
+	}
+	if len(execSHAs) > 0 {
+		res.Facts["gate.exec_commands_sha256"] = execSHAs
 	}
 	verdict := "deny"
 	if allow {

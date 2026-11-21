@@ -484,6 +484,9 @@ type Step struct {
 	// Exec is the shell command an exec step runs, with sh -c on Linux and macOS. It is set
 	// only when Run is ExecStep.
 	Exec string `yaml:"run,omitempty" json:"run,omitempty"`
+	// Target, for an exec step only, names the target the command runs logged in to. On any
+	// tier but ephemeral the command also needs a PERMIT that binds it (gate --exec-command).
+	Target string `yaml:"target,omitempty" json:"target,omitempty"`
 }
 
 // UnmarshalYAML accepts both "plan" and {step: plan, when: always}.

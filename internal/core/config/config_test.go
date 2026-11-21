@@ -465,3 +465,26 @@ func TestPlanScopeLeavesConfigHashAlone(t *testing.T) {
 		t.Fatalf("target JSON = %s, want no plan key", data)
 	}
 }
+
+func TestExecStepTarget(t *testing.T) {
+	ok := "version: 1\ntargets:\n  prod: { tier: prod }\nenvironments:\n  scratch: { devhub: prod }\npipelines:\n  p:\n    - { step: exec, run: ./a.sh, target: prod }\n    - { step: exec, run: ./b.sh, target: scratch }\n"
+	cfg, err := Parse([]byte(ok))
+	if err != nil {
+		t.Fatalf("a target that is a target or an environment: %v", err)
+	}
+	if cfg.Pipelines["p"][0].Target != "prod" || cfg.Pipelines["p"][1].Target != "scratch" {
+		t.Fatalf("targets = %+v", cfg.Pipelines["p"])
+	}
+	for name, tc := range map[string]struct{ yaml, want string }{
+		"unknown target":       {"version: 1\npipelines:\n  p:\n    - { step: exec, run: ./a.sh, target: nope }\n", `"nope" is not a configured target or environment`},
+		"target on a glassops": {"version: 1\ntargets:\n  prod: {}\npipelines:\n  p:\n    - { step: plan, target: prod }\n", "/pipelines/p/0"},
+		"bad target name":      {"version: 1\npipelines:\n  p:\n    - { step: exec, run: ./a.sh, target: Prod }\n", "/pipelines/p/0"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := Parse([]byte(tc.yaml))
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error %v, want it to mention %q", err, tc.want)
+			}
+		})
+	}
+}
