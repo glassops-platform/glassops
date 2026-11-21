@@ -155,7 +155,9 @@ Verifies the PERMIT before it logs in. Then it runs the [guard](#the-guard) and 
 
 ```bash
 git tag -d glassops/deployed/prod
-``` A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
+```
+
+A deploy the target reports as failed lists one problem line per component failure, per test failure and, when the status is not Succeeded, per coverage warning.
 
 | Flag | Default | Meaning |
 |---|---|---|
