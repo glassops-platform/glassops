@@ -57,6 +57,29 @@ type sessionStep struct {
 	// env is added to the command's environment. It points the provider's tools at the
 	// session and holds no secret.
 	env []string
+	// revoker ends the session's token at the target after the command, or is nil when the
+	// provider cannot.
+	revoker providers.SessionRevoker
+}
+
+// revoke ends the session's token so a copy the command made stops working. A failure is a
+// warning: the command has run, and the token still expires on its own.
+func (ss *sessionStep) revoke(ctx context.Context, c ci.CI, res *run.Result) {
+	if ss.revoker == nil {
+		return
+	}
+	// A cancelled run still revokes, with a short budget of its own.
+	rctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
+	if err := ss.revoker.RevokeSession(rctx, ss.sess); err != nil {
+		res.Facts["exec.token_revoked"] = false
+		msg := fmt.Sprintf("the session's token was not revoked: %v. It still expires on its own", err)
+		res.AddCheck("revoke", run.StatusSkipped, msg)
+		c.Annotate(ci.Warning, "exec: "+msg)
+		return
+	}
+	res.Facts["exec.token_revoked"] = true
+	res.AddCheck("revoke", run.StatusPass, "the session's token was revoked at the target")
 }
 
 // execSession prepares an exec step that names a target. On any tier but ephemeral it first
@@ -142,7 +165,8 @@ func (app *App) execSession(ctx context.Context, g *globals, c ci.CI, s pipeline
 		return fail("session", err)
 	}
 	res.Facts["exec.session"] = true
-	return &sessionStep{sess: sess, env: env}, nil
+	revoker, _ := proj.provider.(providers.SessionRevoker)
+	return &sessionStep{sess: sess, env: env, revoker: revoker}, nil
 }
 
 // withoutPermitKey drops GLASSOPS_PERMIT_KEY from env, so a command that holds a session can

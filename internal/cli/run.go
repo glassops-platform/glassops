@@ -257,7 +257,7 @@ func (app *App) execStep(ctx context.Context, g *globals, c ci.CI, s pipeline.St
 	env := append(os.Environ(), ResultsDirEnv+"="+results)
 	runner := shellRunner
 	var stdout, stderr io.Writer = app.Stdout, app.Stderr
-	var closeOut func()
+	var afterCommand func()
 	if s.Target != "" {
 		ss, err := app.execSession(ctx, g, c, s, res)
 		if err != nil {
@@ -268,12 +268,18 @@ func (app *App) execStep(ctx context.Context, g *globals, c ci.CI, s pipeline.St
 		env = append(withoutPermitKey(env), ss.env...)
 		ow, ew := redact.NewLineWriter(app.Stdout), redact.NewLineWriter(app.Stderr)
 		stdout, stderr = ow, ew
-		closeOut = func() { _ = ow.Close(); _ = ew.Close() }
+		// After the command, whatever its exit: flush the masked output, then end the token
+		// so nothing the command copied outlives the step.
+		afterCommand = func() {
+			_ = ow.Close()
+			_ = ew.Close()
+			ss.revoke(ctx, c, res)
+		}
 		runner = sessionShellRunner
 	}
 	code, err := runner(ctx, g.dir, env, s.Exec, stdout, stderr)
-	if closeOut != nil {
-		closeOut()
+	if afterCommand != nil {
+		afterCommand()
 	}
 	if err != nil {
 		res.AddCheck("command", run.StatusError, fmt.Sprintf("%s: %v", s.Exec, err))

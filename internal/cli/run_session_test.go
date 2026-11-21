@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -267,5 +268,63 @@ func TestGateRefusesAnEmptyExecCommand(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(h.dir, ".glassops", "permit.json")); err == nil {
 		t.Fatal("a PERMIT was written for an empty --exec-command")
+	}
+}
+
+// revokingProvider is sessionProvider that also revokes, recording each call.
+type revokingProvider struct {
+	sessionProvider
+	revokes *int
+	err     error
+}
+
+func (r revokingProvider) RevokeSession(context.Context, providers.Session) error {
+	*r.revokes++
+	return r.err
+}
+
+func TestExecSessionRevokesTheTokenAfterTheCommand(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		err     error
+		check   run.Status
+		revoked bool
+	}{
+		{"revoked", nil, run.StatusPass, true},
+		{"revoke fails, a warning only", errors.New("revoke: example.invalid answered HTTP 400"), run.StatusSkipped, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newSessionHarness(t, sessionConfig, bindSessionCommand)
+			revokes := 0
+			h.app.Providers = providers.Registry{revokingProvider{sessionProvider{h.fp}, &revokes, tc.err}}
+			sr := fakeSessionShell(t, 0)
+			if code := h.runScripts(); code != exitcode.OK {
+				t.Fatalf("exit %d, output:\n%s", code, h.out)
+			}
+			if sr.calls != 1 || revokes != 1 || !h.fp.allClosed() {
+				t.Fatalf("runs %d, revokes %d, closed %v", sr.calls, revokes, h.fp.allClosed())
+			}
+			r := h.result(t, "exec.1")
+			if r.Status != run.StatusPass || checkStatus(r, "revoke") != tc.check || r.Facts["exec.token_revoked"] != tc.revoked {
+				t.Fatalf("result = %+v", r)
+			}
+			if warned := strings.Contains(h.out.String(), "::warning") && strings.Contains(h.out.String(), "not revoked"); warned == tc.revoked {
+				t.Fatalf("warning shown = %v, revoked = %v:\n%s", warned, tc.revoked, h.out)
+			}
+		})
+	}
+}
+
+// A refused step logs in to nothing, so there is no token to revoke.
+func TestExecSessionRefusalRevokesNothing(t *testing.T) {
+	h := newSessionHarness(t, sessionConfig, nil)
+	revokes := 0
+	h.app.Providers = providers.Registry{revokingProvider{sessionProvider{h.fp}, &revokes, nil}}
+	fakeSessionShell(t, 0)
+	if code := h.runScripts(); code != exitcode.Error {
+		t.Fatalf("exit %d, want 2", code)
+	}
+	if revokes != 0 {
+		t.Fatalf("revokes = %d after a refusal", revokes)
 	}
 }
