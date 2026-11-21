@@ -58,9 +58,14 @@ One entry per org. The key is the target name that `--target` takes.
 | `tier` | A name that policy windows, rules and test levels key on. `prod`, `devhub` and `ephemeral` have fixed meaning in the guard |
 | `branch` | The git branch that deploys to this target. `plan --from auto` uses its merge base when the target has no deployed tag |
 | `auth` | The login. See [Authentication](cli.md#authentication) |
+| `plan.scope` | `full` or `delta`, for `plan --target` with this target. It wins over `salesforce.delta.enabled`. See [plan scope](cli.md#glassops-plan) |
+
+A name under `environments` can also have an entry here, to set its `tier` or `plan.scope`. Its org Id and login still come from `env create`.
 
 ```yaml
 targets:
+  ephemeral:
+    plan: { scope: full }
   devhub:
     id: $SF_DEVHUB_ORG_ID
     tier: devhub
@@ -107,7 +112,7 @@ policy:
 | Field | Meaning |
 |---|---|
 | `test_level` | Map of tier to the test level `validate` and `deploy` use: `NoTestRun`, `RunSpecifiedTests`, `RunLocalTests`, `RunRelevantTests` or `RunAllTestsInOrg`. `RunRelevantTests` is a beta Salesforce test level that runs the tests Salesforce picks from the Apex in the change set, so a change set with no Apex runs none (see [PERMIT and rules](permit-and-rules.md)). The `default` key applies to any tier not listed |
-| `delta.enabled` | `false` makes `plan` list the whole source instead of a delta |
+| `delta.enabled` | `false` makes `plan` list the whole source instead of a delta. It is the project default, and a target's `plan.scope` wins over it |
 | `deploy.quick` | `prefer` (the default), `require` or `off`. See [validation binding](permit-and-rules.md#validation-binding-and-quick-deploy) |
 | `ephemeral.seed` | `minimal` (the default), `full` or `off`. See [the smart seed](cli.md#the-smart-seed) |
 | `engine` | `native`, the default and the only engine |

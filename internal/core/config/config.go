@@ -230,6 +230,40 @@ type Target struct {
 	Tier   string `yaml:"tier,omitempty" json:"tier,omitempty"`
 	Branch string `yaml:"branch,omitempty" json:"branch,omitempty"`
 	Auth   Auth   `yaml:"auth,omitempty" json:"auth,omitempty"`
+	// Plan holds what plan does for this target. Use Config.PlanScope to read the scope with
+	// the project default applied.
+	// It is a pointer so a target without it encodes as it did before the field existed.
+	Plan *TargetPlan `yaml:"plan,omitempty" json:"plan,omitempty"`
+}
+
+// Plan scopes for targets.<name>.plan.scope and plan --scope.
+const (
+	// ScopeDelta plans what changed between two refs. It is the default.
+	ScopeDelta = "delta"
+	// ScopeFull plans the whole source and reads no git history.
+	ScopeFull = "full"
+)
+
+// TargetPlan is the plan settings of one target.
+type TargetPlan struct {
+	// Scope is full or delta. Empty means the project default.
+	Scope string `yaml:"scope,omitempty" json:"scope,omitempty"`
+}
+
+// PlanScope returns the plan scope for target and where it came from: the target's own
+// plan.scope, then salesforce.delta.enabled, then delta. target may be empty, or a name that
+// is only under environments, and then the project default applies.
+func (c *Config) PlanScope(target string) (scope, source string) {
+	if t, ok := c.Targets[target]; ok && t.Plan != nil && t.Plan.Scope != "" {
+		return t.Plan.Scope, "targets." + target + ".plan.scope"
+	}
+	if c.Salesforce.Delta.Enabled != nil {
+		if *c.Salesforce.Delta.Enabled {
+			return ScopeDelta, "salesforce.delta.enabled"
+		}
+		return ScopeFull, "salesforce.delta.enabled"
+	}
+	return ScopeDelta, "default"
 }
 
 // Auth names how to log in to a target. Secret values are $VAR references, never literals.

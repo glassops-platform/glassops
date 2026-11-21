@@ -21,6 +21,7 @@ type planOptions struct {
 	from   string
 	to     string
 	target string
+	scope  string
 }
 
 func newPlanCommand(app *App, g *globals) *cobra.Command {
@@ -33,6 +34,8 @@ func newPlanCommand(app *App, g *globals) *cobra.Command {
 			"With --from auto, a pull request uses the merge base with its base branch. With\n" +
 			"--target, auto uses the git tag glassops/deployed/<target>. A target with no tag has\n" +
 			"never been deployed to, so the whole source is planned and a notice says so.\n" +
+			"The scope is --scope, else targets.<target>.plan.scope, else\n" +
+			"salesforce.delta.enabled, else delta. A full plan reads no git history.\n" +
 			"A shallow clone is an error, never an empty plan.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -43,6 +46,7 @@ func newPlanCommand(app *App, g *globals) *cobra.Command {
 	f.StringVar(&o.from, "from", "auto", "base git ref, or auto")
 	f.StringVar(&o.to, "to", "auto", "head git ref, or auto (HEAD)")
 	f.StringVar(&o.target, "target", "", "target the plan is for, used by --from auto")
+	f.StringVar(&o.scope, "scope", "", "full or delta, overrides the config for this run")
 	return cmd
 }
 
@@ -61,17 +65,28 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 
 	var branch string
 	if o.target != "" {
+		// A name only under environments is a target too, as for every other command.
 		t, ok := cfg.Targets[o.target]
-		if !ok {
+		if _, isEnv := cfg.Environments[o.target]; !ok && !isEnv {
 			return &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("%w: %s", ErrTargetNotConfigured, o.target)}
 		}
 		branch = t.Branch
 		res.Target = o.target
 	}
 
-	// delta.enabled false plans the whole source. Nothing then depends on history, so no ref
-	// is resolved and a shallow clone does not matter.
-	full := cfg.Salesforce.Delta.Enabled != nil && !*cfg.Salesforce.Delta.Enabled
+	// A full scope plans the whole source. Nothing then depends on history, so no ref is
+	// resolved and a shallow clone does not matter.
+	scope, scopeSource := cfg.PlanScope(o.target)
+	switch o.scope {
+	case "":
+	case config.ScopeFull, config.ScopeDelta:
+		scope, scopeSource = o.scope, "--scope"
+	default:
+		return &exitcode.ExitError{Code: exitcode.Error, Err: fmt.Errorf("--scope is %q, want full or delta", o.scope)}
+	}
+	res.Facts["plan.scope"] = scope
+	res.Facts["plan.scope_source"] = scopeSource
+	full := scope == config.ScopeFull
 	git := func(dir string, args ...string) (string, error) {
 		out, err := app.Run(dir, "git", args...)
 		return strings.TrimSpace(string(out)), err
@@ -111,7 +126,7 @@ func (app *App) plan(ctx context.Context, g *globals, o *planOptions) error {
 		if sha, err := git(g.dir, "rev-parse", "HEAD"); err == nil {
 			req.To = sha
 		}
-		res.AddCheck("refs", run.StatusSkipped, "full plan, history is not used")
+		res.AddCheck("refs", run.StatusSkipped, fmt.Sprintf("full plan (%s), history is not used", scopeSource))
 	} else {
 		refs, err := gitref.Resolve(git, gitref.Options{
 			Dir:        g.dir,

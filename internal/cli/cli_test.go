@@ -111,6 +111,15 @@ func checkStatus(r run.Result, name string) run.Status {
 	return ""
 }
 
+func checkDetail(r run.Result, name string) string {
+	for _, c := range r.Checks {
+		if c.Name == name {
+			return c.Detail
+		}
+	}
+	return ""
+}
+
 func TestDoctorPassesOnHealthySalesforceProject(t *testing.T) {
 	h := newHarness(t)
 	h.write(t, "sfdx-project.json", "{}")
