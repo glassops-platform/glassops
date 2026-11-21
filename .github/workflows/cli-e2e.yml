@@ -5,9 +5,11 @@ name: CLI End-to-End
 # the Phase 6 features on a dummy exec project, also with no Salesforce org and no secret, and
 # run on every push and pull request. "pr-comment" proves the pull request comment and runs on
 # pull requests only. "e2e" runs the CLI against a real
-# Salesforce scratch org. It is not a required check, never runs for a pull request, and only
-# one run at a time, so only one scratch org exists at a time. The same pipeline runs every
-# night in e2e-nightly.yml.
+# Salesforce scratch org. It runs on main, and on a pull request only when the PR carries the
+# label scratch-e2e, because every run spends Dev Hub scratch org creates. Only one run at a
+# time, so only one scratch org exists at a time. "scratch-label" fails a pull request that
+# changes what the scratch org run covers but does not carry the label. The same pipeline runs
+# every night in e2e-nightly.yml.
 on:
   workflow_dispatch:
     inputs:
@@ -19,6 +21,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    # labeled, so adding scratch-e2e starts the scratch org run without a new push.
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
@@ -241,9 +245,47 @@ jobs:
             -e GITHUB_API_URL -e "E2E_ACTOR=$GITHUB_ACTOR" \
             glassops:e2e /src/scripts/e2e/pr-comment-e2e.sh /usr/local/bin/glassops
 
+  # Paths whose changes the scratch org run covers: the commands that plan, deploy and create
+  # environments, git refs and tags, the Salesforce provider, the image and this run itself.
+  # Test files alone change no behaviour, so they do not count.
+  scratch-label:
+    name: Scratch e2e label check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Require scratch-e2e when covered paths change
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'scratch-e2e') }}
+        run: |
+          covered='^(internal/cli/(plan|deploy|env)[^/]*\.go|internal/core/gitref/.*|internal/providers/salesforce/.*|Dockerfile|testdata/e2e/.*|\.github/workflows/cli-e2e\.yml)$'
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -E "$covered" | grep -v '_test\.go$' || true)
+          if [ -z "$changed" ]; then
+            echo "No path the scratch org run covers changed."
+            exit 0
+          fi
+          echo "Changed paths the scratch org run covers:"
+          echo "$changed" | sed 's/^/  /'
+          if [ "$HAS_LABEL" = "true" ]; then
+            echo "The label scratch-e2e is set, so the scratch org run checks this pull request."
+            exit 0
+          fi
+          echo "::error::This pull request changes paths the scratch org run covers. Add the label scratch-e2e so the run checks it before the merge."
+          exit 1
+
   e2e:
     name: Scratch org end to end
-    if: github.event_name != 'pull_request'
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'scratch-e2e') &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     concurrency:
