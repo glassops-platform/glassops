@@ -76,7 +76,7 @@ What `gate` evaluates. The rules are described in [PERMIT and rules](permit-and-
 |---|---|
 | `windows` | Per tier, a list of allowed deploy windows: `days`, `from`, `to` (24 hour `HH:MM`) and `tz` (an IANA zone) |
 | `blackouts` | Date ranges (`from`, `to`, optional `tiers` and `reason`) when no deploy is allowed |
-| `rules` | `coverage_min`, `analyzer_max_severity`, `separation_of_duties`, `destructive_needs_label` |
+| `rules` | `coverage_min`, `analyzer_max_severity`, `separation_of_duties`, `destructive_needs_label`, `validate_passed` (default `{ tiers: [prod] }`, `{ tiers: [] }` to switch it off) |
 | `permit_ttl` | How long a PERMIT stays valid, from `5m` to `24h`. The default is `2h` |
 | `actors` | Accepted by the schema. No command reads it yet |
 

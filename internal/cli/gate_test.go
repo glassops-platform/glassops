@@ -799,9 +799,14 @@ func TestGateBindsValidationOnlyForTheSamePlan(t *testing.T) {
 				}
 				writeResult(t, h, tc.r)
 			}
-			// An unbound validation never denies.
-			if code := h.gate("--target", "prod"); code != exitcode.OK {
-				t.Fatalf("exit %d, output:\n%s", code, h.out)
+			// An unbound validation never denies through validation.bound. Only a failed
+			// validate of this plan for this prod target denies, through validate_passed.
+			wantCode := exitcode.OK
+			if tc.r != nil && tc.r.Status == run.StatusFail {
+				wantCode = exitcode.Fail
+			}
+			if code := h.gate("--target", "prod"); code != wantCode {
+				t.Fatalf("exit %d, want %d, output:\n%s", code, wantCode, h.out)
 			}
 			p := readPermit(t, h)
 			if (p.Validation == nil) != (tc.want == nil) || (tc.want != nil && *p.Validation != *tc.want) {

@@ -96,6 +96,10 @@ func classCoverage(in Input, min int) []Result {
 	if len(failed) > 0 {
 		return one("coverage_min", Fail, "below %d%% or unmeasured: %s.%s", min, strings.Join(failed, ", "), note)
 	}
+	if checked == 0 {
+		// Nothing was measured, so a pass would claim a check that did not happen.
+		return one("coverage_min", Skipped, "the change set has no Apex class with coverage to measure against %d%%.%s", min, note)
+	}
 	return one("coverage_min", Pass, "%d class(es) at or above %d%%.%s", checked, min, note)
 }
 

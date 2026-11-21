@@ -40,12 +40,14 @@ A release starts when a tag such as `v1.2.3` is pushed. The release workflow onl
 | `v1.2.3-rc1` | prerelease | `1.2.3-rc1`, `v1.2.3-rc1` | marked as a prerelease | none |
 | `v0.4.0` | prerelease, because the major version is 0 | `0.4.0`, `v0.4.0` | marked as a prerelease | none |
 | `v1.2.3` | final | `1.2.3`, `v1.2.3`, `v1`, `latest` | a draft you publish yourself | `v1` moves to the release commit |
+| `v1.0.2` after `v1.1.0` | final, on an older line | `1.0.2`, `v1.0.2` | a draft you publish yourself, not marked latest | none |
 
 Details:
 
 - The binaries go to a draft GitHub release. Publishing it stays a deliberate step.
 - The images `ghcr.io/glassops-platform/glassops` and `ghcr.io/glassops-platform/glassops-analyzer` are built for `linux/amd64` and `linux/arm64`.
 - The moving tags `v1` and `latest` change only on a final release, so a prerelease never becomes what `@v1` runs.
+- They also never move back. `v1` moves only for the highest final version of major 1, and `latest` only for the highest final version of all, so a fix released on an older line, such as `v1.0.2` after `v1.1.0`, leaves both where they are. The plan job reads the repository's tags to decide.
 - The `v1` git tag moves last, after both images and the binaries exist. A caller of `@v1` never gets a workflow whose image is missing.
 - The images carry the OCI labels `source`, `version`, `revision` and `licenses`.
 
