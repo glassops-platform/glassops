@@ -180,6 +180,15 @@
       "properties": {
         "coverage_min": { "type": "integer", "minimum": 0, "maximum": 100 },
         "analyzer_max_severity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "validate_passed": {
+          "description": "Tiers on which a failed validate of the plan denies the PERMIT. Default [prod]. An empty list switches it off.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tiers"],
+          "properties": {
+            "tiers": { "type": "array", "items": { "$ref": "#/$defs/name" } }
+          }
+        },
         "separation_of_duties": {
           "type": "object",
           "additionalProperties": false,
