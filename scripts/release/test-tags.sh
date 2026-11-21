@@ -42,5 +42,28 @@ for row in "${table[@]}"; do
   [ "$got_major" = "$want_major" ] || { echo "FAIL $tag: major_tag='$got_major', want '$want_major'"; fail=1; }
   [ "$got_tags" = "$want_tags" ] || { echo "FAIL $tag: image tags '$got_tags', want '$want_tags'"; fail=1; }
 done
-[ "$fail" = 0 ] && echo "ok: ${#table[@]} tags"
+# With existing tags: a final release older than another final release never moves the moving
+# tags back. existing tags, space separated | tag | major_tag | image tags | latest
+history=(
+  "v1.0.0 v1.0.1 v1.1.0|v1.0.2||1.0.2 v1.0.2|false"
+  "v1.0.1 v1.1.0|v1.1.1|v1|1.1.1 v1.1.1 v1 latest|true"
+  "v1.0.1 v1.1.0 v1.2.0-rc.1|v1.1.1|v1|1.1.1 v1.1.1 v1 latest|true"
+  "v1.1.0 v2.0.0|v1.1.1|v1|1.1.1 v1.1.1 v1|false"
+  "v1.9.0|v1.10.0|v1|1.10.0 v1.10.0 v1 latest|true"
+  "v1.10.0|v1.9.1||1.9.1 v1.9.1|false"
+  "v1.1.0|v1.1.0|v1|1.1.0 v1.1.0 v1 latest|true"
+  "v1.1.0|v1.0.3-rc.1||1.0.3-rc.1 v1.0.3-rc.1|false"
+  "|v1.2.3|v1|1.2.3 v1.2.3 v1 latest|true"
+)
+for row in "${history[@]}"; do
+  IFS='|' read -r existing tag want_major want_tags want_latest <<< "$row"
+  out="$(RELEASE_TAGS="$(tr ' ' '\n' <<< "$existing")" "$here/tags.sh" "$tag" 2>/dev/null)"
+  got_major="$(sed -n 's/^major_tag=//p' <<< "$out")"
+  got_latest="$(sed -n 's/^latest=//p' <<< "$out")"
+  got_tags="$(sed -n '/^image_tags<<EOF$/,/^EOF$/p' <<< "$out" | sed '1d;$d' | tr '\n' ' ' | sed 's/ $//')"
+  [ "$got_major" = "$want_major" ] || { echo "FAIL $tag after '$existing': major_tag='$got_major', want '$want_major'"; fail=1; }
+  [ "$got_tags" = "$want_tags" ] || { echo "FAIL $tag after '$existing': image tags '$got_tags', want '$want_tags'"; fail=1; }
+  [ "$got_latest" = "$want_latest" ] || { echo "FAIL $tag after '$existing': latest=$got_latest, want $want_latest"; fail=1; }
+done
+[ "$fail" = 0 ] && echo "ok: ${#table[@]} tags, ${#history[@]} with history"
 exit "$fail"
