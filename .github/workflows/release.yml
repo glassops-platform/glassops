@@ -8,7 +8,9 @@ name: Release
 #   v1.2.3-rc1 or v0.4.0  a prerelease. It gets only its full version image tags (1.2.3-rc1 and
 #                         v1.2.3-rc1) and its GitHub release is marked as a prerelease.
 #   v1.2.3                a final release. It also gets the image tags v1 and latest, and the git
-#                         tag v1 moves to the release commit.
+#                         tag v1 moves to the release commit, each only when it is the newest
+#                         final release of its major (v1) or of all (latest). A fix on an older
+#                         line, such as v1.0.2 after v1.1.0, moves neither.
 # The reusable workflows and action.yml pick their default image from the tag they are called at,
 # so @v1 runs the image of the current v1.x.y release and @v1.2.3 runs the image of v1.2.3.
 on:
@@ -27,14 +29,19 @@ jobs:
       version: ${{ steps.tags.outputs.version }}
       major_tag: ${{ steps.tags.outputs.major_tag }}
       image_tags: ${{ steps.tags.outputs.image_tags }}
+      latest: ${{ steps.tags.outputs.latest }}
     steps:
+      # Every tag, so tags.sh can tell whether a final release is the newest. An older one, such
+      # as a fix released on an earlier line, never moves v1 or latest back.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - id: tags
         name: Decide the tags
         env:
           TAG: ${{ github.ref_name }}
-        run: scripts/release/tags.sh "$TAG" | tee -a "$GITHUB_OUTPUT"
+        run: RELEASE_TAGS="$(git tag -l 'v*')" scripts/release/tags.sh "$TAG" | tee -a "$GITHUB_OUTPUT"
 
   license-scan:
     name: License Scan
