@@ -80,7 +80,7 @@ func TestCoverageMin(t *testing.T) {
 			"salesforce.coverage.TestFactory.percent": 10,
 		}, Fail, "TestFactory 10%"},
 		{"no apex classes fact", covCfg(intp(75)), map[string]any{}, Fail, "plan facts are missing"},
-		{"empty class list passes", covCfg(intp(75)), map[string]any{"salesforce.apex_classes": []string{}}, Pass, "0 class"},
+		{"empty class list is skipped", covCfg(intp(75)), map[string]any{"salesforce.apex_classes": []string{}}, Skipped, "no Apex class"},
 		{"coverage through JSON types", covCfg(intp(75)), map[string]any{
 			"salesforce.apex_classes":       []any{"A"},
 			"salesforce.coverage.A.percent": float64(80),
