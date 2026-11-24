@@ -31,7 +31,7 @@
         "husky": "^9.1.7",
         "prettier": "^3.10.1",
         "prettier-plugin-apex": "^2.4.0",
-        "secretlint": "^13.1.0",
+        "secretlint": "^14.0.1",
         "shx": "^0.4.0"
     },
     "author": "Ryan Bumstead",
